@@ -1,14 +1,14 @@
 ---
 name: scenario-pipeline
-description: "Frontend composite engineering scenario pipeline. Two-phase workflow: pre-processing (scan internet sources, extract technical topics, evaluate against four-dimension criteria, pool candidates) and post-processing (scenario research using four-quadrant framework). Use when user asks to scan technical articles/blogs for research topics, collect interview questions, do deep research on composite engineering topics, or says '扫描' / '研究' / 'deep scan' / 'deep research' / 'scenario research' followed by a topic description. Also triggers on requests to collect frontend interview questions, analyze engineering trade-offs, or build a knowledge base of technical scenarios."
+description: "Frontend composite engineering scenario pipeline. Two-phase workflow: pre-processing (scan → decompose → capability extract → highground identify → evaluate → pool) and post-processing (capability research in parallel → assembly in parallel). Use when user asks to scan technical articles/blogs for research topics, collect interview questions, do deep research on composite engineering topics, or says '扫描' / '研究' / 'deep scan' / 'deep research' / 'scenario research' followed by a topic description. Also triggers on requests to collect frontend interview questions, analyze engineering trade-offs, or build a knowledge base of technical scenarios."
 ---
 
 # Scenario Pipeline
 
 Two-phase knowledge production pipeline for composite engineering scenarios.
 
-**Pre-processing** = scan → extract → evaluate → pool
-**Post-processing** = candidate → four-quadrant research → structured output
+**Pre-processing** = scan → decompose → capability extract → highground identify → evaluate → pool
+**Post-processing** = capability research (parallel) → assembly (parallel)
 
 ## Trigger Patterns
 
@@ -30,32 +30,51 @@ deep research：<场景描述>
 
 ```
 SKILL.md          ← Roadmap（本文件：触发方式 + 流程概览 + 导航）
-core/             ← 元能力（评估框架，稳定不常变）
-plugins/          ← 规则配置（可热插拔替换）
-references/       ← 工作流细节（前后处理的具体步骤）
+core/             ← 元能力（定义方法论，稳定不常变）
+plugins/          ← 增强插件（可热插拔的能力扩展）
+references/       ← 流程控制
+  ├── pre-process.md    ← 前处理编排（纯胶水，调用 processes/）
+  ├── post-process.md   ← 后处理编排（两阶段管线）
+  └── processes/        ← 步骤实现（无序，可组合）
+      ├── scan.md
+      ├── decompose.md
+      ├── capability-extract.md
+      ├── highground-identify.md
+      ├── evaluate.md
+      ├── capability-research.md
+      └── assemble.md
 ```
 
 ### Core — 元能力
 
-评估方法论，定义"什么是复合工程场景"以及"如何评判"。
+定义"什么是 X"以及"如何评判 X"。
 
-- **Architecture Decomposition** — 架构分词：识别命题内部的通用工程层与框架特化层结构（标注，不拆分）：[core/architecture-decomposition.md](core/architecture-decomposition.md)
-- **Scenario Framework** — 四维评估矩阵 + 四象限研究框架 + 命名规范：[core/scenario-matrix.md](core/scenario-matrix.md)
+- **Architecture Decomposition** — 架构分词：识别命题内部的通用工程层与框架特化层结构：[core/architecture-decomposition.md](core/architecture-decomposition.md)
+- **Capability Graph** — 原子能力图谱：从分词结果中提取原子能力，建立跨命题共享关系：[core/capability-graph.md](core/capability-graph.md)
+- **Strategic Highground** — 战略高地识别：基于扇出度和限定词耦合度识别制高点：[core/strategic-highground.md](core/strategic-highground.md)
+- **Scenario Framework** — 四维评估矩阵 + 四象限研究框架：[core/scenario-matrix.md](core/scenario-matrix.md)
 
-执行顺序：**先分词，再评估**。任何命题进入评估矩阵之前，必须先经过架构分词。
+### Plugins — 增强插件
 
-### Plugins — 规则配置
+对 core 能力的增强/扩展/配置化。
 
-可独立替换的规则模块，修改无需改动其他文件。
+- **Year-Granularity** — 经验年限与命题颗粒度匹配规则（增强分词能力）：[plugins/year-granularity.md](plugins/year-granularity.md)
+- **Capability Research Mode** — 材料块标准格式 + 研究深度分级（增强能力研究）：[plugins/capability-research-mode.md](plugins/capability-research-mode.md)
 
-- **Year-Granularity** — 经验年限与命题颗粒度匹配规则：[plugins/year-granularity.md](plugins/year-granularity.md)
+### References — 流程控制
 
-### References — 工作流细节
+编排文件定义步骤顺序，processes/ 定义步骤实现。
 
-前后处理的具体执行步骤和输出规范。
-
-- **Pre-process** — 扫描触发 + 信息源 + 提取规则 + 候选池：[references/pre-process.md](references/pre-process.md)
-- **Post-process** — 研究触发 + 四步流程 + 输出规范：[references/post-process.md](references/post-process.md)
+- **Pre-process** — 前处理编排：[references/pre-process.md](references/pre-process.md)
+- **Post-process** — 后处理编排（两阶段管线）：[references/post-process.md](references/post-process.md)
+- **Processes/** — 步骤实现（7 个可组合的独立模块）：
+  - [scan.md](references/processes/scan.md) — 广域扫描
+  - [decompose.md](references/processes/decompose.md) — 架构分词
+  - [capability-extract.md](references/processes/capability-extract.md) — 原子能力提取
+  - [highground-identify.md](references/processes/highground-identify.md) — 战略高地识别
+  - [evaluate.md](references/processes/evaluate.md) — 四维评估
+  - [capability-research.md](references/processes/capability-research.md) — 能力研究 → 材料块
+  - [assemble.md](references/processes/assemble.md) — 材料块组装 → 四象限输出
 
 ## 上下文加载策略
 
@@ -65,50 +84,59 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 
 | 触发条件 | 必须加载 | 按需加载 |
 |---------|---------|---------|
-| 任意扫描指令 | `core/architecture-decomposition.md` + `core/scenario-matrix.md` + `references/pre-process.md` | — |
-| 指令含 `--year` 参数 | 同上 | `plugins/year-granularity.md` |
-| 指令含 `--digest` 参数 | `core/architecture-decomposition.md` + `core/scenario-matrix.md` | — |
+| 任意扫描指令 | 编排：pre-process.md + 涉及的 processes/*.md + core/*.md | — |
+| 指令含 `--year` | 同上 | plugins/year-granularity.md |
+| 指令含 `--digest` | core/architecture-decomposition.md + core/capability-graph.md + core/scenario-matrix.md | — |
 
 ### 后处理上下文
 
 | 触发条件 | 必须加载 | 按需加载 |
 |---------|---------|---------|
-| 任意研究指令 | `core/architecture-decomposition.md` + `core/scenario-matrix.md` + `references/post-process.md` | — |
-| 指令含 `--year` 参数 | 同上 | `plugins/year-granularity.md` |
-| 指令含 `--no-experiment` | 同上 | 象限IV 相关指令可省略 |
+| 任意研究指令 | 编排：post-process.md + 涉及的 processes/*.md + core/*.md | — |
+| 能力研究阶段 | plugins/capability-research-mode.md + processes/capability-research.md | — |
+| 命题组装阶段 | plugins/capability-research-mode.md + processes/assemble.md | — |
+| 指令含 `--year` | 同上 | plugins/year-granularity.md |
+| 指令含 `--no-experiment` | 同上 | 象限IV 相关可省略 |
 
 ### 禁止事项
 
-- 不同时加载 `pre-process.md` 和 `post-process.md`（前后处理互斥）
+- 不同时加载 pre-process.md 和 post-process.md（前后处理互斥）
 - 不加载未命中按需条件的 plugins 文件
 
 ## Pre-processing Flow
 
-1. **Scan** — Crawl information sources (see [references/pre-process.md](references/pre-process.md) §三)
-2. **Extract** — Identify independent technical topics from raw materials
-3. **Evaluate** — Score each topic against four-dimension matrix (see [core/scenario-matrix.md](core/scenario-matrix.md) §二)
-4. **Pool** — Write qualified candidates to `workflow/research/candidates.md`
-
-If year constraint present, apply granularity filter from [plugins/year-granularity.md](plugins/year-granularity.md).
+1. **Scan** — 调用 [processes/scan.md](references/processes/scan.md)
+2. **Decompose** — 调用 [processes/decompose.md](references/processes/decompose.md)
+3. **Capability Extract** — 调用 [processes/capability-extract.md](references/processes/capability-extract.md)
+4. **Highground Identify** — 调用 [processes/highground-identify.md](references/processes/highground-identify.md)
+5. **Evaluate** — 调用 [processes/evaluate.md](references/processes/evaluate.md)
+6. **Pool** — 写入 `workflow/research/candidates.md`
 
 ## Post-processing Flow
 
-1. **Parse** — Extract tech stack, constraints, depth from trigger input
-2. **Four-quadrant research** — Execute sequentially (see [core/scenario-matrix.md](core/scenario-matrix.md) §三)
-3. **Output** — Write to `workflow/research/<slug>/` directory
-4. **Summarize** — Return ≤200 word summary to user
+**阶段一：能力研究（并行）**
+- 对每个扇出度 ≥ 30% 的原子能力，并行调用 [processes/capability-research.md](references/processes/capability-research.md)
+- 产出：标准化材料块，存储于 `workflow/research/material-blocks/`
+
+**阶段二：命题组装（并行）**
+- 对每个待处理命题，并行调用 [processes/assemble.md](references/processes/assemble.md)
+- 产出：四象限研究输出，存储于 `workflow/research/<slug>/`
 
 ## Output Structure
 
 ```
 workflow/research/
-├── candidates.md           # Candidate pool
-└── <scenario-slug>/
-    ├── overview.md         # Q1: Chain deconstruction
-    ├── edge-cases.md       # Q2: Extreme scenarios
-    ├── trade-offs.md       # Q3: Trade-off comparison
-    ├── experiment/         # Q4: Minimal viable experiment
+├── candidates.md                    # 候选池（前处理产出）
+├── material-blocks/                 # 能力材料块仓库（后处理阶段一产出）
+│   ├── A1-浏览器渲染管线.md
+│   ├── A2-DOM生命周期.md
+│   └── ...
+└── <scenario-slug>/                 # 命题研究（后处理阶段二产出）
+    ├── overview.md                  # Q1: 链路编排
+    ├── edge-cases.md                # Q2: 坑点提取
+    ├── trade-offs.md                # Q3: 方案对比
+    ├── experiment/                  # Q4: 实验组装
     │   ├── README.md
     │   └── src/
-    └── references.md       # Source links
+    └── references.md                # 参考资料
 ```
