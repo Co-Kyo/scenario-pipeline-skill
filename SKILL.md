@@ -39,7 +39,10 @@ references/       ← 工作流细节（前后处理的具体步骤）
 
 评估方法论，定义"什么是复合工程场景"以及"如何评判"。
 
+- **Architecture Decomposition** — 架构分词：识别命题内部的通用工程层与框架特化层结构（标注，不拆分）：[core/architecture-decomposition.md](core/architecture-decomposition.md)
 - **Scenario Framework** — 四维评估矩阵 + 四象限研究框架 + 命名规范：[core/scenario-matrix.md](core/scenario-matrix.md)
+
+执行顺序：**先分词，再评估**。任何命题进入评估矩阵之前，必须先经过架构分词。
 
 ### Plugins — 规则配置
 
@@ -62,15 +65,15 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 
 | 触发条件 | 必须加载 | 按需加载 |
 |---------|---------|---------|
-| 任意扫描指令 | `core/scenario-matrix.md` + `references/pre-process.md` | — |
+| 任意扫描指令 | `core/architecture-decomposition.md` + `core/scenario-matrix.md` + `references/pre-process.md` | — |
 | 指令含 `--year` 参数 | 同上 | `plugins/year-granularity.md` |
-| 指令含 `--digest` 参数 | 仅 `core/scenario-matrix.md` | — |
+| 指令含 `--digest` 参数 | `core/architecture-decomposition.md` + `core/scenario-matrix.md` | — |
 
 ### 后处理上下文
 
 | 触发条件 | 必须加载 | 按需加载 |
 |---------|---------|---------|
-| 任意研究指令 | `core/scenario-matrix.md` + `references/post-process.md` | — |
+| 任意研究指令 | `core/architecture-decomposition.md` + `core/scenario-matrix.md` + `references/post-process.md` | — |
 | 指令含 `--year` 参数 | 同上 | `plugins/year-granularity.md` |
 | 指令含 `--no-experiment` | 同上 | 象限IV 相关指令可省略 |
 
