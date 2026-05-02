@@ -1,6 +1,6 @@
 # Process: 原子能力提取 (capability-extract)
 
-> 从多个命题的分词结果中提取原子能力，计算扇出度。
+> 从多个命题的分词结果中提取原子能力，计算扇出度，输出结构化 capability-graph.json。
 
 ## 输入
 
@@ -32,42 +32,109 @@
 
 分析不同限定词向命题注入的特化能力集
 
-## 输出
+### Step 6：生成 capability-graph.json
 
-```yaml
-atomic_capabilities:
-  - id: "A1"
-    name: "浏览器渲染管线"
-    layer: "浏览器层"
-    fanout: 6
-    total: 7
-    fanout_ratio: "6/7"
-    coupling: 1
-    covers: ["P1", "P2", "P3", "P5", "P6", "P7"]
-    dependencies: []
-    
-  - id: "A2"
-    name: "DOM 节点生命周期"
-    layer: "浏览器+V8"
-    fanout: 5
-    total: 7
-    fanout_ratio: "5/7"
-    coupling: 1
-    covers: ["P1", "P3", "P5", "P6", "P7"]
-    dependencies: ["A1"]
+将全部结果写入 `.meta/capability-graph.json`，格式见下方。
 
-qualifier_injection:
-  - qualifier: "Vue 3"
-    injects: ["V1-Proxy响应式", "V2-Composition API", "V3-Patch Flag"]
-    affects_priority: ["A6-事件循环（nextTick调度）"]
-  - qualifier: "React 18"
-    injects: ["R1-Fiber调度", "R2-Hooks", "R3-Concurrent Mode"]
-    affects_priority: ["A6-事件循环（Fiber调度）"]
+---
+
+## 输出：capability-graph.json
+
+```jsonc
+{
+  "$schema": "capability-graph-v1",
+  "meta": {
+    "scan_date": "2026-05-02",
+    "target_years": "L2",
+    "total_propositions": 7,
+    "scan_scope": "前端性能优化面试场景分析题"
+  },
+
+  // 原子能力清单
+  "capabilities": [
+    {
+      "id": "A1",
+      "name": "浏览器渲染管线",
+      "layer": "浏览器层",
+      "description": "CRP→Layout→Paint→Composite",
+      "fanout": {
+        "count": 5,
+        "total": 7,
+        "ratio": "5/7",
+        "level": "core"           // core | high |专项 | low
+      },
+      "coupling": 1,              // 1=框架无关 2=部分相关 3=高度绑定
+      "covers": ["P1", "P2", "P3", "P5", "P6"],
+      "dependencies": [],         // 前置依赖的能力 ID 列表
+      "tags": ["渲染", "浏览器", "CRP"]
+    }
+    // ... 更多能力
+  ],
+
+  // 能力依赖图（从 dependencies 字段派生，冗余存储便于查询）
+  "dependency_graph": {
+    "A1": [],
+    "A2": ["A1"],
+    "A3": [],
+    "A4": ["A1"],
+    "A5": ["A2"],
+    "A6": [],
+    "A7": [],
+    "A8": []
+  },
+
+  // 限定词注入映射
+  "qualifier_injection": {
+    "Vue 3": {
+      "injects": ["V1-Proxy响应式", "V2-Composition API", "V3-Patch Flag"],
+      "affects_priority": ["A4"]
+    },
+    "React 18": {
+      "injects": ["R1-Fiber调度", "R2-Hooks", "R3-Concurrent Mode"],
+      "affects_priority": ["A4"]
+    },
+    "Webpack 5": {
+      "injects": ["W1-Module Federation", "W2-持久化缓存", "W3-Chunk分割"],
+      "affects_priority": ["A7"]
+    },
+    "Vite": {
+      "injects": ["VI1-ESM原生加载", "VI2-预构建", "VI3-Rollup产物优化"],
+      "affects_priority": ["A7"]
+    }
+  },
+
+  // 战略高地（由 highground-identify 追加）
+  "highgrounds": [],
+
+  // 修炼路径（由 highground-identify 追加）
+  "learning_path": []
+}
 ```
+
+### 能力 ID 命名规范
+
+| 前缀 | 含义 | 示例 |
+|------|------|------|
+| A | 通用原子能力（Generic） | A1, A2, A8 |
+| V | Vue 特化能力 | V1, V2 |
+| R | React 特化能力 | R1, R2 |
+| W | Webpack 特化能力 | W1, W2 |
+| VI | Vite 特化能力 | VI1, VI2 |
+
+### fanout.level 枚举
+
+| level | 条件 | 含义 |
+|-------|------|------|
+| `core` | ≥ 50% 命题覆盖 | 战略高地，必须掌握 |
+| `high` | 30-50% | 重要能力，优先学习 |
+| `专项` | 10-30% | 特定场景需要 |
+| `low` | < 10% | 按需学习 |
+
+---
 
 ## 依赖
 
-- 需要先执行 processes/decompose.md
+- 无（可独立执行）
 
 ## 参考
 

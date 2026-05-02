@@ -1,11 +1,10 @@
 # Process: 战略高地识别 (highground-identify)
 
-> 基于扇出度和限定词耦合度识别战略高地，生成修炼路径。
+> 基于 capability-graph.json 中的扇出度和限定词耦合度识别战略高地，生成修炼路径，追加写入 JSON。
 
 ## 输入
 
-- `capability_graph`：原子能力图谱（来自 processes/capability-extract.md 的输出）
-- `qualifier_context`：当前限定词上下文（可选）
+- `capability-graph.json`：原子能力图谱（来自 processes/capability-extract.md 的输出）
 
 ## 执行步骤
 
@@ -39,43 +38,70 @@
 
 同一命题不同限定词下，高地优先级如何变化
 
-## 输出
+### Step 6：追加写入 capability-graph.json
 
-```yaml
-strategic_highgrounds:
-  - id: "A1"
-    name: "浏览器渲染管线"
-    fanout: 6
-    coupling: 1
-    strategic_value: 6.0
-    cumulative_value: 18.0
-    level: "🏔️ 一级"
-    path_position: "Step 1"
-    
-  - id: "A2"
-    name: "DOM 生命周期"
-    fanout: 5
-    coupling: 1
-    strategic_value: 5.0
-    cumulative_value: 8.0
-    level: "🏔️ 一级"
-    path_position: "Step 2"
-    depends_on: ["A1"]
+将 `highgrounds` 和 `learning_path` 字段写入 JSON。
 
-learning_path:
-  - step: 1
-    capability: "A1-浏览器渲染管线"
-    coverage: "6/7"
-    rationale: "最大覆盖，框架无关"
-  - step: 2
-    capability: "A2-DOM生命周期"
-    coverage: "6/7"
-    rationale: "深化 A1 的下游理解"
+---
+
+## 输出：追加到 capability-graph.json
+
+```jsonc
+{
+  // ... 已有能力字段 ...
+
+  "highgrounds": [
+    {
+      "capability_id": "A8",
+      "name": "DevTools 性能分析",
+      "fanout": 7,
+      "coupling": 1,
+      "strategic_value": 7.0,
+      "cumulative_value": 7.0,
+      "level": "一级",
+      "level_emoji": "🏔️"
+    },
+    {
+      "capability_id": "A1",
+      "name": "浏览器渲染管线",
+      "fanout": 5,
+      "coupling": 1,
+      "strategic_value": 5.0,
+      "cumulative_value": 16.0,
+      "level": "一级",
+      "level_emoji": "🏔️"
+    }
+    // ... 按战略价值降序 ...
+  ],
+
+  "learning_path": [
+    {
+      "step": 1,
+      "capability_id": "A8",
+      "name": "DevTools 性能分析",
+      "coverage": "7/7",
+      "rationale": "最大覆盖，工具层入口，所有诊断的起点",
+      "verification": "能独立用 Performance 面板定位一个页面的渲染瓶颈"
+    },
+    {
+      "step": 2,
+      "capability_id": "A1",
+      "name": "浏览器渲染管线",
+      "coverage": "5/7",
+      "depends_on": [],
+      "rationale": "累积覆盖 7/7，框架无关的底层基础",
+      "verification": "能解释为什么修改 transform 不触发 Layout 而修改 width 会"
+    }
+    // ... 拓扑排序后的完整路径 ...
+  ]
+}
 ```
+
+---
 
 ## 依赖
 
-- 需要先执行 processes/capability-extract.md
+- 需要先执行 processes/capability-extract.md（提供 capability-graph.json）
 
 ## 参考
 

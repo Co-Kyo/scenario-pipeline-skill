@@ -8,7 +8,7 @@ description: "Frontend composite engineering scenario pipeline. Two-phase workfl
 Two-phase knowledge production pipeline for composite engineering scenarios.
 
 **Pre-processing** = scan → decompose → capability extract → highground identify → evaluate → pool
-**Post-processing** = capability research (parallel) → assembly (parallel)
+**Post-processing** = capability research (parallel) → assembly (parallel) ⛔ 两阶段有显式 barrier
 
 ## Trigger Patterns
 
@@ -34,15 +34,15 @@ core/             ← 元能力（定义方法论，稳定不常变）
 plugins/          ← 增强插件（可热插拔的能力扩展）
 references/       ← 流程控制
   ├── pre-process.md    ← 前处理编排（纯胶水，调用 processes/）
-  ├── post-process.md   ← 后处理编排（两阶段管线）
+  ├── post-process.md   ← 后处理编排（两阶段管线 + 编排者指令 + barrier）
   └── processes/        ← 步骤实现（无序，可组合）
       ├── scan.md
       ├── decompose.md
-      ├── capability-extract.md
-      ├── highground-identify.md
+      ├── capability-extract.md   ← 输出 .meta/capability-graph.json
+      ├── highground-identify.md  ← 追加 JSON 的 highgrounds + learning_path
       ├── evaluate.md
-      ├── capability-research.md
-      └── assemble.md
+      ├── capability-research.md  ← 输出 capabilities/<id>-<name>.md
+      └── assemble.md             ← 输出 <序号>-<命题简称>/
 ```
 
 ### Core — 元能力
@@ -66,15 +66,15 @@ references/       ← 流程控制
 编排文件定义步骤顺序，processes/ 定义步骤实现。
 
 - **Pre-process** — 前处理编排：[references/pre-process.md](references/pre-process.md)
-- **Post-process** — 后处理编排（两阶段管线）：[references/post-process.md](references/post-process.md)
+- **Post-process** — 后处理编排（两阶段管线 + 编排者指令）：[references/post-process.md](references/post-process.md)
 - **Processes/** — 步骤实现（7 个可组合的独立模块）：
   - [scan.md](references/processes/scan.md) — 广域扫描
   - [decompose.md](references/processes/decompose.md) — 架构分词
-  - [capability-extract.md](references/processes/capability-extract.md) — 原子能力提取
-  - [highground-identify.md](references/processes/highground-identify.md) — 战略高地识别
+  - [capability-extract.md](references/processes/capability-extract.md) — 原子能力提取 → 输出 `.meta/capability-graph.json`
+  - [highground-identify.md](references/processes/highground-identify.md) — 战略高地识别 → 追加 JSON
   - [evaluate.md](references/processes/evaluate.md) — 四维评估
-  - [capability-research.md](references/processes/capability-research.md) — 能力研究 → 材料块
-  - [assemble.md](references/processes/assemble.md) — 材料块组装 → 四象限输出
+  - [capability-research.md](references/processes/capability-research.md) — 能力研究 → 输出 `capabilities/`
+  - [assemble.md](references/processes/assemble.md) — 材料块组装 → 输出 `<序号>-<命题简称>/`
 
 ## 上下文加载策略
 
@@ -107,36 +107,62 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 
 1. **Scan** — 调用 [processes/scan.md](references/processes/scan.md)
 2. **Decompose** — 调用 [processes/decompose.md](references/processes/decompose.md)
-3. **Capability Extract** — 调用 [processes/capability-extract.md](references/processes/capability-extract.md)
-4. **Highground Identify** — 调用 [processes/highground-identify.md](references/processes/highground-identify.md)
+3. **Capability Extract** — 调用 [processes/capability-extract.md](references/processes/capability-extract.md) → 输出 `.meta/capability-graph.json`
+4. **Highground Identify** — 调用 [processes/highground-identify.md](references/processes/highground-identify.md) → 追加 JSON 的 `highgrounds` + `learning_path`
 5. **Evaluate** — 调用 [processes/evaluate.md](references/processes/evaluate.md)
-6. **Pool** — 写入 `workflow/research/candidates.md`
+6. **Pool** — 写入 `workflow/research/README.md`（总览导航）+ `.meta/candidates.md`（原始记录）
 
 ## Post-processing Flow
 
+> ⛔ **两阶段必须顺序执行，有显式 barrier。详见 [post-process.md](references/post-process.md) §编排者指令。**
+
 **阶段一：能力研究（并行）**
-- 对每个扇出度 ≥ 30% 的原子能力，并行调用 [processes/capability-research.md](references/processes/capability-research.md)
-- 产出：标准化材料块，存储于 `workflow/research/material-blocks/`
+- 读取 `.meta/capability-graph.json`，识别需要研究的原子能力
+- 对每个缺失材料块的能力，并行调用 [processes/capability-research.md](references/processes/capability-research.md)
+- 产出：能力知识库 `capabilities/`（含索引 README.md）
+- **⛔ 全部完成后才能进入阶段二**
 
 **阶段二：命题组装（并行）**
-- 对每个待处理命题，并行调用 [processes/assemble.md](references/processes/assemble.md)
-- 产出：四象限研究输出，存储于 `workflow/research/<slug>/`
+- 读取 `.meta/capability-graph.json` + `capabilities/`，对每个待处理命题并行调用 [processes/assemble.md](references/processes/assemble.md)
+- 产出：按命题组织的深度研究 `<序号>-<命题简称>/`
 
 ## Output Structure
 
 ```
 workflow/research/
-├── candidates.md                    # 候选池（前处理产出）
-├── material-blocks/                 # 能力材料块仓库（后处理阶段一产出）
-│   ├── A1-浏览器渲染管线.md
-│   ├── A2-DOM生命周期.md
+│
+├── README.md                          ← 总览导航（研究范围 + 命题索引 + 学习路径摘要）
+│
+├── 01-长列表渲染/                      ← 命题研究（用户的主要交付物）
+│   ├── overview.md                    # Q1: 链路编排
+│   ├── edge-cases.md                  # Q2: 坑点提取
+│   ├── trade-offs.md                  # Q3: 方案对比
+│   ├── experiment/                    # Q4: 实验组装
+│   │   ├── README.md
+│   │   └── src/
+│   └── references.md                  # 参考资料
+│
+├── 02-首屏白屏/
 │   └── ...
-└── <scenario-slug>/                 # 命题研究（后处理阶段二产出）
-    ├── overview.md                  # Q1: 链路编排
-    ├── edge-cases.md                # Q2: 坑点提取
-    ├── trade-offs.md                # Q3: 方案对比
-    ├── experiment/                  # Q4: 实验组装
-    │   ├── README.md
-    │   └── src/
-    └── references.md                # 参考资料
+│
+├── 03-网络优化/
+│   └── ...
+│
+├── capabilities/                      ← 原子能力知识库（跨命题复用的参考手册）
+│   ├── README.md                      # 能力索引 + 依赖图 + 学习路径
+│   ├── A1-浏览器渲染管线.md
+│   ├── A2-DOM节点生命周期.md
+│   └── ...
+│
+└── .meta/                             ← 内部数据（pipeline 工具用）
+    ├── capability-graph.json          # 结构化图谱（供后处理 agent 读取）
+    └── candidates.md                  # 原始候选池记录
 ```
+
+### 三层用户价值
+
+| 层 | 目录 | 用户价值 | 使用场景 |
+|----|------|---------|---------|
+| 命题研究 | `<序号>-<命题简称>/` | 面试场景的深度答案 | 面试前针对特定命题速查 |
+| 能力知识库 | `capabilities/` | 跨命题的原子能力参考 | 系统性学习某个技术点 |
+| 学习路径 | `capabilities/README.md` | 战略性修炼地图 | 规划学习优先级 |

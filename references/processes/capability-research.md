@@ -1,6 +1,6 @@
 # Process: 能力研究 (capability-research)
 
-> 对单个原子能力进行深度研究，产出标准化材料块。
+> 对单个原子能力进行深度研究，产出能力知识库条目。
 
 ## 输入
 
@@ -42,49 +42,53 @@
 
 提供一个可直接运行的代码片段，验证该能力的核心行为
 
-## 输出格式
+## 输出
 
-严格遵循 plugins/capability-research-mode.md 定义的材料块格式。
+写入 `workflow/research/capabilities/<id>-<name>.md`：
 
-```yaml
-capability_block:
-  id: "A1"
-  name: "浏览器渲染管线"
-  fanout: "6/7"
-  coupling: 1
-  
-  mechanism: |
-    关键渲染路径（CRP）：...
-    
-  bottlenecks:
-    - id: "A1-B1"
-      name: "强制同步布局"
-      trigger: "..."
-      symptom: "..."
-      detection: "..."
-      mitigation: ["..."]
-      
-  tools:
-    - name: "Chrome DevTools Performance"
-      usage: "..."
-      
-  tradeoffs:
-    - id: "A1-T1"
-      dimension: "..."
-      option_a: "..."
-      option_b: "..."
-      
-  experiments:
-    - id: "A1-E1"
-      description: "..."
-      code: "..."
-      verification: "..."
-      
-  references:
-    - tier: T1
-      url: "..."
-      title: "..."
+```markdown
+# <能力名称>
+
+> ID: <id> | 扇出: <fanout> | 耦合度: <coupling> | 战略价值: <value>
+
+## 核心机制
+
+（从底层原理到表层行为的完整链路）
+
+## 工程瓶颈
+
+| # | 瓶颈名 | 触发条件 | 表现症状 | 检测手段 | 缓解策略 |
+|---|--------|---------|---------|---------|---------|
+
+## 调试工具
+
+| 工具 | 用法 |
+
+## 典型权衡
+
+| 维度 | 方案A | 方案B | 选择建议 |
+
+## 最小验证实验
+
+（可直接运行的 HTML/JS 代码片段）
+
+## 参考资料
+
+（按 Tier 排序，至少 1 个 T1）
 ```
+
+### 文件命名规范
+
+```
+格式：<id>-<中文名称>.md
+示例：
+  ✓ A1-浏览器渲染管线.md
+  ✓ A8-DevTools性能分析.md
+  ✗ A1.md（纯 ID 无语义）
+  ✗ browser-rendering-pipeline.md（英文不直观）
+```
+
+---
 
 ## 依赖
 
