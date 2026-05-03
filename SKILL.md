@@ -30,8 +30,10 @@ deep research：<场景描述>
 
 ```
 SKILL.md          ← Roadmap（本文件：触发方式 + 流程概览 + 导航）
+ROADMAP.md        ← 全景执行路径（完整数据流 + 上下文加载地图 + 故障恢复）
 core/             ← 元能力（定义方法论，稳定不常变）
 plugins/          ← 增强插件（可热插拔的能力扩展）
+environment/      ← 环境探测（多 Agent 能力探测 + 适配协议）
 references/       ← 流程控制
   ├── pre-process.md    ← 前处理编排（纯胶水，调用 processes/）
   ├── post-process.md   ← 后处理编排（两阶段管线 + 编排者指令 + barrier）
@@ -60,6 +62,15 @@ references/       ← 流程控制
 
 - **Year-Granularity** — 经验年限与命题颗粒度匹配规则（增强分词能力）：[plugins/year-granularity.md](plugins/year-granularity.md)
 - **Capability Research Mode** — 材料块标准格式 + 研究深度分级（增强能力研究）：[plugins/capability-research-mode.md](plugins/capability-research-mode.md)
+- **Source Registry** — 信源质量白名单 + 域名映射 + 反爬黑名单（增强信源获取）：[plugins/source-registry.md](plugins/source-registry.md)
+### Environment — 环境探测
+
+跨平台多 Agent 能力探测与动态适配。
+
+- **Probe Protocol** — 两阶段探测（C0 元探测 → C1-C7 能力探测）+ 自然语言诱导实验 + 动态适配：[environment/probe-protocol.md](environment/probe-protocol.md)
+
+> 编排者后处理启动时加载 probe-protocol，先测 C0（能否自建子 agent），
+> 再用诱导实验探测 C1-C7，按能力指标选择执行策略。
 
 ### References — 流程控制
 
@@ -73,8 +84,8 @@ references/       ← 流程控制
   - [capability-extract.md](references/processes/capability-extract.md) — 原子能力提取 → 输出 `.meta/capability-graph.json`
   - [highground-identify.md](references/processes/highground-identify.md) — 战略高地识别 → 追加 JSON
   - [evaluate.md](references/processes/evaluate.md) — 四维评估
-  - [capability-research.md](references/processes/capability-research.md) — 能力研究 → 输出 `capabilities/`
-  - [assemble.md](references/processes/assemble.md) — 材料块组装 → 输出 `<序号>-<命题简称>/`
+  - [capability-research.md](references/processes/capability-research.md) — 能力研究（双写：主文件 + summary.json）→ 输出 `capabilities/` + `.meta/summaries/`
+  - [assemble.md](references/processes/assemble.md) — 材料块组装（接收 briefing，只写不读）→ 输出 `<序号>-<命题简称>/`
 
 ## 上下文加载策略
 
@@ -97,6 +108,7 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 | 命题组装阶段 | plugins/capability-research-mode.md + processes/assemble.md | — |
 | 指令含 `--year` | 同上 | plugins/year-granularity.md |
 | 指令含 `--no-experiment` | 同上 | 象限IV 相关可省略 |
+| 后处理启动时 | environment/probe-protocol.md | — |
 
 ### 禁止事项
 
@@ -119,11 +131,17 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 **阶段一：能力研究（并行）**
 - 读取 `.meta/capability-graph.json`，识别需要研究的原子能力
 - 对每个缺失材料块的能力，并行调用 [processes/capability-research.md](references/processes/capability-research.md)
-- 产出：能力知识库 `capabilities/`（含索引 README.md）
-- **⛔ 全部完成后才能进入阶段二**
+- 每个 agent 双写：主文件 `capabilities/<id>-<name>.md` + 结构化摘要 `.meta/summaries/<id>-<name>.json`
+- **⛔ 全部完成后才能进入编排者预处理**
+
+**编排者预处理：Briefing 组装**
+- 编排者读取 `.meta/summaries/` 下的摘要，按命题+文件类型定向提取，组装为 briefing
+- 保存到 `.meta/briefings/<命题简称>.md`
+- **⛔ 全部 briefing 生成后才能进入阶段二**
 
 **阶段二：命题组装（并行）**
-- 读取 `.meta/capability-graph.json` + `capabilities/`，对每个待处理命题并行调用 [processes/assemble.md](references/processes/assemble.md)
+- 编排者将 briefing 内联到 agent task，对每个待处理命题并行调用 [processes/assemble.md](references/processes/assemble.md)
+- 组装 agent **只写不读**，不读取 `capabilities/` 下的任何文件
 - 产出：按命题组织的深度研究 `<序号>-<命题简称>/`
 
 ## Output Structure
@@ -156,7 +174,15 @@ workflow/research/
 │
 └── .meta/                             ← 内部数据（pipeline 工具用）
     ├── capability-graph.json          # 结构化图谱（供后处理 agent 读取）
-    └── candidates.md                  # 原始候选池记录
+    ├── candidates.md                  # 原始候选池记录
+    ├── summaries/                     # 结构化摘要（阶段一双写，编排者消费）
+    │   ├── A1-浏览器渲染管线.json
+    │   ├── A2-DOM节点生命周期.json
+    │   └── ...
+    └── briefings/                     # 组装 Briefing（编排者生成，阶段二消费）
+        ├── 01-长列表渲染.md
+        ├── 02-首屏白屏.md
+        └── ...
 ```
 
 ### 三层用户价值

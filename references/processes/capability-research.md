@@ -127,7 +127,82 @@
 （每个来源标注：Tier、URL、提取的关键内容摘要）
 ```
 
+### Step 8：结构化摘要双写（强制）
+
+**在写完主文件后，必须额外产出一个结构化摘要 JSON，供编排者在阶段二组装 briefing 时消费。**
+
+> 设计理由：能力研究 agent 刚完成主文件，对全文结构最熟悉，此时提取摘要的认知成本最低（≈ 从刚写的草稿中"复制粘贴"）。
+> 这一步将阶段二 agent 从"读 30-100KB 全文"降为"编排者从 1-2KB 摘要组装 briefing"，压缩比约 5:1~7:1。
+
+#### 摘要 JSON Schema
+
+```json
+{
+  "id": "A1",
+  "name": "浏览器渲染管线",
+  "tech_layer": "浏览器层",
+  "fanout": "6/7",
+  "coupling": 1,
+  "strategic_value": 5.0,
+
+  "mechanism_summary": "关键渲染路径（CRP）：DOM + CSSOM → Style → Layout → Paint → Composite。浏览器将 HTML/CSS 解析为树结构，经样式计算、布局、绘制、合成四个阶段生成像素。",
+
+  "bottlenecks": [
+    {
+      "name": "强制同步布局",
+      "trigger": "读 offsetHeight 后立即写 style",
+      "symptom": "帧率骤降到 15fps"
+    },
+    {
+      "name": "布局抖动",
+      "trigger": "循环中交替读写布局属性",
+      "symptom": "单帧 Layout 次数暴增"
+    }
+  ],
+
+  "tradeoffs": [
+    {
+      "dimension": "图层数 vs GPU 内存",
+      "option_a": "will-change 提升独立图层 → Paint 隔离，GPU 内存增加",
+      "option_b": "不提升 → Paint 整体重绘，GPU 内存节省",
+      "suggestion": "对频繁重绘的独立元素（动画、fixed 定位）提升图层"
+    }
+  ],
+
+  "experiment_code": "（仅 deep 模式：提取最小可运行的代码片段，非 deep 模式填 null）",
+
+  "references": [
+    {"tier": "T1", "url": "https://developer.chrome.com/...", "title": "Chrome DevTools Performance Analysis"},
+    {"tier": "T1", "url": "https://developer.mozilla.org/...", "title": "MDN: Critical Rendering Path"}
+  ]
+}
+```
+
+#### 字段提取规则
+
+| 字段 | 提取来源 | 约束 |
+|------|---------|------|
+| `mechanism_summary` | 主文件「核心机制」章节 | 1-3 句，≤200 字 |
+| `bottlenecks` | 主文件「工程瓶颈」表格 | 每项只保留 name+trigger+symptom 三列 |
+| `tradeoffs` | 主文件「典型权衡」表格 | 每项保留完整四列（dimension + option_a + option_b + suggestion） |
+| `experiment_code` | 主文件「最小验证实验」 | deep 模式提取核心代码片段，非 deep 填 `null` |
+| `references` | 主文件「参考资料」 | 提取 tier+url+title，按 Tier 排序 |
+
+#### 写入路径
+
+```
+.meta/summaries/<id>-<name>.json
+```
+
+示例：`.meta/summaries/A1-浏览器渲染管线.json`
+
+> ⚠️ 摘要与主文件必须保持一致。如果后续修改了主文件，摘要也应同步更新。
+
+---
+
 ## 输出
+
+### 输出 1：能力知识库主文件
 
 写入 `workflow/research/capabilities/<id>-<name>.md`：
 
@@ -167,13 +242,19 @@
 （只列出实际读过的来源，标注 Tier 和提取摘要）
 ```
 
+### 输出 2：结构化摘要
+
+写入 `.meta/summaries/<id>-<name>.json`（格式见 Step 8）。
+
 ### 文件命名规范
 
 ```
-格式：<id>-<中文名称>.md
+主文件：capabilities/<id>-<中文名称>.md
+摘要：  .meta/summaries/<id>-<中文名称>.json
+
 示例：
-  ✓ A1-浏览器渲染管线.md
-  ✓ A8-DevTools性能分析.md
+  ✓ capabilities/A1-浏览器渲染管线.md
+  ✓ .meta/summaries/A1-浏览器渲染管线.json
   ✗ A1.md（纯 ID 无语义）
   ✗ browser-rendering-pipeline.md（英文不直观）
 ```
@@ -188,7 +269,9 @@
 你是 [能力名称] 的深度研究员。
 
 ## 任务
-研究原子能力 "[能力名称]"（ID: [id]），产出一个能力知识库文件。
+研究原子能力 "[能力名称]"（ID: [id]），产出两个文件：
+1. 能力知识库主文件
+2. 结构化摘要 JSON
 
 ## 信源获取（第一步，必须先执行）
 
@@ -205,7 +288,9 @@
    - mimo_web_search "<能力名称> pitfalls optimization"
 
 ## 产出
-写入文件：workflow/research/capabilities/[id]-[name].md
+
+### 文件 1：能力知识库主文件
+路径：workflow/research/capabilities/[id]-[name].md
 
 格式要求：
 - 核心机制（基于官方文档，引用具体 API）
@@ -215,9 +300,20 @@
 - 最小验证实验（可运行的 HTML/JS）
 - 参考资料（只列实际读过的 URL）
 
+### 文件 2：结构化摘要
+路径：workflow/research/.meta/summaries/[id]-[name].json
+
+从主文件中提取以下字段（JSON 格式）：
+- mechanism_summary：1-3 句核心机制摘要（≤200 字）
+- bottlenecks：每项只保留 name + trigger + symptom
+- tradeoffs：每项保留 dimension + option_a + option_b + suggestion
+- experiment_code：deep 模式提取核心代码，非 deep 填 null
+- references：提取 tier + url + title
+
 约束：
 - 中文撰写，技术术语保留英文
 - 通用内容 ≥ 70%（框架特化能力除外）
+- 摘要与主文件内容必须一致
 - 直接写文件，不要输出到聊天
 ```
 
