@@ -134,6 +134,7 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 **阶段一：能力研究（并行）**
 - 读取 `.meta/capability-graph.json`，识别需要研究的原子能力
 - 对每个缺失材料块的能力，并行调用 [processes/capability-research.md](references/processes/capability-research.md)
+- ⚠️ spawn 后按环境档案 `preserve_level` 执行主线程保全（单例窗口下主线程易丢失）
 - 每个 agent 双写：主文件 `capabilities/<id>-<name>.md` + 结构化摘要 `.meta/summaries/<id>-<name>.json`
 - **⛔ 全部完成后才能进入 Briefing 组装**
 
@@ -145,6 +146,7 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 
 **阶段二：命题组装（并行）**
 - 将 briefing 内联到 agent task，对每个待处理命题并行调用 [processes/assemble.md](references/processes/assemble.md)
+- ⚠️ spawn 后按环境档案 `preserve_level` 执行主线程保全（单例窗口下主线程易丢失）
 - 组装 agent **只写不读**，不读取 `capabilities/` 下的任何文件
 - 产出：按命题组织的深度研究 `<序号>-<命题简称>/`
 

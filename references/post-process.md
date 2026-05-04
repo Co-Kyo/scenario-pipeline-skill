@@ -74,6 +74,37 @@ spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配**
 > ⚠️ 下文中的 `spawn(task)` 是平台无关的伪代码。
 > 用自然语言描述"创建独立助手完成 X"，环境自行选择执行方式。
 
+### ⚠️ 多线程主线程保全协议
+
+> **平台已知 Bug**：在单例模式的 agent 窗口下，主线程 spawn 子 agent 后，
+> 主窗口的上下文可能潜入子 agent 的调用链，导致主线程丢失（主 agent 的
+> 后续指令被吞入子 agent 的执行上下文，主线程无法继续推进管线）。
+>
+> **保全策略**：此问题属于负行为（环境"做错了什么"），无法通过正向诱导实验直接探测。
+> 因此不新增探测维度，而是从环境档案中已有的 `execution_mode` + `C7` 组合推断风险等级，
+> 映射到分级保全策略。详见 [probe-protocol §6.5](../environment/probe-protocol.md)。
+>
+> **保全行为**（按环境档案 `efficiency.main_thread_preservation.preserve_level` 分级）：
+>
+> | 保全级别 | spawn 后立即输出 | 周期性轮询 | 收尾确认 |
+> |---------|:---:|:---:|:---:|
+> | mandatory（🔴 高风险） | ✅ 必须 | ✅ 必须 | ✅ 必须 |
+> | enabled（🟡 中风险） | ✅ 必须 | ✅ 必须 | ✅ 必须 |
+> | suggested（🟢 低风险） | ✅ 建议 | — | ✅ 建议 |
+> | optional（⚪ 极低风险） | 可选 | — | — |
+>
+> **行为定义**：
+> 1. **spawn 后立即输出**：spawn 后立即向用户输出一条状态确认消息
+>    （如"已启动 N 个子任务，正在跟踪进度"），强制主线程保持自己的对话轮次
+> 2. **周期性轮询**：在等待子 agent 完成期间，主动轮询检查产出文件
+>    （而非静默等待），每次轮询都是一个主线程的活跃 turn
+> 3. **收尾确认**：子 agent 完成后，主线程必须先输出一条收尾确认
+>    （如"子任务 X 已完成，继续推进"），再进入下一步骤
+>
+> **核心原则**：主线程永远不能在 spawn 后"静默等待"——
+> 静默 = 主线程交出对话轮次 = 单例窗口下上下文被劫持的高危时刻。
+> 保全级别越低，此原则的强制力越弱，但防御性编程始终推荐。
+
 ### 执行流程
 
 ```
@@ -159,21 +190,33 @@ spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配**
 
 ### 调度算法
 
+> ⚠️ **主线程保全**：每次 spawn 后，按环境档案 `preserve_level` 执行对应级别的保全行为。
+> 详见 §执行协议「多线程主线程保全协议」。
+
 ```
 窗口大小 W = 4
 待处理队列 Q = [任务1, 任务2, ..., 任务N]
 进行中集合 running = {}
 完成集合 done = {}
 
+读取 preserve_level = environment-profile.efficiency.main_thread_preservation.preserve_level
+
 循环：
   while |running| < W 且 Q 非空：
     task = Q.dequeue()
     agent = spawn(task)  ← 具体API见运行时适配层插件
     running.add(agent)
+    if preserve_level ∈ {"mandatory", "enabled", "suggested"}:
+      ⚠️ 立即输出状态确认："已启动子任务 <task_id>，当前并发 N/W" ← 主线程保全
 
-  等待任意一个 agent 完成
+  if preserve_level ∈ {"mandatory", "enabled"}:
+    ⚠️ 主动轮询检查产出文件（非静默等待）← 主线程保全
+  else:
+    等待任意一个 agent 完成
   running.remove(完成的 agent)
   done.add(完成的 agent)
+  if preserve_level ∈ {"mandatory", "enabled", "suggested"}:
+    ⚠️ 输出完成确认："子任务 <task_id> 完成，继续推进" ← 主线程保全
 
   if 该 agent 失败：
     记录失败原因，可选择重入 Q
@@ -243,6 +286,8 @@ spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配**
 - 能力之间无依赖，可完全并行
 - 使用滑动窗口调度，维持稳定并发数
 - **等待所有能力 agent 完成后才能进入 Briefing 组装**
+- ⚠️ **主线程保全**：按环境档案 `preserve_level` 执行对应级别的保全行为，
+  详见 §执行协议「多线程主线程保全协议」
 
 ### 输出
 
@@ -349,6 +394,8 @@ capabilities/                      ← 能力知识库（人类阅读）
 - 同一命题的不同文件可并行
 - 不同命题之间可并行
 - 使用滑动窗口调度
+- ⚠️ **主线程保全**：按环境档案 `preserve_level` 执行对应级别的保全行为，
+  详见 §执行协议「多线程主线程保全协议」
 
 ### 输出
 
