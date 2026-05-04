@@ -194,6 +194,7 @@ workflow/research/
 
 | 项 | 内容 |
 |----|------|
+| process | `processes/briefing-assemble.md` |
 | 执行模式 | 主 agent 单线程执行，不 spawn |
 | 输入 | `.meta/summaries/*.json` + `capability-graph.json` |
 | 核心 | 对每个命题：从 JSON 获取涉及的能力 ID → 读对应 summary → 按5种文件类型定向提取 → 组装 briefing |
@@ -369,7 +370,7 @@ evaluate.md
   ├── core/capability-graph.md
   ├── environment/probe-protocol.md  ← 必须（探测环境，Step 0）
 
-Briefing 组装：
+Briefing 组装：briefing-assemble.md
   ├── .meta/summaries/*.json
   ├── .meta/capability-graph.json
   └── README.md（命题列表）
@@ -442,6 +443,7 @@ environment/probe-protocol.md            ← 环境探测（必须加载）
 | `processes/highground-identify.md` | 步骤 | 战略高地识别 | ★ |
 | `processes/evaluate.md` | 步骤 | 四维评估 | ★ |
 | `processes/capability-research.md` | 步骤 | 能力研究+双写 | ★ |
+| `processes/briefing-assemble.md` | 步骤 | Briefing 组装(定向提取) | ★ |
 | `processes/assemble.md` | 步骤 | 命题组装(只写不读) | ★ |
 
 ---

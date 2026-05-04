@@ -290,88 +290,21 @@ capabilities/                      ← 能力知识库（人类阅读）
 
 > 阶段一全部完成后、阶段二开始前执行此步骤。
 > **单线程，不需要 spawn，直接读取 summary.json 并生成 briefing。**
+> 实现细节见 [processes/briefing-assemble.md](processes/briefing-assemble.md)。
 
-### 输入来源
-
-- `.meta/summaries/*.json` — 阶段一双写的结构化摘要
-- `.meta/capability-graph.json` — 能力与命题的映射关系
-- `README.md` — 待处理命题列表 + 分词结果
-
-### Briefing 组装规则
-
-对每个待处理命题生成一个 briefing 文件：
+### 执行逻辑
 
 ```
-对每个待处理命题 P：
-  1. 从 capability-graph.json 获取 P 涉及的能力 ID 列表
+对每个待处理命题：
+  1. 从 capability-graph.json 获取该命题涉及的能力 ID 列表
   2. 读取这些能力的 summary.json
-  3. 按 5 种目标文件类型定向提取内容：
+  3. 按 5 种文件类型定向提取，组装为 briefing
+  4. 保存到 .meta/briefings/<命题简称>.md
 ```
 
-| 目标文件 | 从 summary.json 提取 | 不提取 |
-|---------|---------------------|--------|
-| overview | `mechanism_summary` | bottlenecks、tradeoffs、experiment_code |
-| edge-cases | `bottlenecks`（name+trigger+symptom） | mechanism_summary、experiment_code |
-| trade-offs | `tradeoffs`（完整四列） | mechanism_summary、experiment_code |
-| experiment | `experiment_code` | mechanism_summary、bottlenecks |
-| references | `references`（tier+url+title） | 正文内容 |
+### 加载条件
 
-### Briefing 模板
-
-```markdown
-# <命题名称> — 组装 Briefing
-
-## 命题信息
-命题：<完整命题文本>
-通用占比：<百分比>
-限定词：<框架/平台（如有）>
-
-## 涉及能力摘要
-
-### <能力ID>-<能力名称>
-机制：<mechanism_summary>
-瓶颈：
-  - B1 <瓶颈名>：<触发条件> → <表现症状>
-  - B2 <瓶颈名>：<触发条件> → <表现症状>
-权衡：
-  - <维度>：<方案A> vs <方案B>，建议 <选择建议>
-实验代码：<experiment_code 或 "无（非 deep 模式）">
-参考：<references 列表>
-
-### <下一个能力>
-（同上格式）
-
-## 内容比例约束
-开篇 10-15%：从 <限定词> 痛点切入
-主体 70-80%：通用工程原理
-收尾 10-15%：回到 <限定词> 给落地方案
-
-## 参考资料（已去重，按 Tier 排序）
-- [T1] <标题>: <URL>
-- [T2] <标题>: <URL>
-```
-
-### Briefing 保存与复用
-
-```
-.meta/briefings/
-├── 01-长列表渲染.md
-├── 02-首屏白屏.md
-└── ...
-```
-
-**复用规则**：
-- 如果同一能力被多个命题引用，其 summary.json 只读一次，内容复用到多个 briefing
-- 如果已有部分 briefing（增量模式），只生成缺失命题的 briefing
-- briefing 生成后可预审：每个能力的瓶颈是否 ≥ 2 个？权衡是否完整？不满足的标记提醒
-
-### 上下文消耗估算
-
-```
-16 个能力 × ~2KB/summary = ~32KB（读取量）
-3 个命题 × ~10KB/briefing = ~30KB（写入量）
-总计：barrier 期间消耗 ~62KB（远低于方案 B 的 128KB 全文读取）
-```
+- 始终加载：processes/briefing-assemble.md
 
 ---
 

@@ -198,7 +198,7 @@ spawn 组装 agent 时，task 按以下模板构造：
 
 - 需要先执行 processes/decompose.md
 - 需要先执行 processes/capability-research.md（阶段一，产出 capabilities/ + .meta/summaries/）
-- 需要从 .meta/summaries/ 预提取 briefing（见 post-process.md §Briefing 组装）
+- 需要先执行 processes/briefing-assemble.md（Briefing 组装，产出 .meta/briefings/）
 
 ## 参考
 

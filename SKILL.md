@@ -44,6 +44,7 @@ references/       ← 流程控制
       ├── highground-identify.md  ← 追加 JSON 的 highgrounds + learning_path
       ├── evaluate.md
       ├── capability-research.md  ← 输出 capabilities/<id>-<name>.md
+      ├── briefing-assemble.md    ← 输出 .meta/briefings/<命题简称>.md
       └── assemble.md             ← 输出 <序号>-<命题简称>/
 ```
 
@@ -78,13 +79,14 @@ references/       ← 流程控制
 
 - **Pre-process** — 前处理编排：[references/pre-process.md](references/pre-process.md)
 - **Post-process** — 后处理编排（两阶段管线 + 执行协议）：[references/post-process.md](references/post-process.md)
-- **Processes/** — 步骤实现（7 个可组合的独立模块）：
+- **Processes/** — 步骤实现（8 个可组合的独立模块）：
   - [scan.md](references/processes/scan.md) — 广域扫描
   - [decompose.md](references/processes/decompose.md) — 架构分词
   - [capability-extract.md](references/processes/capability-extract.md) — 原子能力提取 → 输出 `.meta/capability-graph.json`
   - [highground-identify.md](references/processes/highground-identify.md) — 战略高地识别 → 追加 JSON
   - [evaluate.md](references/processes/evaluate.md) — 四维评估
   - [capability-research.md](references/processes/capability-research.md) — 能力研究（双写：主文件 + summary.json）→ 输出 `capabilities/` + `.meta/summaries/`
+  - [briefing-assemble.md](references/processes/briefing-assemble.md) — Briefing 组装（从 summary.json 定向提取）→ 输出 `.meta/briefings/`
   - [assemble.md](references/processes/assemble.md) — 材料块组装（接收 briefing，只写不读）→ 输出 `<序号>-<命题简称>/`
 
 ## 上下文加载策略
@@ -105,6 +107,7 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 |---------|---------|---------|
 | 任意研究指令 | 编排：post-process.md + 涉及的 processes/*.md + core/*.md | — |
 | 能力研究阶段 | plugins/capability-research-mode.md + processes/capability-research.md | — |
+| Briefing 组装 | processes/briefing-assemble.md | — |
 | 命题组装阶段 | plugins/capability-research-mode.md + processes/assemble.md | — |
 | 指令含 `--year` | 同上 | plugins/year-granularity.md |
 | 指令含 `--no-experiment` | 同上 | 象限IV 相关可省略 |
@@ -135,6 +138,7 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 - **⛔ 全部完成后才能进入 Briefing 组装**
 
 **中间步骤：Briefing 组装**
+- 调用 [processes/briefing-assemble.md](references/processes/briefing-assemble.md)
 - 读取 `.meta/summaries/` 下的摘要，按命题+文件类型定向提取，组装为 briefing
 - 保存到 `.meta/briefings/<命题简称>.md`
 - **⛔ 全部 briefing 生成后才能进入阶段二**
