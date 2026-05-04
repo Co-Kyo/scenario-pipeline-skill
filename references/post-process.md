@@ -42,37 +42,37 @@ deep research：<场景描述>
   └─────────────────┘            └─────────────────┘
         ↑                              ↑
         │                              │
-  .meta/capability-graph.json    编排者从 summaries
-  (来自前处理)                  组装 briefing 内联到 task
+  .meta/capability-graph.json    从 summaries 组装
+  (来自前处理)                  briefing 内联到 task
 ```
 
 **双写**：每个能力研究 agent 产出两个文件：
 1. `capabilities/<id>-<name>.md` — 人类阅读的完整知识库
 2. `.meta/summaries/<id>-<name>.json` — 机器消费的结构化摘要
 
-**编排者预处理**：阶段一与阶段二之间，编排者读 summary.json 组装 briefing，内联到组装 agent 的 task 中。组装 agent **只写不读**。
+**中间步骤：Briefing 组装**：阶段一与阶段二之间，读 summary.json 组装 briefing，内联到组装 agent 的 task 中。组装 agent **只写不读**。
 
 ---
 
-## 编排者指令（Orchestrator Instructions）
+## 执行协议
 
-> 本节定义编排者（主 agent）的执行协议。**必须严格遵循两阶段顺序，禁止合并。**
+> 本节定义后处理的执行协议。**必须严格遵循两阶段顺序，禁止合并。**
 > **spawn 机制依赖运行时平台**，具体 API 参见 §运行时适配层。
 
 ### 运行时适配层
 
-编排者 spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配** 实现跨平台兼容：
+spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配** 实现跨平台兼容：
 
 | 层 | 文件 | 职责 |
 |----|------|------|
 | 探测 + 适配 | [environment/probe-protocol.md](../environment/probe-protocol.md) | 自然语言诱导实验 → 7 维能力档案 → 执行策略适配 |
 
-**编排者执行流程前必须**：
+**执行流程前必须**：
 1. 加载 `environment/probe-protocol.md`，执行/读取环境档案
 2. 按档案中 C1-C7 能力指标选择执行策略（probe-protocol §六）
 
 > ⚠️ 下文中的 `spawn(task)` 是平台无关的伪代码。
-> 编排者用自然语言描述"创建独立助手完成 X"，环境自行选择执行方式。
+> 用自然语言描述"创建独立助手完成 X"，环境自行选择执行方式。
 
 ### 执行流程
 
@@ -101,12 +101,12 @@ deep research：<场景描述>
 2. 【阶段一】能力研究
    ├── 筛选：覆盖待处理命题的能力（或扇出度 ≥ 30% 的能力）
    ├── 增量检查：capabilities/ 中已有 → 跳过，缺失 → 研究
-   ├── 为每个能力预查找 T1/T2 URL（编排者负责）
+   ├── 为每个能力预查找 T1/T2 URL
    ├── 按滑动窗口并行 spawn（每 agent 1 个能力文件）← 具体API见运行时适配层插件
    ├── 每个 agent 双写：主文件 + summary.json
-   └── ⛔ 全部完成后才能进入编排者预处理
+   └── ⛔ 全部完成后才能进入 Briefing 组装
 
-3. 【编排者预处理】Briefing 组装（单线程，不需要 spawn）
+3. 【Briefing 组装】（单线程，不需要 spawn）
    ├── 读取 .meta/summaries/ 下所有相关能力的 summary.json
    ├── 对每个待处理命题：
    │   ├── 从 capability-graph.json 确定该命题涉及的能力 ID 列表
@@ -123,7 +123,7 @@ deep research：<场景描述>
 
 ### ⛔ 阶段间 Barrier（强制）
 
-**阶段一必须全部完成，才能开始编排者预处理；编排者预处理必须全部完成，才能开始阶段二。**
+**阶段一必须全部完成，才能开始 Briefing 组装；Briefing 组装必须全部完成，才能开始阶段二。**
 
 原因：
 - 阶段二的 briefing 依赖阶段一产出的 summary.json
@@ -140,9 +140,9 @@ deep research：<场景描述>
 
 正确模式：
 ```
-✅ 主 agent 作为编排者，用滑动窗口 spawn 阶段一 agent → 全部完成（API见运行时插件）
-✅ 编排者读 summary.json 组装 briefing → 保存到 .meta/briefings/
-✅ 编排者用滑动窗口 spawn 阶段二 agent，task 中内联 briefing（API见运行时插件）
+✅ 主 agent 用滑动窗口 spawn 阶段一 agent → 全部完成（API见运行时插件）
+✅ 读 summary.json 组装 briefing → 保存到 .meta/briefings/
+✅ 用滑动窗口 spawn 阶段二 agent，task 中内联 briefing（API见运行时插件）
 ✅ 每个 agent 只负责 1 个文件，任务边界清晰
 ✅ 失败的 agent 可精确重跑，不影响其他
 ```
@@ -183,7 +183,7 @@ deep research：<场景描述>
 
 ### 状态追踪
 
-编排者维护以下状态表，在每个 agent 完成时更新：
+主 agent 维护以下状态表，在每个 agent 完成时更新：
 
 ```
 | 能力ID | 状态 | agent session | 备注 |
@@ -203,9 +203,9 @@ deep research：<场景描述>
 - 前处理产出的 `.meta/capability-graph.json`（原子能力图谱）
 - 前处理产出的 `README.md`（命题列表，用于筛选哪些能力需要研究）
 
-### 编排者预处理：为每个能力查找信源 URL
+### 信源预查找：为每个能力准备 T1/T2 URL
 
-在 spawn agent 之前，编排者需要为每个原子能力准备 T1/T2 URL：
+在 spawn agent 之前，为每个原子能力准备 T1/T2 URL：
 
 ```
 对每个待研究的能力：
@@ -242,7 +242,7 @@ deep research：<场景描述>
 - 每个能力分配一个独立 agent（**一个 agent 一个文件，禁止合并**）
 - 能力之间无依赖，可完全并行
 - 使用滑动窗口调度，维持稳定并发数
-- **等待所有能力 agent 完成后才能进入编排者预处理**
+- **等待所有能力 agent 完成后才能进入 Briefing 组装**
 
 ### 输出
 
@@ -286,10 +286,10 @@ capabilities/                      ← 能力知识库（人类阅读）
 
 ---
 
-## 编排者预处理：Briefing 组装
+## Briefing 组装
 
-> 阶段一全部完成后、阶段二开始前，编排者执行此步骤。
-> **单线程，不需要 spawn，编排者直接读取 summary.json 并生成 briefing。**
+> 阶段一全部完成后、阶段二开始前执行此步骤。
+> **单线程，不需要 spawn，直接读取 summary.json 并生成 briefing。**
 
 ### 输入来源
 
@@ -299,7 +299,7 @@ capabilities/                      ← 能力知识库（人类阅读）
 
 ### Briefing 组装规则
 
-编排者对每个待处理命题生成一个 briefing 文件：
+对每个待处理命题生成一个 briefing 文件：
 
 ```
 对每个待处理命题 P：
@@ -368,9 +368,9 @@ capabilities/                      ← 能力知识库（人类阅读）
 ### 上下文消耗估算
 
 ```
-16 个能力 × ~2KB/summary = ~32KB（编排者读取量）
-3 个命题 × ~10KB/briefing = ~30KB（编排者写入量）
-总计：编排者 barrier 期间消耗 ~62KB（远低于方案 B 的 128KB 全文读取）
+16 个能力 × ~2KB/summary = ~32KB（读取量）
+3 个命题 × ~10KB/briefing = ~30KB（写入量）
+总计：barrier 期间消耗 ~62KB（远低于方案 B 的 128KB 全文读取）
 ```
 
 ---
@@ -379,7 +379,7 @@ capabilities/                      ← 能力知识库（人类阅读）
 
 ### 输入来源
 
-- 编排者预处理的 `.meta/briefings/<命题简称>.md`（已内联到 agent task）
+- Briefing 组装产出的 `.meta/briefings/<命题简称>.md`（已内联到 agent task）
 - 前处理产出的 `README.md`（命题列表 + 分词结果）
 
 ### 执行逻辑
@@ -484,6 +484,6 @@ workflow/research/<序号>-<命题简称>/
 ```
 1. 从 .meta/capability-graph.json 识别该命题依赖的原子能力
 2. 增量检查 capabilities/ + .meta/summaries/，缺失的用滑动窗口并行研究（双写）
-3. 编排者从 summary.json 组装该命题的 briefing
+3. 从 summary.json 组装该命题的 briefing
 4. 组装该命题（滑动窗口按文件拆分，task 内联 briefing）
 ```

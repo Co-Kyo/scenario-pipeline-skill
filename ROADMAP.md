@@ -22,10 +22,10 @@
                           ┌─────────────────────┐
                           │   后 处 理（并行）    │
                           │                     │
-                          │  阶段一：能力研究     │  ← 滑动窗口并行
-                          │    ⛔ barrier        │
-                          │  编排者：Briefing 组装│  ← 单线程
-                          │    ⛔ barrier        │
+│  阶段一：能力研究     │  ← 滑动窗口并行
+│    ⛔ barrier        │
+│  Briefing 组装       │  ← 单线程
+│    ⛔ barrier        │
                           │  阶段二：命题组装     │  ← 滑动窗口并行
                           └─────────────────────┘
 ```
@@ -113,10 +113,10 @@ workflow/research/
 
 ---
 
-## 三、后处理：3 步管线（2 次并行 + 1 次编排者预处理）
+## 三、后处理：3 步管线（2 次并行 + 1 次 Briefing 组装）
 
 > 触发：`研究：<场景描述>`
-> 执行者：编排者（主 agent）+ 多个 spawn agent
+> 执行模式：主 agent 调度 + 多个 spawn agent 并行执行
 > spawn 机制：两阶段探测（**probe-protocol** → [environment/probe-protocol.md](environment/probe-protocol.md)）→ C0 元探测（能否自建 agent）→ C1-C7 诱导实验 → 能力档案 → 动态适配
 > 编排文件：[references/post-process.md](references/post-process.md)
 
@@ -136,7 +136,7 @@ workflow/research/
 │  ⛔ BARRIER: 全部完成后才进入下一步                                    │
 │  ══════════════════════════════════════════════════                  │
 │                                                                     │
-│  编排者预处理：Briefing 组装（单线程）                                 │
+│  Briefing 组装（单线程）                                 │
 │  ┌─────────────────────────────────────────┐                        │
 │  │ 读 .meta/summaries/*.json               │                        │
 │  │ × capability-graph.json (能力→命题映射)  │                        │
@@ -190,11 +190,11 @@ workflow/research/
 }
 ```
 
-### 编排者预处理：Briefing 组装
+### Briefing 组装
 
 | 项 | 内容 |
 |----|------|
-| 执行者 | 编排者（主 agent），不 spawn |
+| 执行模式 | 主 agent 单线程执行，不 spawn |
 | 输入 | `.meta/summaries/*.json` + `capability-graph.json` |
 | 核心 | 对每个命题：从 JSON 获取涉及的能力 ID → 读对应 summary → 按5种文件类型定向提取 → 组装 briefing |
 
@@ -208,7 +208,7 @@ workflow/research/
 | experiment | experiment_code | mechanism_summary, bottlenecks |
 | references | references(tier+url+title) | 正文内容 |
 
-**上下文消耗**：读 32KB summaries + 写 30KB briefings ≈ 62KB（编排者可承受）
+**上下文消耗**：读 32KB summaries + 写 30KB briefings ≈ 62KB（主 agent 可承受）
 
 **输出**：`.meta/briefings/<命题简称>.md`
 
@@ -292,7 +292,7 @@ workflow/research/
 │                       │                               │
 │                  ⛔ BARRIER                           │
 │                       │                               │
-│  ┌── 编排者预处理：Briefing 组装 ────────────────┐    │
+│  ┌── Briefing 组装 ────────────────────────────┐    │
 │  │                                               │    │
 │  │  .meta/summaries/*.json                       │    │
 │  │       ×                                       │    │
@@ -369,7 +369,7 @@ evaluate.md
   ├── core/capability-graph.md
   ├── environment/probe-protocol.md  ← 必须（探测环境，Step 0）
 
-编排者预处理：
+Briefing 组装：
   ├── .meta/summaries/*.json
   ├── .meta/capability-graph.json
   └── README.md（命题列表）
@@ -392,8 +392,8 @@ evaluate.md
 | `evaluations[]` | evaluate | pool | 内存→文件 |
 | `README.md` | pool | 用户 + 后处理 | 人类阅读+agent读取 |
 | `capabilities/<id>.md` | capability-research | **人类阅读**（组装agent不再读） | 人类消费 |
-| `summaries/<id>.json` | capability-research 双写 | 编排者预处理 | 机器消费 |
-| `briefings/<命题>.md` | 编排者预处理 | assemble agent | 内联到task |
+| `summaries/<id>.json` | capability-research 双写 | Briefing 组装 | 机器消费 |
+| `briefings/<命题>.md` | Briefing 组装 | assemble agent | 内联到task |
 | `<命题>/overview.md` 等 | assemble | 用户 | 人类消费 |
 
 **关键洞察**：`capabilities/*.md` 在新方案中只服务于**人类读者**，组装 agent 通过 `summaries → briefings` 链路获取素材，不再直接读能力文件。
@@ -453,7 +453,7 @@ environment/probe-protocol.md            ← 环境探测（必须加载）
 | 前处理 scan 网络不通 | raw_materials 为空 | 换镜像/指定 --source |
 | capability-extract 信源验证全部失败 | t1_missing=true 普遍 | 后处理 fallback 搜索 |
 | 阶段一 agent 超时 | summary.json 缺失 | 精确重跑该能力（1 agent 1 文件） |
-| 编排者 briefing 组装超时 | .meta/briefings/ 不完整 | 按缺失命题增量生成 |
+| Briefing 组装超时 | .meta/briefings/ 不完整 | 按缺失命题增量生成 |
 | 阶段二 agent 输出质量差 | 文件内容空洞 | 重跑：拿同样的 briefing 再写一次 |
 | summary 与主文件不一致 | 摘要过时 | 从主文件重新提取（增量修复） |
 | 运行时 spawn 失败 | agent 无法创建 | 检查 .meta/environment-profile.json 中 C1 是否为 true |

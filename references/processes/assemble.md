@@ -1,13 +1,13 @@
 # Process: 命题组装 (assemble)
 
-> 将编排者预提取的 briefing 组装为命题的四象限研究输出。
-> **组装 agent 只写不读**——所有素材由编排者在 spawn 前内联到 task 中，agent 不需要读取任何能力文件。
+> 将预提取的 briefing 组装为命题的四象限研究输出。
+> **组装 agent 只写不读**——所有素材在 spawn 前内联到 task 中，agent 不需要读取任何能力文件。
 
 ## 输入
 
 - `proposition`：命题文本
 - `decomposition`：分词结果（来自 processes/decompose.md）
-- `briefing`：编排者从 summary.json 预提取的定向素材（已内联到 task）
+- `briefing`：从 summary.json 预提取的定向素材（已内联到 task）
 - `target_file`：本次 agent 负责写的目标文件类型（overview / edge-cases / trade-offs / experiment / references）
 - `depth`：组装深度（shallow / normal / deep）
 - `platform`：平台约束（web / miniapp / rn / all）
@@ -16,7 +16,7 @@
 
 ```
 ❌ 旧模式：agent 读 7-11 个能力文件（30-100KB）→ 筛选 → 写
-✅ 新模式：编排者从 summary.json 提取 briefing → 内联到 task → agent 只写
+✅ 新模式：从 summary.json 提取 briefing → 内联到 task → agent 只写
 
 agent 不读取 capabilities/ 下的任何文件。
 所有需要的素材已经在 briefing 中提供。
@@ -24,7 +24,7 @@ agent 不读取 capabilities/ 下的任何文件。
 
 ## Briefing 格式
 
-编排者生成的 briefing 结构如下（已内联到 agent 的 task 中）：
+briefing 结构如下（已内联到 agent 的 task 中）：
 
 ```markdown
 # <命题名称> — 组装 Briefing
@@ -159,7 +159,7 @@ agent 不读取 capabilities/ 下的任何文件。
 
 ## Agent 执行指令模板
 
-编排者 spawn 组装 agent 时，task 按以下模板构造：
+spawn 组装 agent 时，task 按以下模板构造：
 
 ```
 你是命题 "[命题名称]" 的组装员。
@@ -174,7 +174,7 @@ agent 不读取 capabilities/ 下的任何文件。
 
 ## 素材（已为你准备好，不需要读取任何文件）
 
-[briefing 完整内容，由编排者从 summary.json 预提取]
+[briefing 完整内容，由 summary.json 预提取]
 
 ## 产出
 写入文件：workflow/research/[序号]-[命题简称]/[target_file].md
@@ -198,7 +198,7 @@ agent 不读取 capabilities/ 下的任何文件。
 
 - 需要先执行 processes/decompose.md
 - 需要先执行 processes/capability-research.md（阶段一，产出 capabilities/ + .meta/summaries/）
-- 需要编排者从 .meta/summaries/ 预提取 briefing（见 post-process.md §编排者预处理）
+- 需要从 .meta/summaries/ 预提取 briefing（见 post-process.md §Briefing 组装）
 
 ## 参考
 
