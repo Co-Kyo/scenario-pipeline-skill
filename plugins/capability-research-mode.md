@@ -28,9 +28,16 @@ capability_block:
   bottlenecks:                          # 工程瓶颈清单
     - id: "A1-B1"
       name: "强制同步布局"
+      category: "时序竞争"                # 分类维度：输入变异/状态跃迁/资源边界/规模拐点/时序竞争
+      priority: "P0"                     # 优先级：P0-必现/P1-高频/P2-边界/P3-极端
       trigger: "读 offsetHeight 后立即写 style"
       symptom: "帧率骤降到 15fps"
       detection: "DevTools Performance → Layout 事件"
+      version_sensitive: "strong"        # 版本相关性：strong/weak/none
+      affected_tool: "Chrome"            # 涉及的工具链/运行环境
+      affected_versions: "< 85"          # 受影响版本范围
+      fixed_version: "85"                # 修复版本（如有）
+      fixed_source: "https://chromestatus.com/roadmap"  # 版本验证来源
       mitigation:
         - "读写分离：批量读完再批量写"
         - "ResizeObserver 异步测量"
@@ -119,6 +126,7 @@ capability_block:
 |--------|------|
 | mechanism 不为空 | 必须包含该能力的核心机制描述 |
 | bottlenecks 覆盖 P0/P1 | shallow: P0 必覆盖; normal: P0+P1 必覆盖; deep: P0+P1+P2 必覆盖 |
+| 版本强相关瓶颈已验证 | version_sensitive=strong 的瓶颈必须有 affected_tool/affected_versions/fixed_version/fixed_source |
 | 每个 bottleneck 有 detection | 必须可检测，不能只描述症状 |
 | tradeoffs 有 dimension | 必须标注两个对立维度 |
 | references 至少 1 个 T1 | 必须有权威来源 |

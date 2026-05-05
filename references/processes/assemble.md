@@ -84,6 +84,7 @@ briefing 结构如下（已内联到 agent 的 task 中）：
 - 过滤：只保留与命题场景相关的瓶颈
 - 优先级排序：P0/P1 必须保留，P2/P3 按场景相关性决定是否保留
 - 分类标注：保留 category 字段（输入变异/状态跃迁/资源边界/规模拐点/时序竞争），便于读者理解瓶颈本质
+- 版本信息保留：保留版本相关字段（version_sensitive/affected_tool/affected_versions/fixed_version/fixed_source），对于强相关瓶颈，版本信息是关键参考
 - 补充：命题特有的极端场景（如 AI 聊天的流式追加）
 - 组合：多个能力的瓶颈可能组合形成新的极端场景
 

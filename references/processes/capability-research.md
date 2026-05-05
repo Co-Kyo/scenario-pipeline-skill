@@ -115,7 +115,41 @@
 | **规模拐点** | 量变引发质变，行为在某阈值后恶化 | O(1)→O(n)、单线程→多线程、缓存穿透 |
 | **时序竞争** | 多个并发操作的执行顺序导致非确定性结果 | 竞态条件、死锁、回调风暴、事件循环饥饿 |
 
-#### 3.3 热点分级
+#### 3.3 版本相关性检查
+
+**前端工程瓶颈高度依赖工具链版本**（Chrome、Vite、Webpack、Node.js 等）。网络文章存在转载问题，旧瓶颈可能在新版本中已解决。必须对每个瓶颈进行版本相关性判断。
+
+**判断标准**：
+
+| 版本相关性 | 定义 | 示例 |
+|-----------|------|------|
+| **强相关** | 瓶颈的触发/解决直接依赖特定版本的特性或修复 | Chrome 的 LayoutNG（v85+）解决了旧版布局性能问题；Vite 5 的依赖预构建优化 |
+| **弱相关** | 瓶颈与版本有间接关系，但核心问题跨版本存在 | DOM 节点数过多导致的渲染性能问题（版本影响的是优化手段而非问题本质） |
+| **无关** | 瓶颈是通用工程问题，不受版本影响 | 内存泄漏、竞态条件、算法复杂度 |
+
+**强相关瓶颈的验证流程**：
+
+```
+1. 识别该瓶颈涉及的工具链/运行环境（如 Chrome、Vite、Node.js）
+2. 加载 plugins/source-registry.md，从 toolchain_releases 技术域获取版本更新文档的 T1 域名
+3. 查找官方版本更新文档：
+   - Chrome: chromestatus.com（Chrome Platform Status）、developer.chrome.com/blog
+   - Vite: vitejs.dev/blog、GitHub Releases
+   - Node.js: nodejs.org/en/blog
+   - Webpack: GitHub Releases
+4. 确认：
+   - 该瓶颈是否在某个版本中被修复/优化？
+   - 如果是，记录修复版本号和对应的 Release Note 链接
+   - 如果否，标记为"当前版本仍存在"
+5. 在产出中标注版本验证结果
+```
+
+**为什么必须做版本验证**：
+- 避免将已解决的旧问题当作当前瓶颈
+- 为读者提供明确的版本升级建议
+- 版本更新文档是最容易找到的高质量 T1 来源
+
+#### 3.4 热点分级
 
 对每个分类下的瓶颈，按以下标准评定优先级：
 
@@ -130,13 +164,15 @@
 - **触发概率**：真实生产环境是否会遇到
 - **影响程度**：对功能/性能/体验的破坏力
 - **隐蔽性**：开发者在开发阶段能否自然发现
+- **版本因素**：如果瓶颈已在新版本中修复，优先级可降级（但仍需记录，因为用户可能使用旧版本）
 
-#### 3.4 产出规则
+#### 3.5 产出规则
 
 - **P0/P1 瓶颈必须作为独立条目出现在 bottlenecks 列表中**，每个条目包含 name + trigger + symptom
 - P2/P3 可合并或降级为文字描述
 - bottlenecks 列表的条目数不设上限（以实际为准，不凑数）
 - 每个分类至少有一个 P0/P1 条目（如果该分类存在 P0/P1 瓶颈的话）
+- **版本强相关的瓶颈必须标注版本信息**（见下方字段要求）
 
 ### Step 4：工具链
 
@@ -190,15 +226,27 @@
   "bottlenecks": [
     {
       "name": "强制同步布局",
+      "category": "时序竞争",
+      "priority": "P0",
       "trigger": "读 offsetHeight 后立即写 style",
-      "symptom": "帧率骤降到 15fps"
+      "symptom": "帧率骤降到 15fps",
+      "version_sensitive": "none",
+      "affected_tool": null,
+      "affected_versions": null,
+      "fixed_version": null,
+      "fixed_source": null
     },
     {
       "name": "布局抖动",
       "category": "时序竞争",
       "priority": "P0",
       "trigger": "循环中交替读写布局属性",
-      "symptom": "单帧 Layout 次数暴增"
+      "symptom": "单帧 Layout 次数暴增",
+      "version_sensitive": "strong",
+      "affected_tool": "Chrome",
+      "affected_versions": "< 85",
+      "fixed_version": "85",
+      "fixed_source": "https://chromestatus.com/roadmap"
     }
   ],
 
@@ -225,7 +273,7 @@
 | 字段 | 提取来源 | 约束 |
 |------|---------|------|
 | `mechanism_summary` | 主文件「核心机制」章节 | 1-3 句，≤200 字 |
-| `bottlenecks` | 主文件「工程瓶颈」表格 | 每项保留 name+category+priority+trigger+symptom |
+| `bottlenecks` | 主文件「工程瓶颈」表格 | 每项保留 name+category+priority+trigger+symptom+版本相关字段（version_sensitive/affected_tool/affected_versions/fixed_version/fixed_source） |
 | `tradeoffs` | 主文件「典型权衡」表格 | 每项保留完整四列（dimension + option_a + option_b + suggestion） |
 | `experiment_code` | 主文件「最小验证实验」 | deep 模式提取核心代码片段，非 deep 填 `null` |
 | `references` | 主文件「参考资料」 | 提取 tier+url+title，按 Tier 排序 |
@@ -336,7 +384,9 @@ spawn 能力研究 agent 时，task 按以下模板构造：
 
 格式要求：
 - 核心机制（基于官方文档，引用具体 API）
-- 工程瓶颈（按 Step 3 的分类→分级流程产出，P0/P1 必须覆盖，条目数以实际为准）
+- 工程瓶颈（按 Step 3 的分类→分级→版本验证流程产出，P0/P1 必须覆盖，条目数以实际为准）
+  - 对于版本强相关的瓶颈，必须查找官方版本更新文档进行验证
+  - 记录受影响版本范围、修复版本、版本验证来源
 - 调试工具（官方推荐的工具链）
 - 典型权衡（2-3 个，从实际案例提炼）
 - 最小验证实验（可运行的 HTML/JS）
@@ -347,7 +397,7 @@ spawn 能力研究 agent 时，task 按以下模板构造：
 
 从主文件中提取以下字段（JSON 格式）：
 - mechanism_summary：1-3 句核心机制摘要（≤200 字）
-- bottlenecks：每项只保留 name + trigger + symptom
+- bottlenecks：每项保留 name + category + priority + trigger + symptom + 版本相关字段（version_sensitive/affected_tool/affected_versions/fixed_version/fixed_source）
 - tradeoffs：每项保留 dimension + option_a + option_b + suggestion
 - experiment_code：deep 模式提取核心代码，非 deep 填 null
 - references：提取 tier + url + title

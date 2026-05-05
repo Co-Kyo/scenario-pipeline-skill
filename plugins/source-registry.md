@@ -140,6 +140,26 @@ source_domain_map:
       - domain: developer.mozilla.org
         name: "MDN JavaScript 文档"
         search_hint: "site:developer.mozilla.org"
+
+  toolchain_releases:             # 工具链版本更新（用于瓶颈版本验证）
+    description: "Chrome、Vite、Node.js、Webpack 等工具链的版本更新日志和 Release Notes"
+    t1:
+      - domain: chromestatus.com
+        name: "Chrome Platform Status（Chrome 版本特性追踪）"
+        search_hint: "site:chromestatus.com"
+      - domain: developer.chrome.com
+        name: "Chrome Release Blog"
+        search_hint: "site:developer.chrome.com blog"
+      - domain: vitejs.dev
+        name: "Vite 官方博客（版本发布公告）"
+        search_hint: "site:vitejs.dev blog"
+      - domain: nodejs.org
+        name: "Node.js 官方博客（版本发布公告）"
+        search_hint: "site:nodejs.org en/blog"
+    t2:
+      - domain: github.com
+        name: "GitHub Releases（各工具链的 Release Notes）"
+        search_hint: "site:github.com releases"
 ```
 
 ---
@@ -163,6 +183,7 @@ source_domain_map:
 | Web Worker、Service Worker、SharedWorker | browser_api + chrome_v8 |
 | 图片优化、WebP、AVIF、srcset | web_performance + http_protocol |
 | 内存泄漏、GC、V8 垃圾回收 | chrome_v8 |
+| 版本更新、Release Notes、Changelog、版本验证 | toolchain_releases |
 
 **多域匹配规则：** 如果一个能力匹配多个技术域，取所有匹配域的 T1 域名合并搜索。
 

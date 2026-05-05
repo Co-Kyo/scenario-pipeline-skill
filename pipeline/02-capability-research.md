@@ -82,7 +82,7 @@
 {
   "id", "name", "tech_layer", "fanout", "coupling", "strategic_value",
   "mechanism_summary",   // → overview / learning-ladder 用
-  "bottlenecks",         // → edge-cases / learning-ladder 用
+  "bottlenecks",         // → edge-cases / learning-ladder 用（含 category/priority/版本相关字段）
   "tradeoffs",           // → trade-offs / learning-ladder 用
   "experiment_code",     // → experiment / learning-ladder 用
   "references"           // → references / learning-ladder 用

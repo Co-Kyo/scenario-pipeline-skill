@@ -26,7 +26,7 @@
 | 目标文件 | 从 summary.json 提取 | 不提取 |
 |---------|---------------------|--------|
 | overview | `mechanism_summary` | bottlenecks、tradeoffs、experiment_code |
-| edge-cases | `bottlenecks`（name+category+priority+trigger+symptom） | mechanism_summary、experiment_code |
+| edge-cases | `bottlenecks`（name+category+priority+trigger+symptom+版本相关字段） | mechanism_summary、experiment_code |
 | trade-offs | `tradeoffs`（完整四列） | mechanism_summary、experiment_code |
 | experiment | `experiment_code` | mechanism_summary、bottlenecks |
 | references | `references`（tier+url+title） | 正文内容 |
@@ -48,8 +48,11 @@
 ### <能力ID>-<能力名称>
 机制：<mechanism_summary>
 瓶颈：
-  - B1 <瓶颈名>：<触发条件> → <表现症状>
-  - B2 <瓶颈名>：<触发条件> → <表现症状>
+  - B1 <瓶颈名>（<分类>，<优先级>）：<触发条件> → <表现症状>
+    - 版本相关性：<强相关/弱相关/无关>
+    - [如强相关] 涉及工具：<工具名>，受影响版本：<版本范围>，修复版本：<版本号>（来源：<URL>）
+  - B2 <瓶颈名>（<分类>，<优先级>）：<触发条件> → <表现症状>
+    - 版本相关性：<强相关/弱相关/无关>
 权衡：
   - <维度>：<方案A> vs <方案B>，建议 <选择建议>
 实验代码：<experiment_code 或 "无（非 deep 模式）">
