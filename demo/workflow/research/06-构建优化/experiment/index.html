@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>构建优化实验 — Webpack/Vite 产物体积与加载速度</title>
+<style>
+/* ========== 基础重置与变量 ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --surface2: #242836;
+  --border: #2e3348;
+  --text: #e1e4ed;
+  --text-dim: #8b8fa7;
+  --accent: #6c8cff;
+  --accent2: #a78bfa;
+  --green: #34d399;
+  --red: #f87171;
+  --orange: #fb923c;
+  --yellow: #fbbf24;
+  --cyan: #22d3ee;
+  --radius: 10px;
+  --mono: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+}
+html { font-size: 15px; scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, 'Segoe UI', 'Noto Sans SC', sans-serif;
+  background: var(--bg); color: var(--text);
+  line-height: 1.7; padding: 0 0 80px;
+}
+
+/* ========== 导航 ========== */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(15,17,23,.92); backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 4px;
+  padding: 0 24px; height: 52px; overflow-x: auto;
+}
+nav a {
+  color: var(--text-dim); text-decoration: none; font-size: .85rem;
+  padding: 6px 14px; border-radius: 6px; white-space: nowrap;
+  transition: all .2s;
+}
+nav a:hover, nav a.active { color: var(--text); background: var(--surface2); }
+nav .title { font-weight: 700; color: var(--accent); margin-right: 16px; font-size: .95rem; }
+
+/* ========== 通用容器 ========== */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+section { margin-top: 48px; }
+h2 {
+  font-size: 1.5rem; font-weight: 700; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 10px;
+}
+h2 .badge {
+  font-size: .7rem; padding: 2px 8px; border-radius: 99px;
+  background: var(--accent); color: #fff; font-weight: 600;
+}
+.subtitle { color: var(--text-dim); font-size: .92rem; margin-bottom: 24px; }
+
+/* ========== 面板 ========== */
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+.panel-header {
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+  font-weight: 600; font-size: .9rem;
+  display: flex; align-items: center; gap: 8px;
+}
+.panel-body { padding: 20px; }
+
+/* ========== 按钮 ========== */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 18px; border-radius: 7px; border: none;
+  font-size: .85rem; font-weight: 600; cursor: pointer;
+  transition: all .15s;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
+.btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: var(--accent); }
+.btn-danger { background: var(--red); color: #fff; }
+.btn-success { background: var(--green); color: #000; }
+.btn:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+/* ========== 代码块 ========== */
+.code-block {
+  background: #0d0f14; border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px 20px;
+  font-family: var(--mono); font-size: .82rem; line-height: 1.9;
+  overflow-x: auto; white-space: pre; color: #c9cdd9;
+}
+.code-block .kw { color: var(--accent2); }       /* 关键字 */
+.code-block .fn { color: var(--accent); }        /* 函数名 */
+.code-block .str { color: var(--green); }        /* 字符串 */
+.code-block .cmt { color: #555a73; }             /* 注释 */
+.code-block .dead { color: #3a3d4d; text-decoration: line-through; } /* tree-shaken */
+.code-block .keep { color: var(--green); }       /* tree-shaking 保留 */
+.code-block .num { color: var(--orange); }
+
+/* ========== 网格布局 ========== */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+@media (max-width: 800px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+/* ========== 模块可视化 ========== */
+.module-box {
+  border: 2px solid var(--border); border-radius: 8px;
+  padding: 14px 16px; font-family: var(--mono); font-size: .8rem;
+  position: relative; transition: all .3s;
+}
+.module-box.esm { border-color: var(--green); background: rgba(52,211,153,.06); }
+.module-box.cjs { border-color: var(--orange); background: rgba(251,146,60,.06); }
+.module-box .tag {
+  position: absolute; top: -10px; left: 12px;
+  font-size: .65rem; padding: 1px 8px; border-radius: 99px;
+  font-weight: 700;
+}
+.module-box.esm .tag { background: var(--green); color: #000; }
+.module-box.cjs .tag { background: var(--orange); color: #000; }
+
+/* ========== Chunk 可视化 ========== */
+.chunk-bar {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 16px; border-radius: 8px;
+  background: var(--surface2); margin-bottom: 8px;
+  transition: all .3s;
+}
+.chunk-bar .name { font-family: var(--mono); font-size: .82rem; min-width: 160px; }
+.chunk-bar .bar-wrap {
+  flex: 1; height: 22px; background: #0d0f14;
+  border-radius: 4px; overflow: hidden; position: relative;
+}
+.chunk-bar .bar-fill {
+  height: 100%; border-radius: 4px; transition: width .6s cubic-bezier(.4,0,.2,1);
+  display: flex; align-items: center; justify-content: flex-end; padding-right: 8px;
+  font-size: .7rem; font-weight: 700; color: #000;
+}
+.chunk-bar .size-label { font-family: var(--mono); font-size: .78rem; color: var(--text-dim); min-width: 60px; text-align: right; }
+
+/* ========== 瀑布图 ========== */
+.waterfall { position: relative; height: 200px; margin: 16px 0; }
+.waterfall-bar {
+  position: absolute; height: 28px; border-radius: 4px;
+  display: flex; align-items: center; padding: 0 10px;
+  font-size: .72rem; font-weight: 600; color: #000;
+  transition: all .5s cubic-bezier(.4,0,.2,1);
+  white-space: nowrap;
+}
+.waterfall-axis {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 24px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between;
+  font-size: .68rem; color: var(--text-dim); padding: 4px 0;
+}
+
+/* ========== Tree Shaking 可视化 ========== */
+.tree-container { display: flex; gap: 24px; flex-wrap: wrap; }
+.tree-col { flex: 1; min-width: 300px; }
+.tree-col h3 { font-size: .95rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.export-line {
+  font-family: var(--mono); font-size: .82rem; padding: 6px 12px;
+  border-radius: 4px; margin-bottom: 4px; transition: all .3s;
+  display: flex; align-items: center; gap: 8px;
+}
+.export-line.used { background: rgba(52,211,153,.1); color: var(--green); }
+.export-line.unused { background: rgba(248,113,113,.08); color: var(--red); }
+.export-line.unused::before { content: '✕'; font-weight: 700; }
+.export-line.used::before { content: '✓'; font-weight: 700; }
+
+/* ========== 缓存网格 ========== */
+.cache-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px; margin: 16px 0;
+}
+.cache-cell {
+  padding: 12px; border-radius: 8px; text-align: center;
+  font-family: var(--mono); font-size: .75rem; transition: all .4s;
+  border: 2px solid transparent;
+}
+.cache-cell.hit { background: rgba(52,211,153,.1); border-color: var(--green); }
+.cache-cell.miss { background: rgba(248,113,113,.1); border-color: var(--red); }
+.cache-cell .cell-name { font-weight: 700; margin-bottom: 4px; }
+.cache-cell .cell-hash { color: var(--text-dim); font-size: .68rem; word-break: break-all; }
+.cache-cell .cell-status { margin-top: 6px; font-weight: 700; font-size: .78rem; }
+
+/* ========== 统计卡片 ========== */
+.stat-cards { display: flex; gap: 14px; flex-wrap: wrap; margin: 16px 0; }
+.stat-card {
+  flex: 1; min-width: 140px;
+  background: var(--surface2); border-radius: 8px; padding: 16px;
+  text-align: center;
+}
+.stat-card .val { font-size: 1.8rem; font-weight: 800; font-family: var(--mono); }
+.stat-card .label { font-size: .75rem; color: var(--text-dim); margin-top: 4px; }
+
+/* ========== 检查点 ========== */
+.checkpoint {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px 18px; margin-bottom: 10px;
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.checkpoint .icon { font-size: 1.2rem; flex-shrink: 0; margin-top: 2px; }
+.checkpoint .cp-body h4 { font-size: .88rem; margin-bottom: 4px; }
+.checkpoint .cp-body p { font-size: .82rem; color: var(--text-dim); }
+.checkpoint.passed { border-color: var(--green); }
+.checkpoint.passed .icon { color: var(--green); }
+.checkpoint.pending { border-color: var(--border); opacity: .6; }
+
+/* ========== 日志面板 ========== */
+.log-panel {
+  background: #0a0c10; border: 1px solid var(--border);
+  border-radius: 8px; padding: 14px; max-height: 220px;
+  overflow-y: auto; font-family: var(--mono); font-size: .78rem;
+  line-height: 1.8;
+}
+.log-panel .log-line { padding: 2px 0; }
+.log-panel .log-line.info { color: var(--accent); }
+.log-panel .log-line.success { color: var(--green); }
+.log-panel .log-line.warn { color: var(--yellow); }
+.log-panel .log-line.error { color: var(--red); }
+.log-panel .log-line .ts { color: var(--text-dim); margin-right: 8px; }
+
+/* ========== 动画 ========== */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+.animate-in { animation: fadeIn .4s ease both; }
+.pulse { animation: pulse 1.5s infinite; }
+</style>
+</head>
+<body>
+
+<!-- ==================== 导航 ==================== -->
+<nav>
+  <span class="title">⚡ 构建优化实验</span>
+  <a href="#sec-esm">ESM vs CJS</a>
+  <a href="#sec-split">Code Splitting</a>
+  <a href="#sec-tree">Tree Shaking</a>
+  <a href="#sec-cache">缓存策略</a>
+  <a href="#sec-report">产物分析</a>
+  <a href="#sec-cp">检查点</a>
+</nav>
+
+<div class="container">
+
+<!-- ==================== 1. ESM vs CJS ==================== -->
+<section id="sec-esm" class="animate-in">
+  <h2>📦 模块系统对比 <span class="badge">A28 ESM vs CJS</span></h2>
+  <p class="subtitle">ESM 的静态结构是 Tree Shaking 的前提。CJS 的动态 require 无法在构建时确定依赖。</p>
+
+  <div class="grid-2">
+    <!-- ESM 模块 -->
+    <div class="panel">
+      <div class="panel-header">🟢 ESM 模块 — <code>math.mjs</code></div>
+      <div class="panel-body">
+        <div class="code-block" id="esm-code"><span class="cmt">// ESM：静态声明，构建时可分析</span>
+<span class="kw">export</span> <span class="kw">function</span> <span class="fn">add</span>(a, b) { <span class="kw">return</span> a + b; }
+<span class="kw">export</span> <span class="kw">function</span> <span class="fn">multiply</span>(a, b) { <span class="kw">return</span> a * b; }
+<span class="kw">export</span> <span class="kw">function</span> <span class="fn">divide</span>(a, b) { <span class="kw">return</span> a / b; }
+
+<span class="cmt">// 导入侧 — 静态绑定</span>
+<span class="kw">import</span> { add } <span class="kw">from</span> <span class="str">'./math.mjs'</span>;
+console.<span class="fn">log</span>(<span class="fn">add</span>(<span class="num">1</span>, <span class="num">2</span>));</div>
+        <div style="margin-top:14px">
+          <button class="btn btn-primary" onclick="parseESM()">🔍 静态分析 ESM</button>
+          <button class="btn btn-secondary" onclick="resetESM()">重置</button>
+        </div>
+        <div id="esm-result" style="margin-top:14px"></div>
+      </div>
+    </div>
+
+    <!-- CJS 模块 -->
+    <div class="panel">
+      <div class="panel-header">🟠 CJS 模块 — <code>math.cjs</code></div>
+      <div class="panel-body">
+        <div class="code-block" id="cjs-code"><span class="cmt">// CJS：动态执行，构建时无法确定</span>
+<span class="kw">const</span> math = {};
+
+math.<span class="fn">add</span> = <span class="kw">function</span>(a, b) { <span class="kw">return</span> a + b; };
+math.<span class="fn">multiply</span> = <span class="kw">function</span>(a, b) { <span class="kw">return</span> a * b; };
+math.<span class="fn">divide</span> = <span class="kw">function</span>(a, b) { <span class="kw">return</span> a / b; };
+
+module.<span class="fn">exports</span> = math;
+
+<span class="cmt">// 导入侧 — 动态执行</span>
+<span class="kw">const</span> m = <span class="fn">require</span>(<span class="str">'./math.cjs'</span>);
+console.<span class="fn">log</span>(m.<span class="fn">add</span>(<span class="num">1</span>, <span class="num">2</span>));</div>
+        <div style="margin-top:14px">
+          <button class="btn btn-primary" onclick="parseCJS()">🔍 尝试分析 CJS</button>
+          <button class="btn btn-secondary" onclick="resetCJS()">重置</button>
+        </div>
+        <div id="cjs-result" style="margin-top:14px"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ESM 导出列表可视化 -->
+  <div class="panel" style="margin-top:20px">
+    <div class="panel-header">📊 ESM 导出解析结果（模拟构建器视角）</div>
+    <div class="panel-body">
+      <div id="esm-exports" style="display:flex;gap:12px;flex-wrap:wrap"></div>
+      <div id="esm-analysis" style="margin-top:16px"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 2. Code Splitting ==================== -->
+<section id="sec-split" class="animate-in">
+  <h2>✂️ Code Splitting <span class="badge">A10 动态导入</span></h2>
+  <p class="subtitle">通过动态 <code>import()</code> 将代码拆分为多个 chunk，实现按需加载、减少首屏体积。</p>
+
+  <!-- 模拟应用 -->
+  <div class="panel">
+    <div class="panel-header">🎮 模拟应用 — 点击功能模块触发懒加载</div>
+    <div class="panel-body">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px">
+        <button class="btn btn-primary" onclick="loadChunk('home')">🏠 首页</button>
+        <button class="btn btn-secondary" onclick="loadChunk('dashboard')">📊 仪表盘</button>
+        <button class="btn btn-secondary" onclick="loadChunk('editor')">📝 编辑器</button>
+        <button class="btn btn-secondary" onclick="loadChunk('settings')">⚙️ 设置</button>
+        <button class="btn btn-secondary" onclick="loadChunk('analytics')">📈 分析</button>
+        <button class="btn btn-danger" onclick="resetChunks()">重置</button>
+      </div>
+
+      <!-- 加载日志 -->
+      <div class="log-panel" id="chunk-log">
+        <div class="log-line info"><span class="ts">[00:00.000]</span>等待用户操作…</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:20px">
+    <!-- Chunk 体积条 -->
+    <div class="panel">
+      <div class="panel-header">📦 Chunk 体积分布</div>
+      <div class="panel-body" id="chunk-bars">
+        <!-- JS 动态生成 -->
+      </div>
+    </div>
+
+    <!-- 瀑布图 -->
+    <div class="panel">
+      <div class="panel-header">🌊 加载瀑布图</div>
+      <div class="panel-body">
+        <div id="waterfall" class="waterfall"></div>
+        <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--text-dim);margin-top:4px">
+          <span>0ms</span><span>200ms</span><span>400ms</span><span>600ms</span><span>800ms</span><span>1000ms</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 首屏 vs 全量 -->
+  <div class="stat-cards" id="split-stats">
+    <div class="stat-card">
+      <div class="val" style="color:var(--accent)">0 KB</div>
+      <div class="label">首屏已加载</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" style="color:var(--text-dim)">0 KB</div>
+      <div class="label">总可用体积</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" style="color:var(--green)">0%</div>
+      <div class="label">首屏占比</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" style="color:var(--orange)">0</div>
+      <div class="label">已加载 chunk 数</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 3. Tree Shaking ==================== -->
+<section id="sec-tree" class="animate-in">
+  <h2>🌳 Tree Shaking <span class="badge">A11 静态分析</span></h2>
+  <p class="subtitle">基于 ESM 的静态 <code>import/export</code>，构建器可以识别并删除未被引用的导出。</p>
+
+  <div class="panel">
+    <div class="panel-header">🎯 选择要使用的导出，观察 Tree Shaking 效果</div>
+    <div class="panel-body">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+        <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--surface2);border-radius:6px;cursor:pointer;font-size:.85rem">
+          <input type="checkbox" checked class="tree-cb" value="formatDate"> formatDate
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--surface2);border-radius:6px;cursor:pointer;font-size:.85rem">
+          <input type="checkbox" class="tree-cb" value="formatCurrency"> formatCurrency
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--surface2);border-radius:6px;cursor:pointer;font-size:.85rem">
+          <input type="checkbox" class="tree-cb" value="validateEmail"> validateEmail
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--surface2);border-radius:6px;cursor:pointer;font-size:.85rem">
+          <input type="checkbox" class="tree-cb" value="debounce"> debounce
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--surface2);border-radius:6px;cursor:pointer;font-size:.85rem">
+          <input type="checkbox" class="tree-cb" value="throttle"> throttle
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;padding:6px 12px;background:var(--surface2);border-radius:6px;cursor:pointer;font-size:.85rem">
+          <input type="checkbox" class="tree-cb" value="deepClone"> deepClone
+        </label>
+      </div>
+      <button class="btn btn-primary" onclick="runTreeShake()">🪓 执行 Tree Shaking</button>
+      <button class="btn btn-secondary" onclick="resetTreeShake()">重置</button>
+    </div>
+  </div>
+
+  <div class="tree-container" style="margin-top:20px">
+    <!-- Shake 前 -->
+    <div class="panel tree-col">
+      <div class="panel-header">📄 Shake 前 — utils.js 原始导出</div>
+      <div class="panel-body" id="tree-before"></div>
+    </div>
+    <!-- Shake 后 -->
+    <div class="panel tree-col">
+      <div class="panel-header">✂️ Shake 后 — 产物保留内容</div>
+      <div class="panel-body" id="tree-after"></div>
+    </div>
+  </div>
+
+  <!-- Tree Shaking 统计 -->
+  <div class="stat-cards" id="tree-stats">
+    <div class="stat-card">
+      <div class="val" style="color:var(--accent)">6</div>
+      <div class="label">原始导出数</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" style="color:var(--green)" id="tree-kept">1</div>
+      <div class="label">保留导出数</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" style="color:var(--red)" id="tree-removed">5</div>
+      <div class="label">移除导出数</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" style="color:var(--yellow)" id="tree-pct">83%</div>
+      <div class="label">代码消除率</div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 4. 缓存策略 ==================== -->
+<section id="sec-cache" class="animate-in">
+  <h2>💾 持久化缓存 <span class="badge">A29 contenthash</span></h2>
+  <p class="subtitle">contenthash 策略：模块内容不变 → hash 不变 → 浏览器命中缓存，无需重新下载。</p>
+
+  <div class="panel">
+    <div class="panel-header">🔧 修改模块内容，观察 hash 传播</div>
+    <div class="panel-body">
+      <p style="font-size:.85rem;color:var(--text-dim);margin-bottom:16px">点击下方模块模拟"代码变更"，观察哪些 chunk 的 contenthash 会随之改变：</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px" id="cache-module-btns"></div>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="simulateChange()">📝 模拟修改选中模块</button>
+        <button class="btn btn-secondary" onclick="resetCache()">重置</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:20px">
+    <!-- Chunk 列表 -->
+    <div class="panel">
+      <div class="panel-header">📦 构建产物 chunk 列表</div>
+      <div class="panel-body">
+        <div class="cache-grid" id="cache-grid"></div>
+      </div>
+    </div>
+
+    <!-- 缓存命中分析 -->
+    <div class="panel">
+      <div class="panel-header">📊 缓存命中分析</div>
+      <div class="panel-body" id="cache-analysis">
+        <p style="color:var(--text-dim);font-size:.85rem">尚未进行变更模拟…</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hash 策略对比 -->
+  <div class="panel" style="margin-top:20px">
+    <div class="panel-header">⚖️ Hash 策略对比</div>
+    <div class="panel-body">
+      <div class="grid-3">
+        <div style="padding:12px;background:var(--surface2);border-radius:8px">
+          <h4 style="font-size:.85rem;color:var(--red);margin-bottom:8px">❌ [hash] 全局</h4>
+          <p style="font-size:.78rem;color:var(--text-dim)">任意文件改动 → 所有产物 hash 变化 → 缓存全部失效</p>
+        </div>
+        <div style="padding:12px;background:var(--surface2);border-radius:8px">
+          <h4 style="font-size:.85rem;color:var(--yellow);margin-bottom:8px">⚠️ [chunkhash]</h4>
+          <p style="font-size:.78rem;color:var(--text-dim)">chunk 内容变化 → 该 chunk hash 变化，但可能影响依赖链</p>
+        </div>
+        <div style="padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--green)">
+          <h4 style="font-size:.85rem;color:var(--green);margin-bottom:8px">✅ [contenthash]</h4>
+          <p style="font-size:.78rem;color:var(--text-dim)">仅内容变化的 chunk hash 改变 → 最大化缓存命中</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 5. 产物分析面板 ==================== -->
+<section id="sec-report" class="animate-in">
+  <h2>📊 构建产物分析面板</h2>
+  <p class="subtitle">汇总各模块优化效果，生成综合构建报告。</p>
+
+  <div class="panel">
+    <div class="panel-header">📋 构建报告</div>
+    <div class="panel-body">
+      <div class="stat-cards" id="report-cards">
+        <div class="stat-card">
+          <div class="val" style="color:var(--accent)" id="r-total">248 KB</div>
+          <div class="label">未优化总产物</div>
+        </div>
+        <div class="stat-card">
+          <div class="val" style="color:var(--green)" id="r-optimized">—</div>
+          <div class="label">优化后产物</div>
+        </div>
+        <div class="stat-card">
+          <div class="val" style="color:var(--orange)" id="r-chunks">5</div>
+          <div class="label">Chunk 数</div>
+        </div>
+        <div class="stat-card">
+          <div class="val" style="color:var(--cyan)" id="r-cache">—</div>
+          <div class="label">缓存命中率</div>
+        </div>
+      </div>
+
+      <button class="btn btn-success" onclick="generateReport()" style="margin-bottom:16px">🔄 生成报告</button>
+
+      <div id="report-detail"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 6. 验证检查点 ==================== -->
+<section id="sec-cp" class="animate-in">
+  <h2>✅ 验证检查点</h2>
+  <p class="subtitle">完成实验后，确认以下检查点全部通过。</p>
+
+  <div id="checkpoints">
+    <div class="checkpoint pending" id="cp-1">
+      <span class="icon">⏳</span>
+      <div class="cp-body">
+        <h4>CP-1：ESM 静态分析</h4>
+        <p>ESM 的 <code>export</code> 语句在解析阶段即可确定导出列表，无需执行代码。</p>
+      </div>
+    </div>
+    <div class="checkpoint pending" id="cp-2">
+      <span class="icon">⏳</span>
+      <div class="cp-body">
+        <h4>CP-2：Code Splitting 按需加载</h4>
+        <p>点击非首屏功能时，只有对应 chunk 被请求加载，首屏体积保持不变。</p>
+      </div>
+    </div>
+    <div class="checkpoint pending" id="cp-3">
+      <span class="icon">⏳</span>
+      <div class="cp-body">
+        <h4>CP-3：Tree Shaking 移除未引用导出</h4>
+        <p>取消勾选某些导出后执行 Tree Shaking，未使用的导出被标记为已删除。</p>
+      </div>
+    </div>
+    <div class="checkpoint pending" id="cp-4">
+      <span class="icon">⏳</span>
+      <div class="cp-body">
+        <h4>CP-4：contenthash 变化范围正确</h4>
+        <p>仅修改某个模块时，只有该模块及其依赖链的 chunk hash 发生变化。</p>
+      </div>
+    </div>
+    <div class="checkpoint pending" id="cp-5">
+      <span class="icon">⏳</span>
+      <div class="cp-body">
+        <h4>CP-5：产物分析面板数据自洽</h4>
+        <p>面板中显示的体积、chunk 数量、缓存命中率数据相互一致。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /.container -->
+
+<script>
+/* ==============================================================
+   全局状态与工具函数
+   ============================================================== */
+const PASS = 'passed';
+const PENDING = 'pending';
+
+/** 更新检查点状态 */
+function setCP(id, status) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.className = 'checkpoint ' + status;
+  el.querySelector('.icon').textContent = status === PASS ? '✅' : '⏳';
+}
+
+/** 获取当前时间戳字符串 */
+function ts() {
+  const d = new Date();
+  return `${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}.${String(d.getMilliseconds()).padStart(3,'0')}`;
+}
+
+/** 向日志面板追加一行 */
+function addLog(panelId, msg, cls = 'info') {
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  const line = document.createElement('div');
+  line.className = `log-line ${cls}`;
+  line.innerHTML = `<span class="ts">[${ts()}]</span>${msg}`;
+  panel.appendChild(line);
+  panel.scrollTop = panel.scrollHeight;
+}
+
+/* ==============================================================
+   1. ESM vs CJS 模块系统演示
+   ============================================================== */
+
+// ESM 导出定义（模拟构建器解析到的结构）
+const ESM_EXPORTS = [
+  { name: 'add',      params: '(a, b)',      body: 'return a + b',   size: 28 },
+  { name: 'multiply', params: '(a, b)',      body: 'return a * b',   size: 32 },
+  { name: 'divide',   params: '(a, b)',      body: 'return a / b',   size: 30 },
+];
+
+// CJS 导出 — 构建器无法静态确定
+const CJS_DYNAMIC_INFO = [
+  'require() 路径可能是变量：`require(path)`',
+  'module.exports 可能在运行时被修改',
+  '条件导出：`if (env) module.exports.a = fn`',
+  '无法确定哪些导出会被使用',
+];
+
+function parseESM() {
+  const result = document.getElementById('esm-result');
+  result.innerHTML = `
+    <div style="background:rgba(52,211,153,.08);border:1px solid var(--green);border-radius:8px;padding:14px;font-size:.85rem">
+      <strong style="color:var(--green)">✅ 静态分析成功</strong>
+      <p style="margin-top:6px;color:var(--text-dim)">在 <strong>解析阶段</strong>（不执行代码），构建器确定了 3 个命名导出：</p>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        ${ESM_EXPORTS.map(e => `<code style="background:var(--surface2);padding:4px 10px;border-radius:4px;font-size:.8rem">${e.name}</code>`).join('')}
+      </div>
+      <p style="margin-top:10px;color:var(--text-dim);font-size:.82rem">→ 这意味着构建器知道每个导出的边界，可以安全地进行 <strong>Tree Shaking</strong>。</p>
+    </div>`;
+
+  // 可视化导出列表
+  const exportsEl = document.getElementById('esm-exports');
+  exportsEl.innerHTML = ESM_EXPORTS.map((e, i) => `
+    <div class="module-box esm animate-in" style="animation-delay:${i * 100}ms;min-width:180px">
+      <span class="tag">export</span>
+      <div style="font-weight:700;margin-bottom:4px">${e.name}${e.params}</div>
+      <div style="color:var(--text-dim);font-size:.75rem">{ ${e.body} }</div>
+      <div style="color:var(--text-dim);font-size:.7rem;margin-top:4px">~${e.size} bytes</div>
+    </div>
+  `).join('');
+
+  const analysisEl = document.getElementById('esm-analysis');
+  analysisEl.innerHTML = `
+    <div style="background:var(--surface2);border-radius:8px;padding:14px;font-size:.82rem">
+      <strong>分析结论：</strong> ESM 的 <code>import { add } from './math.mjs'</code> 是静态声明。
+      构建器可以在 <strong>不执行任何代码</strong> 的情况下，精确知道哪些导出被使用、哪些未被引用。
+      这是 Tree Shaking 的 <strong>根本前提</strong>。
+    </div>`;
+
+  setCP('cp-1', PASS);
+}
+
+function resetESM() {
+  document.getElementById('esm-result').innerHTML = '';
+  document.getElementById('esm-exports').innerHTML = '';
+  document.getElementById('esm-analysis').innerHTML = '';
+}
+
+function parseCJS() {
+  const result = document.getElementById('cjs-result');
+  result.innerHTML = `
+    <div style="background:rgba(251,146,60,.08);border:1px solid var(--orange);border-radius:8px;padding:14px;font-size:.85rem">
+      <strong style="color:var(--orange)">⚠️ 静态分析失败</strong>
+      <p style="margin-top:6px;color:var(--text-dim)">构建器无法确定 <code>require('./math.cjs')</code> 返回的对象包含哪些属性：</p>
+      <ul style="margin-top:10px;padding-left:20px;color:var(--text-dim);font-size:.82rem">
+        ${CJS_DYNAMIC_INFO.map(s => `<li style="margin-bottom:4px">${s}</li>`).join('')}
+      </ul>
+      <p style="margin-top:10px;color:var(--text-dim);font-size:.82rem">→ 构建器必须 <strong>保守地保留整个模块</strong>，无法安全删除任何代码。</p>
+    </div>`;
+}
+
+function resetCJS() {
+  document.getElementById('cjs-result').innerHTML = '';
+}
+
+/* ==============================================================
+   2. Code Splitting 演示
+   ============================================================== */
+
+// 模拟 chunk 定义
+const CHUNKS = {
+  home:      { name: 'chunk-home.js',      size: 42,  color: 'var(--accent)',  loadTime: 80,  isEntry: true },
+  vendor:    { name: 'chunk-vendor.js',    size: 68,  color: 'var(--accent2)', loadTime: 120, isEntry: true },
+  dashboard: { name: 'chunk-dashboard.js', size: 35,  color: 'var(--green)',   loadTime: 90 },
+  editor:    { name: 'chunk-editor.js',    size: 52,  color: 'var(--cyan)',    loadTime: 110 },
+  settings:  { name: 'chunk-settings.js',  size: 18,  color: 'var(--yellow)',  loadTime: 50 },
+  analytics: { name: 'chunk-analytics.js', size: 45,  color: 'var(--orange)',  loadTime: 100 },
+};
+
+let loadedChunks = new Set(['home', 'vendor']);
+let loadTimeline = []; // { chunk, start, end }
+
+function renderChunkBars() {
+  const container = document.getElementById('chunk-bars');
+  const maxSize = Math.max(...Object.values(CHUNKS).map(c => c.size));
+  container.innerHTML = Object.entries(CHUNKS).map(([key, c]) => {
+    const loaded = loadedChunks.has(key);
+    const pct = (c.size / maxSize * 100).toFixed(0);
+    return `
+      <div class="chunk-bar" style="opacity:${loaded ? 1 : .4}">
+        <span class="name">${c.name}</span>
+        <div class="bar-wrap">
+          <div class="bar-fill" style="width:${pct}%;background:${c.color}">${c.size} KB</div>
+        </div>
+        <span class="size-label">${loaded ? '✅' : '⏳'}</span>
+      </div>`;
+  }).join('');
+}
+
+function renderWaterfall() {
+  const container = document.getElementById('waterfall');
+  if (loadTimeline.length === 0) {
+    container.innerHTML = '<p style="color:var(--text-dim);font-size:.85rem;padding:20px">等待加载…</p>';
+    return;
+  }
+  const maxTime = Math.max(...loadTimeline.map(t => t.end)) || 1000;
+  const width = container.offsetWidth || 500;
+  container.innerHTML = loadTimeline.map((t, i) => {
+    const left = (t.start / maxTime * 100).toFixed(1);
+    const w = ((t.end - t.start) / maxTime * 100).toFixed(1);
+    const c = CHUNKS[t.chunk];
+    return `<div class="waterfall-bar" style="left:${left}%;width:${Math.max(w, 2)}%;top:${i * 34}px;background:${c.color}">${c.name} (${t.end - t.start}ms)</div>`;
+  }).join('');
+}
+
+function updateSplitStats() {
+  const entrySize = CHUNKS.home.size + CHUNKS.vendor.size;
+  const totalSize = Object.values(CHUNKS).reduce((s, c) => s + c.size, 0);
+  const loadedSize = [...loadedChunks].reduce((s, k) => s + CHUNKS[k].size, 0);
+  const cards = document.getElementById('split-stats').children;
+  cards[0].querySelector('.val').textContent = `${loadedSize} KB`;
+  cards[1].querySelector('.val').textContent = `${totalSize} KB`;
+  cards[2].querySelector('.val').textContent = `${(loadedSize / totalSize * 100).toFixed(0)}%`;
+  cards[3].querySelector('.val').textContent = loadedChunks.size;
+}
+
+function loadChunk(key) {
+  if (loadedChunks.has(key)) {
+    addLog('chunk-log', `${CHUNKS[key].name} 已在缓存中，跳过加载`, 'warn');
+    return;
+  }
+
+  const c = CHUNKS[key];
+  const startTime = loadTimeline.length > 0 ? loadTimeline[loadTimeline.length - 1].end : 0;
+  addLog('chunk-log', `触发动态 import() → 请求 <strong>${c.name}</strong> (${c.size} KB)`, 'info');
+
+  setTimeout(() => {
+    loadedChunks.add(key);
+    loadTimeline.push({ chunk: key, start: startTime, end: startTime + c.loadTime });
+    addLog('chunk-log', `✅ <strong>${c.name}</strong> 加载完成 (${c.loadTime}ms)`, 'success');
+    renderChunkBars();
+    renderWaterfall();
+    updateSplitStats();
+
+    if (loadedChunks.size >= 3) {
+      setCP('cp-2', PASS);
+    }
+  }, 400);
+}
+
+function resetChunks() {
+  loadedChunks = new Set(['home', 'vendor']);
+  loadTimeline = [];
+  document.getElementById('chunk-log').innerHTML = `<div class="log-line info"><span class="ts">[${ts()}]</span>已重置，等待用户操作…</div>`;
+  renderChunkBars();
+  renderWaterfall();
+  updateSplitStats();
+}
+
+// 初始化 chunk 视图
+renderChunkBars();
+updateSplitStats();
+
+/* ==============================================================
+   3. Tree Shaking 演示
+   ============================================================== */
+
+const TREE_FUNCS = [
+  { name: 'formatDate',     size: 85,  deps: [] },
+  { name: 'formatCurrency', size: 72,  deps: [] },
+  { name: 'validateEmail',  size: 45,  deps: [] },
+  { name: 'debounce',       size: 38,  deps: [] },
+  { name: 'throttle',       size: 42,  deps: [] },
+  { name: 'deepClone',      size: 96,  deps: [] },
+];
+
+function getSelectedExports() {
+  return [...document.querySelectorAll('.tree-cb:checked')].map(cb => cb.value);
+}
+
+function renderTreeBefore() {
+  const el = document.getElementById('tree-before');
+  el.innerHTML = TREE_FUNCS.map(f => `
+    <div class="export-line used" id="tb-${f.name}">
+      <span>export function <strong>${f.name}</strong>() { … } — ${f.size} bytes</span>
+    </div>
+  `).join('');
+}
+
+function renderTreeAfter(selected) {
+  const el = document.getElementById('tree-after');
+  el.innerHTML = TREE_FUNCS.map(f => {
+    const isUsed = selected.includes(f.name);
+    return `
+      <div class="export-line ${isUsed ? 'used' : 'unused'}" id="ta-${f.name}">
+        <span>${isUsed ? `export function <strong>${f.name}</strong>() { … }` : `function ${f.name}() { … } <em style="opacity:.5">// 已删除</em>`}</span>
+      </div>`;
+  }).join('');
+}
+
+function runTreeShake() {
+  const selected = getSelectedExports();
+  renderTreeAfter(selected);
+
+  // 更新统计
+  const kept = selected.length;
+  const removed = TREE_FUNCS.length - kept;
+  const keptSize = TREE_FUNCS.filter(f => selected.includes(f.name)).reduce((s, f) => s + f.size, 0);
+  const totalSize = TREE_FUNCS.reduce((s, f) => s + f.size, 0);
+  const savedSize = totalSize - keptSize;
+
+  document.getElementById('tree-kept').textContent = kept;
+  document.getElementById('tree-removed').textContent = removed;
+  document.getElementById('tree-pct').textContent = totalSize > 0 ? `${(savedSize / totalSize * 100).toFixed(0)}%` : '0%';
+
+  if (removed > 0) {
+    setCP('cp-3', PASS);
+  }
+}
+
+function resetTreeShake() {
+  renderTreeBefore();
+  document.getElementById('tree-kept').textContent = '1';
+  document.getElementById('tree-removed').textContent = '5';
+  document.getElementById('tree-pct').textContent = '83%';
+}
+
+renderTreeBefore();
+
+/* ==============================================================
+   4. 缓存策略演示
+   ============================================================== */
+
+// 模拟模块与 chunk 依赖关系
+const MODULES = [
+  { id: 'utils',    name: 'utils.js',      chunk: 'chunk-vendor', hash: 'a1b2c3' },
+  { id: 'router',   name: 'router.js',     chunk: 'chunk-vendor', hash: 'd4e5f6' },
+  { id: 'home',     name: 'Home.vue',      chunk: 'chunk-home',   hash: 'g7h8i9' },
+  { id: 'dash',     name: 'Dashboard.vue', chunk: 'chunk-dash',   hash: 'j0k1l2' },
+  { id: 'editor',   name: 'Editor.vue',    chunk: 'chunk-editor', hash: 'm3n4o5' },
+  { id: 'settings', name: 'Settings.vue',  chunk: 'chunk-settings', hash: 'p6q7r8' },
+];
+
+// chunk -> hash 映射（初始状态）
+let chunkHashes = {
+  'chunk-vendor':   'a1b2d4',
+  'chunk-home':     'g7h8i9',
+  'chunk-dash':     'j0k1l2',
+  'chunk-editor':   'm3n4o5',
+  'chunk-settings': 'p6q7r8',
+};
+
+let changedModules = new Set();
+
+function randomHash() {
+  return Math.random().toString(16).slice(2, 8);
+}
+
+function renderCacheModuleBtns() {
+  const el = document.getElementById('cache-module-btns');
+  el.innerHTML = MODULES.map(m => `
+    <button class="btn btn-secondary cache-mod-btn" data-id="${m.id}" onclick="toggleCacheModule('${m.id}', this)">
+      ${m.name} → ${m.chunk}
+    </button>
+  `).join('');
+}
+
+function toggleCacheModule(id, btn) {
+  if (changedModules.has(id)) {
+    changedModules.delete(id);
+    btn.classList.remove('btn-danger');
+    btn.classList.add('btn-secondary');
+  } else {
+    changedModules.add(id);
+    btn.classList.remove('btn-secondary');
+    btn.classList.add('btn-danger');
+  }
+}
+
+function simulateChange() {
+  if (changedModules.size === 0) {
+    alert('请先选择要修改的模块！');
+    return;
+  }
+
+  // 重新计算受影响的 chunk hash
+  const affectedChunks = new Set();
+  changedModules.forEach(mid => {
+    const mod = MODULES.find(m => m.id === mid);
+    if (mod) affectedChunks.add(mod.chunk);
+  });
+
+  // 为受影响的 chunk 生成新 hash
+  const newHashes = { ...chunkHashes };
+  affectedChunks.forEach(chunk => {
+    newHashes[chunk] = randomHash();
+  });
+
+  // 渲染缓存网格
+  const grid = document.getElementById('cache-grid');
+  grid.innerHTML = Object.entries(newHashes).map(([name, hash]) => {
+    const isAffected = affectedChunks.has(name);
+    const oldHash = chunkHashes[name];
+    return `
+      <div class="cache-cell ${isAffected ? 'miss' : 'hit'} animate-in">
+        <div class="cell-name">${name}</div>
+        <div class="cell-hash">${hash}</div>
+        ${isAffected ? `<div style="color:var(--text-dim);font-size:.65rem;text-decoration:line-through">${oldHash}</div>` : ''}
+        <div class="cell-status" style="color:${isAffected ? 'var(--red)' : 'var(--green)'}">${isAffected ? '❌ MISS' : '✅ HIT'}</div>
+      </div>`;
+  }).join('');
+
+  // 缓存命中分析
+  const hitCount = Object.keys(newHashes).length - affectedChunks.size;
+  const totalCount = Object.keys(newHashes).length;
+  const hitRate = (hitCount / totalCount * 100).toFixed(0);
+  document.getElementById('cache-analysis').innerHTML = `
+    <div style="font-size:.85rem">
+      <p><strong>修改模块：</strong>${[...changedModules].map(id => MODULES.find(m=>m.id===id)?.name).join(', ')}</p>
+      <p style="margin-top:8px"><strong>受影响 chunk：</strong>${[...affectedChunks].join(', ')}</p>
+      <p style="margin-top:8px"><strong>缓存命中：</strong><span style="color:var(--green)">${hitCount}/${totalCount}</span> (${hitRate}%)</p>
+      <div style="margin-top:12px;background:var(--surface2);border-radius:6px;padding:12px;font-size:.82rem">
+        <strong>contenthash 策略优势：</strong>只有内容实际变化的 chunk 才会获得新 hash，
+        未修改的 chunk 保持原 hash，浏览器可直接使用缓存，无需重新下载。
+      </div>
+    </div>`;
+
+  if (affectedChunks.size > 0 && hitCount > 0) {
+    setCP('cp-4', PASS);
+  }
+}
+
+function resetCache() {
+  changedModules = new Set();
+  chunkHashes = {
+    'chunk-vendor':   'a1b2d4',
+    'chunk-home':     'g7h8i9',
+    'chunk-dash':     'j0k1l2',
+    'chunk-editor':   'm3n4o5',
+    'chunk-settings': 'p6q7r8',
+  };
+  renderCacheModuleBtns();
+  document.getElementById('cache-grid').innerHTML = '';
+  document.getElementById('cache-analysis').innerHTML = '<p style="color:var(--text-dim);font-size:.85rem">尚未进行变更模拟…</p>';
+}
+
+renderCacheModuleBtns();
+
+/* ==============================================================
+   5. 构建产物分析报告
+   ============================================================== */
+
+function generateReport() {
+  // 计算各维度数据
+  const treeSelected = getSelectedExports();
+  const treeTotal = TREE_FUNCS.reduce((s, f) => s + f.size, 0);
+  const treeKept = TREE_FUNCS.filter(f => treeSelected.includes(f.name)).reduce((s, f) => s + f.size, 0);
+  const treeSaved = treeTotal - treeKept;
+
+  const totalRaw = Object.values(CHUNKS).reduce((s, c) => s + c.size, 0);
+  const loadedSize = [...loadedChunks].reduce((s, k) => s + CHUNKS[k].size, 0);
+
+  // 缓存命中率（基于上次模拟）
+  const cacheCells = document.querySelectorAll('.cache-cell');
+  const hitCells = document.querySelectorAll('.cache-cell.hit');
+  const cacheRate = cacheCells.length > 0 ? (hitCells.length / cacheCells.length * 100).toFixed(0) : '—';
+
+  const optimizedSize = totalRaw - treeSaved;
+
+  document.getElementById('r-optimized').textContent = `${optimizedSize} KB`;
+  document.getElementById('r-cache').textContent = cacheRate !== '—' ? `${cacheRate}%` : '—';
+
+  document.getElementById('report-detail').innerHTML = `
+    <div style="display:grid;gap:12px">
+      <div style="background:var(--surface2);border-radius:8px;padding:16px">
+        <h4 style="font-size:.88rem;margin-bottom:8px">📦 产物体积分析</h4>
+        <table style="width:100%;font-size:.82rem;border-collapse:collapse">
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 0;color:var(--text-dim)">未优化总产物</td><td style="text-align:right;font-family:var(--mono)">${totalRaw} KB</td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 0;color:var(--text-dim)">Tree Shaking 消除</td><td style="text-align:right;font-family:var(--mono);color:var(--green)">-${treeSaved} KB</td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 0;color:var(--text-dim)">Code Splitting chunk 数</td><td style="text-align:right;font-family:var(--mono)">${Object.keys(CHUNKS).length} 个</td></tr>
+          <tr><td style="padding:6px 0;font-weight:700">优化后产物</td><td style="text-align:right;font-family:var(--mono);color:var(--green);font-weight:700">${optimizedSize} KB</td></tr>
+        </table>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:16px">
+        <h4 style="font-size:.88rem;margin-bottom:8px">⚡ 加载性能</h4>
+        <table style="width:100%;font-size:.82rem;border-collapse:collapse">
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 0;color:var(--text-dim)">首屏需加载 chunk</td><td style="text-align:right;font-family:var(--mono)">home + vendor</td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 0;color:var(--text-dim)">首屏体积</td><td style="text-align:right;font-family:var(--mono)">${CHUNKS.home.size + CHUNKS.vendor.size} KB</td></tr>
+          <tr style="border-bottom:1px solid var(--border)"><td style="padding:6px 0;color:var(--text-dim)">懒加载可用</td><td style="text-align:right;font-family:var(--mono)">${totalRaw - CHUNKS.home.size - CHUNKS.vendor.size} KB</td></tr>
+          <tr><td style="padding:6px 0;font-weight:700">首屏占比</td><td style="text-align:right;font-family:var(--mono);color:var(--accent);font-weight:700">${((CHUNKS.home.size + CHUNKS.vendor.size) / totalRaw * 100).toFixed(0)}%</td></tr>
+        </table>
+      </div>
+      <div style="background:var(--surface2);border-radius:8px;padding:16px">
+        <h4 style="font-size:.88rem;margin-bottom:8px">💾 缓存策略</h4>
+        <p style="font-size:.82rem;color:var(--text-dim)">使用 <code>contenthash</code> 策略：只有内容变化的 chunk 才更新 hash，最大化浏览器缓存命中率。${cacheRate !== '—' ? `最近一次模拟命中率：<strong style="color:var(--green)">${cacheRate}%</strong>` : '请先在缓存策略面板执行一次变更模拟。'}</p>
+      </div>
+    </div>`;
+
+  setCP('cp-5', PASS);
+}
+
+</script>
+</body>
+</html>

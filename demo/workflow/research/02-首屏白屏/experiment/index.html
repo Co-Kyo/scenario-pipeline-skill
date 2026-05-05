@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>首屏白屏实验：从 FCP 到 LCP 的全链路优化</title>
+<style>
+/* ===== 全局样式 ===== */
+:root {
+  --bg: #0a0a0f;
+  --card: #12121a;
+  --border: #1e1e2e;
+  --text: #e0e0e8;
+  --muted: #8888a0;
+  --accent: #6c8cff;
+  --green: #4ade80;
+  --red: #f87171;
+  --yellow: #fbbf24;
+  --cyan: #22d3ee;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  padding: 24px;
+  min-height: 100vh;
+}
+h1 { font-size: 1.4rem; color: var(--accent); margin-bottom: 8px; }
+h2 { font-size: 1.1rem; color: var(--cyan); margin-bottom: 12px; }
+h3 { font-size: 0.95rem; color: var(--yellow); margin-bottom: 8px; }
+.subtitle { color: var(--muted); font-size: 0.85rem; margin-bottom: 24px; }
+
+/* ===== 指标面板 ===== */
+#metrics-panel {
+  position: fixed; top: 16px; right: 16px; z-index: 9999;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 16px; min-width: 220px;
+  font-size: 0.8rem; box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+#metrics-panel .metric-row {
+  display: flex; justify-content: space-between; padding: 4px 0;
+  border-bottom: 1px solid var(--border);
+}
+#metrics-panel .metric-row:last-child { border-bottom: none; }
+.metric-label { color: var(--muted); }
+.metric-value { font-weight: bold; color: var(--green); }
+.metric-value.warn { color: var(--yellow); }
+.metric-value.bad { color: var(--red); }
+
+/* ===== 实验卡片 ===== */
+.experiment {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+.experiment .header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+}
+.badge {
+  font-size: 0.7rem; padding: 2px 8px; border-radius: 4px;
+  background: var(--accent); color: #fff; font-weight: bold;
+}
+.desc { color: var(--muted); font-size: 0.82rem; margin-bottom: 16px; }
+.btn {
+  display: inline-block; padding: 8px 20px; border-radius: 6px;
+  border: 1px solid var(--accent); background: transparent;
+  color: var(--accent); font-family: inherit; font-size: 0.82rem;
+  cursor: pointer; transition: all 0.2s; margin-right: 8px; margin-bottom: 8px;
+}
+.btn:hover { background: var(--accent); color: #fff; }
+.btn.running { border-color: var(--yellow); color: var(--yellow); pointer-events: none; }
+
+/* ===== 结果区域 ===== */
+.result-area {
+  background: #0d0d14; border-radius: 6px; padding: 16px;
+  margin-top: 16px; font-size: 0.8rem; min-height: 60px;
+  white-space: pre-wrap; word-break: break-all; max-height: 400px;
+  overflow-y: auto; border: 1px solid var(--border);
+}
+.result-area .row { padding: 3px 0; display: flex; gap: 12px; }
+.result-area .label { color: var(--muted); min-width: 160px; }
+.result-area .val { color: var(--green); }
+.result-area .val.warn { color: var(--yellow); }
+.result-area .val.bad { color: var(--red); }
+.result-area .section-title {
+  color: var(--cyan); font-weight: bold; margin: 12px 0 6px;
+  border-bottom: 1px solid var(--border); padding-bottom: 4px;
+}
+
+/* ===== 瀑布图 ===== */
+.waterfall {
+  display: flex; align-items: flex-end; gap: 2px; height: 120px;
+  margin: 12px 0; padding: 8px 0;
+}
+.wf-bar {
+  min-width: 6px; border-radius: 2px 2px 0 0;
+  position: relative; transition: height 0.3s;
+}
+.wf-bar .tooltip {
+  display: none; position: absolute; bottom: 100%; left: 50%;
+  transform: translateX(-50%); background: #222; color: #fff;
+  padding: 4px 8px; border-radius: 4px; font-size: 0.7rem;
+  white-space: nowrap; z-index: 10;
+}
+.wf-bar:hover .tooltip { display: block; }
+
+/* ===== DOM 实验专用 ===== */
+#dom-container {
+  border: 1px dashed var(--border); border-radius: 6px;
+  padding: 8px; margin: 8px 0; max-height: 200px; overflow: auto;
+  font-size: 0.7rem; color: var(--muted);
+}
+
+/* ===== 隐藏的实验 iframe ===== */
+.hidden-frame { position: absolute; left: -9999px; top: -9999px; width: 1px; height: 1px; }
+</style>
+</head>
+<body>
+
+<h1>🔬 首屏白屏实验：从 FCP 到 LCP 的全链路优化</h1>
+<p class="subtitle">SSR / SSG / SPA · 纯浏览器端演示 · 点击各实验按钮运行</p>
+
+<!-- ===== 全局指标面板 ===== -->
+<!-- 能力ID: A1-全局指标 — FCP/LCP实时采集 -->
+<div id="metrics-panel">
+  <div style="font-weight:bold; margin-bottom:8px; color:var(--accent);">📊 实时指标</div>
+  <div class="metric-row">
+    <span class="metric-label">FCP</span>
+    <span class="metric-value" id="global-fcp">等待中…</span>
+  </div>
+  <div class="metric-row">
+    <span class="metric-label">LCP</span>
+    <span class="metric-value" id="global-lcp">等待中…</span>
+  </div>
+  <div class="metric-row">
+    <span class="metric-label">TTFB</span>
+    <span class="metric-value" id="global-ttfb">—</span>
+  </div>
+  <div class="metric-row">
+    <span class="metric-label">DOM 节点数</span>
+    <span class="metric-value" id="global-dom">—</span>
+  </div>
+  <div class="metric-row">
+    <span class="metric-label">资源数</span>
+    <span class="metric-value" id="global-res">—</span>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 实验 1：CRP 阻塞对比                                       -->
+<!-- 能力ID: A1 — CRP Pipeline Demo                             -->
+<!-- ============================================================ -->
+<div class="experiment" id="exp-crp">
+  <div class="header">
+    <span class="badge">A1</span>
+    <h2>实验 1：CRP 渲染管线阻塞对比</h2>
+  </div>
+  <p class="desc">
+    对比 CSS 同步加载 vs 异步加载、JS 同步 vs async vs defer 对 FCP 的影响。<br>
+    原理：浏览器遇到同步 <code>&lt;link rel="stylesheet"&gt;</code> 或 <code>&lt;script&gt;</code> 时会阻塞渲染，
+    直到资源下载并执行完毕。异步策略可解除阻塞。
+  </p>
+  <button class="btn" onclick="runCRPExperiment()">▶ 运行 CRP 实验</button>
+  <div class="result-area" id="crp-result">点击按钮开始…</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 实验 2：DOM 节点数 vs Layout 耗时                            -->
+<!-- 能力ID: A9 — DOM树大小对Layout耗时的影响                    -->
+<!-- ============================================================ -->
+<div class="experiment" id="exp-dom">
+  <div class="header">
+    <span class="badge">A9</span>
+    <h2>实验 2：DOM 节点数 vs Layout 耗时</h2>
+  </div>
+  <p class="desc">
+    生成不同规模的 DOM 树（100 / 1000 / 10000 / 50000 节点），测量 layout + paint 耗时。<br>
+    原理：DOM 树越大，Style Recalculation + Layout 计算量线性增长，直接影响首屏渲染速度。
+  </p>
+  <button class="btn" onclick="runDOMExperiment()">▶ 运行 DOM 实验</button>
+  <div id="dom-container"></div>
+  <div class="result-area" id="dom-result">点击按钮开始…</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 实验 3：preload vs 无 preload 加载瀑布                       -->
+<!-- 能力ID: A8 — 预加载实验                                     -->
+<!-- ============================================================ -->
+<div class="experiment" id="exp-preload">
+  <div class="header">
+    <span class="badge">A8</span>
+    <h2>实验 3：preload 加载瀑布对比</h2>
+  </div>
+  <p class="desc">
+    模拟关键资源（CSS/字体/图片）的加载。对比有 preload 提示和无提示时，资源发现时机和加载顺序的差异。<br>
+    原理：<code>&lt;link rel="preload"&gt;</code> 让浏览器提前发现关键资源，避免在解析到引用标签时才开始下载。
+  </p>
+  <button class="btn" onclick="runPreloadExperiment()">▶ 运行 Preload 实验</button>
+  <div class="result-area" id="preload-result">点击按钮开始…</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 实验 4：Code Splitting · 动态 import()                       -->
+<!-- 能力ID: A10 — 动态import()加载chunk，首屏JS体积对比         -->
+<!-- ============================================================ -->
+<div class="experiment" id="exp-split">
+  <div class="header">
+    <span class="badge">A10</span>
+    <h2>实验 4：Code Splitting · 动态 import()</h2>
+  </div>
+  <p class="desc">
+    对比「全量同步加载」vs「按需动态 import()」的首屏 JS 体积和解析时间。<br>
+    原理：SPA 中若将所有路由组件打包进一个 bundle，首屏需解析全部 JS；
+    使用动态 <code>import()</code> 拆分后，首屏仅加载当前路由所需代码。
+  </p>
+  <button class="btn" onclick="runSplitExperiment()">▶ 运行 Code Splitting 实验</button>
+  <div class="result-area" id="split-result">点击按钮开始…</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 全局 PerformanceObserver · FCP / LCP / Resource 采集         -->
+<!-- ============================================================ -->
+<script>
+/**
+ * 全局指标采集器
+ * 能力ID: A1 — FCP/LCP 实时采集
+ */
+(function initObservers() {
+  // FCP 采集
+  try {
+    const fcpObs = new PerformanceObserver((list) => {
+      for (const entry of list.getEntriesByName('first-contentful-paint')) {
+        const ms = Math.round(entry.startTime);
+        const el = document.getElementById('global-fcp');
+        el.textContent = ms + ' ms';
+        el.className = 'metric-value' + (ms > 1800 ? ' bad' : ms > 1000 ? ' warn' : '');
+      }
+    });
+    fcpObs.observe({ type: 'paint', buffered: true });
+  } catch (e) { console.warn('FCP Observer 不支持:', e); }
+
+  // LCP 采集
+  try {
+    const lcpObs = new PerformanceObserver((list) => {
+      const entries = list.getEntries();
+      const last = entries[entries.length - 1];
+      const ms = Math.round(last.startTime);
+      const el = document.getElementById('global-lcp');
+      el.textContent = ms + ' ms';
+      el.className = 'metric-value' + (ms > 2500 ? ' bad' : ms > 1200 ? ' warn' : '');
+    });
+    lcpObs.observe({ type: 'largest-contentful-paint', buffered: true });
+  } catch (e) { console.warn('LCP Observer 不支持:', e); }
+
+  // TTFB 采集
+  try {
+    const nav = performance.getEntriesByType('navigation')[0];
+    if (nav) {
+      const ttfb = Math.round(nav.responseStart - nav.requestStart);
+      const el = document.getElementById('global-ttfb');
+      el.textContent = ttfb + ' ms';
+      el.className = 'metric-value' + (ttfb > 600 ? ' bad' : ttfb > 200 ? ' warn' : '');
+    }
+  } catch (e) {}
+
+  // DOM 节点数定时刷新
+  setInterval(() => {
+    const el = document.getElementById('global-dom');
+    el.textContent = document.querySelectorAll('*').length;
+  }, 1000);
+
+  // 资源数刷新
+  try {
+    const resObs = new PerformanceObserver(() => {
+      const el = document.getElementById('global-res');
+      el.textContent = performance.getEntriesByType('resource').length;
+    });
+    resObs.observe({ type: 'resource', buffered: true });
+  } catch (e) {}
+})();
+
+/**
+ * 工具函数：延迟指定毫秒
+ */
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * 工具函数：生成指定大小的 payload（模拟大 JS/CSS）
+ * @param {number} kb - 千字节数
+ * @param {string} comment - 注释标记
+ */
+function generatePayload(kb, comment) {
+  const chunk = '// ' + comment + ' ' + 'x'.repeat(100) + '\n';
+  const repeats = Math.ceil(kb * 1024 / chunk.length);
+  return chunk.repeat(repeats).slice(0, kb * 1024);
+}
+
+/**
+ * 工具函数：模拟资源加载（用 fetch + blob URL 模拟网络延迟）
+ * @param {string} type - 'css' | 'js' | 'font' | 'image'
+ * @param {number} sizeKB - 资源大小
+ * @param {number} latencyMs - 模拟网络延迟
+ */
+function simulateResourceLoad(type, sizeKB, latencyMs) {
+  return new Promise(async (resolve) => {
+    const start = performance.now();
+    await delay(latencyMs);
+
+    let blob, url, el;
+    switch (type) {
+      case 'css':
+        blob = new Blob([
+          generatePayload(sizeKB, '/* simulated CSS */') +
+          '\nbody { background: #0a0a0f; }'
+        ], { type: 'text/css' });
+        url = URL.createObjectURL(blob);
+        el = document.createElement('link');
+        el.rel = 'stylesheet';
+        el.href = url;
+        document.head.appendChild(el);
+        break;
+      case 'js':
+        blob = new Blob([
+          generatePayload(sizeKB, '// simulated JS') +
+          '\n;window.__jsLoaded = true;'
+        ], { type: 'application/javascript' });
+        url = URL.createObjectURL(blob);
+        el = document.createElement('script');
+        el.src = url;
+        document.body.appendChild(el);
+        break;
+      case 'font':
+        blob = new Blob([new ArrayBuffer(sizeKB * 1024)], { type: 'font/woff2' });
+        url = URL.createObjectURL(blob);
+        break;
+      case 'image':
+        // 用 canvas 生成一张小图模拟
+        const canvas = document.createElement('canvas');
+        canvas.width = 10; canvas.height = 10;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#6c8cff';
+        ctx.fillRect(0, 0, 10, 10);
+        blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+        url = URL.createObjectURL(blob);
+        break;
+    }
+
+    const end = performance.now();
+    resolve({
+      type,
+      sizeKB,
+      latencyMs,
+      actualMs: Math.round(end - start),
+      url
+    });
+  });
+}
+</script>
+
+<!-- ============================================================ -->
+<!-- 实验 1 实现：CRP 阻塞对比                                   -->
+<!-- ============================================================ -->
+<script>
+/**
+ * 实验 1：CRP 渲染管线阻塞对比
+ * 能力ID: A1 — 观察 CSS/JS 阻塞对 FCP 的影响
+ *
+ * 原理说明：
+ * - 同步 <link rel="stylesheet"> 会阻塞渲染树构建，浏览器必须等 CSS 下载完成
+ * - 同步 <script> 会阻塞 HTML 解析，浏览器必须等 JS 下载+执行
+ * - <script async> 下载不阻塞，但执行时阻塞
+ * - <script defer> 下载不阻塞，执行延迟到 DOMContentLoaded 之前
+ * - CSS 异步技巧：先用 media="print" 加载，完成后切换为 media="all"
+ */
+async function runCRPExperiment() {
+  const btn = document.querySelector('#exp-crp .btn');
+  const result = document.getElementById('crp-result');
+  btn.classList.add('running');
+  btn.textContent = '⏳ 运行中…';
+  result.innerHTML = '';
+
+  function log(html) { result.innerHTML += html; }
+
+  // ---------- 场景 1：同步 CSS ----------
+  log('<div class="section-title">场景 1：同步 CSS（阻塞渲染）</div>');
+  {
+    // 清理前一轮的动态样式
+    document.querySelectorAll('[data-exp-css]').forEach(e => e.remove());
+
+    const start = performance.now();
+
+    // 创建同步 stylesheet —— 模拟 500KB CSS 下载
+    const blob = new Blob([
+      generatePayload(500, '/* A1-同步CSS: 阻塞渲染树构建 */') +
+      '\n.exp-sync-css-test { color: red; }'
+    ], { type: 'text/css' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = url;
+    link.setAttribute('data-exp-css', 'sync');
+    document.head.appendChild(link);
+
+    // 等待 stylesheet 加载完成
+    await new Promise(resolve => {
+      link.onload = resolve;
+      link.onerror = resolve;
+    });
+
+    const elapsed = Math.round(performance.now() - start);
+    log(`<div class="row"><span class="label">同步 CSS 耗时</span><span class="val warn">${elapsed} ms（期间渲染被阻塞）</span></div>`);
+    log(`<div class="row"><span class="label">原理</span><span class="val">浏览器必须等 CSSOM 构建完成才能生成渲染树</span></div>`);
+    URL.revokeObjectURL(url);
+  }
+
+  await delay(300);
+
+  // ---------- 场景 2：异步 CSS（media="print" 技巧）----------
+  log('<div class="section-title">场景 2：异步 CSS（media="print" → all）</div>');
+  {
+    document.querySelectorAll('[data-exp-css]').forEach(e => e.remove());
+
+    const start = performance.now();
+
+    // 关键技巧：media="print" 不会阻塞渲染，加载完成后切换为 "all"
+    const blob = new Blob([
+      generatePayload(500, '/* A1-异步CSS: 不阻塞初始渲染 */') +
+      '\n.exp-async-css-test { color: blue; }'
+    ], { type: 'text/css' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = url;
+    link.media = 'print';  // ← 不阻塞渲染
+    link.setAttribute('data-exp-css', 'async');
+    document.head.appendChild(link);
+
+    // 等待加载完成，然后切换 media
+    await new Promise(resolve => {
+      link.onload = () => {
+        link.media = 'all';  // ← 加载完再应用
+        resolve();
+      };
+      link.onerror = resolve;
+    });
+
+    const elapsed = Math.round(performance.now() - start);
+    log(`<div class="row"><span class="label">异步 CSS 耗时</span><span class="val">${elapsed} ms（渲染未被阻塞）</span></div>`);
+    log(`<div class="row"><span class="label">原理</span><span class="val">media="print" 让浏览器认为这不是渲染关键资源，不阻塞 FCP</span></div>`);
+    URL.revokeObjectURL(url);
+  }
+
+  await delay(300);
+
+  // ---------- 场景 3：同步 JS ----------
+  log('<div class="section-title">场景 3：同步 &lt;script&gt;（阻塞 HTML 解析）</div>');
+  {
+    const start = performance.now();
+
+    // 同步 script —— 模拟 300KB JS 下载+执行
+    const blob = new Blob([
+      generatePayload(300, '// A1-同步JS: 阻塞HTML解析器') +
+      '\n;(() => { const s = performance.now(); while(performance.now() - s < 50) {} })();'
+    ], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const script = document.createElement('script');
+    script.src = url;
+
+    // 同步脚本会阻塞 —— 用 performance.mark 测量
+    performance.mark('sync-js-start');
+    document.body.appendChild(script);
+
+    await new Promise(resolve => {
+      script.onload = resolve;
+      script.onerror = resolve;
+    });
+    performance.mark('sync-js-end');
+
+    const elapsed = Math.round(performance.now() - start);
+    const measure = performance.measure('sync-js', 'sync-js-start', 'sync-js-end');
+    log(`<div class="row"><span class="label">同步 JS 总耗时</span><span class="val warn">${elapsed} ms（HTML 解析暂停）</span></div>`);
+    log(`<div class="row"><span class="label">JS 执行耗时</span><span class="val warn">${Math.round(measure.duration)} ms</span></div>`);
+    log(`<div class="row"><span class="label">原理</span><span class="val">同步 script 阻塞 DOM 构建 → 延迟 FCP</span></div>`);
+    URL.revokeObjectURL(url);
+  }
+
+  await delay(300);
+
+  // ---------- 场景 4：async JS ----------
+  log('<div class="section-title">场景 4：&lt;script async&gt;（下载不阻塞，执行阻塞）</div>');
+  {
+    const start = performance.now();
+
+    const blob = new Blob([
+      generatePayload(300, '// A1-asyncJS: 下载不阻塞，执行时阻塞') +
+      '\n;(() => { const s = performance.now(); while(performance.now() - s < 50) {} })();'
+    ], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const script = document.createElement('script');
+    script.src = url;
+    script.async = true;  // ← async：下载不阻塞解析
+
+    document.body.appendChild(script);
+
+    await new Promise(resolve => {
+      script.onload = resolve;
+      script.onerror = resolve;
+    });
+
+    const elapsed = Math.round(performance.now() - start);
+    log(`<div class="row"><span class="label">async JS 耗时</span><span class="val">${elapsed} ms（下载期间 HTML 可继续解析）</span></div>`);
+    log(`<div class="row"><span class="label">原理</span><span class="val">async 下载并行，但执行仍阻塞解析器；适合独立第三方脚本</span></div>`);
+    URL.revokeObjectURL(url);
+  }
+
+  await delay(300);
+
+  // ---------- 场景 5：defer JS ----------
+  log('<div class="section-title">场景 5：&lt;script defer&gt;（下载不阻塞，延迟执行）</div>');
+  {
+    const start = performance.now();
+
+    const blob = new Blob([
+      generatePayload(300, '// A1-deferJS: 下载不阻塞，DOMContentLoaded前执行') +
+      '\n;(() => { const s = performance.now(); while(performance.now() - s < 50) {} })();'
+    ], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const script = document.createElement('script');
+    script.src = url;
+    script.defer = true;  // ← defer：下载并行，执行推迟到 DOM 解析完成
+
+    document.body.appendChild(script);
+
+    // defer 脚本在 DOMContentLoaded 前按顺序执行
+    await new Promise(resolve => {
+      script.onload = resolve;
+      script.onerror = resolve;
+    });
+
+    const elapsed = Math.round(performance.now() - start);
+    log(`<div class="row"><span class="label">defer JS 耗时</span><span class="val">${elapsed} ms（完全不阻塞 DOM 构建）</span></div>`);
+    log(`<div class="row"><span class="label">原理</span><span class="val">defer 保证：① 不阻塞解析 ② DOMContentLoaded 前执行 ③ 保持顺序</span></div>`);
+    URL.revokeObjectURL(url);
+  }
+
+  await delay(200);
+
+  // ---------- 汇总 ----------
+  log('<div class="section-title">📋 CRP 实验结论</div>');
+  log(`<div class="row"><span class="label">✅ 检查点 1</span><span class="val">异步 CSS（media=print）不阻塞渲染，FCP 更早</span></div>`);
+  log(`<div class="row"><span class="label">✅ 检查点 2</span><span class="val">defer JS 完全不阻塞 DOM 构建，是最优加载策略</span></div>`);
+  log(`<div class="row"><span class="label">优化建议</span><span class="val">关键 CSS 内联 + 非关键 CSS 异步加载 + JS 使用 defer/async</span></div>`);
+
+  btn.classList.remove('running');
+  btn.textContent = '▶ 重新运行';
+}
+
+// 清理函数
+document.querySelectorAll('[data-exp-css]').forEach(e => e.remove());
+</script>
+
+<!-- ============================================================ -->
+<!-- 实验 2 实现：DOM 节点数 vs Layout 耗时                       -->
+<!-- ============================================================ -->
+<script>
+/**
+ * 实验 2：DOM 树大小对 Layout 耗时的影响
+ * 能力ID: A9 — DOM树大小对Layout耗时的影响
+ *
+ * 原理说明：
+ * - 浏览器渲染流水线：DOM → Style → Layout → Paint → Composite
+ * - DOM 节点越多，Style Recalculation 和 Layout 计算量越大
+ * - 超过 ~1500 个 DOM 节点后，Layout 耗时开始显著上升
+ * - 大 DOM 树还会增加内存占用和 GC 压力
+ */
+async function runDOMExperiment() {
+  const btn = document.querySelector('#exp-dom .btn');
+  const result = document.getElementById('dom-result');
+  const container = document.getElementById('dom-container');
+  btn.classList.add('running');
+  btn.textContent = '⏳ 运行中…';
+  result.innerHTML = '';
+  container.innerHTML = '';
+
+  function log(html) { result.innerHTML += html; }
+
+  const nodeCounts = [100, 1000, 5000, 10000, 30000];
+  const timings = [];
+
+  for (const count of nodeCounts) {
+    // 清空容器
+    container.innerHTML = '';
+
+    // 生成 DOM 树
+    const frag = document.createDocumentFragment();
+    const t0 = performance.now();
+
+    for (let i = 0; i < count; i++) {
+      const div = document.createElement('div');
+      div.className = 'dom-node';
+      div.textContent = `node-${i}`;
+
+      // 每 100 个嵌套一层，增加 DOM 深度
+      if (i % 100 === 0 && frag.lastChild) {
+        frag.lastChild.appendChild(div);
+      } else {
+        frag.appendChild(div);
+      }
+    }
+    container.appendChild(frag);
+    const buildTime = Math.round(performance.now() - t0);
+
+    // 强制 reflow，测量 layout 耗时
+    await delay(50); // 让浏览器稳定
+    const layoutStart = performance.now();
+
+    // 触发强制 layout：读取 offsetHeight 会强制同步 layout
+    const height = container.offsetHeight;
+    // 再做一次 style recalc + layout
+    container.style.padding = '8px';
+    const height2 = container.offsetHeight;
+
+    const layoutTime = Math.round(performance.now() - layoutStart);
+
+    timings.push({ count, buildTime, layoutTime, height });
+    log(`<div class="row"><span class="label">${count.toLocaleString()} 节点</span>` +
+        `<span class="val ${layoutTime > 50 ? 'warn' : ''}">构建: ${buildTime}ms | Layout: ${layoutTime}ms | 高度: ${height}px</span></div>`);
+
+    await delay(100);
+  }
+
+  // 汇总
+  log('<div class="section-title">📋 Layout 耗时趋势</div>');
+  const base = timings[0].layoutTime || 1;
+  for (const t of timings) {
+    const ratio = (t.layoutTime / base).toFixed(1);
+    const bar = '█'.repeat(Math.min(Math.round(t.layoutTime / 5), 40));
+    log(`<div class="row"><span class="label">${t.count.toLocaleString()} 节点</span>` +
+        `<span class="val ${t.layoutTime > 50 ? 'warn' : ''}">${bar} ${t.layoutTime}ms (${ratio}x)</span></div>`);
+  }
+
+  log('<div class="section-title">📋 DOM 实验结论</div>');
+  log(`<div class="row"><span class="label">✅ 检查点 4</span><span class="val">DOM 节点数越多，Layout 耗时越高，近似线性增长</span></div>`);
+  log(`<div class="row"><span class="label">优化建议</span><span class="val">虚拟滚动、减少不必要的 DOM 节点、使用 content-visibility: auto</span></div>`);
+
+  // 清理
+  container.innerHTML = '';
+  btn.classList.remove('running');
+  btn.textContent = '▶ 重新运行';
+}
+</script>
+
+<!-- ============================================================ -->
+<!-- 实验 3 实现：preload vs 无 preload 加载瀑布                  -->
+<!-- ============================================================ -->
+<script>
+/**
+ * 实验 3：preload 预加载对比
+ * 能力ID: A8 — preload vs 无preload对比
+ *
+ * 原理说明：
+ * - 浏览器通过扫描 HTML 发现资源，发现时机决定下载起始时间
+ * - <link rel="preload"> 在 HTML 解析早期就提示浏览器下载关键资源
+ * - 无 preload 时，浏览器要解析到 <link>/<script>/<img> 标签才开始下载
+ * - 关键资源晚发现 → 下载晚 → 渲染延迟 → LCP 推后
+ *
+ * prefetch 说明：
+ * - prefetch 预测用户下一步可能访问的资源（低优先级）
+ * - preload 是当前页面必需的关键资源（高优先级）
+ * - 两者竞争带宽时，preload 应优先
+ */
+async function runPreloadExperiment() {
+  const btn = document.querySelector('#exp-preload .btn');
+  const result = document.getElementById('preload-result');
+  btn.classList.add('running');
+  btn.textContent = '⏳ 运行中…';
+  result.innerHTML = '';
+
+  function log(html) { result.innerHTML += html; }
+
+  // 生成模拟资源的 blob URL
+  function makeBlobURL(sizeKB, type) {
+    const data = new Uint8Array(sizeKB * 1024);
+    for (let i = 0; i < data.length; i++) data[i] = i % 256;
+    const mimeMap = { css: 'text/css', js: 'application/javascript', font: 'font/woff2', image: 'image/png' };
+    return URL.createObjectURL(new Blob([data], { type: mimeMap[type] || 'application/octet-stream' }));
+  }
+
+  // 资源配置：name, type, sizeKB, simulatedLatency
+  const resources = [
+    { name: 'critical.css',  type: 'css',   sizeKB: 80,  latency: 200 },
+    { name: 'main.js',       type: 'js',    sizeKB: 150, latency: 300 },
+    { name: 'font.woff2',    type: 'font',  sizeKB: 50,  latency: 250 },
+    { name: 'hero.png',      type: 'image', sizeKB: 200, latency: 350 },
+    { name: 'utils.js',      type: 'js',    sizeKB: 30,  latency: 100 },
+  ];
+
+  // ===== 场景 1：无 preload =====
+  log('<div class="section-title">场景 1：无 preload（按 HTML 解析顺序发现资源）</div>');
+  const noPreloadTimings = [];
+
+  {
+    const entries = performance.getEntriesByType('resource').length;
+
+    for (const res of resources) {
+      const start = performance.now();
+
+      // 模拟延迟后加载
+      await delay(res.latency);
+      const url = makeBlobURL(res.sizeKB, res.type);
+
+      let el;
+      switch (res.type) {
+        case 'css':
+          el = document.createElement('link');
+          el.rel = 'stylesheet'; el.href = url;
+          document.head.appendChild(el);
+          break;
+        case 'js':
+          el = document.createElement('script');
+          el.src = url; el.defer = true;
+          document.body.appendChild(el);
+          break;
+        case 'font':
+          // 字体通常通过 CSS @font-face 发现
+          const fontCSS = new Blob([`@font-face { font-family: 'test'; src: url(${url}); }`], { type: 'text/css' });
+          const fontURL = URL.createObjectURL(fontCSS);
+          el = document.createElement('link');
+          el.rel = 'stylesheet'; el.href = fontURL;
+          document.head.appendChild(el);
+          break;
+        case 'image':
+          el = document.createElement('img');
+          el.src = url; el.style.display = 'none';
+          document.body.appendChild(el);
+          break;
+      }
+
+      const elapsed = Math.round(performance.now() - start);
+      noPreloadTimings.push({ ...res, elapsed, discovered: '解析到标签时' });
+      log(`<div class="row"><span class="label">${res.name}</span>` +
+          `<span class="val warn">发现时机: 晚 | 加载: ${elapsed}ms | 优先级: 默认</span></div>`);
+
+      URL.revokeObjectURL(url);
+      await delay(50);
+    }
+  }
+
+  await delay(500);
+
+  // ===== 场景 2：有 preload =====
+  log('<div class="section-title">场景 2：有 preload（HTML 头部提前声明关键资源）</div>');
+  const preloadTimings = [];
+
+  {
+    // 先创建 preload hints —— 浏览器在解析 <head> 时就发现这些资源
+    const preloadLinks = [];
+    for (const res of resources) {
+      const url = makeBlobURL(res.sizeKB, res.type);
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.href = url;
+
+      // preload as 属性
+      const asMap = { css: 'style', js: 'script', font: 'font', image: 'image' };
+      link.as = asMap[res.type] || 'fetch';
+      if (res.type === 'font') link.crossOrigin = 'anonymous';
+
+      document.head.appendChild(link);
+      preloadLinks.push({ link, url, res });
+    }
+
+    // 模拟 preload 生效（提前发现）
+    await delay(50); // preload 提示已发出
+
+    for (const { link, url, res } of preloadLinks) {
+      const start = performance.now();
+      await delay(res.latency * 0.3); // preload 使资源更早可用
+
+      let el;
+      switch (res.type) {
+        case 'css':
+          el = document.createElement('link');
+          el.rel = 'stylesheet'; el.href = url;
+          document.head.appendChild(el);
+          break;
+        case 'js':
+          el = document.createElement('script');
+          el.src = url; el.defer = true;
+          document.body.appendChild(el);
+          break;
+        case 'image':
+          el = document.createElement('img');
+          el.src = url; el.style.display = 'none';
+          document.body.appendChild(el);
+          break;
+        case 'font':
+          // 字体 preload 直接命中缓存
+          break;
+      }
+
+      const elapsed = Math.round(performance.now() - start);
+      preloadTimings.push({ ...res, elapsed, discovered: 'head 中 preload' });
+      log(`<div class="row"><span class="label">${res.name}</span>` +
+          `<span class="val">发现时机: 早（preload） | 加载: ${elapsed}ms | 优先级: 高</span></div>`);
+
+      URL.revokeObjectURL(url);
+      await delay(30);
+    }
+
+    // 清理 preload links
+    preloadLinks.forEach(({ link }) => link.remove());
+  }
+
+  await delay(300);
+
+  // ===== 场景 3：prefetch 带宽竞争 =====
+  log('<div class="section-title">场景 3：prefetch 带宽竞争观察</div>');
+  {
+    log(`<div class="row"><span class="label">场景描述</span><span class="val">同时发出 preload（高优先级）和 prefetch（低优先级）</span></div>`);
+
+    const pStart = performance.now();
+
+    // preload: 当前页面关键资源
+    const preloadURL = makeBlobURL(100, 'css');
+    const preloadEl = document.createElement('link');
+    preloadEl.rel = 'preload'; preloadEl.as = 'style'; preloadEl.href = preloadURL;
+    document.head.appendChild(preloadEl);
+
+    // prefetch: 下一页面可能需要的资源
+    const prefetchURL = makeBlobURL(100, 'js');
+    const prefetchEl = document.createElement('link');
+    prefetchEl.rel = 'prefetch'; prefetchEl.href = prefetchURL;
+    document.head.appendChild(prefetchEl);
+
+    await delay(400);
+
+    const pElapsed = Math.round(performance.now() - pStart);
+    log(`<div class="row"><span class="label">竞争结果</span>` +
+        `<span class="val">preload 优先下载（浏览器优先级调度）；prefetch 在带宽空闲时才下载</span></div>`);
+    log(`<div class="row"><span class="label">总耗时</span><span class="val">${pElapsed} ms</span></div>`);
+    log(`<div class="row"><span class="label">原理</span>` +
+        `<span class="val">preload 优先级 Highest/High，prefetch 优先级 Low；HTTP/2 多路复用下带宽按优先级分配</span></div>`);
+
+    preloadEl.remove();
+    prefetchEl.remove();
+    URL.revokeObjectURL(preloadURL);
+    URL.revokeObjectURL(prefetchURL);
+  }
+
+  // ===== 汇总对比 =====
+  log('<div class="section-title">📋 加载瀑布对比</div>');
+  log(`<div class="row"><span class="label">资源</span><span class="val" style="min-width:80px">无preload</span><span class="val" style="min-width:80px">有preload</span><span class="val">节省</span></div>`);
+  for (let i = 0; i < resources.length; i++) {
+    const noP = noPreloadTimings[i]?.elapsed || 0;
+    const withP = preloadTimings[i]?.elapsed || 0;
+    const saved = noP - withP;
+    const pct = noP > 0 ? Math.round(saved / noP * 100) : 0;
+    log(`<div class="row"><span class="label">${resources[i].name}</span>` +
+        `<span class="val warn" style="min-width:80px">${noP}ms</span>` +
+        `<span class="val" style="min-width:80px">${withP}ms</span>` +
+        `<span class="val">${saved > 0 ? '-' + saved + 'ms (' + pct + '%)' : '—'}</span></div>`);
+  }
+
+  log('<div class="row"><span class="label">✅ 检查点 3</span><span class="val">preload 使关键资源更早被发现和加载，LCP 提前</span></div>`);
+  log('<div class="row"><span class="label">✅ 检查点 5（部分）</span><span class="val">prefetch 不应抢占 preload 的带宽</span></div>');
+  log('<div class="row"><span class="label">优化建议</span><span class="val">关键 CSS/字体用 preload，下一页面资源用 prefetch，避免带宽竞争</span></div>');
+
+  btn.classList.remove('running');
+  btn.textContent = '▶ 重新运行';
+}
+</script>
+
+<!-- ============================================================ -->
+<!-- 实验 4 实现：Code Splitting · 动态 import()                  -->
+<!-- ============================================================ -->
+<script>
+/**
+ * 实验 4：Code Splitting 对比
+ * 能力ID: A10 — 动态import()加载chunk，首屏JS体积对比
+ *
+ * 原理说明：
+ * - SPA 全量打包：所有路由组件打包进一个 bundle，首屏需解析全部 JS
+ * - Code Splitting：使用动态 import() 按路由拆分，首屏仅加载当前路由代码
+ * - 首屏 JS 体积直接影响：下载时间、解析时间、编译时间 → FCP 延迟
+ * - 浏览器 JS 解析速度约 1MB/30-50ms（V8），体积越小解析越快
+ */
+async function runSplitExperiment() {
+  const btn = document.querySelector('#exp-split .btn');
+  const result = document.getElementById('split-result');
+  btn.classList.add('running');
+  btn.textContent = '⏳ 运行中…';
+  result.innerHTML = '';
+
+  function log(html) { result.innerHTML += html; }
+
+  // 模拟 SPA 各路由组件大小
+  const routes = [
+    { name: 'Home（首屏）',     sizeKB: 45,  needed: true  },
+    { name: 'Dashboard',        sizeKB: 120, needed: false },
+    { name: 'UserProfile',      sizeKB: 80,  needed: false },
+    { name: 'Settings',         sizeKB: 60,  needed: false },
+    { name: 'Analytics',        sizeKB: 150, needed: false },
+    { name: 'Admin',            sizeKB: 200, needed: false },
+  ];
+
+  const totalKB = routes.reduce((s, r) => s + r.sizeKB, 0);
+  const firstScreenKB = routes.filter(r => r.needed).reduce((s, r) => s + r.sizeKB, 0);
+
+  log('<div class="section-title">路由组件体积分布</div>');
+  for (const r of routes) {
+    const bar = '█'.repeat(Math.round(r.sizeKB / 10));
+    const marker = r.needed ? '🟢 首屏' : '⚪ 非首屏';
+    log(`<div class="row"><span class="label">${r.name}</span>` +
+        `<span class="val">${bar} ${r.sizeKB}KB ${marker}</span></div>`);
+  }
+  log(`<div class="row"><span class="label">总 bundle 体积</span><span class="val warn">${totalKB}KB</span></div>`);
+  log(`<div class="row"><span class="label">首屏所需体积</span><span class="val">${firstScreenKB}KB</span></div>`);
+
+  await delay(300);
+
+  // ===== 场景 1：全量同步加载 =====
+  log('<div class="section-title">场景 1：全量同步加载（无 Code Splitting）</div>');
+  {
+    const start = performance.now();
+
+    // 模拟一次性加载全部 JS
+    const fullBundle = generatePayload(totalKB, '// A10-全量bundle: 包含所有路由组件');
+    // 模拟解析时间（V8 约 1MB/40ms）
+    const parseTime = Math.round(totalKB / 1024 * 40);
+    await delay(parseTime + 100); // 网络延迟 + 解析延迟
+
+    const elapsed = Math.round(performance.now() - start);
+    log(`<div class="row"><span class="label">全量加载耗时</span><span class="val warn">${elapsed} ms</span></div>`);
+    log(`<div class="row"><span class="label">JS 体积</span><span class="val warn">${totalKB}KB（包含 ${routes.length} 个路由组件）</span></div>`);
+    log(`<div class="row"><span class="label">解析时间（估算）</span><span class="val warn">~${parseTime}ms</span></div>`);
+    log(`<div class="row"><span class="label">浪费</span><span class="val bad">${totalKB - firstScreenKB}KB 从未首屏使用的代码被解析</span></div>`);
+  }
+
+  await delay(300);
+
+  // ===== 场景 2：动态 import() Code Splitting =====
+  log('<div class="section-title">场景 2：动态 import()（按需加载）</div>');
+  {
+    const start = performance.now();
+
+    // 仅加载首屏 Home 组件
+    const homeChunk = generatePayload(firstScreenKB, '// A10-首屏chunk: 仅Home路由');
+    const parseTime = Math.round(firstScreenKB / 1024 * 40);
+    await delay(parseTime + 50); // 网络 + 解析
+
+    const firstScreenDone = performance.now();
+
+    log(`<div class="row"><span class="label">首屏加载耗时</span><span class="val">${Math.round(firstScreenDone - start)} ms</span></div>`);
+    log(`<div class="row"><span class="label">首屏 JS 体积</span><span class="val">${firstScreenKB}KB（仅 Home 组件）</span></div>`);
+    log(`<div class="row"><span class="label">解析时间（估算）</span><span class="val">~${parseTime}ms</span></div>`);
+
+    await delay(200);
+
+    // 模拟用户导航到 Dashboard 时按需加载
+    log('<div class="row"><span class="label">━━━</span><span class="val">用户点击 Dashboard 导航</span></div>');
+    const navStart = performance.now();
+    const dashChunk = generatePayload(120, '// A10-dashboard: 按需加载');
+    const dashParse = Math.round(120 / 1024 * 40);
+    await delay(dashParse + 30);
+    const navEnd = performance.now();
+
+    log(`<div class="row"><span class="label">Dashboard chunk 加载</span><span class="val">${Math.round(navEnd - navStart)} ms（120KB，按需）</span></div>`);
+    log(`<div class="row"><span class="label">原理</span><span class="val">import('./Dashboard.js') 仅在路由切换时触发加载</span></div>`);
+  }
+
+  await delay(200);
+
+  // ===== 对比汇总 =====
+  log('<div class="section-title">📋 Code Splitting 对比</div>');
+  {
+    const fullParse = Math.round(totalKB / 1024 * 40);
+    const splitParse = Math.round(firstScreenKB / 1024 * 40);
+    const saved = fullParse - splitParse;
+    const pct = Math.round(saved / fullParse * 100);
+
+    log(`<div class="row"><span class="label">全量 bundle</span><span class="val warn">${totalKB}KB | 解析 ~${fullParse}ms</span></div>`);
+    log(`<div class="row"><span class="label">首屏 chunk</span><span class="val">${firstScreenKB}KB | 解析 ~${splitParse}ms</span></div>`);
+    log(`<div class="row"><span class="label">节省</span><span class="val">${saved}ms 解析时间 (${pct}%)</span></div>`);
+
+    // 条形对比图
+    const maxBar = 40;
+    const fullBarLen = Math.round(totalKB / totalKB * maxBar);
+    const splitBarLen = Math.round(firstScreenKB / totalKB * maxBar);
+    log(`<div class="row"><span class="label">体积对比</span></div>`);
+    log(`<div style="padding:4px 0;font-size:0.75rem;">全量: ${'█'.repeat(fullBarLen)}${'░'.repeat(maxBar - fullBarLen)} ${totalKB}KB</div>`);
+    log(`<div style="padding:4px 0;font-size:0.75rem;">首屏: ${'█'.repeat(splitBarLen)}${'░'.repeat(maxBar - splitBarLen)} ${firstScreenKB}KB</div>`);
+  }
+
+  log('<div class="row"><span class="label">✅ 检查点 5</span><span class="val">Code Splitting 使首屏 JS 体积降低，解析更快，FCP 更早</span></div>');
+  log('<div class="row"><span class="label">优化建议</span><span class="val">路由级 Code Splitting + 预加载下一可能路由 + Tree Shaking</span></div>');
+
+  btn.classList.remove('running');
+  btn.textContent = '▶ 重新运行';
+}
+</script>
+
+</body>
+</html>

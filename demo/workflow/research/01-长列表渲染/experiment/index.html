@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>长列表渲染实验 — 万级数据流畅滚动方案</title>
+<style>
+/* ===== 全局样式 ===== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0f1117;
+  color: #e0e0e0;
+  line-height: 1.6;
+}
+h1 { text-align: center; padding: 24px 0 8px; font-size: 1.6rem; color: #fff; }
+.subtitle { text-align: center; color: #888; margin-bottom: 24px; font-size: 0.9rem; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px 60px; }
+
+/* ===== FPS 仪表盘 ===== */
+#fps-monitor {
+  position: fixed; top: 12px; right: 12px; z-index: 9999;
+  background: rgba(0,0,0,0.85); border: 1px solid #333; border-radius: 8px;
+  padding: 10px 16px; min-width: 120px; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+#fps-monitor .label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+#fps-monitor .value { font-size: 1.8rem; font-weight: 700; }
+.fps-good { color: #4caf50; }
+.fps-ok { color: #ff9800; }
+.fps-bad { color: #f44336; }
+
+/* ===== 实验区块 ===== */
+.experiment {
+  background: #1a1d27;
+  border: 1px solid #2a2d3a;
+  border-radius: 12px;
+  margin-bottom: 24px;
+  overflow: hidden;
+}
+.experiment-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px;
+  background: #21242f; border-bottom: 1px solid #2a2d3a;
+}
+.experiment-header h2 { font-size: 1.1rem; color: #fff; }
+.badge {
+  font-size: 0.7rem; padding: 2px 8px; border-radius: 4px;
+  background: #2d4a3e; color: #66bb6a; font-weight: 600;
+}
+.experiment-body { padding: 20px; }
+
+/* ===== 控制区 ===== */
+.controls {
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+  margin-bottom: 16px;
+}
+button {
+  padding: 8px 18px; border: none; border-radius: 6px;
+  background: #3b82f6; color: #fff; font-size: 0.85rem;
+  cursor: pointer; transition: background 0.2s;
+}
+button:hover { background: #2563eb; }
+button.secondary { background: #374151; }
+button.secondary:hover { background: #4b5563; }
+button.danger { background: #ef4444; }
+button.danger:hover { background: #dc2626; }
+select, input[type="range"] {
+  padding: 6px 10px; background: #2a2d3a; border: 1px solid #3a3d4a;
+  border-radius: 4px; color: #e0e0e0; font-size: 0.85rem;
+}
+label { font-size: 0.85rem; color: #aaa; }
+.metric {
+  display: inline-block; padding: 4px 10px; margin: 2px;
+  background: #1a1d27; border-radius: 4px; font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+.metric .label { color: #888; }
+.metric .val { color: #4caf50; font-weight: 600; }
+.metric .val.warn { color: #ff9800; }
+.metric .val.bad { color: #f44336; }
+
+/* ===== 虚拟列表容器 ===== */
+.viewport {
+  height: 400px;
+  overflow-y: auto;
+  border: 1px solid #2a2d3a;
+  border-radius: 6px;
+  position: relative;
+  background: #12141c;
+}
+.viewport::-webkit-scrollbar { width: 8px; }
+.viewport::-webkit-scrollbar-track { background: #1a1d27; }
+.viewport::-webkit-scrollbar-thumb { background: #3a3d4a; border-radius: 4px; }
+
+/* [A4] 虚拟列表 — 占位撑高滚动条 */
+.phantom { width: 100%; }
+
+/* [A4] 虚拟列表 — 单行样式 */
+.v-item {
+  height: 40px;
+  line-height: 40px;
+  padding: 0 16px;
+  border-bottom: 1px solid #1e2130;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.v-item:nth-child(even) { background: rgba(255,255,255,0.02); }
+.v-item .idx { color: #666; margin-right: 8px; font-size: 0.75rem; }
+.v-item .text { color: #ccc; }
+
+/* [A3] 布局抖动对比 — 两列 */
+.thrash-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.thrash-box {
+  border: 1px solid #2a2d3a;
+  border-radius: 6px;
+  padding: 12px;
+  min-height: 180px;
+  background: #12141c;
+}
+.thrash-box h4 { font-size: 0.85rem; margin-bottom: 8px; color: #aaa; }
+.thrash-box .items {
+  display: flex; flex-wrap: wrap; gap: 2px;
+  min-height: 120px;
+}
+.thrash-box .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #3b82f6; transition: background 0.1s;
+}
+
+/* [A30] rAF 节流对比 */
+.raf-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.raf-box {
+  border: 1px solid #2a2d3a;
+  border-radius: 6px;
+  padding: 12px;
+  background: #12141c;
+}
+.raf-box h4 { font-size: 0.85rem; margin-bottom: 8px; color: #aaa; }
+.raf-viewport {
+  height: 250px;
+  overflow-y: auto;
+  border: 1px solid #2a2d3a;
+  border-radius: 4px;
+  position: relative;
+  background: #0a0c14;
+}
+.raf-viewport::-webkit-scrollbar { width: 6px; }
+.raf-viewport::-webkit-scrollbar-thumb { background: #3a3d4a; border-radius: 3px; }
+
+/* [A27] contain 属性对比 */
+.contain-compare {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.contain-box {
+  border: 1px solid #2a2d3a;
+  border-radius: 6px;
+  padding: 12px;
+  background: #12141c;
+}
+.contain-box h4 { font-size: 0.85rem; margin-bottom: 8px; color: #aaa; }
+.contain-viewport {
+  height: 300px;
+  overflow-y: auto;
+  border: 1px solid #2a2d3a;
+  border-radius: 4px;
+  background: #0a0c14;
+}
+.contain-viewport::-webkit-scrollbar { width: 6px; }
+.contain-viewport::-webkit-scrollbar-thumb { background: #3a3d4a; border-radius: 3px; }
+.c-item {
+  padding: 8px 12px;
+  border-bottom: 1px solid #1e2130;
+  font-size: 0.8rem;
+}
+.c-item .bar {
+  height: 4px; border-radius: 2px; margin-top: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+
+/* ===== 说明文字 ===== */
+.note {
+  font-size: 0.8rem; color: #666; margin-top: 8px;
+  padding: 8px 12px; background: rgba(255,255,255,0.02);
+  border-radius: 4px; border-left: 3px solid #333;
+}
+</style>
+</head>
+<body>
+
+<!-- [A30] 帧率实时监控器 -->
+<div id="fps-monitor">
+  <div class="label">FPS</div>
+  <div class="value fps-good" id="fps-value">--</div>
+  <div style="font-size:0.65rem;color:#666;margin-top:2px" id="fps-frames">0 帧</div>
+</div>
+
+<h1>长列表渲染：万级数据的流畅滚动方案</h1>
+<p class="subtitle">纯浏览器实验 · 10万项数据 · 零依赖</p>
+
+<div class="container">
+
+<!-- ==================== 实验1：虚拟列表 ==================== -->
+<div class="experiment" id="exp-virtual">
+  <div class="experiment-header">
+    <h2>实验 1：虚拟列表 — 10万项渲染</h2>
+    <span class="badge">A4 虚拟化算法</span>
+  </div>
+  <div class="experiment-body">
+    <div class="controls">
+      <label>数据量：
+        <select id="vl-count">
+          <option value="1000">1,000</option>
+          <option value="10000">10,000</option>
+          <option value="100000" selected>100,000</option>
+        </select>
+      </label>
+      <label>Overscan：
+        <select id="vl-overscan">
+          <option value="3">3</option>
+          <option value="5" selected>5</option>
+          <option value="10">10</option>
+          <option value="20">20</option>
+        </select>
+      </label>
+      <button onclick="initVirtualList()">初始化列表</button>
+      <button class="secondary" onclick="scrollToMiddle()">跳转到 50%</button>
+      <button class="secondary" onclick="scrollToBottom()">跳转到底部</button>
+    </div>
+    <div id="vl-metrics" style="margin-bottom:12px"></div>
+    <!-- [A4] 虚拟列表可视区域 -->
+    <div class="viewport" id="vl-viewport">
+      <div class="phantom" id="vl-phantom"></div>
+      <div id="vl-container" style="position:absolute;top:0;left:0;right:0;"></div>
+    </div>
+    <div class="note">
+      <strong>[A4] 可视区域计算公式：</strong>
+      startIndex = Math.floor(scrollTop / itemHeight)<br>
+      实际渲染节点数 = visibleCount + overscan * 2（上下各预渲染 overscan 项）
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 实验2：布局抖动对比 ==================== -->
+<div class="experiment" id="exp-thrash">
+  <div class="experiment-header">
+    <h2>实验 2：布局抖动对比 — appendChild vs DocumentFragment</h2>
+    <span class="badge">A3 重绘与回流</span>
+  </div>
+  <div class="experiment-body">
+    <div class="controls">
+      <label>节点数：
+        <select id="th-count">
+          <option value="500">500</option>
+          <option value="2000" selected>2,000</option>
+          <option value="5000">5,000</option>
+          <option value="10000">10,000</option>
+        </select>
+      </label>
+      <button onclick="runThrashTest()">运行对比</button>
+      <button class="danger" onclick="clearThrashTest()">清除</button>
+    </div>
+    <div id="th-metrics" style="margin-bottom:12px"></div>
+    <div class="thrash-compare">
+      <!-- [A3] 左：逐个 appendChild（触发多次回流） -->
+      <div class="thrash-box">
+        <h4>❌ 逐个 appendChild（多次回流）</h4>
+        <div class="items" id="th-slow"></div>
+      </div>
+      <!-- [A3] 右：DocumentFragment 批量插入（单次回流） -->
+      <div class="thrash-box">
+        <h4>✅ DocumentFragment 批量插入（单次回流）</h4>
+        <div class="items" id="th-fast"></div>
+      </div>
+    </div>
+    <div class="note">
+      <strong>[A3] 布局抖动原理：</strong>
+      每次 appendChild 后浏览器被迫同步计算布局（Layout Thrashing）。
+      DocumentFragment 在内存中构建完整子树，一次性插入只触发一次回流。
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 实验3：rAF 节流对比 ==================== -->
+<div class="experiment" id="exp-raf">
+  <div class="experiment-header">
+    <h2>实验 3：滚动节流 — rAF 节流 vs 直接响应</h2>
+    <span class="badge">A30 rAF 节流</span>
+  </div>
+  <div class="experiment-body">
+    <div class="controls">
+      <label>模拟计算负载：
+        <select id="raf-load">
+          <option value="0">0ms（无负载）</option>
+          <option value="5">5ms</option>
+          <option value="12" selected>12ms</option>
+          <option value="20">20ms（超负荷）</option>
+        </select>
+      </label>
+      <span class="metric"><span class="label">左FPS：</span><span class="val" id="raf-fps-left">--</span></span>
+      <span class="metric"><span class="label">右FPS：</span><span class="val" id="raf-fps-right">--</span></span>
+    </div>
+    <div class="raf-compare">
+      <!-- [A30] 左：直接 scrollTop 响应（无节流） -->
+      <div class="raf-box">
+        <h4>❌ 直接 scroll 事件（无节流）</h4>
+        <div class="raf-viewport" id="raf-left-viewport">
+          <div class="phantom" id="raf-left-phantom" style="height:40000px"></div>
+          <div id="raf-left-container" style="position:absolute;top:0;left:0;right:0;"></div>
+        </div>
+        <div style="margin-top:6px">
+          <span class="metric"><span class="label">触发次数：</span><span class="val" id="raf-left-count">0</span></span>
+          <span class="metric"><span class="label">丢帧数：</span><span class="val bad" id="raf-left-drops">0</span></span>
+        </div>
+      </div>
+      <!-- [A30] 右：rAF 节流 -->
+      <div class="raf-box">
+        <h4>✅ requestAnimationFrame 节流</h4>
+        <div class="raf-viewport" id="raf-right-viewport">
+          <div class="phantom" id="raf-right-phantom" style="height:40000px"></div>
+          <div id="raf-right-container" style="position:absolute;top:0;left:0;right:0;"></div>
+        </div>
+        <div style="margin-top:6px">
+          <span class="metric"><span class="label">触发次数：</span><span class="val" id="raf-right-count">0</span></span>
+          <span class="metric"><span class="label">丢帧数：</span><span class="val bad" id="raf-right-drops">0</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      <strong>[A30] rAF 节流原理：</strong>
+      scroll 事件可能在一帧内触发多次（触控板尤为严重）。
+      rAF 将回调推迟到下一帧渲染前执行，天然对齐 16.6ms 刷新周期，
+      避免一帧内重复计算，有效减少掉帧。
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 实验4：contain/content-visibility ==================== -->
+<div class="experiment" id="exp-contain">
+  <div class="experiment-header">
+    <h2>实验 4：CSS contain 与 content-visibility</h2>
+    <span class="badge">A27 CSS 渲染隔离</span>
+  </div>
+  <div class="experiment-body">
+    <div class="controls">
+      <button onclick="initContainTest()">初始化渲染测试</button>
+      <span class="metric"><span class="label">左FPS：</span><span class="val" id="cv-fps-left">--</span></span>
+      <span class="metric"><span class="label">右FPS：</span><span class="val" id="cv-fps-right">--</span></span>
+    </div>
+    <div class="contain-compare">
+      <!-- [A27] 左：无 contain -->
+      <div class="contain-box">
+        <h4>❌ 无 contain / content-visibility</h4>
+        <div class="contain-viewport" id="cv-left-viewport"></div>
+      </div>
+      <!-- [A27] 右：含 contain: layout paint; content-visibility: auto -->
+      <div class="contain-box">
+        <h4>✅ contain: layout paint + content-visibility: auto</h4>
+        <div class="contain-viewport" id="cv-right-viewport"></div>
+      </div>
+    </div>
+    <div class="note">
+      <strong>[A27] contain 原理：</strong>
+      <code>contain: layout paint</code> 告知浏览器该元素的布局/绘制不影响外部，
+      可跳过不必要的祖先重算。<code>content-visibility: auto</code> 对视口外的
+      元素跳过渲染（跳过 layout + paint + composition），显著降低首屏渲染开销。
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+// ========================================================================
+// [A30] FPS 监控器 — 全局帧率实时计算
+// ========================================================================
+const FPSMonitor = (() => {
+  let frames = 0;
+  let lastTime = performance.now();
+  let fps = 0;
+  const fpsEl = document.getElementById('fps-value');
+  const framesEl = document.getElementById('fps-frames');
+
+  function tick() {
+    frames++;
+    const now = performance.now();
+    const delta = now - lastTime;
+    if (delta >= 500) { // 每500ms更新一次，避免闪烁
+      fps = Math.round((frames * 1000) / delta);
+      frames = 0;
+      lastTime = now;
+      fpsEl.textContent = fps;
+      fpsEl.className = 'value ' + (fps >= 50 ? 'fps-good' : fps >= 30 ? 'fps-ok' : 'fps-bad');
+      framesEl.textContent = `Δ${Math.round(delta)}ms`;
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  return { getFps: () => fps };
+})();
+
+// ========================================================================
+// [A4] 实验1：10万项虚拟列表
+// ========================================================================
+const VirtualList = (() => {
+  const viewport = document.getElementById('vl-viewport');
+  const phantom = document.getElementById('vl-phantom');
+  const container = document.getElementById('vl-container');
+  const metricsEl = document.getElementById('vl-metrics');
+
+  const ITEM_HEIGHT = 40; // 固定行高 40px
+  let totalCount = 100000;
+  let overscan = 5;
+  let data = []; // 模拟数据源
+  let lastStart = -1;
+  let lastEnd = -1;
+  let domPool = []; // [A4] 复用池：回收已移除的 DOM 节点
+
+  // [A4] 生成模拟数据
+  function generateData(count) {
+    data = new Array(count);
+    for (let i = 0; i < count; i++) {
+      data[i] = `Item #${i} — ${Math.random().toString(36).slice(2, 10)}`;
+    }
+  }
+
+  // [A4] 创建或复用一个 DOM 节点
+  function getOrCreateNode() {
+    if (domPool.length > 0) return domPool.pop(); // 从复用池取
+    const div = document.createElement('div');
+    div.className = 'v-item';
+    return div;
+  }
+
+  // [A4] 回收节点到复用池
+  function recycleNodes(keepStart, keepEnd) {
+    const children = container.children;
+    for (let i = children.length - 1; i >= 0; i--) {
+      const child = children[i];
+      const idx = parseInt(child.dataset.idx);
+      if (idx < keepStart || idx >= keepEnd) {
+        container.removeChild(child);
+        if (domPool.length < overscan * 2 + 20) {
+          domPool.push(child); // 限制复用池大小
+        }
+      }
+    }
+  }
+
+  // [A4] 渲染可视区域
+  function render() {
+    const scrollTop = viewport.scrollTop;
+    const viewportHeight = viewport.clientHeight;
+
+    // [A4] 核心公式：startIndex = Math.floor(scrollTop / itemHeight)
+    const startIdx = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - overscan);
+    const visibleCount = Math.ceil(viewportHeight / ITEM_HEIGHT);
+    const endIdx = Math.min(totalCount, startIdx + visibleCount + overscan * 2);
+
+    // 优化：如果范围没变就跳过
+    if (startIdx === lastStart && endIdx === lastEnd) return;
+
+    // [A4] 回收范围外的节点
+    recycleNodes(startIdx, endIdx);
+
+    // [A4] 批量创建/更新节点（使用 DocumentFragment 减少回流）
+    const fragment = document.createDocumentFragment();
+    for (let i = startIdx; i < endIdx; i++) {
+      let node = container.querySelector(`[data-idx="${i}"]`);
+      if (!node) {
+        node = getOrCreateNode();
+        node.dataset.idx = i;
+        node.style.position = 'absolute';
+        node.style.left = '0';
+        node.style.right = '0';
+        node.style.height = ITEM_HEIGHT + 'px';
+        node.innerHTML = `<span class="idx">#${i}</span><span class="text">${data[i]}</span>`;
+      }
+      node.style.top = (i * ITEM_HEIGHT) + 'px';
+      fragment.appendChild(node);
+    }
+    container.appendChild(fragment);
+
+    lastStart = startIdx;
+    lastEnd = endIdx;
+
+    // 更新指标
+    updateMetrics(startIdx, endIdx);
+  }
+
+  function updateMetrics(start, end) {
+    const domCount = container.children.length;
+    metricsEl.innerHTML =
+      `<span class="metric"><span class="label">DOM节点：</span><span class="val">${domCount}</span></span>` +
+      `<span class="metric"><span class="label">渲染范围：</span><span class="val">${start} ~ ${end}</span></span>` +
+      `<span class="metric"><span class="label">复用池：</span><span class="val">${domPool.length}</span></span>` +
+      `<span class="metric"><span class="label">总数据：</span><span class="val">${totalCount.toLocaleString()}</span></span>`;
+  }
+
+  // rAF 节流的滚动处理
+  let ticking = false;
+  viewport.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        render();
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+
+  function init() {
+    totalCount = parseInt(document.getElementById('vl-count').value);
+    overscan = parseInt(document.getElementById('vl-overscan').value);
+    domPool = [];
+    container.innerHTML = '';
+    lastStart = -1;
+    lastEnd = -1;
+
+    phantom.style.height = (totalCount * ITEM_HEIGHT) + 'px';
+    generateData(totalCount);
+    render();
+  }
+
+  return { init, render };
+})();
+
+function initVirtualList() { VirtualList.init(); }
+function scrollToMiddle() {
+  const vp = document.getElementById('vl-viewport');
+  vp.scrollTop = vp.scrollHeight / 2;
+}
+function scrollToBottom() {
+  const vp = document.getElementById('vl-viewport');
+  vp.scrollTop = vp.scrollHeight;
+}
+
+// 初始化虚拟列表
+initVirtualList();
+
+// ========================================================================
+// [A3] 实验2：布局抖动对比 — appendChild vs DocumentFragment
+// ========================================================================
+function runThrashTest() {
+  const count = parseInt(document.getElementById('th-count').value);
+  const slowBox = document.getElementById('th-slow');
+  const fastBox = document.getElementById('th-fast');
+  const metricsEl = document.getElementById('th-metrics');
+
+  slowBox.innerHTML = '';
+  fastBox.innerHTML = '';
+
+  // [A3] 方式A：逐个 appendChild（每次插入触发一次回流）
+  const t0 = performance.now();
+  for (let i = 0; i < count; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    dot.style.background = `hsl(${(i / count) * 260}, 70%, 60%)`;
+    slowBox.appendChild(dot); // 每次都插入DOM → 触发回流
+  }
+  const slowTime = performance.now() - t0;
+
+  // [A3] 方式B：DocumentFragment 批量插入（仅一次回流）
+  const t1 = performance.now();
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < count; i++) {
+    const dot = document.createElement('div');
+    dot.className = 'dot';
+    dot.style.background = `hsl(${(i / count) * 260}, 70%, 60%)`;
+    frag.appendChild(dot); // 插入内存中的 fragment，无回流
+  }
+  fastBox.appendChild(frag); // 最后一次性插入，仅触发一次回流
+  const fastTime = performance.now() - t1;
+
+  const ratio = slowTime > 0 ? (slowTime / fastTime).toFixed(1) : 'N/A';
+  metricsEl.innerHTML =
+    `<span class="metric"><span class="label">逐个插入：</span><span class="val warn">${slowTime.toFixed(1)}ms</span></span>` +
+    `<span class="metric"><span class="label">Fragment批量：</span><span class="val">${fastTime.toFixed(1)}ms</span></span>` +
+    `<span class="metric"><span class="label">性能比：</span><span class="val">${ratio}x</span></span>` +
+    `<span class="metric"><span class="label">节点数：</span><span class="val">${count.toLocaleString()}</span></span>`;
+}
+
+function clearThrashTest() {
+  document.getElementById('th-slow').innerHTML = '';
+  document.getElementById('th-fast').innerHTML = '';
+  document.getElementById('th-metrics').innerHTML = '';
+}
+
+// ========================================================================
+// [A30] 实验3：rAF 节流 vs 直接滚动响应
+// ========================================================================
+const RAFExperiment = (() => {
+  const ITEM_H = 40;
+  const TOTAL = 1000;
+  let fakeLoad = 12; // 模拟计算负载 ms
+
+  // 生成数据
+  const items = [];
+  for (let i = 0; i < TOTAL; i++) {
+    items.push(`Row ${i} — ${Math.random().toString(36).slice(2, 8)}`);
+  }
+
+  // [A30] 模拟计算负载（阻塞主线程指定毫秒数）
+  function simulateWork(ms) {
+    if (ms <= 0) return;
+    const start = performance.now();
+    while (performance.now() - start < ms) { /* busy wait */ }
+  }
+
+  // 虚拟渲染（通用函数）
+  function renderTo(container, phantom, scrollTop) {
+    const startIdx = Math.max(0, Math.floor(scrollTop / ITEM_H) - 3);
+    const endIdx = Math.min(TOTAL, startIdx + 12);
+    container.innerHTML = '';
+    for (let i = startIdx; i < endIdx; i++) {
+      const div = document.createElement('div');
+      div.className = 'v-item';
+      div.style.height = ITEM_H + 'px';
+      div.style.position = 'absolute';
+      div.style.top = (i * ITEM_H) + 'px';
+      div.style.left = '0';
+      div.style.right = '0';
+      div.innerHTML = `<span class="idx">#${i}</span><span class="text">${items[i]}</span>`;
+      container.appendChild(div);
+    }
+  }
+
+  // 初始化两个视口
+  function init() {
+    fakeLoad = parseInt(document.getElementById('raf-load').value);
+    const leftVP = document.getElementById('raf-left-viewport');
+    const rightVP = document.getElementById('raf-right-viewport');
+    const leftPh = document.getElementById('raf-left-phantom');
+    const rightPh = document.getElementById('raf-right-phantom');
+    const leftC = document.getElementById('raf-left-container');
+    const rightC = document.getElementById('raf-right-container');
+
+    leftPh.style.height = (TOTAL * ITEM_H) + 'px';
+    rightPh.style.height = (TOTAL * ITEM_H) + 'px';
+
+    // [A30] 左侧：直接 scroll 事件（无节流，每帧可能触发多次）
+    let leftCount = 0, leftDrops = 0, leftLastFrame = -1;
+    leftVP.onscroll = () => {
+      leftCount++;
+      simulateWork(fakeLoad); // 模拟重计算
+      renderTo(leftC, leftPh, leftVP.scrollTop);
+
+      // 掉帧检测：连续两帧间隔 > 20ms 视为掉帧
+      const now = performance.now();
+      if (leftLastFrame > 0 && now - leftLastFrame > 20) leftDrops++;
+      leftLastFrame = now;
+
+      document.getElementById('raf-left-count').textContent = leftCount;
+      document.getElementById('raf-left-drops').textContent = leftDrops;
+      document.getElementById('raf-left-drops').className = 'val' + (leftDrops > 10 ? ' bad' : '');
+    };
+
+    // [A30] 右侧：rAF 节流（一帧内多次 scroll 只执行一次渲染）
+    let rightCount = 0, rightDrops = 0, rightLastFrame = -1;
+    let rightTicking = false;
+    rightVP.onscroll = () => {
+      rightCount++;
+      if (!rightTicking) {
+        requestAnimationFrame(() => {
+          simulateWork(fakeLoad);
+          renderTo(rightC, rightPh, rightVP.scrollTop);
+          rightTicking = false;
+
+          const now = performance.now();
+          if (rightLastFrame > 0 && now - rightLastFrame > 20) rightDrops++;
+          rightLastFrame = now;
+
+          document.getElementById('raf-right-count').textContent = rightCount;
+          document.getElementById('raf-right-drops').textContent = rightDrops;
+          document.getElementById('raf-right-drops').className = 'val' + (rightDrops > 10 ? ' bad' : '');
+        });
+        rightTicking = true;
+      }
+    };
+
+    // 初始渲染
+    renderTo(leftC, leftPh, 0);
+    renderTo(rightC, rightPh, 0);
+  }
+
+  return { init };
+})();
+
+// 页面加载后初始化 rAF 实验
+RAFExperiment.init();
+
+// ========================================================================
+// [A27] 实验4：contain / content-visibility 对比
+// ========================================================================
+const ContainExperiment = (() => {
+  const ITEM_COUNT = 200;
+
+  function generateItems(container, withContain) {
+    container.innerHTML = '';
+    for (let i = 0; i < ITEM_COUNT; i++) {
+      const div = document.createElement('div');
+      div.className = 'c-item';
+      if (withContain) {
+        // [A27] contain: layout paint — 隔离布局与绘制
+        // content-visibility: auto — 视口外元素跳过渲染
+        div.style.contain = 'layout paint';
+        div.style.contentVisibility = 'auto';
+        div.style.containIntrinsicSize = '0 50px'; // 预估尺寸
+      }
+      div.innerHTML =
+        `<div>条目 #${i} — 包含若干嵌套元素用于测试渲染性能</div>` +
+        `<div class="bar" style="width:${30 + Math.random() * 70}%"></div>`;
+      container.appendChild(div);
+    }
+  }
+
+  function init() {
+    const leftVP = document.getElementById('cv-left-viewport');
+    const rightVP = document.getElementById('cv-right-viewport');
+
+    generateItems(leftVP, false);  // 无 contain
+    generateItems(rightVP, true);   // 有 contain + content-visibility
+
+    // [A27] 滚动时测量 FPS
+    let leftFrames = 0, leftLast = performance.now();
+    let rightFrames = 0, rightLast = performance.now();
+
+    leftVP.onscroll = () => {
+      leftFrames++;
+      const now = performance.now();
+      if (now - leftLast >= 500) {
+        const fps = Math.round((leftFrames * 1000) / (now - leftLast));
+        document.getElementById('cv-fps-left').textContent = fps;
+        document.getElementById('cv-fps-left').className = 'val' + (fps < 50 ? ' warn' : '');
+        leftFrames = 0; leftLast = now;
+      }
+    };
+    rightVP.onscroll = () => {
+      rightFrames++;
+      const now = performance.now();
+      if (now - rightLast >= 500) {
+        const fps = Math.round((rightFrames * 1000) / (now - rightLast));
+        document.getElementById('cv-fps-right').textContent = fps;
+        document.getElementById('cv-fps-right').className = 'val' + (fps < 50 ? ' warn' : '');
+        rightFrames = 0; rightLast = now;
+      }
+    };
+  }
+
+  return { init };
+})();
+
+function initContainTest() { ContainExperiment.init(); }
+</script>
+</body>
+</html>

@@ -108,6 +108,17 @@ deep research：P1、P2、P4 --no-experiment
 | `--batch=pending` | 批量处理候选池 |
 | `--year=L1\|L2\|L3\|L4` | 经验年限适配 |
 
+### 演示实验
+
+[`demo/`](demo/) 目录包含一个完整的管线演示产物，演示输入为：
+
+```
+扫描：前端性能优化面试题 --year=L2
+研究：--batch=pending
+```
+
+演示覆盖 3-5 年前端 Web 开发经验候选人在面试中可能遇到的性能场景分析题，包含前处理和批量后处理的完整产出。详见 [`demo/readme.md`](demo/readme.md)。
+
 ---
 
 ## 项目结构
@@ -130,10 +141,12 @@ scenario-pipeline-skill/
 │   ├── pre-process.md                  前处理编排
 │   ├── post-process.md                 后处理编排
 │   └── processes/                      9 个可组合步骤
-└── pipeline/                       ← 管道设计文档（推荐阅读）
-    ├── 00-overview.md                  全局数据流 + 阶段索引
-    ├── 01 ~ 05                         各阶段：输入/输出/涉及文件/执行逻辑
-    └── 99-shared.md                    共享协议（调度/保全/故障恢复）
+├── pipeline/                       ← 管道设计文档（推荐阅读）
+│   ├── 00-overview.md                  全局数据流 + 阶段索引
+│   ├── 01 ~ 05                         各阶段：输入/输出/涉及文件/执行逻辑
+│   └── 99-shared.md                    共享协议（调度/保全/故障恢复）
+└── demo/                           ← 演示实验产物
+    └── workflow/research/              管线产出示例
 ```
 
 ---

@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>实验：内存泄漏 — 长时间运行页面的性能退化排查</title>
+<style>
+  /* ========== 全局样式 ========== */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f172a; color: #e2e8f0; line-height: 1.6;
+    padding: 20px; max-width: 1200px; margin: 0 auto;
+  }
+  h1 { font-size: 1.6rem; margin-bottom: 8px; color: #f1f5f9; }
+  h2 { font-size: 1.2rem; margin-bottom: 8px; color: #94a3b8; }
+  h3 { font-size: 1rem; margin-bottom: 6px; color: #cbd5e1; }
+
+  /* ========== 内存监控栏 ========== */
+  #memory-bar {
+    position: sticky; top: 0; z-index: 100;
+    background: #1e293b; border: 1px solid #334155; border-radius: 8px;
+    padding: 12px 16px; margin-bottom: 20px;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  #memory-bar .label { color: #94a3b8; font-size: 0.85rem; }
+  #memory-bar .value { color: #38bdf8; font-weight: 700; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+  #memory-bar .warn { color: #f59e0b; }
+  #memory-bar .danger { color: #ef4444; }
+  #gc-btn {
+    background: #334155; border: 1px solid #475569; color: #e2e8f0;
+    padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;
+  }
+  #gc-btn:hover { background: #475569; }
+
+  /* ========== 实验卡片 ========== */
+  .experiment {
+    background: #1e293b; border: 1px solid #334155; border-radius: 12px;
+    padding: 20px; margin-bottom: 20px;
+  }
+  .experiment h2 { border-bottom: 1px solid #334155; padding-bottom: 8px; margin-bottom: 12px; }
+  .desc { color: #94a3b8; font-size: 0.9rem; margin-bottom: 12px; }
+
+  /* ========== 按钮 ========== */
+  .btn {
+    display: inline-block; padding: 8px 16px; margin: 4px 6px 4px 0;
+    border: 1px solid #475569; border-radius: 6px; background: #334155;
+    color: #e2e8f0; cursor: pointer; font-size: 0.85rem; transition: all 0.15s;
+  }
+  .btn:hover { background: #475569; border-color: #64748b; }
+  .btn.primary { background: #2563eb; border-color: #3b82f6; }
+  .btn.primary:hover { background: #3b82f6; }
+  .btn.danger { background: #dc2626; border-color: #ef4444; }
+  .btn.danger:hover { background: #ef4444; }
+  .btn.success { background: #16a34a; border-color: #22c55e; }
+  .btn.success:hover { background: #22c55e; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ========== 输出区 ========== */
+  .output {
+    background: #0f172a; border: 1px solid #1e293b; border-radius: 8px;
+    padding: 12px; margin-top: 12px; font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 0.8rem; max-height: 240px; overflow-y: auto; white-space: pre-wrap;
+    color: #94a3b8;
+  }
+  .output .info { color: #38bdf8; }
+  .output .warn { color: #f59e0b; }
+  .output .err { color: #ef4444; }
+  .output .ok { color: #22c55e; }
+
+  /* ========== 状态面板 ========== */
+  .stats {
+    display: flex; gap: 16px; flex-wrap: wrap; margin: 12px 0;
+  }
+  .stat {
+    background: #0f172a; border: 1px solid #334155; border-radius: 8px;
+    padding: 8px 14px; min-width: 140px;
+  }
+  .stat .stat-label { font-size: 0.75rem; color: #64748b; }
+  .stat .stat-value { font-size: 1.1rem; font-weight: 700; color: #38bdf8; font-variant-numeric: tabular-nums; }
+
+  /* ========== 组件演示区 ========== */
+  .component-area {
+    border: 2px dashed #334155; border-radius: 8px; padding: 16px;
+    margin: 12px 0; min-height: 80px; position: relative;
+  }
+  .component-area .placeholder { color: #475569; font-style: italic; }
+
+  /* ========== 进度条 ========== */
+  .progress-bar {
+    height: 6px; background: #334155; border-radius: 3px; margin: 8px 0; overflow: hidden;
+  }
+  .progress-bar .fill {
+    height: 100%; background: #3b82f6; border-radius: 3px;
+    transition: width 0.3s; width: 0%;
+  }
+
+  /* ========== 检查点 ========== */
+  .checkpoint {
+    background: #172554; border: 1px solid #1e3a5f; border-radius: 8px;
+    padding: 12px 16px; margin-top: 12px;
+  }
+  .checkpoint h3 { color: #60a5fa; font-size: 0.9rem; margin-bottom: 6px; }
+  .checkpoint p { color: #93c5fd; font-size: 0.85rem; }
+
+  /* ========== 监听器列表 ========== */
+  .listener-log {
+    max-height: 120px; overflow-y: auto; font-size: 0.75rem;
+    background: #0f172a; padding: 8px; border-radius: 6px; margin-top: 8px;
+  }
+  .listener-log .entry { padding: 2px 0; border-bottom: 1px solid #1e293b; }
+  .listener-log .entry:last-child { border-bottom: none; }
+
+  /* ========== 响应式 ========== */
+  @media (max-width: 640px) {
+    body { padding: 12px; }
+    .stats { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== 内存监控栏 ==================== -->
+<div id="memory-bar">
+  <span class="label">🧠 JS 堆内存：</span>
+  <span class="value" id="mem-used">—</span>
+  <span class="label">/</span>
+  <span class="value" id="mem-total">—</span>
+  <span class="label" id="mem-usage-label">使用率：—</span>
+  <button id="gc-btn" onclick="window.gc && window.gc()" title="需要 Chrome 启动时加 --js-flags='--expose-gc'">手动 GC</button>
+  <span class="label" style="margin-left:auto;">⏱️ 运行：<span id="uptime" style="color:#38bdf8;">0s</span></span>
+</div>
+
+<h1>🔬 实验：内存泄漏 — 长时间运行页面的性能退化排查</h1>
+<p class="desc" style="margin-bottom:20px;">
+  包含 4 个独立实验，演示常见内存泄漏模式。建议配合 Chrome DevTools → Memory 面板使用。
+</p>
+
+<!-- ==================== 实验 1：Map vs WeakMap ==================== -->
+<div class="experiment" id="exp1">
+  <h2>实验 1：Map vs WeakMap 内存对比</h2>
+  <p class="desc">
+    强引用（Map）会阻止对象被 GC 回收，即使外部已无引用。WeakMap 的键是弱引用，对象可被自动回收。<br>
+    操作：分别点击「用 Map 存储」和「用 WeakMap 存储」，然后「删除外部引用」，观察内存差异。
+  </p>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Map 条目数</div>
+      <div class="stat-value" id="map-count">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">WeakMap 条目数</div>
+      <div class="stat-value" id="wmap-count">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">泄漏对象数</div>
+      <div class="stat-value" id="leak-obj-count">0</div>
+    </div>
+  </div>
+
+  <div>
+    <button class="btn primary" onclick="exp1_createMap()">① 用 Map 存储 10000 对象</button>
+    <button class="btn primary" onclick="exp1_createWeakMap()">② 用 WeakMap 存储 10000 对象</button>
+    <button class="btn danger" onclick="exp1_deleteRefs()">③ 删除外部引用</button>
+    <button class="btn success" onclick="exp1_triggerGC()">④ 触发 GC 并对比</button>
+    <button class="btn" onclick="exp1_reset()">重置</button>
+  </div>
+  <div class="output" id="exp1-output">等待操作...</div>
+
+  <div class="checkpoint">
+    <h3>✅ 检查点 1</h3>
+    <p>完成步骤 ①→③→④ 后，Map 版内存不降（对象仍被 Map 强引用）；完成 ②→③→④ 后，WeakMap 版内存下降（弱引用允许 GC 回收）。</p>
+  </div>
+</div>
+
+<!-- ==================== 实验 2：事件监听器泄漏 ==================== -->
+<div class="experiment" id="exp2">
+  <h2>实验 2：事件监听器泄漏演示</h2>
+  <p class="desc">
+    组件切换时未移除事件监听器，导致旧监听器累积。每次切换都创建新监听器，旧的无法被 GC。<br>
+    操作：反复点击「切换组件」，观察监听器计数持续增长。
+  </p>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">组件切换次数</div>
+      <div class="stat-value" id="exp2-switches">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">活跃监听器数</div>
+      <div class="stat-value" id="exp2-listeners">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">累计闭包数</div>
+      <div class="stat-value" id="exp2-closures">0</div>
+    </div>
+  </div>
+
+  <div>
+    <button class="btn primary" onclick="exp2_switch()">切换组件（泄漏模式）</button>
+    <button class="btn success" onclick="exp2_switchClean()">切换组件（修复模式）</button>
+    <button class="btn" onclick="exp2_reset()">重置</button>
+  </div>
+
+  <div class="component-area" id="exp2-area">
+    <span class="placeholder">点击「切换组件」开始演示</span>
+  </div>
+
+  <div class="listener-log" id="exp2-log"></div>
+  <div class="output" id="exp2-output">等待操作...</div>
+
+  <div class="checkpoint">
+    <h3>✅ 检查点 2</h3>
+    <p>泄漏模式下，反复切换后监听器数量 = 切换次数（每次 +1 不清理）。修复模式下，监听器数量保持为 1（先 remove 再 add）。</p>
+  </div>
+</div>
+
+<!-- ==================== 实验 3：setInterval 闭包泄漏 ==================== -->
+<div class="experiment" id="exp3">
+  <h2>实验 3：setInterval 闭包引用泄漏</h2>
+  <p class="desc">
+    setInterval 回调闭包持有外部大对象引用，即使组件已「销毁」，定时器仍在运行，闭包中的对象无法释放。<br>
+    操作：启动定时器 → 销毁组件 → 观察定时器仍在输出。
+  </p>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">定时器状态</div>
+      <div class="stat-value" id="exp3-timer-status">未启动</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">闭包持有对象数</div>
+      <div class="stat-value" id="exp3-held-objects">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">定时器 tick 数</div>
+      <div class="stat-value" id="exp3-ticks">0</div>
+    </div>
+  </div>
+
+  <div>
+    <button class="btn primary" onclick="exp3_start()">① 启动定时器（持有大对象）</button>
+    <button class="btn danger" onclick="exp3_destroy()">② 销毁组件（不清理定时器）</button>
+    <button class="btn success" onclick="exp3_cleanup()">③ 修复：清理定时器</button>
+    <button class="btn" onclick="exp3_reset()">重置</button>
+  </div>
+
+  <div class="component-area" id="exp3-area">
+    <span class="placeholder">点击「启动定时器」开始</span>
+  </div>
+
+  <div class="output" id="exp3-output">等待操作...</div>
+
+  <div class="checkpoint">
+    <h3>✅ 检查点 3</h3>
+    <p>点击②后组件从 DOM 移除，但定时器仍每秒输出日志（闭包持有引用）。点击③后定时器停止，对象可被 GC 回收。观察内存数值变化。</p>
+  </div>
+</div>
+
+<!-- ==================== 实验 4：Detached DOM 检测 ==================== -->
+<div class="experiment" id="exp4">
+  <h2>实验 4：Detached DOM 检测</h2>
+  <p class="desc">
+    DOM 节点从文档树移除后，如果仍有 JS 变量引用它，它处于 Detached 状态（游离节点），无法被 GC。<br>
+    操作：创建节点 → 移除 → 保持引用 → 观察 Detached 状态。
+  </p>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">已创建节点数</div>
+      <div class="stat-value" id="exp4-created">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">已移除节点数</div>
+      <div class="stat-value" id="exp4-removed">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Detached 节点（JS 引用）</div>
+      <div class="stat-value" id="exp4-detached">0</div>
+    </div>
+  </div>
+
+  <div>
+    <button class="btn primary" onclick="exp4_create()">① 创建 100 个 DOM 节点</button>
+    <button class="btn danger" onclick="exp4_remove()">② 从 DOM 树移除（保留 JS 引用）</button>
+    <button class="btn success" onclick="exp4_release()">③ 释放 JS 引用</button>
+    <button class="btn" onclick="exp4_inspect()">④ 检查 Detached 状态</button>
+    <button class="btn" onclick="exp4_reset()">重置</button>
+  </div>
+
+  <div class="component-area" id="exp4-area">
+    <span class="placeholder">点击「创建节点」开始</span>
+  </div>
+
+  <div class="output" id="exp4-output">等待操作...</div>
+
+  <div class="checkpoint">
+    <h3>✅ 检查点 4</h3>
+    <p>步骤②后节点从 DOM 消失，但 JS 数组仍持有引用 → Detached 计数 = 100。步骤③释放引用后 Detached 归零，GC 可回收。<br>
+    验证：在 DevTools → Memory 拍堆快照，搜索 "Detached" 可找到游离节点。</p>
+  </div>
+</div>
+
+<!-- ==================== JavaScript 实验逻辑 ==================== -->
+<script>
+// ========== 内存监控 ==========
+const memoryBar = {
+  used: document.getElementById('mem-used'),
+  total: document.getElementById('mem-total'),
+  label: document.getElementById('mem-usage-label'),
+  uptime: document.getElementById('uptime'),
+};
+const startTime = Date.now();
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / 1048576).toFixed(2) + ' MB';
+}
+
+function updateMemoryDisplay() {
+  // performance.memory 仅 Chrome/Edge 支持
+  if (performance.memory) {
+    const used = performance.memory.usedJSHeapSize;
+    const total = performance.memory.totalJSHeapSize;
+    const limit = performance.memory.jsHeapSizeLimit;
+    const pct = (used / limit * 100).toFixed(1);
+
+    memoryBar.used.textContent = formatBytes(used);
+    memoryBar.total.textContent = formatBytes(limit);
+    memoryBar.used.className = 'value' + (pct > 80 ? ' danger' : pct > 50 ? ' warn' : '');
+    memoryBar.label.textContent = `使用率：${pct}%`;
+  } else {
+    memoryBar.used.textContent = '不支持';
+    memoryBar.total.textContent = '(需 Chrome)';
+    memoryBar.label.textContent = '';
+  }
+  // 运行时间
+  const elapsed = Math.floor((Date.now() - startTime) / 1000);
+  const m = Math.floor(elapsed / 60);
+  const s = elapsed % 60;
+  memoryBar.uptime.textContent = m > 0 ? `${m}m${s}s` : `${s}s`;
+}
+
+setInterval(updateMemoryDisplay, 500);
+updateMemoryDisplay();
+
+// ========== 工具函数 ==========
+function log(outputId, msg, cls = '') {
+  const el = document.getElementById(outputId);
+  const span = document.createElement('span');
+  if (cls) span.className = cls;
+  span.textContent = `[${new Date().toLocaleTimeString()}] ${msg}\n`;
+  el.appendChild(span);
+  el.scrollTop = el.scrollHeight;
+}
+
+function clearLog(outputId) {
+  document.getElementById(outputId).textContent = '';
+}
+
+function forceGC() {
+  // 仅在 --expose-gc 启动时可用
+  if (window.gc) { window.gc(); return true; }
+  return false;
+}
+
+// ========== 实验 1：Map vs WeakMap ==========
+let exp1_map = null;
+let exp1_wmap = null;
+let exp1_objects = [];
+let exp1_mapUsed = false;
+let exp1_wmapUsed = false;
+
+function exp1_createMap() {
+  exp1_reset();
+  exp1_map = new Map();
+  exp1_objects = [];
+  // 创建 10000 个对象，同时存入 Map 和外部数组
+  for (let i = 0; i < 10000; i++) {
+    const obj = { id: i, data: new Array(100).fill('x'.repeat(50)) };
+    exp1_objects.push(obj);
+    exp1_map.set(obj, `metadata_${i}`);
+  }
+  exp1_mapUsed = true;
+  document.getElementById('map-count').textContent = exp1_map.size;
+  document.getElementById('leak-obj-count').textContent = exp1_objects.length;
+  log('exp1-output', `已创建 10000 个对象存入 Map，当前堆中对象数: ${exp1_objects.length}`, 'info');
+  log('exp1-output', `Map 条目数: ${exp1_map.size}`);
+}
+
+function exp1_createWeakMap() {
+  exp1_reset();
+  exp1_wmap = new WeakMap();
+  exp1_objects = [];
+  for (let i = 0; i < 10000; i++) {
+    const obj = { id: i, data: new Array(100).fill('x'.repeat(50)) };
+    exp1_objects.push(obj);
+    exp1_wmap.set(obj, `metadata_${i}`);
+  }
+  exp1_wmapUsed = true;
+  document.getElementById('wmap-count').textContent = '— (WeakMap 无 size)';
+  document.getElementById('leak-obj-count').textContent = exp1_objects.length;
+  log('exp1-output', `已创建 10000 个对象存入 WeakMap，当前堆中对象数: ${exp1_objects.length}`, 'info');
+  log('exp1-output', 'WeakMap 条目数: 无法直接查询（WeakMap 无 .size 属性）');
+}
+
+function exp1_deleteRefs() {
+  if (exp1_objects.length === 0) {
+    log('exp1-output', '请先创建对象', 'warn');
+    return;
+  }
+  const count = exp1_objects.length;
+  // 清空外部引用数组，但 Map/WeakMap 中的引用仍在
+  exp1_objects.length = 0;
+  document.getElementById('leak-obj-count').textContent = '0';
+  log('exp1-output', `已删除外部数组引用（${count} 个对象）`, 'warn');
+  if (exp1_mapUsed) {
+    log('exp1-output', `⚠️ Map 仍持有 ${exp1_map.size} 个强引用 → 对象无法被 GC`, 'err');
+  }
+  if (exp1_wmapUsed) {
+    log('exp1-output', `✅ WeakMap 是弱引用 → 删除外部引用后对象可被 GC`, 'ok');
+  }
+}
+
+function exp1_triggerGC() {
+  log('exp1-output', '尝试触发 GC...');
+  if (forceGC()) {
+    log('exp1-output', '✅ GC 已触发（--expose-gc 模式）', 'ok');
+  } else {
+    log('exp1-output', '⚠️ 无法直接调用 gc()，请用 --js-flags="--expose-gc" 启动 Chrome，或等待自动 GC', 'warn');
+  }
+  // 等待一小段时间后检查内存
+  setTimeout(() => {
+    updateMemoryDisplay();
+    if (exp1_mapUsed && exp1_map) {
+      log('exp1-output', `Map 仍存在，条目数: ${exp1_map.size} → 内存未释放`, 'err');
+    }
+    if (exp1_wmapUsed) {
+      log('exp1-output', 'WeakMap 模式：外部引用已删除，对象理论上可被 GC 回收', 'ok');
+      log('exp1-output', '💡 提示：在 DevTools Memory 面板拍两个堆快照对比，观察对象数量变化');
+    }
+  }, 1000);
+}
+
+function exp1_reset() {
+  exp1_map = null;
+  exp1_wmap = null;
+  exp1_objects = [];
+  exp1_mapUsed = false;
+  exp1_wmapUsed = false;
+  document.getElementById('map-count').textContent = '0';
+  document.getElementById('wmap-count').textContent = '0';
+  document.getElementById('leak-obj-count').textContent = '0';
+  clearLog('exp1-output');
+  log('exp1-output', '已重置，请重新开始实验', 'info');
+}
+
+// ========== 实验 2：事件监听器泄漏 ==========
+let exp2_switchCount = 0;
+let exp2_listenerCount = 0;
+let exp2_closureCount = 0;
+let exp2_currentCleanup = null; // 当前组件的清理函数
+let exp2_leakedHandlers = [];   // 泄漏的处理器引用
+
+function exp2_switch() {
+  // 泄漏模式：不清理旧监听器
+  exp2_switchCount++;
+  const area = document.getElementById('exp2-area');
+  const idx = exp2_switchCount;
+
+  // 创建新组件内容
+  area.innerHTML = `
+    <div style="padding:8px;">
+      <h3 style="color:#38bdf8;">组件 #${idx}</h3>
+      <p style="color:#94a3b8;font-size:0.85rem;">这是第 ${idx} 个组件实例（泄漏模式：不清理旧监听器）</p>
+      <button class="btn" id="exp2-btn-${idx}">点击我（监听器 #${idx}）</button>
+      <span id="exp2-click-msg-${idx}" style="color:#22c55e;margin-left:8px;"></span>
+    </div>
+  `;
+
+  // 添加事件监听器（不清理旧的 → 泄漏）
+  const btn = document.getElementById(`exp2-btn-${idx}`);
+  // 闭包捕获大量数据，模拟真实场景
+  const bigData = new Array(1000).fill(`组件${idx}的闭包数据`.repeat(10));
+  const handler = function() {
+    document.getElementById(`exp2-click-msg-${idx}`).textContent = `✅ 监听器 #${idx} 触发！(闭包持有 ${bigData.length} 条数据)`;
+    log('exp2-output', `组件 #${idx} 的监听器被触发`, 'info');
+  };
+  btn.addEventListener('click', handler);
+
+  // 记录泄漏
+  exp2_listenerCount++;
+  exp2_closureCount++;
+  exp2_leakedHandlers.push({ btn, handler, idx, bigData });
+
+  // 更新显示
+  document.getElementById('exp2-switches').textContent = exp2_switchCount;
+  document.getElementById('exp2-listeners').textContent = exp2_listenerCount;
+  document.getElementById('exp2-closures').textContent = exp2_closureCount;
+
+  // 日志
+  const logEl = document.getElementById('exp2-log');
+  const entry = document.createElement('div');
+  entry.className = 'entry';
+  entry.innerHTML = `<span style="color:#ef4444;">⚠️ 切换 #${idx}：新增监听器，未清理旧的</span>`;
+  logEl.appendChild(entry);
+  logEl.scrollTop = logEl.scrollHeight;
+
+  log('exp2-output', `切换到组件 #${idx}（泄漏模式）— 当前活跃监听器: ${exp2_listenerCount}`, 'warn');
+}
+
+function exp2_switchClean() {
+  // 修复模式：先清理旧监听器再添加新的
+  exp2_switchCount++;
+  const area = document.getElementById('exp2-area');
+  const idx = exp2_switchCount;
+
+  // 先清理所有旧监听器
+  exp2_leakedHandlers.forEach(({ btn, handler }) => {
+    btn.removeEventListener('click', handler);
+  });
+  const cleaned = exp2_leakedHandlers.length;
+  exp2_leakedHandlers.length = 0;
+  exp2_listenerCount = Math.max(0, exp2_listenerCount - cleaned);
+
+  // 创建新组件
+  area.innerHTML = `
+    <div style="padding:8px;">
+      <h3 style="color:#22c55e;">组件 #${idx}（已修复）</h3>
+      <p style="color:#94a3b8;font-size:0.85rem;">这是第 ${idx} 个组件实例（修复模式：先 removeEventListener 再添加）</p>
+      <button class="btn" id="exp2-btn-${idx}">点击我（监听器 #${idx}）</button>
+      <span id="exp2-click-msg-${idx}" style="color:#22c55e;margin-left:8px;"></span>
+    </div>
+  `;
+
+  const btn = document.getElementById(`exp2-btn-${idx}`);
+  const bigData = new Array(1000).fill(`组件${idx}的闭包数据`.repeat(10));
+  const handler = function() {
+    document.getElementById(`exp2-click-msg-${idx}`).textContent = `✅ 监听器 #${idx} 触发！`;
+    log('exp2-output', `组件 #${idx} 的监听器被触发`, 'info');
+  };
+  btn.addEventListener('click', handler);
+
+  exp2_listenerCount++;
+  exp2_closureCount++;
+  exp2_leakedHandlers.push({ btn, handler, idx, bigData });
+
+  document.getElementById('exp2-switches').textContent = exp2_switchCount;
+  document.getElementById('exp2-listeners').textContent = exp2_listenerCount;
+  document.getElementById('exp2-closures').textContent = exp2_closureCount;
+
+  const logEl = document.getElementById('exp2-log');
+  const entry = document.createElement('div');
+  entry.className = 'entry';
+  entry.innerHTML = `<span style="color:#22c55e;">✅ 切换 #${idx}：已清理 ${cleaned} 个旧监听器，添加 1 个新监听器</span>`;
+  logEl.appendChild(entry);
+  logEl.scrollTop = logEl.scrollHeight;
+
+  log('exp2-output', `切换到组件 #${idx}（修复模式）— 清理 ${cleaned} 个旧监听器，当前活跃: ${exp2_listenerCount}`, 'ok');
+}
+
+function exp2_reset() {
+  // 清理所有监听器
+  exp2_leakedHandlers.forEach(({ btn, handler }) => {
+    if (btn) btn.removeEventListener('click', handler);
+  });
+  exp2_switchCount = 0;
+  exp2_listenerCount = 0;
+  exp2_closureCount = 0;
+  exp2_leakedHandlers = [];
+  document.getElementById('exp2-switches').textContent = '0';
+  document.getElementById('exp2-listeners').textContent = '0';
+  document.getElementById('exp2-closures').textContent = '0';
+  document.getElementById('exp2-area').innerHTML = '<span class="placeholder">点击「切换组件」开始演示</span>';
+  document.getElementById('exp2-log').innerHTML = '';
+  clearLog('exp2-output');
+  log('exp2-output', '已重置', 'info');
+}
+
+// ========== 实验 3：setInterval 闭包引用 ==========
+let exp3_timerId = null;
+let exp3_tickCount = 0;
+let exp3_heldObjects = 0;
+let exp3_domRef = null;    // 闭包持有的 DOM 引用
+let exp3_bigArray = null;  // 闭包持有的大数组
+
+function exp3_start() {
+  if (exp3_timerId) {
+    log('exp3-output', '定时器已在运行，请先销毁或清理', 'warn');
+    return;
+  }
+
+  const area = document.getElementById('exp3-area');
+  // 创建一个 DOM 元素
+  const div = document.createElement('div');
+  div.id = 'exp3-component';
+  div.style.padding = '8px';
+  div.innerHTML = `
+    <h3 style="color:#38bdf8;">组件实例（定时器运行中）</h3>
+    <p style="color:#94a3b8;font-size:0.85rem;">
+      定时器每秒输出一次，闭包持有此 DOM 元素和一个大数组的引用。<br>
+      tick 计数: <span id="exp3-tick-display" style="color:#f59e0b;">0</span>
+    </p>
+  `;
+  area.innerHTML = '';
+  area.appendChild(div);
+  exp3_domRef = div;
+
+  // 创建大数组（模拟闭包持有的大量数据）
+  exp3_bigArray = new Array(50000).fill(null).map((_, i) => ({
+    id: i,
+    payload: 'x'.repeat(100),
+    timestamp: Date.now()
+  }));
+  exp3_heldObjects = exp3_bigArray.length;
+
+  // 启动定时器 — 闭包引用了 div 和 bigArray
+  exp3_tickCount = 0;
+  exp3_timerId = setInterval(() => {
+    exp3_tickCount++;
+    // 通过闭包访问 DOM 引用（即使组件已从 DOM 移除）
+    const stillInDOM = document.contains(exp3_domRef);
+    const display = document.getElementById('exp3-tick-display');
+    if (display) display.textContent = exp3_tickCount;
+
+    document.getElementById('exp3-ticks').textContent = exp3_tickCount;
+    log('exp3-output',
+      `⏱️ tick #${exp3_tickCount} | DOM 节点仍在文档中: ${stillInDOM} | 闭包持有 ${exp3_heldObjects} 个对象`,
+      stillInDOM ? 'info' : 'err'
+    );
+  }, 1000);
+
+  document.getElementById('exp3-timer-status').textContent = '运行中';
+  document.getElementById('exp3-timer-status').style.color = '#22c55e';
+  document.getElementById('exp3-held-objects').textContent = exp3_heldObjects.toLocaleString();
+  log('exp3-output', '✅ 定时器已启动，闭包持有 DOM 引用 + 50000 个对象', 'info');
+}
+
+function exp3_destroy() {
+  if (!exp3_timerId) {
+    log('exp3-output', '请先启动定时器', 'warn');
+    return;
+  }
+
+  const area = document.getElementById('exp3-area');
+  // 移除 DOM 节点（模拟组件销毁）
+  if (exp3_domRef && exp3_domRef.parentNode) {
+    exp3_domRef.parentNode.removeChild(exp3_domRef);
+  }
+  area.innerHTML = '<span class="placeholder" style="color:#ef4444;">⚠️ 组件已销毁（但定时器仍在运行！）</span>';
+
+  log('exp3-output', '⚠️ 组件已从 DOM 移除，但定时器未清理！', 'err');
+  log('exp3-output', '   闭包仍持有已移除的 DOM 节点引用和 50000 个对象', 'err');
+  log('exp3-output', '   定时器将继续运行，内存无法释放', 'err');
+}
+
+function exp3_cleanup() {
+  if (exp3_timerId) {
+    clearInterval(exp3_timerId);
+    exp3_timerId = null;
+    log('exp3-output', '✅ 定时器已清理（clearInterval）', 'ok');
+  }
+  // 释放闭包引用
+  exp3_domRef = null;
+  exp3_bigArray = null;
+  exp3_heldObjects = 0;
+  document.getElementById('exp3-timer-status').textContent = '已停止';
+  document.getElementById('exp3-timer-status').style.color = '#ef4444';
+  document.getElementById('exp3-held-objects').textContent = '0';
+  log('exp3-output', '✅ 已释放闭包中的 DOM 引用和大数组引用', 'ok');
+  log('exp3-output', '💡 对象现在可以被 GC 回收了', 'info');
+}
+
+function exp3_reset() {
+  if (exp3_timerId) {
+    clearInterval(exp3_timerId);
+    exp3_timerId = null;
+  }
+  exp3_tickCount = 0;
+  exp3_heldObjects = 0;
+  exp3_domRef = null;
+  exp3_bigArray = null;
+  document.getElementById('exp3-timer-status').textContent = '未启动';
+  document.getElementById('exp3-timer-status').style.color = '#38bdf8';
+  document.getElementById('exp3-held-objects').textContent = '0';
+  document.getElementById('exp3-ticks').textContent = '0';
+  document.getElementById('exp3-area').innerHTML = '<span class="placeholder">点击「启动定时器」开始</span>';
+  clearLog('exp3-output');
+  log('exp3-output', '已重置', 'info');
+}
+
+// ========== 实验 4：Detached DOM 检测 ==========
+let exp4_createdCount = 0;
+let exp4_removedCount = 0;
+let exp4_detachedCount = 0;
+let exp4_nodes = [];       // JS 引用（保持 Detached 状态）
+let exp4_area = document.getElementById('exp4-area');
+
+function exp4_create() {
+  exp4_reset();
+  const container = document.createElement('div');
+  container.id = 'exp4-container';
+  container.style.display = 'flex';
+  container.style.flexWrap = 'wrap';
+  container.style.gap = '4px';
+
+  for (let i = 0; i < 100; i++) {
+    const node = document.createElement('div');
+    node.className = 'exp4-node';
+    node.style.cssText = 'width:40px;height:40px;background:#3b82f6;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;color:#fff;';
+    node.textContent = i;
+    // 每个节点附加大数据（更容易在堆快照中发现）
+    node._bigData = new Array(500).fill(`node-${i}-data`.repeat(20));
+    container.appendChild(node);
+    exp4_nodes.push(node);
+  }
+
+  exp4_area.innerHTML = '';
+  exp4_area.appendChild(container);
+  exp4_createdCount = 100;
+  document.getElementById('exp4-created').textContent = exp4_createdCount;
+  document.getElementById('exp4-detached').textContent = '0';
+  log('exp4-output', `✅ 已创建 100 个 DOM 节点，每个附加大数据数组`, 'info');
+  log('exp4-output', '   所有节点同时在 DOM 树中和 JS 数组中有引用');
+}
+
+function exp4_remove() {
+  if (exp4_nodes.length === 0) {
+    log('exp4-output', '请先创建节点', 'warn');
+    return;
+  }
+  // 从 DOM 树移除，但 JS 数组仍持有引用 → Detached
+  const container = document.getElementById('exp4-container');
+  if (container) {
+    while (container.firstChild) container.removeChild(container.firstChild);
+    container.parentNode.removeChild(container);
+  }
+  exp4_removedCount = exp4_nodes.length;
+  exp4_detachedCount = exp4_nodes.length;
+  document.getElementById('exp4-removed').textContent = exp4_removedCount;
+  document.getElementById('exp4-detached').textContent = exp4_detachedCount;
+  exp4_area.innerHTML = '<span class="placeholder" style="color:#ef4444;">⚠️ 节点已从 DOM 移除，但 JS 数组仍持有引用（Detached 状态）</span>';
+
+  log('exp4-output', `⚠️ 已移除 ${exp4_removedCount} 个节点`, 'warn');
+  log('exp4-output', `   但 JS 变量仍引用这些节点 → 它们是 Detached DOM`, 'err');
+  log('exp4-output', '   在 DevTools → Memory → 堆快照中搜索 "Detached" 可以找到它们', 'info');
+}
+
+function exp4_release() {
+  if (exp4_nodes.length === 0) {
+    log('exp4-output', '无节点可释放', 'warn');
+    return;
+  }
+  const count = exp4_nodes.length;
+  // 释放 JS 引用
+  exp4_nodes.forEach(n => { n._bigData = null; });
+  exp4_nodes.length = 0;
+  exp4_detachedCount = 0;
+  document.getElementById('exp4-detached').textContent = '0';
+  log('exp4-output', `✅ 已释放 ${count} 个节点的 JS 引用`, 'ok');
+  log('exp4-output', '   节点现在可以被 GC 回收了（不再是 Detached 状态）', 'ok');
+}
+
+function exp4_inspect() {
+  if (exp4_nodes.length === 0 && exp4_detachedCount === 0) {
+    log('exp4-output', '无 Detached 节点可检查', 'info');
+    return;
+  }
+
+  log('exp4-output', '📋 Detached DOM 检查结果：', 'info');
+  exp4_nodes.forEach((node, i) => {
+    const inDOM = document.contains(node);
+    log('exp4-output', `  节点 #${i}: 在文档中=${inDOM}, hasData=${!!node._bigData}`, inDOM ? 'ok' : 'err');
+  });
+  log('exp4-output', '', '');
+  log('exp4-output', '💡 DevTools 验证步骤：', 'info');
+  log('exp4-output', '   1. 打开 DevTools → Memory → 拍摄堆快照');
+  log('exp4-output', '   2. 在快照中搜索 "Detached"');
+  log('exp4-output', '   3. 展开 Detached HTMLDivElement 可看到 _bigData 属性');
+  log('exp4-output', '   4. 释放引用后再拍快照，Detached 节点应消失');
+}
+
+function exp4_reset() {
+  exp4_nodes.forEach(n => { n._bigData = null; });
+  exp4_nodes = [];
+  exp4_createdCount = 0;
+  exp4_removedCount = 0;
+  exp4_detachedCount = 0;
+  document.getElementById('exp4-created').textContent = '0';
+  document.getElementById('exp4-removed').textContent = '0';
+  document.getElementById('exp4-detached').textContent = '0';
+  exp4_area.innerHTML = '<span class="placeholder">点击「创建节点」开始</span>';
+  clearLog('exp4-output');
+  log('exp4-output', '已重置', 'info');
+}
+
+// ========== 初始化日志 ==========
+log('exp1-output', '实验就绪。点击按钮开始 Map vs WeakMap 对比实验。', 'info');
+log('exp2-output', '实验就绪。反复切换组件观察监听器泄漏。', 'info');
+log('exp3-output', '实验就绪。启动定时器后销毁组件观察闭包泄漏。', 'info');
+log('exp4-output', '实验就绪。创建节点后移除观察 Detached 状态。', 'info');
+</script>
+</body>
+</html>

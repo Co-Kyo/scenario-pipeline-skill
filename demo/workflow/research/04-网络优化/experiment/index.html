@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>网络优化实验 — 弱网环境下的资源加载策略</title>
+  <style>
+    /* ===== CSS Reset & Variables ===== */
+    :root {
+      --bg: #0a0e1a;
+      --bg-card: #111827;
+      --bg-card2: #1a2233;
+      --border: #2a3548;
+      --text: #e2e8f0;
+      --text-dim: #8892a4;
+      --accent: #3b82f6;
+      --accent2: #06b6d4;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --red: #ef4444;
+      --orange: #f97316;
+      --purple: #a855f7;
+      --radius: 10px;
+      --shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ===== 布局 ===== */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+    }
+    .header p {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+
+    /* ===== 网络状态面板 ===== */
+    .net-panel {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+    .net-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      text-align: center;
+    }
+    .net-card .label { font-size: 0.75rem; color: var(--text-dim); margin-bottom: 4px; }
+    .net-card .value { font-size: 1.3rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .net-card .value.green { color: var(--green); }
+    .net-card .value.yellow { color: var(--yellow); }
+    .net-card .value.red { color: var(--red); }
+    .net-card .value.blue { color: var(--accent); }
+
+    /* ===== 实验面板 ===== */
+    .experiment {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 20px;
+      box-shadow: var(--shadow);
+    }
+    .experiment h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .experiment .desc {
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      margin-bottom: 18px;
+    }
+    .experiment-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    /* ===== 控件 ===== */
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .control-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .control-group label {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+    select, input[type="number"] {
+      background: var(--bg-card2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text);
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      font-family: inherit;
+    }
+    select:focus, input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 18px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    button:hover { filter: brightness(1.1); }
+    button:active { transform: scale(0.97); }
+    button.secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+    }
+    button.secondary:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+      filter: none;
+    }
+
+    /* ===== 表格 ===== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin-top: 14px;
+    }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+    th {
+      color: var(--text-dim);
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    td { font-variant-numeric: tabular-nums; }
+
+    /* ===== 徽章 ===== */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .badge-hit { background: rgba(34,197,94,0.15); color: var(--green); }
+    .badge-miss { background: rgba(239,68,68,0.15); color: var(--red); }
+    .badge-warn { background: rgba(234,179,8,0.15); color: var(--yellow); }
+    .badge-blue { background: rgba(59,130,246,0.15); color: var(--accent); }
+    .badge-purple { background: rgba(168,85,247,0.15); color: var(--purple); }
+
+    /* ===== 瀑布图 ===== */
+    .waterfall-container {
+      background: var(--bg-card2);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 12px;
+      overflow-x: auto;
+    }
+    .waterfall-header {
+      display: flex;
+      margin-bottom: 8px;
+      font-size: 0.7rem;
+      color: var(--text-dim);
+    }
+    .waterfall-header .wf-name { width: 120px; flex-shrink: 0; }
+    .waterfall-header .wf-track { flex: 1; display: flex; justify-content: space-between; }
+    .wf-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 3px;
+      height: 22px;
+    }
+    .wf-row .wf-name {
+      width: 120px;
+      flex-shrink: 0;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding-right: 10px;
+    }
+    .wf-track {
+      flex: 1;
+      height: 18px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 3px;
+      position: relative;
+    }
+    .wf-bar {
+      position: absolute;
+      height: 100%;
+      border-radius: 3px;
+      opacity: 0.85;
+      transition: width 0.5s ease;
+      min-width: 2px;
+    }
+    .wf-bar.dns { background: #6366f1; }
+    .wf-bar.tcp { background: var(--accent); }
+    .wf-bar.tls { background: var(--accent2); }
+    .wf-bar.wait { background: var(--yellow); }
+    .wf-bar.download { background: var(--green); }
+
+    /* ===== 图表 ===== */
+    .bar-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      height: 200px;
+      padding: 16px 0;
+    }
+    .bar-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100%;
+      justify-content: flex-end;
+    }
+    .bar-value {
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+    .bar {
+      width: 100%;
+      max-width: 60px;
+      border-radius: 4px 4px 0 0;
+      transition: height 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+      min-height: 2px;
+    }
+    .bar-label {
+      margin-top: 6px;
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    /* ===== 检查点 ===== */
+    .checkpoint {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-top: 24px;
+    }
+    .checkpoint h3 {
+      font-size: 1rem;
+      margin-bottom: 14px;
+    }
+    .cp-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      font-size: 0.88rem;
+    }
+    .cp-item:last-child { border-bottom: none; }
+    .cp-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+    .cp-text { color: var(--text-dim); }
+    .cp-text strong { color: var(--text); }
+
+    /* ===== 状态面板 ===== */
+    .status-bar {
+      display: flex;
+      gap: 16px;
+      padding: 10px 14px;
+      background: var(--bg-card2);
+      border-radius: 8px;
+      margin-top: 12px;
+      font-size: 0.8rem;
+      flex-wrap: wrap;
+    }
+    .status-item { display: flex; gap: 4px; }
+    .status-item .s-label { color: var(--text-dim); }
+    .status-item .s-value { font-weight: 600; }
+
+    /* ===== 日志区域 ===== */
+    .log-area {
+      background: #080c14;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 12px;
+      max-height: 180px;
+      overflow-y: auto;
+      font-family: 'Menlo', 'Consolas', monospace;
+      font-size: 0.78rem;
+      line-height: 1.7;
+      color: var(--text-dim);
+    }
+    .log-area .log-hit { color: var(--green); }
+    .log-area .log-miss { color: var(--red); }
+    .log-area .log-warn { color: var(--yellow); }
+    .log-area .log-info { color: var(--accent2); }
+
+    /* ===== 对比箭头 ===== */
+    .comparison-row {
+      display: flex;
+      gap: 16px;
+      margin-top: 12px;
+    }
+    .compare-card {
+      flex: 1;
+      background: var(--bg-card2);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: center;
+    }
+    .compare-card .c-title { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 6px; }
+    .compare-card .c-value { font-size: 1.4rem; font-weight: 700; }
+    .compare-card .c-sub { font-size: 0.75rem; color: var(--text-dim); margin-top: 4px; }
+
+    /* ===== 响应式 ===== */
+    @media (max-width: 640px) {
+      .container { padding: 16px 12px 40px; }
+      .experiment { padding: 16px; }
+      .controls { gap: 6px; }
+      .comparison-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- ===== 头部 ===== -->
+    <div class="header">
+      <h1>🌐 网络优化：弱网环境下的资源加载策略</h1>
+      <p>交互式实验 — HTTP缓存 · 指数退避 · 资源压缩 · 弱网模拟</p>
+    </div>
+
+    <!-- ===== 网络状态面板 ===== -->
+    <div class="net-panel" id="netPanel">
+      <div class="net-card">
+        <div class="label">请求总数</div>
+        <div class="value blue" id="statRequests">0</div>
+      </div>
+      <div class="net-card">
+        <div class="label">缓存命中</div>
+        <div class="value green" id="statHits">0</div>
+      </div>
+      <div class="net-card">
+        <div class="label">缓存命中率</div>
+        <div class="value green" id="statHitRate">—</div>
+      </div>
+      <div class="net-card">
+        <div class="label">当前网络</div>
+        <div class="value blue" id="statNetwork">WiFi</div>
+      </div>
+      <div class="net-card">
+        <div class="label">平均延迟</div>
+        <div class="value yellow" id="statLatency">—</div>
+      </div>
+      <div class="net-card">
+        <div class="label">节省流量</div>
+        <div class="value green" id="statSaved">0 B</div>
+      </div>
+    </div>
+
+    <!-- ===== 实验1: HTTP缓存 ===== -->
+    <div class="experiment" id="exp-cache">
+      <h2><span class="experiment-number">1</span> HTTP 缓存行为模拟</h2>
+      <p class="desc">模拟 Service Worker 缓存策略：强缓存 / 协商缓存 / no-cache / no-store。对比首次请求与缓存命中行为。</p>
+
+      <div class="controls">
+        <div class="control-group">
+          <label>缓存策略：</label>
+          <select id="cacheStrategy">
+            <option value="strong">强缓存 (Cache-Control: max-age=3600)</option>
+            <option value="negotiate">协商缓存 (ETag/If-None-Match)</option>
+            <option value="no-cache">no-cache (强制协商验证)</option>
+            <option value="no-store">no-store (完全不缓存)</option>
+          </select>
+        </div>
+        <button id="btnCacheRequest">发起请求</button>
+        <button id="btnCacheAuto" class="secondary">自动对比(全部策略)</button>
+        <button id="btnCacheClear" class="secondary">清空缓存</button>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>请求次数</th>
+            <th>策略</th>
+            <th>状态码</th>
+            <th>耗时</th>
+            <th>来源</th>
+            <th>备注</th>
+          </tr>
+        </thead>
+        <tbody id="cacheTableBody">
+          <tr><td colspan="6" style="text-align:center;color:var(--text-dim)">点击"发起请求"开始实验</td></tr>
+        </tbody>
+      </table>
+
+      <div class="log-area" id="cacheLog" style="display:none;"></div>
+    </div>
+
+    <!-- ===== 实验2: 指数退避 ===== -->
+    <div class="experiment" id="exp-backoff">
+      <h2><span class="experiment-number">2</span> 请求重试 — 指数退避策略</h2>
+      <p class="desc">可调参数：初始延迟、最大重试次数、退避因子、抖动范围。可视化每次重试的等待间隔。</p>
+
+      <div class="controls">
+        <div class="control-group">
+          <label>初始延迟(ms)：</label>
+          <input type="number" id="backoffInit" value="200" min="50" max="5000" step="50">
+        </div>
+        <div class="control-group">
+          <label>最大重试：</label>
+          <input type="number" id="backoffMax" value="7" min="1" max="15">
+        </div>
+        <div class="control-group">
+          <label>退避因子：</label>
+          <input type="number" id="backoffFactor" value="2" min="1.1" max="10" step="0.1">
+        </div>
+        <div class="control-group">
+          <label>抖动(±%)：</label>
+          <input type="number" id="backoffJitter" value="10" min="0" max="50" step="5">
+        </div>
+        <button id="btnBackoffRun">运行模拟</button>
+      </div>
+
+      <div class="bar-chart" id="backoffChart"></div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>重试 #</th>
+            <th>计算延迟</th>
+            <th>抖动后</th>
+            <th>实际等待</th>
+            <th>累计耗时</th>
+            <th>状态</th>
+          </tr>
+        </thead>
+        <tbody id="backoffTableBody">
+          <tr><td colspan="6" style="text-align:center;color:var(--text-dim)">点击"运行模拟"开始</td></tr>
+        </tbody>
+      </table>
+
+      <div class="log-area" id="backoffLog" style="display:none;"></div>
+    </div>
+
+    <!-- ===== 实验3: 资源压缩 ===== -->
+    <div class="experiment" id="exp-compress">
+      <h2><span class="experiment-number">3</span> 资源压缩对比</h2>
+      <p class="desc">模拟 gzip / brotli 压缩比和耗时。使用 TextEncoder 计算原始体积，用模拟比率估算压缩后大小。</p>
+
+      <div class="controls">
+        <div class="control-group">
+          <label>内容类型：</label>
+          <select id="compressType">
+            <option value="json">JSON 数据</option>
+            <option value="html">HTML 文档</option>
+            <option value="css">CSS 样式</option>
+            <option value="js">JavaScript</option>
+            <option value="svg">SVG 图形</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>原始大小：</label>
+          <select id="compressSize">
+            <option value="10">10 KB</option>
+            <option value="50" selected>50 KB</option>
+            <option value="200">200 KB</option>
+            <option value="500">500 KB</option>
+            <option value="1000">1 MB</option>
+          </select>
+        </div>
+        <button id="btnCompressRun">压缩对比</button>
+      </div>
+
+      <div class="bar-chart" id="compressChart"></div>
+
+      <div class="comparison-row" id="compressCards"></div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>算法</th>
+            <th>压缩后大小</th>
+            <th>压缩率</th>
+            <th>压缩耗时(模拟)</th>
+            <th>节省流量</th>
+            <th>评估</th>
+          </tr>
+        </thead>
+        <tbody id="compressTableBody">
+          <tr><td colspan="6" style="text-align:center;color:var(--text-dim)">点击"压缩对比"开始</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===== 实验4: 弱网模拟 ===== -->
+    <div class="experiment" id="exp-weaknet">
+      <h2><span class="experiment-number">4</span> 弱网模拟 & 加载瀑布图</h2>
+      <p class="desc">用 setTimeout 模拟 2G / 3G / 4G / WiFi 延迟，观察多资源并行加载的瀑布图。</p>
+
+      <div class="controls">
+        <div class="control-group">
+          <label>网络类型：</label>
+          <select id="weaknetType">
+            <option value="wifi">WiFi (RTT ~5ms)</option>
+            <option value="4g" selected>4G (RTT ~50ms)</option>
+            <option value="3g">3G (RTT ~200ms)</option>
+            <option value="2g">2G (RTT ~800ms)</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>资源数量：</label>
+          <input type="number" id="weaknetCount" value="8" min="3" max="20">
+        </div>
+        <button id="btnWeaknetRun">模拟加载</button>
+        <button id="btnWeaknetCompare" class="secondary">四种网络对比</button>
+      </div>
+
+      <div class="status-bar" id="weaknetStatus">
+        <div class="status-item"><span class="s-label">网络：</span><span class="s-value" id="wnStatType">4G</span></div>
+        <div class="status-item"><span class="s-label">RTT：</span><span class="s-value" id="wnStatRTT">50ms</span></div>
+        <div class="status-item"><span class="s-label">总耗时：</span><span class="s-value" id="wnStatTotal">—</span></div>
+        <div class="status-item"><span class="s-label">首个资源：</span><span class="s-value" id="wnStatFirst">—</span></div>
+      </div>
+
+      <div class="waterfall-container" id="waterfallContainer">
+        <div style="text-align:center;color:var(--text-dim);padding:40px 0;">点击"模拟加载"生成瀑布图</div>
+      </div>
+
+      <table id="weaknetCompareTable" style="display:none;">
+        <thead>
+          <tr>
+            <th>网络</th>
+            <th>RTT</th>
+            <th>总耗时</th>
+            <th>首个资源</th>
+            <th>评估</th>
+          </tr>
+        </thead>
+        <tbody id="weaknetCompareBody"></tbody>
+      </table>
+    </div>
+
+    <!-- ===== 验证检查点 ===== -->
+    <div class="checkpoint">
+      <h3>✅ 验证检查点</h3>
+      <div class="cp-item" data-cp="cp1">
+        <span class="cp-icon" id="cp1">⏳</span>
+        <span class="cp-text"><strong>CP1:</strong> 强缓存命中时，响应时间应为 <strong>0ms</strong>（无网络请求）</span>
+      </div>
+      <div class="cp-item" data-cp="cp2">
+        <span class="cp-icon" id="cp2">⏳</span>
+        <span class="cp-text"><strong>CP2:</strong> 协商缓存命中时，返回 <strong>304</strong> 且响应时间 &lt; 完整请求</span>
+      </div>
+      <div class="cp-item" data-cp="cp3">
+        <span class="cp-icon" id="cp3">⏳</span>
+        <span class="cp-text"><strong>CP3:</strong> 指数退避间隔应 ≥ 上次间隔 × 退避因子（允许 ±10% 抖动）</span>
+      </div>
+      <div class="cp-item" data-cp="cp4">
+        <span class="cp-icon" id="cp4">⏳</span>
+        <span class="cp-text"><strong>CP4:</strong> brotli 压缩率应优于 gzip（模拟值 brotli ~75%, gzip ~65%）</span>
+      </div>
+      <div class="cp-item" data-cp="cp5">
+        <span class="cp-icon" id="cp5">⏳</span>
+        <span class="cp-text"><strong>CP5:</strong> 2G 瀑布图总耗时应显著大于 4G（&gt;3× 差异）</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ==============================================================
+       工具函数
+       ============================================================== */
+    /** 生成伪随机种子序列 */
+    function seededRandom(seed) {
+      let s = seed;
+      return function() {
+        s = (s * 16807 + 0) % 2147483647;
+        return (s - 1) / 2147483646;
+      };
+    }
+
+    /** 格式化字节 */
+    function fmtBytes(b) {
+      if (b < 1024) return b + ' B';
+      if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+      return (b / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+
+    /** 格式化毫秒 */
+    function fmtMs(ms) {
+      if (ms < 1000) return ms + 'ms';
+      return (ms / 1000).toFixed(2) + 's';
+    }
+
+    /** 全局统计 */
+    const stats = {
+      requests: 0,
+      hits: 0,
+      latencies: [],
+      savedBytes: 0,
+    };
+
+    function updateStats() {
+      document.getElementById('statRequests').textContent = stats.requests;
+      document.getElementById('statHits').textContent = stats.hits;
+      document.getElementById('statHitRate').textContent =
+        stats.requests > 0 ? Math.round(stats.hits / stats.requests * 100) + '%' : '—';
+      const avg = stats.latencies.length > 0
+        ? Math.round(stats.latencies.reduce((a,b) => a+b, 0) / stats.latencies.length)
+        : null;
+      document.getElementById('statLatency').textContent = avg !== null ? avg + 'ms' : '—';
+      document.getElementById('statSaved').textContent = fmtBytes(stats.savedBytes);
+    }
+
+    /** 检查点状态 */
+    const cpResults = { cp1: null, cp2: null, cp3: null, cp4: null, cp5: null };
+    function setCheckpoint(id, pass) {
+      cpResults[id] = pass;
+      const el = document.getElementById(id);
+      el.textContent = pass ? '✅' : (pass === false ? '❌' : '⏳');
+    }
+
+    /* ==============================================================
+       实验1: HTTP 缓存模拟
+       ============================================================== */
+    const CacheSimulator = (() => {
+      // 模拟缓存存储 (模拟 Service Worker Cache)
+      let cacheStore = new Map(); // key -> { data, etag, lastModified, maxAge, savedAt }
+      let requestCount = 0;
+
+      /** 模拟网络请求延迟 */
+      function networkDelay() {
+        return 50 + Math.floor(Math.random() * 150); // 50-200ms
+      }
+
+      /** 发起一次请求 */
+      function request(strategy) {
+        const url = '/api/resource/data.json';
+        const now = Date.now();
+        requestCount++;
+        stats.requests++;
+
+        const entry = cacheStore.get(url);
+        let result = { attempt: requestCount, strategy, statusCode: 0, time: 0, source: '', note: '' };
+
+        switch (strategy) {
+          case 'strong': {
+            // 强缓存：检查 max-age 是否过期
+            if (entry && (now - entry.savedAt) < entry.maxAge * 1000) {
+              // 命中强缓存，直接返回，0ms
+              result.statusCode = 200;
+              result.time = 0;
+              result.source = '💾 强缓存';
+              result.note = 'Cache-Control: max-age 命中';
+              stats.hits++;
+              stats.latencies.push(0);
+            } else {
+              // 未命中，发起网络请求
+              const delay = networkDelay();
+              result.statusCode = 200;
+              result.time = delay;
+              result.source = '🌐 网络';
+              result.note = 'max-age 过期，回源请求';
+              stats.latencies.push(delay);
+              // 更新缓存
+              cacheStore.set(url, {
+                data: 'mock-data-' + now,
+                etag: '"' + Math.random().toString(36).slice(2, 10) + '"',
+                lastModified: new Date(now).toUTCString(),
+                maxAge: 3600,
+                savedAt: now,
+              });
+            }
+            break;
+          }
+
+          case 'negotiate': {
+            // 协商缓存：始终发请求，但带 If-None-Match
+            if (entry) {
+              const delay = Math.floor(networkDelay() * 0.3); // 协商请求更小
+              // 80% 概率内容未变 -> 304
+              if (Math.random() < 0.8) {
+                result.statusCode = 304;
+                result.time = delay;
+                result.source = '💾 协商缓存';
+                result.note = 'ETag 匹配 → 304 Not Modified';
+                stats.hits++;
+                stats.latencies.push(delay);
+              } else {
+                result.statusCode = 200;
+                result.time = networkDelay();
+                result.source = '🌐 网络';
+                result.note = 'ETag 不匹配 → 200 新内容';
+                stats.latencies.push(result.time);
+                // 更新缓存
+                cacheStore.set(url, {
+                  data: 'new-data-' + now,
+                  etag: '"' + Math.random().toString(36).slice(2, 10) + '"',
+                  lastModified: new Date(now).toUTCString(),
+                  maxAge: 3600,
+                  savedAt: now,
+                });
+              }
+            } else {
+              // 首次请求
+              const delay = networkDelay();
+              result.statusCode = 200;
+              result.time = delay;
+              result.source = '🌐 网络';
+              result.note = '首次请求，建立缓存';
+              stats.latencies.push(delay);
+              cacheStore.set(url, {
+                data: 'initial-data',
+                etag: '"' + Math.random().toString(36).slice(2, 10) + '"',
+                lastModified: new Date(Date.now()).toUTCString(),
+                maxAge: 3600,
+                savedAt: now,
+              });
+            }
+            break;
+          }
+
+          case 'no-cache': {
+            // no-cache: 总是协商验证，但允许缓存存储
+            const delay = entry ? Math.floor(networkDelay() * 0.3) : networkDelay();
+            if (entry && Math.random() < 0.7) {
+              result.statusCode = 304;
+              result.time = delay;
+              result.source = '🔄 协商验证';
+              result.note = 'no-cache: 强制验证 → 304';
+              stats.hits++;
+              stats.latencies.push(delay);
+            } else {
+              result.statusCode = 200;
+              result.time = delay + (entry ? 50 : 0);
+              result.source = '🌐 网络';
+              result.note = 'no-cache: 验证后返回新内容';
+              stats.latencies.push(result.time);
+              cacheStore.set(url, {
+                data: 'fresh-' + now,
+                etag: '"' + Math.random().toString(36).slice(2, 10) + '"',
+                lastModified: new Date(now).toUTCString(),
+                maxAge: 0,
+                savedAt: now,
+              });
+            }
+            break;
+          }
+
+          case 'no-store': {
+            // no-store: 完全不缓存，每次都完整请求
+            const delay = networkDelay();
+            result.statusCode = 200;
+            result.time = delay;
+            result.source = '🌐 网络';
+            result.note = 'no-store: 完全不缓存';
+            stats.latencies.push(delay);
+            // 不存储任何内容
+            cacheStore.delete(url);
+            break;
+          }
+        }
+
+        updateStats();
+        return result;
+      }
+
+      function clear() {
+        cacheStore.clear();
+        requestCount = 0;
+      }
+
+      function getCount() { return requestCount; }
+
+      return { request, clear, getCount };
+    })();
+
+    // 绑定缓存实验按钮
+    document.getElementById('btnCacheRequest').onclick = function() {
+      const strategy = document.getElementById('cacheStrategy').value;
+      const result = CacheSimulator.request(strategy);
+      addCacheRow(result);
+    };
+
+    document.getElementById('btnCacheClear').onclick = function() {
+      CacheSimulator.clear();
+      stats.requests = 0;
+      stats.hits = 0;
+      stats.latencies = [];
+      updateStats();
+      const tbody = document.getElementById('cacheTableBody');
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim)">缓存已清空，点击发起请求</td></tr>';
+      setCheckpoint('cp1', null);
+      setCheckpoint('cp2', null);
+    };
+
+    document.getElementById('btnCacheAuto').onclick = async function() {
+      this.disabled = true;
+      const tbody = document.getElementById('cacheTableBody');
+      tbody.innerHTML = '';
+
+      // 测试所有策略
+      const strategies = ['strong', 'negotiate', 'no-cache', 'no-store'];
+      const strategyNames = {
+        strong: '强缓存', negotiate: '协商缓存',
+        'no-cache': 'no-cache', 'no-store': 'no-store'
+      };
+
+      for (const s of strategies) {
+        CacheSimulator.clear();
+        // 先发一次建立缓存
+        const first = CacheSimulator.request(s);
+        addCacheRow(first);
+        await sleep(200);
+
+        // 再发 3 次观察缓存行为
+        for (let i = 0; i < 3; i++) {
+          const r = CacheSimulator.request(s);
+          addCacheRow(r);
+          await sleep(150);
+        }
+        // 策略间分隔
+        await sleep(300);
+      }
+
+      // 验证 CP1: 强缓存命中 0ms
+      CacheSimulator.clear();
+      CacheSimulator.request('strong'); // 建立缓存
+      const hitResult = CacheSimulator.request('strong'); // 第二次应命中
+      setCheckpoint('cp1', hitResult.time === 0 && hitResult.source.includes('缓存'));
+
+      // 验证 CP2: 协商缓存 304
+      CacheSimulator.clear();
+      CacheSimulator.request('negotiate'); // 建立缓存
+      let got304 = false;
+      for (let i = 0; i < 5; i++) {
+        const r = CacheSimulator.request('negotiate');
+        if (r.statusCode === 304) { got304 = true; break; }
+      }
+      setCheckpoint('cp2', got304);
+
+      this.disabled = false;
+    };
+
+    function addCacheRow(r) {
+      const tbody = document.getElementById('cacheTableBody');
+      // 移除占位行
+      if (tbody.querySelector('td[colspan]')) tbody.innerHTML = '';
+
+      const tr = document.createElement('tr');
+      const sourceClass = r.source.includes('缓存') ? 'badge-hit' : 'badge-blue';
+      tr.innerHTML = `
+        <td>${r.attempt}</td>
+        <td><span class="badge badge-purple">${r.strategy}</span></td>
+        <td>${r.statusCode}</td>
+        <td>${r.time === 0 ? '<span style="color:var(--green)">0ms ⚡</span>' : r.time + 'ms'}</td>
+        <td><span class="badge ${sourceClass}">${r.source}</span></td>
+        <td style="font-size:0.8rem;color:var(--text-dim)">${r.note}</td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    /* ==============================================================
+       实验2: 指数退避
+       ============================================================== */
+    const BackoffSimulator = (() => {
+      /** 计算退避序列 */
+      function calculate(initDelay, maxRetry, factor, jitterPct) {
+        const results = [];
+        for (let i = 0; i < maxRetry; i++) {
+          const baseDelay = Math.round(initDelay * Math.pow(factor, i));
+          const jitterRange = baseDelay * (jitterPct / 100);
+          const jitter = (Math.random() * 2 - 1) * jitterRange;
+          const actualDelay = Math.max(0, Math.round(baseDelay + jitter));
+          results.push({
+            attempt: i + 1,
+            baseDelay,
+            jitter: Math.round(jitter),
+            actualDelay,
+            cumulative: 0, // 后续计算
+          });
+        }
+        // 计算累计
+        let cum = 0;
+        for (const r of results) {
+          cum += r.actualDelay;
+          r.cumulative = cum;
+        }
+        return results;
+      }
+
+      return { calculate };
+    })();
+
+    document.getElementById('btnBackoffRun').onclick = function() {
+      const initDelay = parseInt(document.getElementById('backoffInit').value) || 200;
+      const maxRetry = parseInt(document.getElementById('backoffMax').value) || 7;
+      const factor = parseFloat(document.getElementById('backoffFactor').value) || 2;
+      const jitterPct = parseInt(document.getElementById('backoffJitter').value) || 10;
+
+      const results = BackoffSimulator.calculate(initDelay, maxRetry, factor, jitterPct);
+
+      // 渲染柱状图
+      const chart = document.getElementById('backoffChart');
+      chart.innerHTML = '';
+      const maxVal = Math.max(...results.map(r => r.actualDelay));
+      const colors = ['#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e', '#ef4444'];
+      results.forEach((r, i) => {
+        const pct = maxVal > 0 ? (r.actualDelay / maxVal * 100) : 0;
+        const group = document.createElement('div');
+        group.className = 'bar-group';
+        group.innerHTML = `
+          <div class="bar-value">${r.actualDelay}ms</div>
+          <div class="bar" style="height:${pct}%;background:${colors[i % colors.length]}"></div>
+          <div class="bar-label">#${r.attempt}</div>
+        `;
+        chart.appendChild(group);
+      });
+
+      // 渲染表格
+      const tbody = document.getElementById('backoffTableBody');
+      tbody.innerHTML = '';
+      results.forEach(r => {
+        const tr = document.createElement('tr');
+        const statusBadge = r.attempt === maxRetry
+          ? '<span class="badge badge-warn">达到上限</span>'
+          : '<span class="badge badge-blue">重试中</span>';
+        tr.innerHTML = `
+          <td>#${r.attempt}</td>
+          <td>${r.baseDelay}ms</td>
+          <td>${r.jitter >= 0 ? '+' : ''}${r.jitter}ms</td>
+          <td>${r.actualDelay}ms</td>
+          <td>${r.cumulative}ms</td>
+          <td>${statusBadge}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // 验证 CP3: 退避递增
+      let cp3Pass = true;
+      for (let i = 1; i < results.length; i++) {
+        const expected = results[i - 1].actualDelay * factor;
+        const tolerance = expected * 0.1;
+        if (results[i].actualDelay < expected - tolerance) {
+          cp3Pass = false;
+          break;
+        }
+      }
+      setCheckpoint('cp3', cp3Pass);
+    };
+
+    /* ==============================================================
+       实验3: 资源压缩
+       ============================================================== */
+    const CompressSimulator = (() => {
+      // 不同内容类型的压缩率配置（模拟值）
+      const profiles = {
+        json: { gzipRatio: 0.12, brotliRatio: 0.08, gzipTimeFactor: 0.5, brotliTimeFactor: 2.0 },
+        html: { gzipRatio: 0.25, brotliRatio: 0.18, gzipTimeFactor: 0.8, brotliTimeFactor: 3.0 },
+        css:  { gzipRatio: 0.20, brotliRatio: 0.15, gzipTimeFactor: 0.6, brotliTimeFactor: 2.5 },
+        js:   { gzipRatio: 0.28, brotliRatio: 0.20, gzipTimeFactor: 1.0, brotliTimeFactor: 3.5 },
+        svg:  { gzipRatio: 0.15, brotliRatio: 0.10, gzipTimeFactor: 0.4, brotliTimeFactor: 1.8 },
+      };
+
+      /** 生成指定大小的模拟文本内容 */
+      function generateContent(type, targetBytes) {
+        const templates = {
+          json: '{"id":1,"name":"example","values":[1,2,3],"nested":{"key":"value","list":[{"a":1},{"b":2}]}}',
+          html: '<div class="container"><h1>标题</h1><p>这是一段示例文本内容，用于模拟HTML文档的可压缩性。</p><ul><li>项目一</li><li>项目二</li></ul></div>',
+          css:  '.container{display:flex;align-items:center;justify-content:space-between;padding:16px;margin:0 auto;max-width:1200px;background:#fff;border-radius:8px}',
+          js:   'function process(data){const result=[];for(let i=0;i<data.length;i++){if(data[i].active){result.push(transform(data[i]));}}return result;}',
+          svg:  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="#3b82f6"/><rect x="20" y="20" width="60" height="60" rx="8" fill="none" stroke="#000"/></svg>',
+        };
+        const tpl = templates[type] || templates.json;
+        let content = '';
+        while (new TextEncoder().encode(content).length < targetBytes) {
+          content += tpl;
+        }
+        return content;
+      }
+
+      /** 模拟压缩 */
+      function compress(type, sizeKB) {
+        const targetBytes = sizeKB * 1024;
+        const content = generateContent(type, targetBytes);
+        const originalSize = new TextEncoder().encode(content).length;
+        const profile = profiles[type] || profiles.json;
+
+        // 模拟压缩（加入少量随机性）
+        const randFactor = () => 0.95 + Math.random() * 0.1; // ±5%
+        const gzipSize = Math.round(originalSize * profile.gzipRatio * randFactor());
+        const brotliSize = Math.round(originalSize * profile.brotliRatio * randFactor());
+
+        // 模拟压缩耗时（与大小和算法复杂度相关）
+        const baseTime = originalSize / 1024; // 每KB基础时间
+        const gzipTime = Math.round(baseTime * profile.gzipTimeFactor);
+        const brotliTime = Math.round(baseTime * profile.brotliTimeFactor);
+
+        return {
+          originalSize,
+          gzip: { size: gzipSize, time: gzipTime },
+          brotli: { size: brotliSize, time: brotliTime },
+        };
+      }
+
+      return { compress };
+    })();
+
+    document.getElementById('btnCompressRun').onclick = function() {
+      const type = document.getElementById('compressType').value;
+      const sizeKB = parseInt(document.getElementById('compressSize').value);
+
+      const result = CompressSimulator.compress(type, sizeKB);
+
+      // 柱状图
+      const chart = document.getElementById('compressChart');
+      const maxBytes = result.originalSize;
+      const bars = [
+        { label: '原始', value: result.originalSize, color: '#ef4444' },
+        { label: 'gzip', value: result.gzip.size, color: '#eab308' },
+        { label: 'brotli', value: result.brotli.size, color: '#22c55e' },
+      ];
+      chart.innerHTML = '';
+      bars.forEach(b => {
+        const pct = (b.value / maxBytes * 100);
+        const group = document.createElement('div');
+        group.className = 'bar-group';
+        group.innerHTML = `
+          <div class="bar-value">${fmtBytes(b.value)}</div>
+          <div class="bar" style="height:${Math.max(pct, 2)}%;background:${b.color}"></div>
+          <div class="bar-label">${b.label}</div>
+        `;
+        chart.appendChild(group);
+      });
+
+      // 对比卡片
+      const cards = document.getElementById('compressCards');
+      const gzipPct = Math.round((1 - result.gzip.size / result.originalSize) * 100);
+      const brotliPct = Math.round((1 - result.brotli.size / result.originalSize) * 100);
+      cards.innerHTML = `
+        <div class="compare-card">
+          <div class="c-title">gzip 压缩率</div>
+          <div class="c-value" style="color:var(--yellow)">${gzipPct}%</div>
+          <div class="c-sub">节省 ${fmtBytes(result.originalSize - result.gzip.size)}</div>
+        </div>
+        <div class="compare-card">
+          <div class="c-title">brotli 压缩率</div>
+          <div class="c-value" style="color:var(--green)">${brotliPct}%</div>
+          <div class="c-sub">节省 ${fmtBytes(result.originalSize - result.brotli.size)}</div>
+        </div>
+        <div class="compare-card">
+          <div class="c-title">brotli 多节省</div>
+          <div class="c-value" style="color:var(--accent2)">+${brotliPct - gzipPct}%</div>
+          <div class="c-sub">多节省 ${fmtBytes(result.gzip.size - result.brotli.size)}</div>
+        </div>
+      `;
+
+      // 表格
+      const tbody = document.getElementById('compressTableBody');
+      tbody.innerHTML = '';
+      const rows = [
+        { algo: '无压缩', size: result.originalSize, pct: 0, time: 0, saved: 0, badge: 'badge-miss', eval: '基线' },
+        { algo: 'gzip', size: result.gzip.size, pct: gzipPct, time: result.gzip.time, saved: result.originalSize - result.gzip.size, badge: 'badge-warn', eval: gzipPct > 50 ? '良好' : '一般' },
+        { algo: 'brotli', size: result.brotli.size, pct: brotliPct, time: result.brotli.time, saved: result.originalSize - result.brotli.size, badge: 'badge-hit', eval: brotliPct > 70 ? '优秀' : '良好' },
+      ];
+      rows.forEach(r => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${r.algo}</strong></td>
+          <td>${fmtBytes(r.size)}</td>
+          <td><span class="badge ${r.badge}">${r.pct}%</span></td>
+          <td>${r.time}ms</td>
+          <td style="color:var(--green)">${r.saved > 0 ? '-' + fmtBytes(r.saved) : '—'}</td>
+          <td>${r.eval}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // 更新全局节省统计
+      stats.savedBytes += result.originalSize - result.brotli.size;
+      updateStats();
+
+      // 验证 CP4
+      setCheckpoint('cp4', brotliPct > gzipPct);
+    };
+
+    /* ==============================================================
+       实验4: 弱网模拟
+       ============================================================== */
+    const WeakNetSimulator = (() => {
+      const NETWORK_PROFILES = {
+        wifi: { rtt: 5,   bandwidth: 50000,  label: 'WiFi', color: '#22c55e' },   // KB/s
+        '4g': { rtt: 50,  bandwidth: 5000,   label: '4G',   color: '#3b82f6' },
+        '3g': { rtt: 200, bandwidth: 500,    label: '3G',   color: '#eab308' },
+        '2g': { rtt: 800, bandwidth: 50,     label: '2G',   color: '#ef4444' },
+      };
+
+      /** 资源模板 */
+      const RESOURCE_TEMPLATES = [
+        { name: 'index.html',   size: 15,  type: 'doc' },
+        { name: 'styles.css',   size: 45,  type: 'css' },
+        { name: 'vendor.js',    size: 280, type: 'js' },
+        { name: 'app.js',       size: 150, type: 'js' },
+        { name: 'hero.webp',    size: 350, type: 'img' },
+        { name: 'logo.svg',     size: 8,   type: 'svg' },
+        { name: 'data.json',    size: 12,  type: 'json' },
+        { name: 'analytics.js', size: 35,  type: 'js' },
+        { name: 'fonts.woff2',  size: 60,  type: 'font' },
+        { name: 'chunk-2.js',   size: 90,  type: 'js' },
+        { name: 'icons.png',    size: 25,  type: 'img' },
+        { name: 'manifest.json',size: 3,   type: 'json' },
+        { name: 'worker.js',    size: 20,  type: 'js' },
+        { name: 'bg.avif',      size: 180, type: 'img' },
+        { name: 'polyfill.js',  size: 40,  type: 'js' },
+        { name: 'config.js',    size: 5,   type: 'js' },
+        { name: 'locale.json',  size: 18,  type: 'json' },
+        { name: 'sentry.js',    size: 28,  type: 'js' },
+        { name: 'splash.webp',  size: 120, type: 'img' },
+        { name: 'robots.txt',   size: 1,   type: 'txt' },
+      ];
+
+      /**
+       * 模拟单个资源的加载时间线
+       * @returns {Object} { name, size, phases: [{name, start, duration, color}] }
+       */
+      function simulateResource(res, profile, startTime) {
+        const phases = [];
+        let cursor = startTime;
+
+        // DNS 查询（首次连接时）
+        const dnsTime = Math.round(profile.rtt * 0.3 + Math.random() * profile.rtt * 0.1);
+        phases.push({ name: 'DNS', start: cursor, duration: dnsTime, color: 'dns' });
+        cursor += dnsTime;
+
+        // TCP 握手
+        const tcpTime = Math.round(profile.rtt * 0.5 + Math.random() * profile.rtt * 0.2);
+        phases.push({ name: 'TCP', start: cursor, duration: tcpTime, color: 'tcp' });
+        cursor += tcpTime;
+
+        // TLS 协商（仅部分资源）
+        if (res.type === 'doc' || res.type === 'js') {
+          const tlsTime = Math.round(profile.rtt * 0.4 + Math.random() * profile.rtt * 0.1);
+          phases.push({ name: 'TLS', start: cursor, duration: tlsTime, color: 'tls' });
+          cursor += tlsTime;
+        }
+
+        // 服务器等待 (TTFB)
+        const waitTime = Math.round(profile.rtt * 0.8 + Math.random() * profile.rtt * 0.5 + 20);
+        phases.push({ name: '等待', start: cursor, duration: waitTime, color: 'wait' });
+        cursor += waitTime;
+
+        // 下载
+        const downloadTime = Math.max(10, Math.round((res.size / profile.bandwidth) * 1000 + Math.random() * profile.rtt * 0.3));
+        phases.push({ name: '下载', start: cursor, duration: downloadTime, color: 'download' });
+        cursor += downloadTime;
+
+        return {
+          name: res.name,
+          size: res.size,
+          type: res.type,
+          start: startTime,
+          end: cursor,
+          total: cursor - startTime,
+          phases,
+        };
+      }
+
+      /**
+       * 模拟页面加载瀑布
+       */
+      function simulatePageLoad(networkType, resourceCount) {
+        const profile = NETWORK_PROFILES[networkType];
+        const resources = RESOURCE_TEMPLATES.slice(0, resourceCount);
+        const timeline = [];
+
+        // 模拟浏览器并发限制
+        const maxConcurrent = networkType === '2g' ? 2 : networkType === '3g' ? 4 : 6;
+        const queue = resources.map((r, i) => ({ ...r, index: i }));
+        const running = [];
+        let currentTime = 0;
+
+        // 先加载 HTML 文档
+        const htmlRes = queue.shift();
+        const htmlTimeline = simulateResource(htmlRes, profile, 0);
+        timeline.push(htmlTimeline);
+        currentTime = htmlTimeline.end;
+
+        // 解析 HTML 后开始加载其他资源
+        const parseDelay = Math.round(profile.rtt * 0.2);
+        currentTime += parseDelay;
+
+        // 模拟并行加载（简化版）
+        let nextStart = currentTime;
+        for (let i = 0; i < queue.length; i++) {
+          const res = queue[i];
+          // 模拟发现延迟（CSS/JS 可能阻塞后续资源发现）
+          let discoveryDelay = 0;
+          if (res.type === 'js' && i > 2) {
+            discoveryDelay = Math.round(profile.rtt * 0.5); // 被 CSS 阻塞
+          }
+
+          const startAt = Math.max(nextStart, currentTime + discoveryDelay);
+          const resTimeline = simulateResource(res, profile, startAt);
+          timeline.push(resTimeline);
+
+          // 控制并发：每 maxConcurrent 个资源后推进时间
+          if ((i + 1) % maxConcurrent === 0) {
+            const batchEnd = Math.max(...timeline.slice(-maxConcurrent).map(t => t.end));
+            nextStart = batchEnd;
+          }
+        }
+
+        return timeline;
+      }
+
+      /**
+       * 渲染瀑布图
+       */
+      function renderWaterfall(timeline, container) {
+        const maxTime = Math.max(...timeline.map(t => t.end));
+
+        let html = `
+          <div class="waterfall-header">
+            <div class="wf-name">资源</div>
+            <div class="wf-track">
+              <span>0ms</span>
+              <span>${fmtMs(maxTime)}</span>
+            </div>
+          </div>
+        `;
+
+        timeline.forEach(item => {
+          html += `<div class="wf-row">`;
+          html += `<div class="wf-name" title="${item.name} (${fmtBytes(item.size * 1024)})">${item.name}</div>`;
+          html += `<div class="wf-track">`;
+
+          item.phases.forEach(phase => {
+            const left = (phase.start / maxTime * 100).toFixed(2);
+            const width = Math.max(0.5, (phase.duration / maxTime * 100)).toFixed(2);
+            html += `<div class="wf-bar ${phase.color}" style="left:${left}%;width:${width}%;" title="${phase.name}: ${phase.duration}ms"></div>`;
+          });
+
+          html += `</div></div>`;
+        });
+
+        container.innerHTML = html;
+      }
+
+      return { simulatePageLoad, renderWaterfall, NETWORK_PROFILES };
+    })();
+
+    document.getElementById('btnWeaknetRun').onclick = function() {
+      const type = document.getElementById('weaknetType').value;
+      const count = parseInt(document.getElementById('weaknetCount').value) || 8;
+      const profile = WeakNetSimulator.NETWORK_PROFILES[type];
+
+      const timeline = WeakNetSimulator.simulatePageLoad(type, count);
+      const container = document.getElementById('waterfallContainer');
+      WeakNetSimulator.renderWaterfall(timeline, container);
+
+      const totalTime = Math.max(...timeline.map(t => t.end));
+      const firstTime = timeline[0]?.end || 0;
+
+      document.getElementById('wnStatType').textContent = profile.label;
+      document.getElementById('wnStatRTT').textContent = profile.rtt + 'ms';
+      document.getElementById('wnStatTotal').textContent = fmtMs(totalTime);
+      document.getElementById('wnStatFirst').textContent = fmtMs(firstTime);
+    };
+
+    document.getElementById('btnWeaknetCompare').onclick = function() {
+      const count = parseInt(document.getElementById('weaknetCount').value) || 8;
+      const types = ['wifi', '4g', '3g', '2g'];
+      const tbody = document.getElementById('weaknetCompareBody');
+      tbody.innerHTML = '';
+
+      document.getElementById('weaknetCompareTable').style.display = 'table';
+
+      const results = {};
+      types.forEach(type => {
+        const profile = WeakNetSimulator.NETWORK_PROFILES[type];
+        const timeline = WeakNetSimulator.simulatePageLoad(type, count);
+        const totalTime = Math.max(...timeline.map(t => t.end));
+        const firstTime = timeline[0]?.end || 0;
+        results[type] = { totalTime, firstTime };
+
+        let evalBadge = '';
+        if (totalTime < 1000) evalBadge = '<span class="badge badge-hit">优秀</span>';
+        else if (totalTime < 3000) evalBadge = '<span class="badge badge-warn">可接受</span>';
+        else evalBadge = '<span class="badge badge-miss">需优化</span>';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${profile.label}</strong></td>
+          <td>${profile.rtt}ms</td>
+          <td>${fmtMs(totalTime)}</td>
+          <td>${fmtMs(firstTime)}</td>
+          <td>${evalBadge}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      // 更新瀑布图为最慢的网络
+      const slowest = types[types.length - 1];
+      const slowestTimeline = WeakNetSimulator.simulatePageLoad(slowest, count);
+      WeakNetSimulator.renderWaterfall(slowestTimeline, document.getElementById('waterfallContainer'));
+
+      const sp = WeakNetSimulator.NETWORK_PROFILES[slowest];
+      document.getElementById('wnStatType').textContent = sp.label;
+      document.getElementById('wnStatRTT').textContent = sp.rtt + 'ms';
+      const st = Math.max(...slowestTimeline.map(t => t.end));
+      document.getElementById('wnStatTotal').textContent = fmtMs(st);
+      document.getElementById('wnStatFirst').textContent = fmtMs(slowestTimeline[0]?.end || 0);
+
+      // 验证 CP5: 2G vs 4G
+      if (results['2g'] && results['4g']) {
+        const ratio = results['2g'].totalTime / results['4g'].totalTime;
+        setCheckpoint('cp5', ratio > 3);
+      }
+    };
+
+    /* ==============================================================
+       辅助
+       ============================================================== */
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+  </script>
+</body>
+</html>
