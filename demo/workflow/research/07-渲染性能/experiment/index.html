@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>渲染性能实验 — 避免掉帧的 JS 执行与 DOM 操作策略</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: #0f1117; color: #e0e0e0; line-height: 1.6;
+}
+h1 { text-align: center; padding: 24px 0 8px; font-size: 1.6rem; color: #fff; }
+.subtitle { text-align: center; color: #888; margin-bottom: 24px; font-size: 0.9rem; }
+.container { max-width: 1200px; margin: 0 auto; padding: 0 20px 60px; }
+
+/* FPS 仪表盘 */
+#fps-monitor {
+  position: fixed; top: 12px; right: 12px; z-index: 9999;
+  background: rgba(0,0,0,0.85); border: 1px solid #333; border-radius: 8px;
+  padding: 10px 16px; min-width: 120px; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+#fps-monitor .label { font-size: 0.7rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+#fps-monitor .value { font-size: 1.8rem; font-weight: 700; }
+.fps-good { color: #4caf50; }
+.fps-ok { color: #ff9800; }
+.fps-bad { color: #f44336; }
+
+/* 实验区块 */
+.experiment {
+  background: #1a1d27; border: 1px solid #2a2d3a; border-radius: 12px;
+  margin-bottom: 24px; overflow: hidden;
+}
+.experiment-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; background: #21242f; border-bottom: 1px solid #2a2d3a;
+}
+.experiment-header h2 { font-size: 1.1rem; color: #fff; }
+.badge {
+  font-size: 0.7rem; padding: 2px 8px; border-radius: 4px;
+  background: #2d4a3e; color: #66bb6a; font-weight: 600;
+}
+.experiment-body { padding: 20px; }
+
+/* 控制区 */
+.controls {
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+  margin-bottom: 16px;
+}
+button {
+  padding: 8px 18px; border: none; border-radius: 6px;
+  background: #3b82f6; color: #fff; font-size: 0.85rem;
+  cursor: pointer; transition: background 0.2s;
+}
+button:hover { background: #2563eb; }
+button.secondary { background: #374151; }
+button.secondary:hover { background: #4b5563; }
+button.danger { background: #ef4444; }
+button.danger:hover { background: #dc2626; }
+select, input[type="range"] {
+  padding: 6px 10px; background: #2a2d3a; border: 1px solid #3a3d4a;
+  border-radius: 4px; color: #e0e0e0; font-size: 0.85rem;
+}
+label { font-size: 0.85rem; color: #aaa; }
+.metric {
+  display: inline-block; padding: 4px 10px; margin: 2px;
+  background: #1a1d27; border-radius: 4px; font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+}
+.metric .label { color: #888; }
+.metric .val { color: #4caf50; font-weight: 600; }
+.metric .val.warn { color: #ff9800; }
+.metric .val.bad { color: #f44336; }
+
+/* 布局抖动对比 */
+.thrash-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.thrash-box {
+  border: 1px solid #2a2d3a; border-radius: 6px; padding: 12px;
+  min-height: 120px; background: #12141c;
+}
+.thrash-box h4 { font-size: 0.85rem; margin-bottom: 8px; color: #aaa; }
+.thrash-box .items { display: flex; flex-wrap: wrap; gap: 2px; min-height: 80px; }
+.thrash-box .dot {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: #3b82f6; transition: background 0.1s;
+}
+
+/* 帧耗时柱状图 */
+.frame-chart {
+  display: flex; align-items: flex-end; gap: 1px;
+  height: 100px; background: #12141c; border: 1px solid #2a2d3a;
+  border-radius: 4px; padding: 4px; overflow: hidden;
+}
+.frame-bar {
+  flex: 1; min-width: 2px; border-radius: 1px 1px 0 0;
+  transition: height 0.1s;
+}
+
+/* Long Task 列表 */
+.longtask-list {
+  max-height: 150px; overflow-y: auto; background: #12141c;
+  border: 1px solid #2a2d3a; border-radius: 4px; padding: 8px;
+  font-size: 0.8rem; font-family: monospace;
+}
+.longtask-item { padding: 3px 0; border-bottom: 1px solid #1e2130; }
+.longtask-item .dur { color: #f44336; font-weight: 600; }
+.longtask-item .src { color: #888; }
+
+/* rAF 切片对比 */
+.raf-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.raf-box {
+  border: 1px solid #2a2d3a; border-radius: 6px; padding: 12px;
+  background: #12141c;
+}
+.raf-box h4 { font-size: 0.85rem; margin-bottom: 8px; color: #aaa; }
+.raf-progress {
+  height: 24px; background: #1e2130; border-radius: 4px; overflow: hidden;
+  margin-bottom: 8px;
+}
+.raf-progress-bar {
+  height: 100%; width: 0; border-radius: 4px; transition: width 0.1s;
+}
+
+.note {
+  font-size: 0.8rem; color: #666; margin-top: 8px;
+  padding: 8px 12px; background: rgba(255,255,255,0.02);
+  border-radius: 4px; border-left: 3px solid #333;
+}
+</style>
+</head>
+<body>
+
+<div id="fps-monitor">
+  <div class="label">FPS</div>
+  <div class="value fps-good" id="fps-value">--</div>
+  <div style="font-size:0.65rem;color:#666;margin-top:2px" id="fps-frames">0 帧</div>
+</div>
+
+<h1>渲染性能：避免掉帧的 JS 执行与 DOM 操作策略</h1>
+<p class="subtitle">纯浏览器实验 · 帧预算可视化 · 零依赖</p>
+
+<div class="container">
+
+<!-- ==================== 实验1：Layout Thrashing ==================== -->
+<div class="experiment">
+  <div class="experiment-header">
+    <h2>实验 1：Layout Thrashing — 读写交替 vs 批量读写</h2>
+    <span class="badge">A3 重绘与回流</span>
+  </div>
+  <div class="experiment-body">
+    <div class="controls">
+      <label>元素数量：
+        <select id="th-count">
+          <option value="500">500</option>
+          <option value="2000" selected>2,000</option>
+          <option value="5000">5,000</option>
+          <option value="10000">10,000</option>
+        </select>
+      </label>
+      <button onclick="runThrashTest()">运行对比</button>
+      <button class="danger" onclick="clearThrashTest()">清除</button>
+    </div>
+    <div id="th-metrics" style="margin-bottom:12px"></div>
+    <div class="thrash-compare">
+      <div class="thrash-box">
+        <h4>❌ 读写交替（强制同步 Layout）</h4>
+        <div class="items" id="th-slow"></div>
+        <div style="margin-top:8px;font-size:0.75rem;color:#888">
+          每次：读 offsetHeight → 写 style.height → 触发 Layout → 循环
+        </div>
+      </div>
+      <div class="thrash-box">
+        <h4>✅ 批量读 → 批量写（单次 Layout）</h4>
+        <div class="items" id="th-fast"></div>
+        <div style="margin-top:8px;font-size:0.75rem;color:#888">
+          先读所有 offsetHeight → 再写所有 style.height → 仅 1 次 Layout
+        </div>
+      </div>
+    </div>
+    <div class="note">
+      <strong>[A3] 原理：</strong>读 <code>offsetHeight</code> 等几何属性时，若 DOM 已被标记为 dirty，
+      浏览器被迫立即执行同步 Layout（Forced Synchronous Layout）。循环中反复"写-读-写"形成
+      Layout Thrashing，耗时可达批量方案的 10-100 倍。
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 实验2：rAF 任务切片 ==================== -->
+<div class="experiment">
+  <div class="experiment-header">
+    <h2>实验 2：任务切片 — 同步长任务 vs rAF 时间分片</h2>
+    <span class="badge">A30 rAF 调度</span>
+    <span class="badge" style="background:#3a2d4a;color:#bb866a;margin-left:4px">A31 事件循环</span>
+  </div>
+  <div class="experiment-body">
+    <div class="controls">
+      <label>总任务量：
+        <select id="raf-total">
+          <option value="50000">50,000</option>
+          <option value="200000" selected>200,000</option>
+          <option value="500000">500,000</option>
+        </select>
+      </label>
+      <label>每帧预算：
+        <select id="raf-budget">
+          <option value="4">4ms</option>
+          <option value="8" selected>8ms</option>
+          <option value="12">12ms</option>
+        </select>
+      </label>
+      <button onclick="runRAFTest('sync')">运行：同步长任务</button>
+      <button onclick="runRAFTest('raf')">运行：rAF 切片</button>
+      <button class="secondary" onclick="resetRAFTest()">重置</button>
+    </div>
+    <div id="raf-metrics" style="margin-bottom:12px"></div>
+    <div class="raf-compare">
+      <div class="raf-box">
+        <h4>❌ 同步执行（阻塞主线程）</h4>
+        <div class="raf-progress"><div class="raf-progress-bar" id="raf-sync-bar" style="background:#ef4444"></div></div>
+        <div id="raf-sync-status" style="font-size:0.8rem;color:#888">就绪</div>
+        <div class="frame-chart" id="raf-sync-chart"></div>
+      </div>
+      <div class="raf-box">
+        <h4>✅ rAF 时间分片（不阻塞渲染）</h4>
+        <div class="raf-progress"><div class="raf-progress-bar" id="raf-slice-bar" style="background:#4caf50"></div></div>
+        <div id="raf-slice-status" style="font-size:0.8rem;color:#888">就绪</div>
+        <div class="frame-chart" id="raf-slice-chart"></div>
+      </div>
+    </div>
+    <div class="note">
+      <strong>[A30+A31] 原理：</strong>同步长任务（macrotask）在执行期间完全阻塞主线程，浏览器无法执行
+      rAF 回调、处理输入或进行渲染。rAF 时间分片将任务拆成多帧执行，每帧只做预算时间内（如 8ms）的工作，
+      剩余时间让给渲染管线，保持 60fps 流畅。
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 实验3：Long Task 检测 ==================== -->
+<div class="experiment">
+  <div class="experiment-header">
+    <h2>实验 3：Long Task 检测 — PerformanceObserver</h2>
+    <span class="badge">A33 Performance API</span>
+  </div>
+  <div class="experiment-body">
+    <div class="controls">
+      <label>任务耗时：
+        <select id="lt-duration">
+          <option value="20">20ms（不会触发）</option>
+          <option value="60" selected>60ms（触发 Long Task）</option>
+          <option value="200">200ms（严重阻塞）</option>
+          <option value="500">500ms（极端情况）</option>
+        </select>
+      </label>
+      <button onclick="triggerLongTask()">触发长任务</button>
+      <button onclick="triggerMicrotaskLoop()">触发 Microtask 饿死渲染</button>
+      <button class="secondary" onclick="clearLongTasks()">清除记录</button>
+      <span class="metric"><span class="label">Long Task 计数：</span><span class="val bad" id="lt-count">0</span></span>
+    </div>
+    <div id="lt-metrics" style="margin-bottom:12px"></div>
+    <div class="longtask-list" id="lt-list">
+      <div style="color:#666">等待触发...</div>
+    </div>
+    <div class="note">
+      <strong>[A33] 原理：</strong><code>PerformanceObserver</code> 监听 <code>longtask</code> 类型，
+      超过 50ms 的连续任务会被标记。回调中的 <code>attribution</code> 提供脚本来源信息。
+      注意：监测 Long Task 的回调本身也在主线程执行，如果回调做复杂分析，本身也可能变成 Long Task。
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 实验4：Worker 对比 ==================== -->
+<div class="experiment">
+  <div class="experiment-header">
+    <h2>实验 4：计算卸载 — 主线程 vs Web Worker</h2>
+    <span class="badge">A32 Web Worker</span>
+  </div>
+  <div class="experiment-body">
+    <div class="controls">
+      <label>数组大小：
+        <select id="wk-size">
+          <option value="100000">100K</option>
+          <option value="1000000" selected>1M</option>
+          <option value="5000000">5M</option>
+        </select>
+      </label>
+      <button onclick="runWorkerTest('main')">主线程排序</button>
+      <button onclick="runWorkerTest('worker')">Worker 排序</button>
+      <button class="secondary" onclick="resetWorkerTest()">重置</button>
+    </div>
+    <div id="wk-metrics" style="margin-bottom:12px"></div>
+    <div class="raf-compare">
+      <div class="raf-box">
+        <h4 id="wk-main-title">🖥️ 主线程</h4>
+        <div class="raf-progress"><div class="raf-progress-bar" id="wk-main-bar" style="background:#ff9800"></div></div>
+        <div id="wk-main-status" style="font-size:0.8rem;color:#888">就绪</div>
+        <div class="frame-chart" id="wk-main-chart"></div>
+      </div>
+      <div class="raf-box">
+        <h4 id="wk-worker-title">⚙️ Web Worker</h4>
+        <div class="raf-progress"><div class="raf-progress-bar" id="wk-worker-bar" style="background:#4caf50"></div></div>
+        <div id="wk-worker-status" style="font-size:0.8rem;color:#888">就绪</div>
+        <div class="frame-chart" id="wk-worker-chart"></div>
+      </div>
+    </div>
+    <div class="note">
+      <strong>[A32] 原理：</strong>Web Worker 运行在独立线程，不阻塞主线程渲染。
+      <code>postMessage</code> 使用结构化克隆传递数据，大数据量时序列化开销可观。
+      经验值：数据序列化耗时 &lt; 计算耗时时 Worker 才有收益。点击两个按钮观察主线程 FPS 差异。
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+// ========================================================================
+// [A30] 全局 FPS 监控
+// ========================================================================
+const FPSMonitor = (() => {
+  let frames = 0, lastTime = performance.now(), fps = 0;
+  const fpsEl = document.getElementById('fps-value');
+  const framesEl = document.getElementById('fps-frames');
+
+  function tick() {
+    frames++;
+    const now = performance.now();
+    const delta = now - lastTime;
+    if (delta >= 500) {
+      fps = Math.round((frames * 1000) / delta);
+      frames = 0; lastTime = now;
+      fpsEl.textContent = fps;
+      fpsEl.className = 'value ' + (fps >= 50 ? 'fps-good' : fps >= 30 ? 'fps-ok' : 'fps-bad');
+      framesEl.textContent = `Δ${Math.round(delta)}ms`;
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+  return { getFps: () => fps };
+})();
+
+// 帧耗时采集器
+const FrameCollector = (() => {
+  const charts = {};
+  let lastFrame = performance.now();
+
+  function register(chartId, maxBars) {
+    charts[chartId] = { bars: [], maxBars: maxBars || 80, el: document.getElementById(chartId) };
+  }
+
+  function tick() {
+    const now = performance.now();
+    const dt = now - lastFrame;
+    lastFrame = now;
+    for (const id in charts) {
+      const c = charts[id];
+      c.bars.push(dt);
+      if (c.bars.length > c.maxBars) c.bars.shift();
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  function render(chartId) {
+    const c = charts[chartId];
+    if (!c || !c.el) return;
+    const max = Math.max(20, ...c.bars);
+    c.el.innerHTML = c.bars.map(dt => {
+      const h = Math.min(96, (dt / max) * 96);
+      const color = dt > 16 ? '#f44336' : dt > 8 ? '#ff9800' : '#4caf50';
+      return `<div class="frame-bar" style="height:${h}px;background:${color}"></div>`;
+    }).join('');
+  }
+
+  function clear(chartId) {
+    if (charts[chartId]) charts[chartId].bars = [];
+  }
+
+  return { register, render, clear };
+})();
+
+// ========================================================================
+// [A3] 实验1：Layout Thrashing
+// ========================================================================
+function runThrashTest() {
+  const count = parseInt(document.getElementById('th-count').value);
+  const slowBox = document.getElementById('th-slow');
+  const fastBox = document.getElementById('th-fast');
+  const metricsEl = document.getElementById('th-metrics');
+
+  // 先创建元素
+  slowBox.innerHTML = '';
+  fastBox.innerHTML = '';
+  const slowEls = [], fastEls = [];
+  for (let i = 0; i < count; i++) {
+    const d1 = document.createElement('div'); d1.className = 'dot';
+    slowBox.appendChild(d1); slowEls.push(d1);
+    const d2 = document.createElement('div'); d2.className = 'dot';
+    fastBox.appendChild(d2); fastEls.push(d2);
+  }
+
+  // [A3] 方式A：读写交替（每轮强制同步 Layout）
+  const t0 = performance.now();
+  for (let i = 0; i < count; i++) {
+    const h = slowEls[i].offsetHeight;         // 读 → 强制 Layout
+    slowEls[i].style.height = (h + 1) + 'px'; // 写 → 标记 dirty
+  }
+  const slowTime = performance.now() - t0;
+
+  // [A3] 方式B：批量读 → 批量写
+  const t1 = performance.now();
+  const heights = fastEls.map(el => el.offsetHeight); // 批量读（仅 1 次 Layout）
+  fastEls.forEach((el, i) => {
+    el.style.height = (heights[i] + 1) + 'px';        // 批量写
+  });
+  const fastTime = performance.now() - t1;
+
+  const ratio = fastTime > 0 ? (slowTime / fastTime).toFixed(1) : '∞';
+  metricsEl.innerHTML =
+    `<span class="metric"><span class="label">读写交替：</span><span class="val bad">${slowTime.toFixed(1)}ms</span></span>` +
+    `<span class="metric"><span class="label">批量读写：</span><span class="val">${fastTime.toFixed(1)}ms</span></span>` +
+    `<span class="metric"><span class="label">性能比：</span><span class="val">${ratio}x</span></span>` +
+    `<span class="metric"><span class="label">Layout 次数：</span><span class="val bad">≈${count}</span> vs <span class="val">1</span></span>`;
+}
+
+function clearThrashTest() {
+  document.getElementById('th-slow').innerHTML = '';
+  document.getElementById('th-fast').innerHTML = '';
+  document.getElementById('th-metrics').innerHTML = '';
+}
+
+// ========================================================================
+// [A30+A31] 实验2：rAF 任务切片
+// ========================================================================
+FrameCollector.register('raf-sync-chart', 80);
+FrameCollector.register('raf-slice-chart', 80);
+
+let rafRunning = false;
+
+function runRAFTest(mode) {
+  if (rafRunning) return;
+  rafRunning = true;
+
+  const total = parseInt(document.getElementById('raf-total').value);
+  const budget = parseInt(document.getElementById('raf-budget').value);
+  const metricsEl = document.getElementById('raf-metrics');
+
+  // 模拟工作单元：排序随机数组片段
+  function workChunk(arr, start, end) {
+    const sub = arr.slice(start, end);
+    sub.sort((a, b) => a - b);
+    for (let i = start; i < end && i < arr.length; i++) arr[i] = sub[i - start];
+  }
+
+  const arr = new Array(total);
+  for (let i = 0; i < total; i++) arr[i] = Math.random();
+
+  const chunkSize = 5000; // 每个 chunk 处理 5000 项
+  const totalChunks = Math.ceil(total / chunkSize);
+
+  if (mode === 'sync') {
+    // [A31] 同步执行：一次性跑完，阻塞主线程
+    const bar = document.getElementById('raf-sync-bar');
+    const status = document.getElementById('raf-sync-status');
+    FrameCollector.clear('raf-sync-chart');
+    status.textContent = '执行中...';
+    bar.style.width = '0%';
+
+    const t0 = performance.now();
+    for (let c = 0; c < totalChunks; c++) {
+      workChunk(arr, c * chunkSize, (c + 1) * chunkSize);
+      bar.style.width = ((c + 1) / totalChunks * 100) + '%';
+    }
+    const elapsed = performance.now() - t0;
+    status.textContent = `完成：${elapsed.toFixed(0)}ms（期间渲染完全阻塞）`;
+    status.style.color = '#f44336';
+
+    metricsEl.innerHTML =
+      `<span class="metric"><span class="label">同步耗时：</span><span class="val bad">${elapsed.toFixed(0)}ms</span></span>` +
+      `<span class="metric"><span class="label">数据量：</span><span class="val">${total.toLocaleString()}</span></span>`;
+
+    rafRunning = false;
+
+  } else {
+    // [A30] rAF 切片：每帧只做 budget ms 的工作
+    const bar = document.getElementById('raf-slice-bar');
+    const status = document.getElementById('raf-slice-status');
+    FrameCollector.clear('raf-slice-chart');
+    status.textContent = '执行中...';
+    bar.style.width = '0%';
+
+    let chunkIdx = 0;
+    const startTime = performance.now();
+
+    function slice() {
+      const frameStart = performance.now();
+
+      while (chunkIdx < totalChunks) {
+        workChunk(arr, chunkIdx * chunkSize, (chunkIdx + 1) * chunkSize);
+        chunkIdx++;
+        bar.style.width = (chunkIdx / totalChunks * 100) + '%';
+
+        // 检查时间预算
+        if (performance.now() - frameStart >= budget) {
+          // 让出主线程，等下一帧继续
+          FrameCollector.render('raf-slice-chart');
+          requestAnimationFrame(slice);
+          return;
+        }
+      }
+
+      // 全部完成
+      const elapsed = performance.now() - startTime;
+      status.textContent = `完成：${elapsed.toFixed(0)}ms（期间保持渲染）`;
+      status.style.color = '#4caf50';
+
+      metricsEl.innerHTML =
+        `<span class="metric"><span class="label">切片耗时：</span><span class="val">${elapsed.toFixed(0)}ms</span></span>` +
+        `<span class="metric"><span class="label">每帧预算：</span><span class="val">${budget}ms</span></span>` +
+        `<span class="metric"><span class="label">数据量：</span><span class="val">${total.toLocaleString()}</span></span>`;
+
+      FrameCollector.render('raf-slice-chart');
+      rafRunning = false;
+    }
+
+    requestAnimationFrame(slice);
+  }
+}
+
+function resetRAFTest() {
+  ['raf-sync-bar','raf-slice-bar'].forEach(id => document.getElementById(id).style.width = '0%');
+  ['raf-sync-status','raf-slice-status'].forEach(id => {
+    document.getElementById(id).textContent = '就绪';
+    document.getElementById(id).style.color = '#888';
+  });
+  document.getElementById('raf-metrics').innerHTML = '';
+  FrameCollector.clear('raf-sync-chart');
+  FrameCollector.clear('raf-slice-chart');
+  rafRunning = false;
+}
+
+// ========================================================================
+// [A33] 实验3：Long Task 检测
+// ========================================================================
+let longTaskCount = 0;
+const ltListEl = document.getElementById('lt-list');
+ltListEl.innerHTML = '<div style="color:#666">等待触发...</div>';
+
+// [A33] 注册 PerformanceObserver 监听 longtask
+if ('PerformanceObserver' in window) {
+  try {
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        longTaskCount++;
+        document.getElementById('lt-count').textContent = longTaskCount;
+
+        const dur = entry.duration.toFixed(1);
+        const src = entry.attribution?.[0]?.containerSrc || 'unknown';
+        const item = document.createElement('div');
+        item.className = 'longtask-item';
+        item.innerHTML = `<span class="dur">${dur}ms</span> <span class="src">${src}</span>`;
+
+        if (ltListEl.querySelector('div[style]')) ltListEl.innerHTML = '';
+        ltListEl.prepend(item);
+
+        // 最多保留 20 条
+        while (ltListEl.children.length > 20) ltListEl.lastChild.remove();
+      }
+    });
+    observer.observe({ type: 'longtask', buffered: true });
+  } catch (e) {
+    ltListEl.innerHTML = '<div style="color:#f44336">PerformanceObserver longtask 不支持（需 Chrome）</div>';
+  }
+}
+
+function triggerLongTask() {
+  const dur = parseInt(document.getElementById('lt-duration').value);
+  const metricsEl = document.getElementById('lt-metrics');
+
+  // [A33] User Timing 标记
+  performance.mark('longtask-start');
+
+  // 阻塞主线程指定时间
+  const start = performance.now();
+  while (performance.now() - start < dur) { /* busy wait */ }
+
+  performance.mark('longtask-end');
+  performance.measure('longtask-duration', 'longtask-start', 'longtask-end');
+
+  const actual = performance.now() - start;
+  metricsEl.innerHTML =
+    `<span class="metric"><span class="label">目标：</span><span class="val">${dur}ms</span></span>` +
+    `<span class="metric"><span class="label">实际：</span><span class="val ${actual > 50 ? 'bad' : ''}">${actual.toFixed(1)}ms</span></span>` +
+    `<span class="metric"><span class="label">是否 Long Task：</span><span class="val ${actual > 50 ? 'bad' : ''}">${actual > 50 ? '✅ 是' : '❌ 否'}</span></span>`;
+}
+
+function triggerMicrotaskLoop() {
+  // [A31] microtask 无限循环 — 饿死渲染
+  const metricsEl = document.getElementById('lt-metrics');
+  metricsEl.innerHTML = '<span class="metric"><span class="label" style="color:#f44336">⚠️ Microtask 循环已启动，页面将冻结 3 秒...</span></span>';
+
+  let iterations = 0;
+  const maxIterations = 30000000;
+  const startTime = performance.now();
+
+  function microLoop() {
+    iterations++;
+    if (iterations < maxIterations && performance.now() - startTime < 3000) {
+      // 不断产生新的 microtask → 渲染永远无法执行
+      Promise.resolve().then(microLoop);
+    } else {
+      const elapsed = performance.now() - startTime;
+      metricsEl.innerHTML =
+        `<span class="metric"><span class="label">Microtask 次数：</span><span class="val">${iterations.toLocaleString()}</span></span>` +
+        `<span class="metric"><span class="label">阻塞时长：</span><span class="val bad">${elapsed.toFixed(0)}ms</span></span>` +
+        `<span class="metric"><span class="label" style="color:#ff9800">期间 FPS=0，渲染被完全饿死</span></span>`;
+    }
+  }
+  Promise.resolve().then(microLoop);
+}
+
+function clearLongTasks() {
+  longTaskCount = 0;
+  document.getElementById('lt-count').textContent = '0';
+  ltListEl.innerHTML = '<div style="color:#666">等待触发...</div>';
+  document.getElementById('lt-metrics').innerHTML = '';
+}
+
+// ========================================================================
+// [A32] 实验4：Worker 对比
+// ========================================================================
+FrameCollector.register('wk-main-chart', 80);
+FrameCollector.register('wk-worker-chart', 80);
+
+// 创建 inline Worker
+function createSortWorker() {
+  const code = `
+    self.onmessage = function(e) {
+      const arr = e.data;
+      arr.sort((a, b) => a - b);
+      self.postMessage(arr.length); // 只回传长度，避免大数据序列化
+    };
+  `;
+  const blob = new Blob([code], { type: 'application/javascript' });
+  return new Worker(URL.createObjectURL(blob));
+}
+
+let workerRunning = false;
+
+function runWorkerTest(mode) {
+  if (workerRunning) return;
+  workerRunning = true;
+
+  const size = parseInt(document.getElementById('wk-size').value);
+  const metricsEl = document.getElementById('wk-metrics');
+
+  // 生成随机数组
+  const arr = new Array(size);
+  for (let i = 0; i < size; i++) arr[i] = Math.random();
+
+  if (mode === 'main') {
+    // [A32] 主线程排序 — 阻塞渲染
+    const bar = document.getElementById('wk-main-bar');
+    const status = document.getElementById('wk-main-status');
+    FrameCollector.clear('wk-main-chart');
+    status.textContent = '排序中...';
+    bar.style.width = '0%';
+
+    setTimeout(() => {
+      const t0 = performance.now();
+      arr.sort((a, b) => a - b);
+      const elapsed = performance.now() - t0;
+
+      bar.style.width = '100%';
+      status.textContent = `完成：${elapsed.toFixed(0)}ms（FPS 应有明显下降）`;
+      status.style.color = '#ff9800';
+      FrameCollector.render('wk-main-chart');
+
+      metricsEl.innerHTML =
+        `<span class="metric"><span class="label">主线程耗时：</span><span class="val warn">${elapsed.toFixed(0)}ms</span></span>` +
+        `<span class="metric"><span class="label">数据量：</span><span class="val">${size.toLocaleString()}</span></span>`;
+
+      workerRunning = false;
+    }, 50);
+
+  } else {
+    // [A32] Worker 排序 — 不阻塞主线程
+    const bar = document.getElementById('wk-worker-bar');
+    const status = document.getElementById('wk-worker-status');
+    FrameCollector.clear('wk-worker-chart');
+    status.textContent = 'Worker 排序中...';
+    bar.style.width = '0%';
+
+    const t0 = performance.now();
+    const worker = createSortWorker();
+
+    worker.onmessage = function(e) {
+      const elapsed = performance.now() - t0;
+      bar.style.width = '100%';
+      status.textContent = `完成：${elapsed.toFixed(0)}ms（FPS 应保持稳定）`;
+      status.style.color = '#4caf50';
+      FrameCollector.render('wk-worker-chart');
+
+      metricsEl.innerHTML =
+        `<span class="metric"><span class="label">Worker 耗时：</span><span class="val">${elapsed.toFixed(0)}ms</span></span>` +
+        `<span class="metric"><span class="label">数据量：</span><span class="val">${size.toLocaleString()}</span></span>` +
+        `<span class="metric"><span class="label" style="color:#4caf50">主线程未阻塞</span></span>`;
+
+      worker.terminate();
+      workerRunning = false;
+    };
+
+    // 使用 Transferable 传递 ArrayBuffer（零拷贝）
+    // 这里用普通数组演示结构化克隆开销
+    worker.postMessage(arr);
+  }
+}
+
+function resetWorkerTest() {
+  ['wk-main-bar','wk-worker-bar'].forEach(id => document.getElementById(id).style.width = '0%');
+  ['wk-main-status','wk-worker-status'].forEach(id => {
+    document.getElementById(id).textContent = '就绪';
+    document.getElementById(id).style.color = '#888';
+  });
+  document.getElementById('wk-metrics').innerHTML = '';
+  FrameCollector.clear('wk-main-chart');
+  FrameCollector.clear('wk-worker-chart');
+  workerRunning = false;
+}
+
+// 持续渲染帧耗时
+function renderLoop() {
+  FrameCollector.render('raf-sync-chart');
+  FrameCollector.render('raf-slice-chart');
+  FrameCollector.render('wk-main-chart');
+  FrameCollector.render('wk-worker-chart');
+  requestAnimationFrame(renderLoop);
+}
+requestAnimationFrame(renderLoop);
+</script>
+</body>
+</html>
