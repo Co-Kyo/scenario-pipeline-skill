@@ -1,0 +1,8 @@
+# 自动识别文本文件
+* text=auto
+
+# Markdown 文件统一为 LF
+*.md text eol=lf
+
+# 如果你希望 JS 也统一 LF
+*.js text eol=lf
