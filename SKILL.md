@@ -1,6 +1,6 @@
 ---
 name: scenario-pipeline
-description: "Frontend composite engineering scenario pipeline. Two-phase workflow: pre-processing (scan → decompose → capability extract → highground identify → evaluate → pool) and post-processing (capability research in parallel → assembly in parallel). Use when user asks to scan technical articles/blogs for research topics, collect interview questions, do deep research on composite engineering topics, or says '扫描' / '研究' / 'deep scan' / 'deep research' / 'scenario research' followed by a topic description. Also triggers on requests to collect frontend interview questions, analyze engineering trade-offs, or build a knowledge base of technical scenarios."
+description: "前端复合工程场景知识管线。两阶段工作流：前处理（扫描→分词→能力提取→高地识别→评估→入池）+ 后处理（能力研究并行→命题组装并行）。触发词：'扫描' / '研究' / 'deep scan' / 'deep research' / 'scenario research' / '面试题' / '技术调研'。用于：扫描技术文章提取研究主题、收集面试题、深度研究复合工程场景、构建技术知识库。"
 ---
 
 # Scenario Pipeline
@@ -64,6 +64,7 @@ references/       ← 流程控制
 - **Year-Granularity** — 经验年限与命题颗粒度匹配规则（增强分词能力）：[plugins/year-granularity.md](plugins/year-granularity.md)
 - **Capability Research Mode** — 材料块标准格式 + 研究深度分级（增强能力研究）：[plugins/capability-research-mode.md](plugins/capability-research-mode.md)
 - **Source Registry** — 信源质量白名单 + 域名映射 + 反爬黑名单（增强信源获取）：[plugins/source-registry.md](plugins/source-registry.md)
+
 ### Environment — 环境探测
 
 跨平台多 Agent 能力探测与动态适配。
@@ -121,11 +122,13 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 ## Pre-processing Flow
 
 1. **Scan** — 调用 [processes/scan.md](references/processes/scan.md)
-2. **Decompose** — 调用 [processes/decompose.md](references/processes/decompose.md)
-3. **Capability Extract** — 调用 [processes/capability-extract.md](references/processes/capability-extract.md) → 输出 `.meta/capability-graph.json`
-4. **Highground Identify** — 调用 [processes/highground-identify.md](references/processes/highground-identify.md) → 追加 JSON 的 `highgrounds` + `learning_path`
-5. **Evaluate** — 调用 [processes/evaluate.md](references/processes/evaluate.md)
-6. **Pool** — 写入 `workflow/research/README.md`（总览导航）+ `.meta/candidates.md`（原始记录）
+2. **ⓒ 检查点 A** — 展示扫描摘要（信源数/素材数/Tier 分布），用户确认后继续
+3. **Decompose** — 调用 [processes/decompose.md](references/processes/decompose.md)
+4. **Capability Extract** — 调用 [processes/capability-extract.md](references/processes/capability-extract.md) → 输出 `.meta/capability-graph.json`
+5. **Highground Identify** — 调用 [processes/highground-identify.md](references/processes/highground-identify.md) → 追加 JSON 的 `highgrounds` + `learning_path`
+6. **Evaluate** — 调用 [processes/evaluate.md](references/processes/evaluate.md)
+7. **ⓒ 检查点 B** — 展示评估结果（命题评分表/战略高地/入池统计），用户确认后入池
+8. **Pool** — 写入 `workflow/research/README.md`（总览导航）+ `.meta/candidates.md`（原始记录）
 
 ## Post-processing Flow
 

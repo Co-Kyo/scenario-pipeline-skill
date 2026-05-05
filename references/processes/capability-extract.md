@@ -198,6 +198,18 @@
 
 ---
 
+## 异常与 Fallback
+
+| 异常场景 | 触发条件 | 处理动作 |
+|---------|---------|---------|
+| 信源预查找全部超时 | 单个能力的 T1+T2 域名 web_fetch 均超时 | 标记 `t1_missing: true` + `t2_missing: true`，后处理 agent 用 Fallback 搜索补充 |
+| source-registry.md 缺失 | 文件不存在或格式损坏 | 使用内置默认域名列表（MDN + Chrome DevTools + web.dev），标记 `registry_fallback: true` |
+| 分词结果为空 | decompositions 列表为空 | 输出空 capability-graph.json + 告知用户"无有效命题，请检查扫描结果" |
+| 能力数量过多 | 提取 > 30 个原子能力 | 提示用户"能力数量过多（{n}），建议用 --filter 缩小范围"，继续执行但标记 `overload: true` |
+| JSON 写入失败 | .meta/ 目录不可写 | 自动创建目录 → 仍失败则输出到 stdout，由用户手动保存 |
+| 搜索结果全部命中黑名单 | T1+T2 域名搜索结果均在 blacklist 中 | 标记 `all_blocked: true`，该能力不写入 references，后处理 agent 自行搜索 |
+| 同一能力多个命题定义冲突 | 不同命题对同一能力的描述差异大 | 保留最详细的描述，其他命题的定义合并到 `covers` 字段 |
+
 ## 依赖
 
 - 需要先执行 processes/decompose.md（提供分词结果）

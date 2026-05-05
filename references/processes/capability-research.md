@@ -319,6 +319,18 @@ spawn 能力研究 agent 时，task 按以下模板构造：
 
 ---
 
+## 异常与 Fallback
+
+| 异常场景 | 触发条件 | 处理动作 |
+|---------|---------|---------|
+| web_fetch 超时 | 单次 fetch > 15s | 重试 1 次 → 仍失败则跳过该 URL，尝试下一优先级来源 |
+| T1 全部失败 | 所有 verified=true 的 T1 URL 均不可达 | 降级到 T2 → 降级到 Fallback 搜索 → 标记信源不足 |
+| 搜索无结果 | Fallback 搜索返回 0 结果 | 标记 `source_insufficient: true`，基于通用知识撰写，文件末尾注明"⚠️ 缺乏 T1 来源" |
+| 摘要 JSON 写入失败 | .meta/summaries/ 目录不存在或权限不足 | 自动创建目录 → 仍失败则记录错误日志，主文件正常产出（摘要可后续补生成） |
+| 内容过短 | 主文件 < 500 字 | 标记 `content_thin: true`，在文件顶部注明"⚠️ 信源不足，内容可能不完整" |
+| 子 agent 超时 | spawn 后 > 120s 无产出 | 主 agent 接管该能力，在主上下文中完成（降级为串行） |
+| 子 agent 产出质量差 | 主文件缺少核心章节 | 主 agent 补充缺失章节（不重跑整个 agent） |
+
 ## 依赖
 
 - 需要先执行 processes/capability-extract.md（提供能力 ID 和描述）
