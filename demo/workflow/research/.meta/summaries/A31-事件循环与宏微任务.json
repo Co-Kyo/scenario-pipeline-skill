@@ -1,0 +1,70 @@
+{
+  "id": "A31",
+  "name": "事件循环与宏微任务",
+  "mechanism_summary": "事件循环每轮迭代按顺序执行：(1)取一个macrotask执行；(2)清空microtask queue全部微任务；(3)渲染阶段(input→rAF→Observer→Style→Layout→Paint→Composite)。Macrotask来源包括setTimeout/setInterval/事件回调，每轮只执行一个。Microtask来源包括Promise.then/queueMicrotask/MutationObserver，必须全部清空才进入渲染。递归microtask可阻塞渲染。50ms以上连续占用构成Long Task。",
+  "bottlenecks": [
+    {
+      "name": "微任务递归导致渲染饥饿",
+      "trigger": "Promise.then回调中不断产生新Promise",
+      "symptom": "页面冻结，无法响应输入，无法渲染"
+    },
+    {
+      "name": "setTimeout最小延迟不准",
+      "trigger": "setTimeout(fn,0)实际延迟4ms(嵌套超5层)",
+      "symptom": "定时器回调间隔不可靠"
+    },
+    {
+      "name": "事件处理回调阻塞主线程",
+      "trigger": "click/scroll/input回调执行耗时操作",
+      "symptom": "用户操作后页面无响应"
+    },
+    {
+      "name": "宏任务队列积压",
+      "trigger": "大量事件同时触发(快速滚动)",
+      "symptom": "队列任务处理延迟越来越大"
+    },
+    {
+      "name": "async/await隐式微任务",
+      "trigger": "大量连续await产生大量微任务",
+      "symptom": "看似同步的代码实际被拆成大量微任务"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "dimension": "微任务 vs 宏任务调度",
+      "option_a": "Microtask：高优先级，可阻塞渲染，适合状态一致性",
+      "option_b": "Macrotask：低优先级，不阻塞渲染，适合延迟执行",
+      "suggestion": "需要立即一致的用microtask；允许延迟的用macrotask"
+    },
+    {
+      "dimension": "requestAnimationFrame vs requestIdleCallback",
+      "option_a": "rAF：渲染前高优先级，占用帧预算",
+      "option_b": "rIC：渲染后空闲时，不影响帧率",
+      "suggestion": "视觉相关用rAF；后台任务用rIC"
+    },
+    {
+      "dimension": "同步 vs 异步事件处理",
+      "option_a": "同步处理：无延迟，立即占用主线程",
+      "option_b": "异步处理(rAF/timeout)：有延迟，分散到后续帧",
+      "suggestion": "简单操作同步处理；复杂计算异步切片"
+    }
+  ],
+  "experiment_code": "见主文件「最小验证实验」章节：执行顺序验证(同步→微任务→宏任务)、微任务递归阻塞渲染、rAF渲染时机实验",
+  "references": [
+    {
+      "tier": "MDN文档",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/HTML_DOM_API/Microtask_guide/In_depth",
+      "title": "Microtask guide - In depth"
+    },
+    {
+      "tier": "HTML规范",
+      "url": "https://html.spec.whatwg.org/multipage/webappapis.html#event-loop",
+      "title": "Event Loop - HTML Spec"
+    },
+    {
+      "tier": "深度解析",
+      "url": "https://zhuanlan.zhihu.com/p/397556355",
+      "title": "浏览器 event loop 备忘"
+    }
+  ]
+}

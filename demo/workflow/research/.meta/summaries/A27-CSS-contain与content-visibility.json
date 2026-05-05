@@ -1,0 +1,24 @@
+{
+  "id": "A27",
+  "name": "CSS contain与content-visibility",
+  "mechanism_summary": "CSS contain告知浏览器元素渲染独立（size/layout/style/paint四种隔离），内部变化不触发外部reflow/repaint。content-visibility: auto在此基础上自动判断屏幕外元素跳过渲染，接近viewport时恢复。需配合contain-intrinsic-size提供占位尺寸。对长页面首屏加载性能提升显著，可减少50%+的渲染时间。",
+  "bottlenecks": [
+    "contain:size未显式设宽高时元素坍缩为0",
+    "content-visibility:hidden的内容对Ctrl+F不可搜索",
+    "contain-intrinsic-size不准确导致滚动条跳动",
+    "嵌套containment过深增加浏览器管理开销",
+    "contain属性不可动画化，content-visibility需transition-behavior:allow-discrete"
+  ],
+  "tradeoffs": [
+    "渲染性能 vs 布局准确性：containment跳过子元素计算可能影响依赖子元素尺寸的父元素布局",
+    "content-visibility:auto vs 手动虚拟滚动：auto更简单无侵入，但对超长列表不如虚拟列表精细",
+    "containment粒度：strict最激进需显式尺寸，content更实用但收益略低"
+  ],
+  "experiment_code": "<style>\nsection {\n  content-visibility: auto;\n  contain-intrinsic-size: auto 500px;\n}\n.card {\n  contain: layout paint;\n}\n</style>\n<!-- 50个section各含100+DOM节点 -->\n<section>...</section>",
+  "references": [
+    "https://developer.mozilla.org/en-US/docs/Web/CSS/contain",
+    "https://developer.mozilla.org/en-US/docs/Web/CSS/content-visibility",
+    "https://web.dev/articles/content-visibility",
+    "https://www.w3.org/TR/css-contain-2/"
+  ]
+}

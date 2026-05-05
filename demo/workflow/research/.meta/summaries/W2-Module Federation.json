@@ -1,0 +1,31 @@
+{
+  "mechanism_summary": "Module Federation 是 Webpack 5 的架构模式，允许独立构建的应用在运行时共享模块。每个应用是一个 container，通过 remoteEntry.js 暴露模块清单。宿主应用通过 import() 异步加载远程模块，共享模块（如 React）通过版本协商避免重复打包。支持动态远程容器（运行时决定加载哪个应用）、嵌套容器和循环依赖。是微前端场景的核心解决方案。",
+  "bottlenecks": [
+    "共享模块版本协商失败导致运行时错误或重复打包",
+    "远程容器（remoteEntry.js）加载失败时缺少降级策略",
+    "远程模块的 TypeScript 类型支持需要额外配置",
+    "共享模块的 CSS 可能泄漏，需要 Shadow DOM 或 CSS Modules",
+    "每个应用独立 Webpack 配置，shared 配置需保持一致"
+  ],
+  "tradeoffs": [
+    {
+      "scenario": "shared singleton vs 多版本",
+      "option_a": "singleton：只有一个版本，节省内存，但版本不兼容会报错",
+      "option_b": "多版本：安全但内存占用更大",
+      "consideration": "React/Vue 等框架建议 singleton，工具库可允许多版本"
+    },
+    {
+      "scenario": "静态远程 vs 动态远程",
+      "option_a": "静态远程：配置文件声明，简单但不灵活",
+      "option_b": "动态远程：运行时决定，灵活但需要额外加载逻辑",
+      "consideration": "A/B 测试、灰度发布场景使用动态远程"
+    }
+  ],
+  "experiment_code": "// app1 (远程应用)\nnew ModuleFederationPlugin({\n  name: 'app1',\n  filename: 'remoteEntry.js',\n  exposes: { './Button': './src/Button' },\n  shared: { react: { singleton: true } }\n});\n\n// host (宿主应用)\nnew ModuleFederationPlugin({\n  name: 'host',\n  remotes: { app1: 'app1@http://localhost:3001/remoteEntry.js' },\n  shared: { react: { singleton: true } }\n});\n// React.lazy(() => import('app1/Button')) 加载远程组件",
+  "references": [
+    "https://webpack.js.org/concepts/module-federation/",
+    "https://webpack.js.org/plugins/module-federation-plugin/",
+    "https://github.com/module-federation/module-federation-examples",
+    "https://indepth.dev/webpack-5-module-federation-a-game-changer-in-javascript-architecture/"
+  ]
+}

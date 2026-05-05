@@ -1,0 +1,65 @@
+{
+  "id": "A5",
+  "name": "IntersectionObserver",
+  "mechanism_summary": "IntersectionObserver是W3C标准的异步可见性观察接口，通过注册回调在目标元素与根元素/视口交叉状态变化时触发通知。配置项包括root（根元素）、rootMargin（边距扩展）、threshold（交叉比例阈值）、trackVisibility（真实可见性追踪）。相比scroll事件，观察和计算在浏览器后台异步执行，不阻塞主线程，一个observer可观察多个目标。",
+  "bottlenecks": [
+    {
+      "name": "回调在主线程执行",
+      "trigger": "回调函数中执行耗时操作",
+      "symptom": "即使观察异步，回调仍可能阻塞主线程"
+    },
+    {
+      "name": "大量目标元素观察开销",
+      "trigger": "同时observe数千个元素",
+      "symptom": "内存占用增加，回调批次过大"
+    },
+    {
+      "name": "threshold过细导致回调风暴",
+      "trigger": "设置大量threshold，元素在边界快速移动",
+      "symptom": "短时间内大量回调，帧率下降"
+    },
+    {
+      "name": "嵌套滚动容器root选择",
+      "trigger": "目标元素在多层嵌套滚动容器中",
+      "symptom": "选择错误root导致检测不准确"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "dimension": "rootMargin预加载量",
+      "option_a": "小rootMargin(50px)：低网络开销，可能有加载闪烁",
+      "option_b": "大rootMargin(500px)：更流畅，可能加载不需要的内容",
+      "suggestion": "图片懒加载用200-300px；无限滚动用1-2屏高度"
+    },
+    {
+      "dimension": "精确追踪vs性能",
+      "option_a": "trackVisibility=false：低开销，仅几何交叉",
+      "option_b": "trackVisibility=true：高开销，检测遮挡/透明度",
+      "suggestion": "大多数场景用false；广告可见性追踪用true"
+    },
+    {
+      "dimension": "单Observer vs 多Observer",
+      "option_a": "单Observer多目标：低内存，共享配置",
+      "option_b": "多Observer各自目标：高内存，独立配置",
+      "suggestion": "同类目标用单observer；不同类型需求用多observer"
+    }
+  ],
+  "experiment_code": "见主文件「最小验证实验」章节：3个Target元素的交叉观察Demo，含rootMargin、多threshold配置",
+  "references": [
+    {
+      "tier": "核心规范",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API",
+      "title": "Intersection Observer API - MDN"
+    },
+    {
+      "tier": "接口文档",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/IntersectionObserver",
+      "title": "IntersectionObserver - MDN"
+    },
+    {
+      "tier": "W3C规范",
+      "url": "https://w3c.github.io/IntersectionObserver/",
+      "title": "Intersection Observer Specification"
+    }
+  ]
+}

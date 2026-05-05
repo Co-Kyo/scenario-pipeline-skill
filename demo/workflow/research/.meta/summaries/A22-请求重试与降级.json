@@ -1,0 +1,23 @@
+{
+  "id": "A22",
+  "name": "请求重试与降级",
+  "domain": "browser_api",
+  "coverage": ["P4"],
+  "dependencies": [],
+  "summary": "指数退避重试通过等待时间指数增长+随机jitter避免重试风暴，典型参数base=1s、maxAttempts=3-5、maxInterval=30s。重试适用于网络错误/5xx/429，不适用于4xx和非幂等请求。Fallback缓存在网络失败时使用本地旧数据降级。Graceful degradation提供替代体验（缓存数据+提示、轮询替代推送、系统字体fallback）。断路器模式在失败率超阈值时自动停止请求。",
+  "bottlenecks": [
+    "重试放大故障导致retry storm",
+    "非幂等请求重试可能重复执行",
+    "超时设置需分接口配置",
+    "降级数据可能导致用户信息误导",
+    "前端断路器状态多Tab共享困难"
+  ],
+  "tradeoffs": [
+    "重试次数 vs 用户等待时间（3次指数退避是平衡点）",
+    "缓存降级提升体验 vs 数据新鲜度",
+    "客户端重试 vs 服务端限流配合"
+  ],
+  "tools": ["Chrome DevTools Network/Throttling", "Console重试日志", "Sentry网络监控", "AbortController", "Performance Observer"],
+  "keyTerms": ["Exponential Backoff", "Jitter", "Retry-After", "Fallback Cache", "Graceful Degradation", "Circuit Breaker", "Idempotent", "AbortController"],
+  "universal": true
+}

@@ -1,0 +1,23 @@
+{
+  "id": "A20",
+  "name": "资源压缩与gzip/brotli",
+  "domain": "http_protocol",
+  "coverage": ["P4"],
+  "dependencies": [],
+  "summary": "HTTP传输层压缩通过Accept-Encoding/Content-Encoding协商，主流算法为gzip（通用兼容）和Brotli（Google开发，压缩率高15-25%）。Brotli内置120KB Web静态字典，对HTML/CSS/JS效果显著。压缩级别1-4适合动态压缩，11适合构建时预压缩。已压缩媒体文件不应再压缩。Zstandard(zstd)逐步获得浏览器支持。小文件(<150字节)压缩可能增大体积。",
+  "bottlenecks": [
+    "Brotli高级别压缩CPU开销大，高并发场景成瓶颈",
+    "不同内容类型压缩率差异大",
+    "Brotli需HTTPS环境，HTTP回退gzip",
+    "极小文件压缩后可能更大",
+    "Vary: Accept-Encoding导致CDN缓存碎片化"
+  ],
+  "tradeoffs": [
+    "压缩级别 vs CPU/延迟（动态用低级别，静态预压缩用高级别）",
+    "Brotli压缩率 vs 兼容性回退链",
+    "预压缩(构建时) vs 动态压缩(运行时)"
+  ],
+  "tools": ["Chrome DevTools Network Size列", "curl -H Accept-Encoding", "gzip_test在线工具", "Lighthouse Enable text compression", "brotli CLI"],
+  "keyTerms": ["Content-Encoding", "Accept-Encoding", "gzip", "Brotli", "zstd", "deflate", "Compression Level", "Static Dictionary"],
+  "universal": true
+}

@@ -1,0 +1,63 @@
+{
+  "id": "A3",
+  "name": "重绘与回流",
+  "mechanism_summary": "回流(Reflow/Layout)重新计算元素几何属性，重绘(Repaint)重新绘制像素。修改几何属性触发回流+重绘，修改视觉属性只触发重绘，修改transform/opacity只触发合成(Composite)。浏览器采用异步回流优化，但读取offsetWidth/getComputedStyle等布局属性会强制同步回流。布局抖动(Layout Thrashing)指JS交替读写布局属性导致多次强制回流，是常见性能杀手。",
+  "bottlenecks": [
+    {
+      "name": "布局抖动Layout Thrashing",
+      "trigger": "JS循环中交替读取布局属性和修改样式",
+      "symptom": "帧率骤降到个位数",
+      "detection": "Performance面板密集Layout/Recalculate Style交替",
+      "mitigation": "批量读写DOM、requestAnimationFrame分离读写"
+    },
+    {
+      "name": "动画使用几何属性",
+      "trigger": "用left/top/width/height做动画",
+      "symptom": "每帧触发Reflow+Repaint",
+      "detection": "Performance面板Layout时间过长",
+      "mitigation": "使用transform/opacity代替"
+    },
+    {
+      "name": "频繁插入DOM节点",
+      "trigger": "循环中逐个appendChild",
+      "symptom": "每次插入触发Reflow",
+      "detection": "Performance面板大量Layout事件",
+      "mitigation": "DocumentFragment批量插入"
+    },
+    {
+      "name": "CSS选择器复杂度过高",
+      "trigger": "深层嵌套选择器",
+      "symptom": "Style Recalculation耗时增加",
+      "detection": "Performance面板Recalculate Style耗时",
+      "mitigation": "简单类选择器、BEM命名"
+    },
+    {
+      "name": "getComputedStyle强制同步回流",
+      "trigger": "修改样式后立即调用getComputedStyle/getBoundingClientRect",
+      "symptom": "同步回流开销",
+      "detection": "Performance面板Forced reflow警告",
+      "mitigation": "缓存计算结果、批量读取"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "name": "will-change提示 vs 内存开销",
+      "description": "提前创建合成层避免回流，但每个元素消耗GPU内存"
+    },
+    {
+      "name": "CSS contain vs 兼容性",
+      "description": "隔离布局/绘制边界限制回流传播，但旧浏览器不支持"
+    },
+    {
+      "name": "减少Reflow vs 代码可读性",
+      "description": "极致优化扭曲代码结构，普通逻辑优先可读性"
+    }
+  ],
+  "experiment_code": "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>Reflow vs Composite</title><style>.box{width:60px;height:60px;margin:5px;display:inline-block;background:#4CAF50}</style></head><body><h1>Reflow vs Composite</h1><button onclick=\"animReflow()\">回流(left)</button> <button onclick=\"animComp()\">合成(transform)</button> <button onclick=\"thrash()\">布局抖动</button> <button onclick=\"batch()\">批量</button><div id=\"stats\" style=\"margin:10px;font-family:monospace\"></div><div id=\"c\"></div><script>const c=document.getElementById('c'),s=document.getElementById('stats'),bx=[];for(let i=0;i<200;i++){const d=document.createElement('div');d.className='box';c.appendChild(d);bx.push(d)}let aid=null;function animReflow(){cancelAnimationFrame(aid);let o=0;function f(){o+=2;if(o>200)o=0;bx.forEach(b=>{b.style.position='relative';b.style.left=o+'px'});s.textContent='Reflow: '+o;aid=requestAnimationFrame(f)}f()}function animComp(){cancelAnimationFrame(aid);let o=0;function f(){o+=2;if(o>200)o=0;bx.forEach(b=>{b.style.transform='translateX('+o+'px)'});s.textContent='Composite: '+o;aid=requestAnimationFrame(f)}f()}function thrash(){cancelAnimationFrame(aid);const t=performance.now();bx.forEach(b=>{b.style.width=(b.offsetWidth+1)+'px'});s.textContent='Thrash: '+(performance.now()-t).toFixed(2)+'ms'}function batch(){cancelAnimationFrame(aid);const t=performance.now(),w=bx.map(b=>b.offsetWidth);bx.forEach((b,i)=>{b.style.width=(w[i]+1)+'px'});s.textContent='Batch: '+(performance.now()-t).toFixed(2)+'ms'}</script></body></html>",
+  "references": [
+    "https://developer.mozilla.org/en-US/docs/Glossary/Reflow",
+    "https://web.dev/articles/avoid-large-complex-layouts-and-layout-thrashing",
+    "https://web.dev/articles/stick-to-compositor-only-properties-and-manage-layer-count",
+    "https://developers.google.com/web/fundamentals/performance/rendering"
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "N1",
+  "name": "Next/Nuxt SSR实践",
+  "mechanism_summary": "Next.js 和 Nuxt 提供 SSR/SSG/ISR 三种渲染模式。SSR 每次请求动态生成，适合实时数据；SSG 构建时生成，CDN 分发；ISR 结合两者，构建时生成 + 定期重验证。Next.js App Router 通过服务端组件和 fetch 缓存实现组件级数据获取和 ISR。Nuxt 通过 useAsyncData/useFetch 实现 SSR/CSR 通用数据获取。模式选择取决于数据变化频率和性能需求。",
+  "bottlenecks": [
+    "SSR 服务端高并发下 Node.js 单线程瓶颈",
+    "串行数据获取导致 TTFB waterfall",
+    "ISR 缓存一致性（stale-while-revalidate）",
+    "SSG 大量页面构建时间线性增长",
+    "无论哪种模式客户端 hydration JS 执行量不变"
+  ],
+  "tradeoffs": [
+    {
+      "name": "SSR vs SSG",
+      "description": "SSR 数据实时但 TTFB 高、服务端压力大；SSG TTFB 极低但数据可能过期、构建时间长"
+    },
+    {
+      "name": "数据获取粒度",
+      "description": "页面级获取简单但 waterfall；组件级获取并行但架构复杂"
+    },
+    {
+      "name": "服务端 API vs 外部 API 直连",
+      "description": "服务端 API 安全但增加网络跳数；直连减少延迟但暴露 API 地址"
+    }
+  ],
+  "experiment_code": "// Next.js App Router 三种模式对比\n// SSR: export const dynamic = 'force-dynamic';\n// SSG: export const dynamic = 'force-static';\n// ISR: export const revalidate = 10;\n// 每个页面 fetch https://jsonplaceholder.typicode.com/posts/1\n// 观察渲染时间在不同模式下的变化行为",
+  "references": [
+    "https://nextjs.org/docs/app/building-your-application/data-fetching",
+    "https://nuxt.com/docs/getting-started/data-fetching",
+    "https://modelers.csdn.net/690058ad5511483559dd179f.html",
+    "https://fruge365.blog.csdn.net/article/details/153964482"
+  ]
+}

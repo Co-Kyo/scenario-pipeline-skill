@@ -1,0 +1,31 @@
+{
+  "mechanism_summary": "Vite 开发模式基于浏览器原生 ESM，通过 esbuild 进行依赖预构建：将 CJS/UMD 转为 ESM，将多模块依赖（如 lodash-es 600+ 文件）合并为单文件减少 HTTP 请求。HMR 通过文件监听 + WebSocket + ESM 模块缓存失效实现，性能与项目大小无关。生产构建使用 Rolldown（之前是 Rollup）。预构建产物缓存在 node_modules/.vite。",
+  "bottlenecks": [
+    "预构建缓存失效判断复杂，有时需要 --force 手动刷新",
+    "某些 CJS 依赖的动态 require() 无法被 esbuild 完全转换",
+    "开发（esbuild）与生产（Rolldown）构建行为差异可能导致环境不一致",
+    "esbuild 不支持 legacy 装饰器和某些 Babel 插件",
+    "大型 monorepo 的 linked dependencies 预构建配置复杂"
+  ],
+  "tradeoffs": [
+    {
+      "scenario": "esbuild vs Babel 转译选择",
+      "option_a": "esbuild：极快（Go 原生），但不支持所有 Babel 插件",
+      "option_b": "Babel：插件生态丰富，但速度慢 10-100x",
+      "consideration": "Vite 默认用 esbuild 转译 TS/JSX，可通过 @vitejs/plugin-react 回退到 Babel"
+    },
+    {
+      "scenario": "开发模式策略",
+      "option_a": "原生 ESM + 按需编译：冷启动极快，但请求数多",
+      "option_b": "全量预打包：请求数少，但冷启动慢",
+      "consideration": "Vite 的预构建策略取两者平衡：依赖预构建 + 源码按需编译"
+    }
+  ],
+  "experiment_code": "# 创建 Vite 项目并观察预构建\nnpm create vite@latest test-vite -- --template react\ncd test-vite && npm install\nls node_modules/.vite/  # 预构建产物\n\n# HMR 测试\nnpx vite  # 启动开发服务器\n# 修改 src/App.tsx，浏览器自动更新\n\n# 性能对比\ntime npx vite build  # 生产构建耗时",
+  "references": [
+    "https://vite.dev/guide/dep-pre-bundling.html",
+    "https://vite.dev/guide/why.html",
+    "https://esbuild.github.io/",
+    "https://vite.dev/guide/api-hmr.html"
+  ]
+}

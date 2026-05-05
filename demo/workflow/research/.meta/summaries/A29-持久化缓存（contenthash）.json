@@ -1,0 +1,31 @@
+{
+  "mechanism_summary": "持久化缓存通过 contenthash 实现：文件内容不变则文件名不变，浏览器可长期缓存。关键措施包括 runtimeChunk 分离（避免 runtime 变化污染业务 chunk hash）、SplitChunksPlugin 提取 vendor chunk（第三方库独立缓存）、Webpack 5 的 deterministic moduleIds（解决模块 ID 不确定性）。理想效果是修改业务代码时只有 main chunk 的 hash 变化。",
+  "bottlenecks": [
+    "不分离 runtime 时，runtime 变化导致所有 chunk hash 污染",
+    "模块 ID 基于解析顺序递增，增删模块导致其他模块 ID 变化",
+    "npm update 改变 node_modules 内容，vendor chunk 全部失效",
+    "CSS 提取插件的 contenthash 需要与 JS 独立计算",
+    "source map 文件的缓存策略需要特殊处理"
+  ],
+  "tradeoffs": [
+    {
+      "scenario": "vendor chunk 拆分粒度",
+      "option_a": "单一 vendor chunk：缓存命中率高，但单次更新代价大",
+      "option_b": "按库拆分多个 vendor chunk：更新粒度细，但请求数增加",
+      "consideration": "一般使用单一 vendor chunk + runtimeChunk: 'single' 即可满足大部分场景"
+    },
+    {
+      "scenario": "hash 长度选择",
+      "option_a": "短 hash（8 字符）：文件名短，碰撞概率略高",
+      "option_b": "长 hash（20 字符，Webpack 默认）：碰撞概率极低",
+      "consideration": "20 字符（80 bit）已足够安全，一般无需修改"
+    }
+  ],
+  "experiment_code": "// webpack.config.js\nmodule.exports = {\n  mode: 'production',\n  entry: './src/index.js',\n  output: { filename: '[name].[contenthash].js', path: path.resolve(__dirname, 'dist'), clean: true },\n  optimization: {\n    runtimeChunk: 'single',\n    splitChunks: { cacheGroups: { vendor: { test: /[\\\\/]node_modules[\\\\/]/, name: 'vendors', chunks: 'all' } } }\n  }\n};\n// 构建两次：第一次记录 hash，修改 src/index.js 后第二次构建，vendors.*.js 的 hash 应不变",
+  "references": [
+    "https://webpack.js.org/guides/caching/",
+    "https://webpack.js.org/configuration/output/#outputfilename",
+    "https://webpack.js.org/blog/2020-10-10-webpack-5-release/#deterministic-chunk-module-and-export-ids",
+    "https://jakearchibald.com/2016/caching-best-practices/"
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "id": "A33",
+  "name": "Performance API与Long Task",
+  "mechanism_summary": "Performance API族提供浏览器性能测量基础设施。PerformanceObserver异步观察性能条目（longtask/mark/measure/resource/paint等）。Long Tasks API检测主线程连续占用≥50ms的任务，通过attribution提供归因信息。User Timing允许performance.mark()/measure()插入自定义标记和测量，支持DevTools Extensibility API在Performance面板自定义轨道显示。所有条目进入统一Performance Timeline。",
+  "bottlenecks": [
+    {
+      "name": "Long Task检测误报与漏报",
+      "trigger": "浏览器合并小任务或跨帧边界不准确",
+      "symptom": "报告的duration与实际卡顿感不一致"
+    },
+    {
+      "name": "PerformanceObserver内存开销",
+      "trigger": "观察多种entryType且不及时清理条目",
+      "symptom": "内存占用持续增长"
+    },
+    {
+      "name": "User Timing条目累积",
+      "trigger": "频繁调用performance.mark()/measure()",
+      "symptom": "Performance Timeline中条目过多，查询变慢"
+    },
+    {
+      "name": "Long Task归因信息不足",
+      "trigger": "任务发生在框架内部或跨iframe",
+      "symptom": "attribution无法定位到具体业务代码"
+    },
+    {
+      "name": "跨浏览器兼容性",
+      "trigger": "不同浏览器对Performance API支持程度不同",
+      "symptom": "某些entryType或属性在Safari/Firefox不可用"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "dimension": "Long Task阈值选择",
+      "option_a": "50ms(规范阈值)：误报率高，漏报率低",
+      "option_b": "100ms(宽松阈值)：误报率中，漏报率中",
+      "suggestion": "监控用50ms；告警用100ms；优化目标<50ms"
+    },
+    {
+      "dimension": "PerformanceObserver vs 轮询getEntries",
+      "option_a": "Observer：异步推送，低开销，时序保证",
+      "option_b": "轮询getEntries：依赖间隔，高开销，可能遗漏",
+      "suggestion": "始终使用PerformanceObserver"
+    },
+    {
+      "dimension": "buffered: true vs false",
+      "option_a": "buffered:true：获取历史数据，高完整性",
+      "option_b": "buffered:false：仅获取创建后数据",
+      "suggestion": "页面加载相关用true；运行时监控用false"
+    }
+  ],
+  "experiment_code": "见主文件「最小验证实验」章节：Long Task检测、User Timing标记/测量、嵌套测量、资源加载计时Demo",
+  "references": [
+    {
+      "tier": "核心规范",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/PerformanceObserver",
+      "title": "PerformanceObserver - MDN"
+    },
+    {
+      "tier": "核心规范",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/PerformanceLongTaskTiming",
+      "title": "PerformanceLongTaskTiming - MDN"
+    },
+    {
+      "tier": "核心规范",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Performance_API/User_timing",
+      "title": "User Timing API - MDN"
+    },
+    {
+      "tier": "W3C规范",
+      "url": "https://w3c.github.io/longtasks/",
+      "title": "Long Tasks API"
+    },
+    {
+      "tier": "工具库",
+      "url": "https://github.com/GoogleChrome/web-vitals",
+      "title": "web-vitals"
+    }
+  ]
+}

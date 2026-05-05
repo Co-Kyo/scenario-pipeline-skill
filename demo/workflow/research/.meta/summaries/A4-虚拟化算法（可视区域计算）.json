@@ -1,0 +1,70 @@
+{
+  "id": "A4",
+  "name": "虚拟化算法（可视区域计算）",
+  "mechanism_summary": "虚拟列表通过仅渲染可视区域内的DOM节点优化大数据量列表性能。核心包括：可视区域计算（根据scrollTop和itemHeight定位startIndex/endIndex）、缓冲区overscan（预渲染额外节点防止白屏）、DOM复用池（回收滚出可视区的节点复用）、容器高度占位（维持正确滚动条）。动态高度场景需维护heightMap，使用预估高度+渐进修正。",
+  "bottlenecks": [
+    {
+      "name": "动态高度计算精度与性能",
+      "trigger": "列表项高度不固定，需实时测量",
+      "symptom": "滚动时跳动闪烁，滚动条位置不准确"
+    },
+    {
+      "name": "快速滚动白屏",
+      "trigger": "用户快速拖拽滚动条，overscan不足",
+      "symptom": "可见区域出现短暂空白"
+    },
+    {
+      "name": "DOM复用池内存泄漏",
+      "trigger": "复用池无限增长或节点重置不彻底",
+      "symptom": "内存持续增长，复用节点残留旧数据"
+    },
+    {
+      "name": "滚动事件节流与渲染同步",
+      "trigger": "高频scroll事件触发重计算和DOM更新",
+      "symptom": "滚动卡顿，帧率下降"
+    },
+    {
+      "name": "列表项内嵌套复杂组件",
+      "trigger": "列表项包含图片、视频、复杂组件",
+      "symptom": "单个列表项渲染仍耗时过长"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "dimension": "高度策略",
+      "option_a": "固定高度：O(1)定位，完美滚动精度",
+      "option_b": "动态高度：O(log n)二分查找，可能跳动",
+      "suggestion": "优先选择固定高度；动态高度仅在业务必须时使用"
+    },
+    {
+      "dimension": "overscan大小",
+      "option_a": "小overscan(1-2)：DOM少，内存低，白屏风险高",
+      "option_b": "大overscan(5-10)：DOM多，内存高，白屏风险低",
+      "suggestion": "根据列表项渲染复杂度和滚动速度动态调整"
+    },
+    {
+      "dimension": "DOM复用策略",
+      "option_a": "DOM复用：低GC压力，高代码复杂度",
+      "option_b": "每次创建销毁：低复杂度，高GC压力",
+      "suggestion": "列表项渲染成本高时使用复用；简单列表可不使用"
+    }
+  ],
+  "experiment_code": "见主文件「最小验证实验」章节：10万项虚拟列表Demo，含复用池、overscan、rAF节流",
+  "references": [
+    {
+      "tier": "核心规范",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API",
+      "title": "Intersection Observer API - MDN"
+    },
+    {
+      "tier": "实践参考",
+      "url": "https://zhuanlan.zhihu.com/p/441638487",
+      "title": "虚拟列表实现原理"
+    },
+    {
+      "tier": "库文档",
+      "url": "https://tanstack.com/virtual",
+      "title": "@tanstack/virtual"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "id": "A23",
+  "name": "ServiceWorker离线缓存",
+  "domain": "browser_api",
+  "coverage": ["P4"],
+  "dependencies": ["A6"],
+  "summary": "Service Worker是运行在浏览器后台的JS线程，独立于网页，拦截网络请求并管理缓存。生命周期：注册→安装(预缓存)→激活(清理旧缓存)→空闲/终止。Cache API独立于HTTP缓存（不遵循Cache-Control头），需手动管理。常见策略：Cache First（静态资源）、Network First（需最新数据）、Stale While Revalidate（兼顾速度和新鲜度）。Workbox提供工具化缓存策略配置。SW仅HTTPS可用，缓存不会自动过期。",
+  "bottlenecks": [
+    "缓存失效管理复杂，需手动版本控制和清理",
+    "新SW需等待旧页面关闭才能激活",
+    "SW生命周期和缓存状态调试困难",
+    "浏览器存储配额限制（约可用磁盘60%）",
+    "仅HTTPS安全上下文可用"
+  ],
+  "tradeoffs": [
+    "Cache First命中率 vs 数据新鲜度",
+    "预缓存范围 vs 首次安装速度",
+    "skipWaiting即时更新 vs 新旧资源不一致风险"
+  ],
+  "tools": ["Chrome DevTools Application→Service Workers", "Chrome DevTools Cache Storage", "Update on reload选项", "Workbox DevTools扩展", "navigator.storage.estimate()"],
+  "keyTerms": ["Service Worker", "Cache API", "CacheStorage", "install/activate/fetch事件", "Workbox", "PWA", "precache", "skipWaiting", "clients.claim"],
+  "universal": true
+}

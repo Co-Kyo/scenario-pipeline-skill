@@ -1,0 +1,745 @@
+{
+  "$schema": "capability-graph-v1",
+  "meta": {
+    "scan_date": "2026-05-05",
+    "target_years": "L2",
+    "total_propositions": 7,
+    "scan_scope": "前端性能优化面试场景分析题（3-5年经验）"
+  },
+
+  "propositions": [
+    {
+      "id": "P1",
+      "name": "长列表渲染：万级数据的流畅滚动方案",
+      "qualifier": "通用（React/Vue）",
+      "tech_keyword": "虚拟列表",
+      "generic_core": [
+        { "layer": "浏览器渲染", "capabilities": ["A1-浏览器渲染管线", "A2-DOM节点生命周期", "A3-重绘与回流"] },
+        { "layer": "算法", "capabilities": ["A4-虚拟化算法（可视区域计算）"] },
+        { "layer": "交互", "capabilities": ["A5-滚动事件与IntersectionObserver"] }
+      ],
+      "specialization": [
+        { "layer": "框架", "capabilities": ["R1-React key与diff策略", "V1-Vue patch flag优化"] }
+      ],
+      "content_weight": "70%",
+      "weight_reasoning": "通用层跨浏览器渲染+算法+交互3层，框架层为辅助优化手段"
+    },
+    {
+      "id": "P2",
+      "name": "首屏白屏：从 FCP 到 LCP 的全链路优化",
+      "qualifier": "SSR/SSG/SPA",
+      "tech_keyword": "首屏加载",
+      "generic_core": [
+        { "layer": "网络", "capabilities": ["A6-HTTP缓存策略", "A7-CDN与资源分发", "A8-资源预加载（preload/prefetch）"] },
+        { "layer": "浏览器渲染", "capabilities": ["A1-浏览器渲染管线", "A9-Critical Rendering Path"] },
+        { "layer": "构建", "capabilities": ["A10-Code Splitting", "A11-Tree Shaking"] }
+      ],
+      "specialization": [
+        { "layer": "框架", "capabilities": ["R2-React hydration", "V2-Vue SSR激活", "N1-Next/Nuxt SSR实践"] }
+      ],
+      "content_weight": "65%",
+      "weight_reasoning": "通用层跨网络+渲染+构建3层，SSR/hydration有框架特化深度"
+    },
+    {
+      "id": "P3",
+      "name": "内存泄漏：长时间运行页面的性能退化排查",
+      "qualifier": "通用",
+      "tech_keyword": "内存泄漏",
+      "generic_core": [
+        { "layer": "浏览器引擎", "capabilities": ["A12-V8垃圾回收机制", "A13-堆快照分析"] },
+        { "layer": "编码规范", "capabilities": ["A14-事件监听清理", "A15-定时器与闭包管理", "A16-WeakMap/WeakRef弱引用"] }
+      ],
+      "specialization": [
+        { "layer": "调试工具", "capabilities": ["A17-DevTools Memory面板"] }
+      ],
+      "content_weight": "85%",
+      "weight_reasoning": "几乎纯通用层，框架特化少，核心在浏览器引擎+编码规范"
+    },
+    {
+      "id": "P4",
+      "name": "网络优化：弱网环境下的资源加载策略",
+      "qualifier": "通用",
+      "tech_keyword": "网络优化",
+      "generic_core": [
+        { "layer": "网络协议", "capabilities": ["A6-HTTP缓存策略", "A18-HTTP/2多路复用", "A19-HTTP/3与QUIC"] },
+        { "layer": "资源策略", "capabilities": ["A7-CDN与资源分发", "A20-资源压缩与gzip/brotli", "A21-接口合并与BFF"] },
+        { "layer": "容错", "capabilities": ["A22-请求重试与降级", "A23-Service Worker离线缓存"] }
+      ],
+      "specialization": [],
+      "content_weight": "95%",
+      "weight_reasoning": "纯通用层，几乎无框架特化，跨网络协议+资源策略+容错3层"
+    },
+    {
+      "id": "P5",
+      "name": "图片优化：大图量场景下的加载与渲染性能",
+      "qualifier": "通用",
+      "tech_keyword": "图片优化",
+      "generic_core": [
+        { "layer": "图片格式", "capabilities": ["A24-WebP/AVIF现代格式", "A25-响应式图片（srcset/sizes）"] },
+        { "layer": "加载策略", "capabilities": ["A26-图片懒加载（loading=lazy）", "A5-IntersectionObserver"] },
+        { "layer": "渲染", "capabilities": ["A27-CSS contain与content-visibility"] }
+      ],
+      "specialization": [],
+      "content_weight": "90%",
+      "weight_reasoning": "纯通用层，跨图片格式+加载策略+渲染3层"
+    },
+    {
+      "id": "P6",
+      "name": "构建优化：Webpack/Vite 的产物体积与加载速度",
+      "qualifier": "Webpack/Vite",
+      "tech_keyword": "构建优化",
+      "generic_core": [
+        { "layer": "模块系统", "capabilities": ["A28-ESM与CommonJS", "A10-Code Splitting", "A11-Tree Shaking"] },
+        { "layer": "缓存", "capabilities": ["A29-持久化缓存（contenthash）"] }
+      ],
+      "specialization": [
+        { "layer": "工具链", "capabilities": ["W1-Webpack loader/plugin链", "VI1-Vite预构建与esbuild", "W2-Module Federation"] }
+      ],
+      "content_weight": "50%",
+      "weight_reasoning": "通用层和框架特化层深度相当，Webpack/Vite各有不同机制"
+    },
+    {
+      "id": "P7",
+      "name": "渲染性能：避免掉帧的 JS 执行与 DOM 操作策略",
+      "qualifier": "通用",
+      "tech_keyword": "渲染性能",
+      "generic_core": [
+        { "layer": "浏览器渲染", "capabilities": ["A1-浏览器渲染管线", "A3-重绘与回流", "A30-requestAnimationFrame调度"] },
+        { "layer": "异步", "capabilities": ["A31-事件循环与宏微任务", "A32-Web Worker多线程"] },
+        { "layer": "度量", "capabilities": ["A33-Performance API与Long Task", "A17-DevTools Memory面板"] }
+      ],
+      "specialization": [],
+      "content_weight": "90%",
+      "weight_reasoning": "纯通用层，跨浏览器渲染+异步+度量3层"
+    }
+  ],
+
+  "capabilities": [
+    {
+      "id": "A1", "name": "浏览器渲染管线", "layer": "浏览器层",
+      "description": "CRP → Style → Layout → Paint → Composite 全流程",
+      "source_domain": "browser_api",
+      "fanout": { "count": 4, "total": 7, "ratio": "4/7", "level": "core" },
+      "coupling": 1, "covers": ["P1","P2","P5","P7"],
+      "dependencies": [],
+      "tags": ["渲染","浏览器","CRP"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A2", "name": "DOM节点生命周期", "layer": "浏览器层",
+      "description": "节点创建、插入、更新、销毁的完整生命周期与性能影响",
+      "source_domain": "browser_api",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P1"],
+      "dependencies": ["A1"],
+      "tags": ["DOM","浏览器"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A3", "name": "重绘与回流", "layer": "浏览器层",
+      "description": "Repaint vs Reflow 触发条件、性能影响与规避策略",
+      "source_domain": "browser_api",
+      "fanout": { "count": 2, "total": 7, "ratio": "2/7", "level": "supplement" },
+      "coupling": 1, "covers": ["P1","P7"],
+      "dependencies": ["A1"],
+      "tags": ["渲染","重绘","回流"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A4", "name": "虚拟化算法（可视区域计算）", "layer": "算法层",
+      "description": "动态高度计算、缓冲区设置、DOM 复用池",
+      "source_domain": "browser_api",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P1"],
+      "dependencies": ["A1","A2"],
+      "tags": ["虚拟列表","算法"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A5", "name": "IntersectionObserver", "layer": "浏览器API",
+      "description": "异步观察元素可见性，替代 scroll 事件的性能优势",
+      "source_domain": "browser_api",
+      "fanout": { "count": 2, "total": 7, "ratio": "2/7", "level": "supplement" },
+      "coupling": 1, "covers": ["P1","P5"],
+      "dependencies": [],
+      "tags": ["浏览器API","懒加载","虚拟列表"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A6", "name": "HTTP缓存策略", "layer": "网络层",
+      "description": "强缓存（Cache-Control）与协商缓存（ETag/Last-Modified）",
+      "source_domain": "http_protocol",
+      "fanout": { "count": 2, "total": 7, "ratio": "2/7", "level": "supplement" },
+      "coupling": 1, "covers": ["P2","P4"],
+      "dependencies": [],
+      "tags": ["HTTP","缓存","网络"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A7", "name": "CDN与资源分发", "layer": "网络层",
+      "description": "CDN 原理、多域名并发、边缘缓存策略",
+      "source_domain": "http_protocol",
+      "fanout": { "count": 2, "total": 7, "ratio": "2/7", "level": "supplement" },
+      "coupling": 1, "covers": ["P2","P4"],
+      "dependencies": ["A6"],
+      "tags": ["CDN","网络","分发"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A8", "name": "资源预加载（preload/prefetch）", "layer": "浏览器层",
+      "description": "link rel=preload/prefetch/modulepreload 语义与使用场景",
+      "source_domain": "browser_api",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P2"],
+      "dependencies": ["A1"],
+      "tags": ["预加载","浏览器","资源提示"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A9", "name": "Critical Rendering Path", "layer": "浏览器层",
+      "description": "关键渲染路径：HTML→DOM+CSSOM→Render Tree→Layout→Paint",
+      "source_domain": "browser_api",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P2"],
+      "dependencies": ["A1"],
+      "tags": ["CRP","渲染","首屏"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A10", "name": "Code Splitting", "layer": "构建层",
+      "description": "按路由/组件/动态import拆分chunk，减少首屏JS体积",
+      "source_domain": "webpack",
+      "fanout": { "count": 2, "total": 7, "ratio": "2/7", "level": "supplement" },
+      "coupling": 2, "covers": ["P2","P6"],
+      "dependencies": ["A28"],
+      "tags": ["构建","Code Splitting","Webpack","Vite"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A11", "name": "Tree Shaking", "layer": "构建层",
+      "description": "ESM 静态分析消除未引用代码",
+      "source_domain": "webpack",
+      "fanout": { "count": 2, "total": 7, "ratio": "2/7", "level": "supplement" },
+      "coupling": 2, "covers": ["P2","P6"],
+      "dependencies": ["A28"],
+      "tags": ["构建","Tree Shaking","ESM"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A12", "name": "V8垃圾回收机制", "layer": "引擎层",
+      "description": "分代回收、Scavenge、Mark-Sweep-Compact、增量标记",
+      "source_domain": "chrome_v8",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P3"],
+      "dependencies": [],
+      "tags": ["V8","GC","内存"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A13", "name": "堆快照分析", "layer": "调试层",
+      "description": "Chrome DevTools Heap Snapshot 拍摄与对比分析",
+      "source_domain": "chrome_v8",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P3"],
+      "dependencies": ["A12","A17"],
+      "tags": ["DevTools","内存","快照"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A14", "name": "事件监听清理", "layer": "编码层",
+      "description": "addEventListener/removeEventListener 生命周期管理",
+      "source_domain": "browser_api",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P3"],
+      "dependencies": [],
+      "tags": ["DOM","事件","内存泄漏"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A15", "name": "定时器与闭包管理", "layer": "编码层",
+      "description": "setInterval/setTimeout 清理、闭包引用链断开",
+      "source_domain": "ecmascript_node",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P3"],
+      "dependencies": [],
+      "tags": ["闭包","定时器","内存泄漏"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A16", "name": "WeakMap/WeakRef弱引用", "layer": "语言层",
+      "description": "WeakMap/WeakRef/FinalizationRegistry 的使用场景与限制",
+      "source_domain": "ecmascript_node",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P3"],
+      "dependencies": ["A12"],
+      "tags": ["ES6","WeakMap","内存"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A17", "name": "DevTools Performance/Memory面板", "layer": "调试层",
+      "description": "Performance 面板火焰图、Memory 面板堆快照、Lighthouse 评分",
+      "source_domain": "chrome_v8",
+      "fanout": { "count": 3, "total": 7, "ratio": "3/7", "level": "supplement" },
+      "coupling": 1, "covers": ["P3","P7","P1"],
+      "dependencies": [],
+      "tags": ["DevTools","性能分析","调试"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A18", "name": "HTTP/2多路复用", "layer": "网络层",
+      "description": "单连接多流、头部压缩、服务端推送",
+      "source_domain": "http_protocol",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P4"],
+      "dependencies": [],
+      "tags": ["HTTP/2","网络","多路复用"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A19", "name": "HTTP/3与QUIC", "layer": "网络层",
+      "description": "基于 UDP 的 QUIC 协议、0-RTT 连接、队头阻塞消除",
+      "source_domain": "http_protocol",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P4"],
+      "dependencies": ["A18"],
+      "tags": ["HTTP/3","QUIC","网络"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A20", "name": "资源压缩与gzip/brotli", "layer": "网络层",
+      "description": "传输层压缩算法选择、压缩级别与 CPU/带宽 trade-off",
+      "source_domain": "http_protocol",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P4"],
+      "dependencies": [],
+      "tags": ["压缩","gzip","brotli","网络"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A21", "name": "接口合并与BFF", "layer": "架构层",
+      "description": "BFF 聚合层、GraphQL 聚合、接口编排减少请求次数",
+      "source_domain": "http_protocol",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P4"],
+      "dependencies": [],
+      "tags": ["BFF","接口","网络优化"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A22", "name": "请求重试与降级", "layer": "容错层",
+      "description": "指数退避重试、fallback 缓存、graceful degradation",
+      "source_domain": "browser_api",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P4"],
+      "dependencies": [],
+      "tags": ["容错","重试","降级"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A23", "name": "Service Worker离线缓存", "layer": "浏览器层",
+      "description": "SW 生命周期、Cache API、Workbox 策略",
+      "source_domain": "browser_api",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P4"],
+      "dependencies": ["A6"],
+      "tags": ["Service Worker","缓存","离线"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A24", "name": "WebP/AVIF现代格式", "layer": "图片层",
+      "description": "有损/无损压缩比对比、浏览器兼容性、渐进式降级",
+      "source_domain": "web_performance",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P5"],
+      "dependencies": [],
+      "tags": ["图片","WebP","AVIF","格式"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A25", "name": "响应式图片（srcset/sizes）", "layer": "图片层",
+      "description": "srcset w 描述符、sizes 媒体条件、picture 元素",
+      "source_domain": "browser_api",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P5"],
+      "dependencies": [],
+      "tags": ["图片","响应式","srcset"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A26", "name": "图片懒加载（loading=lazy）", "layer": "图片层",
+      "description": "原生 loading=lazy vs IntersectionObserver 实现",
+      "source_domain": "browser_api",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P5"],
+      "dependencies": ["A5"],
+      "tags": ["图片","懒加载","浏览器"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A27", "name": "CSS contain与content-visibility", "layer": "CSS层",
+      "description": "contain 属性限制重绘范围、content-visibility 延迟渲染",
+      "source_domain": "browser_api",
+      "fanout": { "count": 2, "total": 7, "ratio": "2/7", "level": "supplement" },
+      "coupling": 1, "covers": ["P5","P1"],
+      "dependencies": ["A1"],
+      "tags": ["CSS","contain","渲染优化"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A28", "name": "ESM与CommonJS", "layer": "模块系统",
+      "description": "静态分析 vs 动态加载、Tree Shaking 前提、import() 动态导入",
+      "source_domain": "ecmascript_node",
+      "fanout": { "count": 2, "total": 7, "ratio": "2/7", "level": "supplement" },
+      "coupling": 1, "covers": ["P6","P2"],
+      "dependencies": [],
+      "tags": ["ESM","CommonJS","模块系统"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A29", "name": "持久化缓存（contenthash）", "layer": "构建层",
+      "description": "文件名 hash 策略、缓存失效边界、runtime chunk 分离",
+      "source_domain": "webpack",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 2, "covers": ["P6"],
+      "dependencies": ["A10"],
+      "tags": ["构建","缓存","Webpack"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A30", "name": "requestAnimationFrame调度", "layer": "浏览器层",
+      "description": "rAF 与渲染帧同步、16ms 预算、任务切片",
+      "source_domain": "browser_api",
+      "fanout": { "count": 2, "total": 7, "ratio": "2/7", "level": "supplement" },
+      "coupling": 1, "covers": ["P7","P1"],
+      "dependencies": ["A1"],
+      "tags": ["rAF","渲染","调度"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A31", "name": "事件循环与宏微任务", "layer": "浏览器层",
+      "description": "macrotask/microtask 执行顺序、渲染时机、Long Task 识别",
+      "source_domain": "browser_api",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P7"],
+      "dependencies": [],
+      "tags": ["事件循环","异步","浏览器"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A32", "name": "Web Worker多线程", "layer": "浏览器层",
+      "description": "Worker 线程隔离、postMessage 通信、SharedArrayBuffer",
+      "source_domain": "browser_api",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P7"],
+      "dependencies": [],
+      "tags": ["Web Worker","多线程","浏览器"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "A33", "name": "Performance API与Long Task", "layer": "度量层",
+      "description": "PerformanceObserver、Long Tasks API、User Timing 自定义标记",
+      "source_domain": "web_performance",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 1, "covers": ["P7"],
+      "dependencies": [],
+      "tags": ["Performance API","Long Task","度量"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "R1", "name": "React key与diff策略", "layer": "框架层",
+      "description": "key 在 reconciliation 中的作用、避免 index 作为 key",
+      "source_domain": "react",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 3, "covers": ["P1"],
+      "dependencies": [],
+      "tags": ["React","diff","key"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "V1", "name": "Vue patch flag优化", "layer": "框架层",
+      "description": "编译时标记动态节点、靶向更新、Block Tree",
+      "source_domain": "vue",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 3, "covers": ["P1"],
+      "dependencies": [],
+      "tags": ["Vue","patch flag","编译优化"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "R2", "name": "React hydration", "layer": "框架层",
+      "description": "SSR 激活过程、Selective Hydration、Suspense 边界",
+      "source_domain": "react",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 3, "covers": ["P2"],
+      "dependencies": [],
+      "tags": ["React","SSR","hydration"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "V2", "name": "Vue SSR激活", "layer": "框架层",
+      "description": "Vue3 SSR hydration 过程、编译时优化、async setup",
+      "source_domain": "vue",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 3, "covers": ["P2"],
+      "dependencies": [],
+      "tags": ["Vue","SSR","hydration"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "N1", "name": "Next/Nuxt SSR实践", "layer": "框架层",
+      "description": "SSR/SSG/ISR 模式选择、getServerSideProps、useAsyncData",
+      "source_domain": "react",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 3, "covers": ["P2"],
+      "dependencies": ["R2","V2"],
+      "tags": ["Next.js","Nuxt","SSR","框架"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "W1", "name": "Webpack loader/plugin链", "layer": "工具链",
+      "description": "loader 执行顺序、plugin hooks、构建流程定制",
+      "source_domain": "webpack",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 3, "covers": ["P6"],
+      "dependencies": [],
+      "tags": ["Webpack","loader","plugin"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "VI1", "name": "Vite预构建与esbuild", "layer": "工具链",
+      "description": "依赖预构建、esbuild 转译、HMR 原理",
+      "source_domain": "vite",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 3, "covers": ["P6"],
+      "dependencies": [],
+      "tags": ["Vite","esbuild","预构建"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    },
+    {
+      "id": "W2", "name": "Module Federation", "layer": "工具链",
+      "description": "运行时模块共享、微前端场景、动态远程容器",
+      "source_domain": "webpack",
+      "fanout": { "count": 1, "total": 7, "ratio": "1/7", "level": "leaf" },
+      "coupling": 3, "covers": ["P6"],
+      "dependencies": ["A10"],
+      "tags": ["Webpack","Module Federation","微前端"],
+      "references": { "t1": [], "t2": [], "t1_missing": true }
+    }
+  ],
+
+  "dependency_graph": {
+    "A1": ["A2","A3","A8","A9","A27","A30"],
+    "A2": ["A4"],
+    "A3": [],
+    "A4": [],
+    "A5": ["A26"],
+    "A6": ["A7","A23"],
+    "A7": [],
+    "A8": [],
+    "A9": [],
+    "A10": ["A29","W2"],
+    "A11": [],
+    "A12": ["A13","A16"],
+    "A13": [],
+    "A14": [],
+    "A15": [],
+    "A16": [],
+    "A17": ["A13"],
+    "A18": ["A19"],
+    "A19": [],
+    "A20": [],
+    "A21": [],
+    "A22": [],
+    "A23": [],
+    "A24": [],
+    "A25": [],
+    "A26": [],
+    "A27": [],
+    "A28": ["A10","A11"],
+    "A29": [],
+    "A30": [],
+    "A31": [],
+    "A32": [],
+    "A33": [],
+    "R1": [],
+    "V1": [],
+    "R2": ["N1"],
+    "V2": ["N1"],
+    "N1": [],
+    "W1": [],
+    "VI1": [],
+    "W2": []
+  },
+
+  "qualifier_injection": {
+    "React": { "injects": ["R1","R2"], "replaces": [] },
+    "Vue": { "injects": ["V1","V2"], "replaces": [] },
+    "Webpack": { "injects": ["W1","W2"], "replaces": [] },
+    "Vite": { "injects": ["VI1"], "replaces": ["W1"] }
+  },
+
+  "highgrounds": [
+    {
+      "capability_id": "A1",
+      "name": "浏览器渲染管线",
+      "fanout": 4,
+      "coupling": 1,
+      "strategic_value": 4.0,
+      "cumulative_value": 16.0,
+      "level": "一级",
+      "level_emoji": "🏔️",
+      "covers_capabilities": ["A1","A2","A3","A8","A9","A27","A30"]
+    },
+    {
+      "capability_id": "A17",
+      "name": "DevTools Performance/Memory面板",
+      "fanout": 3,
+      "coupling": 1,
+      "strategic_value": 3.0,
+      "cumulative_value": 5.0,
+      "level": "二级",
+      "level_emoji": "⛰️",
+      "covers_capabilities": ["A17","A13"]
+    },
+    {
+      "capability_id": "A5",
+      "name": "IntersectionObserver",
+      "fanout": 2,
+      "coupling": 1,
+      "strategic_value": 2.0,
+      "cumulative_value": 4.0,
+      "level": "二级",
+      "level_emoji": "⛰️",
+      "covers_capabilities": ["A5","A26"]
+    },
+    {
+      "capability_id": "A6",
+      "name": "HTTP缓存策略",
+      "fanout": 2,
+      "coupling": 1,
+      "strategic_value": 2.0,
+      "cumulative_value": 5.0,
+      "level": "二级",
+      "level_emoji": "⛰️",
+      "covers_capabilities": ["A6","A7","A23"]
+    },
+    {
+      "capability_id": "A3",
+      "name": "重绘与回流",
+      "fanout": 2,
+      "coupling": 1,
+      "strategic_value": 2.0,
+      "cumulative_value": 2.0,
+      "level": "二级",
+      "level_emoji": "⛰️",
+      "covers_capabilities": ["A3"]
+    },
+    {
+      "capability_id": "A27",
+      "name": "CSS contain与content-visibility",
+      "fanout": 2,
+      "coupling": 1,
+      "strategic_value": 2.0,
+      "cumulative_value": 2.0,
+      "level": "二级",
+      "level_emoji": "⛰️",
+      "covers_capabilities": ["A27"]
+    },
+    {
+      "capability_id": "A30",
+      "name": "requestAnimationFrame调度",
+      "fanout": 2,
+      "coupling": 1,
+      "strategic_value": 2.0,
+      "cumulative_value": 2.0,
+      "level": "二级",
+      "level_emoji": "⛰️",
+      "covers_capabilities": ["A30"]
+    },
+    {
+      "capability_id": "A28",
+      "name": "ESM与CommonJS",
+      "fanout": 2,
+      "coupling": 1,
+      "strategic_value": 2.0,
+      "cumulative_value": 6.0,
+      "level": "二级",
+      "level_emoji": "⛰️",
+      "covers_capabilities": ["A28","A10","A11","A29","W2"]
+    },
+    {
+      "capability_id": "A12",
+      "name": "V8垃圾回收机制",
+      "fanout": 1,
+      "coupling": 1,
+      "strategic_value": 1.0,
+      "cumulative_value": 3.0,
+      "level": "三级",
+      "level_emoji": "🏕️",
+      "covers_capabilities": ["A12","A13","A16"]
+    }
+  ],
+
+  "learning_path": [
+    {
+      "step": 1,
+      "capability_id": "A1",
+      "name": "浏览器渲染管线",
+      "coverage": "4/7",
+      "cumulative_coverage": "7/7（含下游能力）",
+      "depends_on": [],
+      "rationale": "最大扇出度，框架无关的底层基础，覆盖 P1/P2/P5/P7 四个命题，所有渲染优化的起点",
+      "verification": "能解释为什么修改 transform 不触发 Layout 而修改 width 会"
+    },
+    {
+      "step": 2,
+      "capability_id": "A17",
+      "name": "DevTools Performance/Memory面板",
+      "coverage": "3/7",
+      "cumulative_coverage": "4/7",
+      "depends_on": [],
+      "rationale": "所有性能诊断的工具层入口，面试必考实操能力",
+      "verification": "能用 Performance 面板火焰图定位一个页面的渲染瓶颈"
+    },
+    {
+      "step": 3,
+      "capability_id": "A6",
+      "name": "HTTP缓存策略",
+      "coverage": "2/7",
+      "cumulative_coverage": "4/7",
+      "depends_on": [],
+      "rationale": "网络层基础，首屏优化和网络优化的共同前置",
+      "verification": "能区分强缓存和协商缓存的触发条件及 CDN 层协作机制"
+    },
+    {
+      "step": 4,
+      "capability_id": "A28",
+      "name": "ESM与CommonJS",
+      "coverage": "2/7",
+      "cumulative_coverage": "5/7",
+      "depends_on": [],
+      "rationale": "构建优化前置，理解 Tree Shaking 和 Code Splitting 的前提",
+      "verification": "能解释为什么 ESM 可以 Tree Shaking 而 CommonJS 不行"
+    },
+    {
+      "step": 5,
+      "capability_id": "A5",
+      "name": "IntersectionObserver",
+      "coverage": "2/7",
+      "cumulative_coverage": "6/7",
+      "depends_on": [],
+      "rationale": "懒加载和虚拟列表的浏览器原生方案",
+      "verification": "能用 IntersectionObserver 实现图片懒加载并解释其优于 scroll 事件的原因"
+    },
+    {
+      "step": 6,
+      "capability_id": "A12",
+      "name": "V8垃圾回收机制",
+      "coverage": "1/7",
+      "cumulative_coverage": "7/7",
+      "depends_on": [],
+      "rationale": "内存泄漏排查的底层知识，面试场景 P3 的核心前置",
+      "verification": "能解释分代回收和 Mark-Sweep 的区别"
+    }
+  ]
+}

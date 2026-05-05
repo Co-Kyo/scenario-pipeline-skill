@@ -1,0 +1,23 @@
+{
+  "id": "A25",
+  "name": "响应式图片（srcset/sizes）",
+  "mechanism_summary": "srcset提供多尺寸候选图片（w描述符声明固有宽度），sizes告知浏览器不同viewport下图片显示宽度，浏览器根据sizes×devicePixelRatio选择最合适的图片。picture元素支持按媒体条件（art direction）或MIME类型（格式降级）选择source。核心价值是按需加载合适尺寸的图片，避免带宽浪费。",
+  "bottlenecks": [
+    "sizes值与CSS布局不一致导致浏览器选择错误图片",
+    "图片数量爆炸：多尺寸×多格式=大量文件",
+    "缓存效率因多版本图片而降低",
+    "构建管线复杂度增加（sharp/ImageMagick/CDN动态裁切）",
+    "LCP图片的sizes值过小会损害Core Web Vitals"
+  ],
+  "tradeoffs": [
+    "sizes精确性 vs 维护成本：精确匹配CSS布局节省带宽，但CSS变动需同步更新sizes",
+    "预生成多尺寸 vs CDN动态裁切：前者增加存储，后者增加首次请求延迟",
+    "Art Direction vs 纯尺寸缩放：picture+media做艺术指导增加设计工作量但提升移动端体验"
+  ],
+  "experiment_code": "<img\n  srcset=\"photo-400.jpg 400w,\n          photo-800.jpg 800w,\n          photo-1200.jpg 1200w\"\n  sizes=\"(max-width: 600px) 100vw,\n         (max-width: 1000px) 50vw,\n         800px\"\n  src=\"photo-800.jpg\"\n  alt=\"Responsive demo\"\n  width=\"1200\" height=\"800\">",
+  "references": [
+    "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Guides/Responsive_images",
+    "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Reference/Elements/img#srcset",
+    "https://web.dev/articles/responsive-images"
+  ]
+}

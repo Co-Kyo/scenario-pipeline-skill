@@ -1,0 +1,31 @@
+{
+  "mechanism_summary": "Webpack 构建由 Loader 和 Plugin 驱动。Loader 是模块转换函数，执行顺序从右到左，处理单个文件的格式转换（如 Babel 转译、CSS 解析）。Plugin 通过 Tapable 事件系统挂载到 Compiler/Compilation 的各个 Hook，处理全局构建逻辑（如 HTML 生成、代码压缩）。构建流程：初始化 → 编译模块（Loader 链）→ 优化 → 输出（Plugin Hooks）。",
+  "bottlenecks": [
+    "Loader 执行顺序（从右到左）容易配置错误",
+    "Plugin 的 Hook 时机选择不当会导致访问未初始化的资源",
+    "Loader 间数据传递依赖字符串，复杂转换链难以调试",
+    "Pitching Loader 可跳过后续 loader，增加调试难度",
+    "某些 Plugin（CompressionPlugin）在 emit 阶段大量计算拖慢构建"
+  ],
+  "tradeoffs": [
+    {
+      "scenario": "Loader 数量与构建速度",
+      "option_a": "完整 Loader 链（Babel + PostCSS + ESLint）：功能完善",
+      "option_b": "精简 Loader 链（esbuild-loader 替代 Babel）：构建提速 10-100x",
+      "consideration": "开发环境可用 esbuild-loader 加速，生产环境保留 Babel 确保兼容性"
+    },
+    {
+      "scenario": "同步 vs 异步 Plugin Hook",
+      "option_a": "tap（同步）：性能好，适合简单逻辑",
+      "option_b": "tapAsync/tapPromise（异步）：适合 I/O 密集操作",
+      "consideration": "异步 hook 有额外开销，简单场景优先使用同步"
+    }
+  ],
+  "experiment_code": "// my-loader.js\nmodule.exports = function(source) {\n  console.log('[my-loader]', this.resourcePath);\n  return source.replace(/TODO/g, 'DONE');\n};\n\n// webpack.config.js\nmodule.exports = {\n  module: { rules: [{ test: /\\.js$/, use: ['./my-loader.js'] }] },\n  plugins: [{ apply(compiler) {\n    compiler.hooks.emit.tap('LogPlugin', (compilation) => {\n      console.log('Assets:', Object.keys(compilation.assets));\n    });\n  }}]\n};",
+  "references": [
+    "https://webpack.js.org/concepts/loaders/",
+    "https://webpack.js.org/concepts/plugins/",
+    "https://github.com/webpack/tapable",
+    "https://webpack.js.org/api/compiler-hooks/"
+  ]
+}

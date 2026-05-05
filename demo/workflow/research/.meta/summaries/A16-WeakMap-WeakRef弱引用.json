@@ -1,0 +1,28 @@
+{
+  "id": "A16",
+  "name": "WeakMap/WeakRef弱引用",
+  "domain": "ecmascript_node",
+  "coverage": ["P3"],
+  "summary": "WeakMap 以对象为弱引用键，键被 GC 后条目自动清除，适合附加私有数据和缓存。WeakRef (ES2021) 创建对对象的弱引用，通过 deref() 访问（可能返回 undefined）。FinalizationRegistry 在对象被 GC 后执行清理回调，但时机不确定，不应用于关键逻辑。三者共同解决\"引用阻止回收\"问题。",
+  "keyPoints": [
+    "WeakMap 键必须是对象/Symbol，不可枚举，自动清理",
+    "WeakRef.deref() 返回目标对象或 undefined（已被 GC）",
+    "FinalizationRegistry 清理回调时机不确定，不保证执行",
+    "WeakMap 适合对象→附加数据模式，WeakRef 适合缓存/观察模式",
+    "当前 Job 保证：刚创建的 WeakRef 在当前 Job 结束前不会失效",
+    "跨 Worker 限制：WeakMap/WeakRef 不能跨 Isolate 传递"
+  ],
+  "bottlenecks": [
+    "WeakMap 不能用原始值作键",
+    "不可枚举导致调试困难",
+    "GC 时机不确定，WeakRef.deref() 行为不可预测",
+    "FinalizationRegistry 回调可能不执行",
+    "跨 Worker 边界不可用",
+    "Heap Snapshot 中 WeakMap 条目不可直接可见"
+  ],
+  "tools": ["Chrome DevTools Memory Heap Snapshot", "--expose-gc + global.gc()", "V8 --trace-gc"],
+  "dependencies": ["A12"],
+  "related": ["A12", "A15"],
+  "language": "zh",
+  "technicalTerms": ["WeakMap", "WeakRef", "FinalizationRegistry", "deref()", "Structured Clone", "GC Root", "Weak Reference", "heldValue", "unregister token"]
+}

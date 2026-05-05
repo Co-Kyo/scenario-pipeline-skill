@@ -1,0 +1,27 @@
+{
+  "id": "A14",
+  "name": "事件监听清理",
+  "domain": "browser_api",
+  "coverage": ["P3"],
+  "summary": "addEventListener 注册的监听器会阻止回调闭包和引用对象被 GC 回收。匿名函数无法通过 removeEventListener 移除，是主要泄漏源。AbortController/AbortSignal 可批量清理监听器。once: true 触发后自动移除。SPA 组件卸载时必须清理全局对象上的监听器。",
+  "keyPoints": [
+    "listener 匹配规则：(type, listener, capture) 三元组完全相同才视为同一监听器",
+    "匿名函数每次创建新引用，无法 removeEventListener 移除",
+    "AbortController + signal 参数支持批量清理多个监听器",
+    "once: true 触发一次后自动移除",
+    "元素从 DOM 移除后，若无 JS 引用，监听器随元素被 GC 回收",
+    "passive: true 提升滚动性能但禁止 preventDefault()"
+  ],
+  "bottlenecks": [
+    "匿名函数监听器无法移除，是内存泄漏主要来源",
+    "闭包持有大对象阻止 GC",
+    "SPA 路由切换时全局监听器未清理",
+    "第三方库内部监听器不暴露清理接口",
+    "大量子元素直接绑定监听器造成内存膨胀"
+  ],
+  "tools": ["Chrome DevTools Elements Event Listeners 面板", "getEventListeners() (Console)", "monitorEvents() / unmonitorEvents()", "ESLint no-unused-vars"],
+  "dependencies": [],
+  "related": ["A13", "A15"],
+  "language": "zh",
+  "technicalTerms": ["addEventListener", "removeEventListener", "AbortController", "AbortSignal", "passive", "capture", "once", "Event Delegation", "Detached DOM"]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "V1",
+  "name": "Vue patch flag优化",
+  "mechanism_summary": "Vue 3 通过编译时分析模板，为 VNode 打上 PatchFlag 标记动态内容类型（TEXT/CLASS/STYLE/PROPS 等），配合 Block Tree 收集动态节点。更新时只遍历 dynamicChildren 做靶向更新，跳过所有静态节点。额外优化包括静态提升、预字符串化和函数缓存。将 diff 性能从与模板大小正相关提升为与动态内容数量相关。",
+  "bottlenecks": [
+    "模板外动态内容（render function 混用）无法被编译器优化",
+    "动态组件 <component :is> 触发 FULL_PROPS 需完整 diff",
+    "动态插槽降低 Block Tree 优化效果",
+    "SSR 阶段不走客户端 diff，PatchFlag 无作用",
+    "深层嵌套 Block 增加内存和遍历开销"
+  ],
+  "tradeoffs": [
+    {
+      "name": "编译时 vs 运行时优化",
+      "description": "编译时优化零运行时开销但受限于模板语法；运行时灵活性高但 diff 开销与模板大小正相关"
+    },
+    {
+      "name": "静态提升 vs 内存占用",
+      "description": "减少 VNode 创建开销但增加模块级常量内存，动态页面收益有限"
+    },
+    {
+      "name": "Block Tree 粒度",
+      "description": "粗粒度 Block 减少数量但 dynamicChildren 较大；细粒度反之"
+    }
+  ],
+  "experiment_code": "<template>\n  <div>\n    <p>static text</p> <!-- HOISTED(-1) -->\n    <p>{{ message }}</p> <!-- TEXT(1) -->\n    <p :class=\"cls\">{{ txt }}</p> <!-- CLASS|TEXT(3) -->\n    <a :href=\"url\">link</a> <!-- PROPS(8) + dynamicProps -->\n  </div>\n</template>\n<script setup>\nimport { ref } from 'vue';\nconst message = ref('hello');\nconst cls = ref('active');\nconst txt = ref('world');\nconst url = ref('/page');\n</script>\n// 在 https://template-explorer.vuejs.org 查看编译产物",
+  "references": [
+    "http://www.cncms.com.cn/internet/20221219/121945559.html",
+    "https://juejin.cn/post/6858955776992968712",
+    "https://segmentfault.com/a/1190000024520877",
+    "https://template-explorer.vuejs.org"
+  ]
+}

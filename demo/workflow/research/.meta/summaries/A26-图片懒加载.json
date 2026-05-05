@@ -1,0 +1,24 @@
+{
+  "id": "A26",
+  "name": "图片懒加载（loading=lazy）",
+  "mechanism_summary": "原生loading=lazy让浏览器自行决定延迟加载时机（距viewport约1250px时预加载），零JS开销。IntersectionObserver方案通过监听元素进入viewport来触发加载，支持自定义rootMargin和动画效果。原生方案更简单且对SEO友好，IntersectionObserver方案更灵活可控。首屏LCP图片需避免被懒加载。",
+  "bottlenecks": [
+    "首屏LCP图片被误懒加载导致LCP恶化",
+    "未设width/height的懒加载图片引发CLS",
+    "原生lazy预加载距离不可自定义（~1250px）",
+    "IntersectionObserver回退到scroll事件时性能下降",
+    "Googlebot对IntersectionObserver实现的爬取依赖JS执行"
+  ],
+  "tradeoffs": [
+    "简单性 vs 控制力：原生零代码但不可自定义，IntersectionObserver灵活需维护JS",
+    "带宽节省 vs LCP风险：过度懒加载首屏图片损害LCP，需显式标记eager",
+    "SEO友好 vs 动画效果：原生对搜索引擎更友好，IO方案可做fade-in动画"
+  ],
+  "experiment_code": "<!-- 原生 -->\n<img src=\"photo.jpg\" loading=\"lazy\" alt=\"Demo\" width=\"800\" height=\"600\">\n\n<!-- IntersectionObserver -->\n<img class=\"lazy\" data-src=\"photo.jpg\" src=\"placeholder.svg\" alt=\"Demo\" width=\"800\" height=\"600\">\n<script>\nconst obs = new IntersectionObserver(entries => {\n  entries.forEach(e => {\n    if (e.isIntersecting) {\n      e.target.src = e.target.dataset.src;\n      obs.unobserve(e.target);\n    }\n  });\n}, { rootMargin: '200px' });\ndocument.querySelectorAll('.lazy').forEach(img => obs.observe(img));\n</script>",
+  "references": [
+    "https://developer.mozilla.org/zh-CN/docs/Web/Performance/Guides/Lazy_loading",
+    "https://developer.mozilla.org/zh-CN/docs/Web/HTML/Reference/Elements/img#loading",
+    "https://developer.mozilla.org/zh-CN/docs/Web/API/IntersectionObserver",
+    "https://web.dev/articles/browser-level-image-lazy-loading"
+  ]
+}

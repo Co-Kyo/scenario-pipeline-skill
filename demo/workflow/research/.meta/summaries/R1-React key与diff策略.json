@@ -1,0 +1,33 @@
+{
+  "id": "R1",
+  "name": "React key与diff策略",
+  "mechanism_summary": "React 通过三条启发式策略将树 diff 从 O(n³) 降至 O(n)：同层比较、类型判断、key 标识。key 在列表 diff 中用于建立新旧节点的映射关系，实现精准复用。使用 index 作为 key 在列表插入/删除/排序时会导致组件 state 错位和不必要的 DOM 更新。",
+  "bottlenecks": [
+    "列表头部插入场景：index key 导致全量节点被视为变更",
+    "列表排序/过滤：index key 使 state 跟随位置而非数据",
+    "大列表 diff O(n) 开销：需配合虚拟滚动",
+    "无天然 ID 的数据需要额外生成稳定 key",
+    "动态 key（Math.random）导致每次销毁重建"
+  ],
+  "tradeoffs": [
+    {
+      "name": "唯一性 vs 稳定性",
+      "description": "数据库 ID 是理想 key，但搜索结果等无 ID 数据需要在数据层生成稳定标识"
+    },
+    {
+      "name": "key 粒度",
+      "description": "粗粒度 key 导致整列表重建，细粒度 key 实现精准复用但需维护映射"
+    },
+    {
+      "name": "性能 vs 代码简洁",
+      "description": "useMemo + 稳定 key 减少 diff 但增加代码复杂度"
+    }
+  ],
+  "experiment_code": "function Item({ label }) {\n  const [text, setText] = useState('');\n  return <div><span>{label}</span><input value={text} onChange={e => setText(e.target.value)} /></div>;\n}\nfunction App() {\n  const [items, setItems] = useState(['A','B','C']);\n  return <div>\n    <button onClick={() => setItems(['NEW', ...items])}>头部插入</button>\n    {items.map((item, i) => <Item key={i} label={item} />)}\n    // 对比: <Item key={item} label={item} />\n  </div>;\n}",
+  "references": [
+    "https://react.dev/learn/rendering-lists#keeping-list-items-in-order-with-key",
+    "https://legacy.reactjs.org/docs/reconciliation.html",
+    "https://juejin.cn/post/6844903944796258317",
+    "https://zhuanlan.zhihu.com/p/510191553"
+  ]
+}

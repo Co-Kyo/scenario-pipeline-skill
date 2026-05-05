@@ -1,0 +1,63 @@
+{
+  "id": "A1",
+  "name": "浏览器渲染管线",
+  "mechanism_summary": "浏览器将HTML/CSS字节流经由DOM和CSSOM构建渲染树，再依次执行Layout（计算几何信息）、Paint（光栅化像素）、Composite（GPU合成图层）输出到屏幕。CSS是渲染阻塞资源，JS（无async/defer）是解析阻塞资源。现代浏览器通过分层合成将transform/opacity动画卸载到GPU执行，避免主线程Layout和Paint。",
+  "bottlenecks": [
+    {
+      "name": "CSS渲染阻塞",
+      "trigger": "外部CSS未加载完成",
+      "symptom": "白屏、FCP延迟",
+      "detection": "Chrome DevTools Network面板、Lighthouse render-blocking audit",
+      "mitigation": "内联Critical CSS、media属性延迟加载、link rel=preload"
+    },
+    {
+      "name": "JavaScript阻塞解析",
+      "trigger": "script标签无async/defer",
+      "symptom": "DOM构建延迟、首屏渲染推迟",
+      "detection": "Performance面板 Parse HTML 耗时",
+      "mitigation": "async/defer属性、脚本放body末尾"
+    },
+    {
+      "name": "布局抖动Layout Thrashing",
+      "trigger": "JS交替读写布局属性",
+      "symptom": "帧率骤降、动画卡顿",
+      "detection": "Performance面板密集Layout事件、Forced reflow警告",
+      "mitigation": "批量读写DOM、requestAnimationFrame、ResizeObserver"
+    },
+    {
+      "name": "过多合成层",
+      "trigger": "大量will-change/transform/opacity",
+      "symptom": "GPU内存暴涨",
+      "detection": "Chrome DevTools Layers面板",
+      "mitigation": "仅为动画元素创建合成层、动画结束后移除will-change"
+    },
+    {
+      "name": "强制同步布局",
+      "trigger": "修改样式后立即读取布局属性",
+      "symptom": "额外布局计算开销",
+      "detection": "Performance面板Layout事件红色三角标记",
+      "mitigation": "先读后写分离、CSS contain属性"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "name": "CSS内联 vs 外链",
+      "description": "内联消除阻塞但无法缓存；外链可缓存但阻塞渲染"
+    },
+    {
+      "name": "合成层多 vs 少",
+      "description": "多层GPU加速动画流畅但内存消耗大；少层内存友好但复杂动画可能掉帧"
+    },
+    {
+      "name": "DOM节点数量 vs 功能复杂度",
+      "description": "节点多功能完整但Layout/Paint耗时；节点少渲染快但需虚拟滚动等复杂方案"
+    }
+  ],
+  "experiment_code": "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>CRP Pipeline Demo</title><style>.box{width:100px;height:100px;background:#4CAF50;margin:10px;display:inline-block}</style><script>const s=performance.now();while(performance.now()-s<100){}</script></head><body><h1>CRP Demo</h1><div id=\"container\"></div><script>const c=document.getElementById('container');const f=document.createDocumentFragment();for(let i=0;i<500;i++){const d=document.createElement('div');d.className='box';d.textContent=i;f.appendChild(d)}c.appendChild(f);const lS=performance.now();c.offsetHeight;console.log('Layout:',(performance.now()-lS).toFixed(2)+'ms');const bx=document.querySelectorAll('.box');const tS=performance.now();bx.forEach(b=>{b.style.width=(b.offsetWidth+1)+'px'});console.log('Thrash:',(performance.now()-tS).toFixed(2)+'ms');const w=Array.from(bx).map(b=>b.offsetWidth);const bS=performance.now();bx.forEach((b,i)=>{b.style.width=(w[i]+1)+'px'});console.log('Batch:',(performance.now()-bS).toFixed(2)+'ms')</script></body></html>",
+  "references": [
+    "https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/Critical_rendering_path",
+    "https://developer.mozilla.org/en-US/docs/Glossary/Reflow",
+    "https://web.dev/articles/critical-rendering-path",
+    "https://developers.google.com/web/fundamentals/performance/rendering"
+  ]
+}

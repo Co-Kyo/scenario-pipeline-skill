@@ -1,0 +1,23 @@
+{
+  "id": "A6",
+  "name": "HTTP缓存策略",
+  "domain": "http_protocol",
+  "coverage": ["P2", "P4"],
+  "dependencies": [],
+  "summary": "HTTP缓存分为强缓存（Cache-Control max-age/no-cache/no-store）和协商缓存（ETag/If-None-Match、Last-Modified/If-Modified-Since）两层。强缓存命中时直接使用本地副本不发请求；协商缓存通过条件请求验证资源是否更新，未变化返回304。关键指令包括private/public控制缓存范围、immutable标记不变资源、stale-while-revalidate实现异步验证。启发式缓存是无Cache-Control时的兜底机制。",
+  "bottlenecks": [
+    "HTML入口文件缓存策略难以平衡更新及时性与性能",
+    "no-cache语义常被误解为不缓存",
+    "CDN的s-maxage与浏览器max-age独立管理导致不同步",
+    "Vary头导致缓存碎片化",
+    "个性化内容错误标记public导致数据泄露"
+  ],
+  "tradeoffs": [
+    "缓存时长 vs 更新及时性",
+    "ETag精度 vs 服务器CPU开销",
+    "stale-while-revalidate用户体验 vs 数据一致性"
+  ],
+  "tools": ["Chrome DevTools Network面板", "curl -I", "WebPageTest", "Lighthouse"],
+  "keyTerms": ["Cache-Control", "max-age", "ETag", "304 Not Modified", "stale-while-revalidate", "s-maxage", "no-cache", "no-store"],
+  "universal": true
+}

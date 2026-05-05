@@ -1,0 +1,65 @@
+{
+  "id": "A17",
+  "name": "DevTools Performance/Memory面板",
+  "mechanism_summary": "Chrome DevTools的Performance面板通过火焰图展示主线程每帧工作（JS执行、Layout、Paint、Composite），可定位Long Task和掉帧。Memory面板提供Heap Snapshot（堆快照对比检测泄漏）、Allocation Timeline（分配热点）和Allocation Sampling三种模式。Lighthouse自动化审计输出0-100评分，核心指标包括FCP、LCP、TBT、CLS。",
+  "bottlenecks": [
+    {
+      "name": "火焰图Long Task定位困难",
+      "trigger": "页面存在多个Long Task，调用栈复杂",
+      "symptom": "火焰图中红色长条，难以定位根因"
+    },
+    {
+      "name": "Heap Snapshot对比噪声",
+      "trigger": "对比快照时框架/库内部对象干扰",
+      "symptom": "难以区分正常分配和泄漏"
+    },
+    {
+      "name": "Lighthouse评分与真实体验不一致",
+      "trigger": "实验室环境与用户实际网络/设备差异大",
+      "symptom": "Lighthouse 90+但用户反馈卡顿"
+    },
+    {
+      "name": "Performance录制的性能开销",
+      "trigger": "录制时间过长或页面过于复杂",
+      "symptom": "录制本身导致页面变慢，数据量过大"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "dimension": "火焰图录制深度",
+      "option_a": "浅录制(Disable JS samples)：小数据量，无调用栈",
+      "option_b": "深录制(完整调用栈)：大数据量，完整信息",
+      "suggestion": "快速定位帧级别问题用浅录制；定位具体函数用深录制"
+    },
+    {
+      "dimension": "Heap Snapshot vs Allocation Timeline",
+      "option_a": "Heap Snapshot：当前时刻快照，适合泄漏对比",
+      "option_b": "Allocation Timeline：时间序列，适合分配热点",
+      "suggestion": "泄漏排查用Snapshot对比；优化分配用Timeline"
+    },
+    {
+      "dimension": "Lighthouse vs 手动Performance录制",
+      "option_a": "Lighthouse：自动化，标准加载场景",
+      "option_b": "手动Performance：任意交互场景，可模拟真实操作",
+      "suggestion": "CI/CD用Lighthouse做回归；性能调优用Performance深入分析"
+    }
+  ],
+  "experiment_code": "见主文件「最小验证实验」章节：Long Task触发、Layout Thrashing、内存泄漏模拟、User Timing标记Demo",
+  "references": [
+    {
+      "tier": "官方文档",
+      "url": "https://developer.chrome.com/docs/devtools/performance",
+      "title": "Performance Analysis Reference - Chrome DevTools"
+    },
+    {
+      "tier": "官方文档",
+      "url": "https://developer.chrome.com/docs/devtools/memory-problems/memory-101",
+      "title": "Memory Terminology - Chrome DevTools"
+    },
+    {
+      "tier": "官方文档",
+      "url": "https://developer.chrome.com/docs/lighthouse",
+      "title": "Lighthouse Documentation"
+    }
+  ]
+}

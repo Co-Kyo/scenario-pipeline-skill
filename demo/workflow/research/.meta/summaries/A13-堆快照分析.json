@@ -1,0 +1,27 @@
+{
+  "id": "A13",
+  "name": "堆快照分析",
+  "domain": "chrome_v8",
+  "coverage": ["P3"],
+  "summary": "Chrome DevTools Memory 面板的 Heap Snapshot 功能拍摄 V8 堆内存快照，支持 Summary/Comparison/Containment/Dominators 四种视图。Comparison 视图通过对比两个快照定位内存增量泄漏。Detached DOM 节点和闭包持有大对象是最常见的泄漏模式。",
+  "keyPoints": [
+    "Summary 视图按 Constructor 分组，显示 Shallow Size 和 Retained Size",
+    "Comparison 视图对比两个快照的 Delta（数量变化）和 Size Delta（内存变化）",
+    "Containment 视图展示引用树，追踪 GC Root → 目标对象的引用链",
+    "Dominators 视图展示支配者树，释放支配者必然释放被支配者",
+    "Detached DOM 节点：从文档移除但仍有 JS 引用的节点",
+    "拍摄前应手动 GC 减少噪声"
+  ],
+  "bottlenecks": [
+    "快照体积巨大（数百 MB），加载分析慢",
+    "GC 时机干扰导致 Comparison 误读",
+    "闭包引用链深且隐晦，难以定位泄漏源",
+    "仅覆盖当前 V8 Isolate，无法分析 Worker/iframe",
+    "Retained Size 基于支配者假设，可能不完全准确"
+  ],
+  "tools": ["Chrome DevTools Memory 面板", "HeapSnapshot 文件导出", "v8.writeHeapSnapshot() (Node)", "--heapsnapshot-signal (Node)", "chrome://inspect 远程调试"],
+  "dependencies": ["A12", "A17"],
+  "related": ["A12"],
+  "language": "zh",
+  "technicalTerms": ["Heap Snapshot", "Shallow Size", "Retained Size", "Dominators", "Detached DOM", "GC Root", "Comparison View", "Containment View"]
+}

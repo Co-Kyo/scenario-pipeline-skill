@@ -1,0 +1,23 @@
+{
+  "id": "A24",
+  "name": "WebP/AVIF现代格式",
+  "mechanism_summary": "WebP基于VP8编解码器，有损压缩比JPEG小25-35%，无损比PNG小26%；AVIF基于AV1编解码器，有损比JPEG小约50%，支持HDR/宽色域/12-bit色深。两者均不支持渐进式渲染，需提供picture元素做格式降级（AVIF→WebP→JPEG）。浏览器支持已广泛但仍有碎片（Edge不支持AVIF）。",
+  "bottlenecks": [
+    "AVIF编码速度慢，CI/CD批量转换需并行化或预处理",
+    "WebP/AVIF均不支持渐进式渲染，大图在慢网络下白屏时间长",
+    "浏览器兼容性碎片化，必须提供多格式fallback",
+    "工具链（CDN、sharp版本）对AVIF支持需跟进",
+    "YUV色彩空间转换在部分场景存在色差"
+  ],
+  "tradeoffs": [
+    "压缩率 vs 编码速度：AVIF最优但最慢，实时场景可选WebP",
+    "文件大小 vs 渲染时机：AVIF更小但无渐进式，首屏大图JPEG progressive感知更快",
+    "兼容性 vs 维护成本：三重fallback保证兼容但增加处理和存储成本"
+  ],
+  "experiment_code": "<picture>\n  <source srcset=\"hero.avif\" type=\"image/avif\">\n  <source srcset=\"hero.webp\" type=\"image/webp\">\n  <img src=\"hero.jpg\" alt=\"Hero\" width=\"1200\" height=\"600\">\n</picture>",
+  "references": [
+    "https://developer.mozilla.org/zh-CN/docs/Web/Media/Guides/Formats/Image_types",
+    "https://web.dev/articles/uses-webp-images",
+    "https://www.ctrl.blog/entry/webp-avif-comparison.html"
+  ]
+}

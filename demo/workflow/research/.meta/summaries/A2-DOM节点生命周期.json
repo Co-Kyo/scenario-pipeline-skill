@@ -1,0 +1,57 @@
+{
+  "id": "A2",
+  "name": "DOM节点生命周期",
+  "mechanism_summary": "DOM节点经历创建(createElement/cloneNode/解析器)→插入(appendChild/Fragment)→更新(textContent/style/attribute)→销毁(remove/removeChild)四阶段。插入文档树后触发Layout和Paint，批量操作可用DocumentFragment合并。节点移除后若JS仍持有引用则无法GC，导致Detached DOM内存泄漏。自定义元素提供connectedCallback/disconnectedCallback等生命周期钩子。",
+  "bottlenecks": [
+    {
+      "name": "频繁DOM操作导致多次Layout",
+      "trigger": "循环中逐个插入/修改节点",
+      "symptom": "创建列表时卡顿",
+      "detection": "Performance面板多次Layout事件",
+      "mitigation": "DocumentFragment批量插入、innerHTML一次性写入、虚拟列表"
+    },
+    {
+      "name": "事件监听器泄漏",
+      "trigger": "组件销毁时未清理事件监听器",
+      "symptom": "SPA切页后内存持续增长",
+      "detection": "Memory面板Heap Snapshot搜索Detached",
+      "mitigation": "AbortController统一管理、WeakRef引用"
+    },
+    {
+      "name": "innerHTML导致子节点全部重建",
+      "trigger": "使用innerHTML更新只改一个字",
+      "symptom": "丢失子节点状态、大范围Reflow",
+      "detection": "Performance面板Layout耗时",
+      "mitigation": "textContent更新纯文本、精确DOM操作"
+    },
+    {
+      "name": "Detached DOM节点内存泄漏",
+      "trigger": "节点从文档移除但JS仍引用",
+      "symptom": "内存占用持续增长",
+      "detection": "Chrome DevTools Memory Heap Snapshot Detached过滤",
+      "mitigation": "移除节点时清除引用、使用WeakMap/WeakRef"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "name": "innerHTML vs DOM API",
+      "description": "innerHTML写入快但销毁子节点丢失状态；DOM API精确控制但代码量大易多次Layout"
+    },
+    {
+      "name": "DocumentFragment vs 虚拟DOM",
+      "description": "Fragment零依赖适合简单批量插入；虚拟DOM自动Diff但有额外Diff开销"
+    },
+    {
+      "name": "事件委托 vs 直接绑定",
+      "description": "委托内存开销小适合大量同类节点；直接绑定响应快但开销大"
+    }
+  ],
+  "experiment_code": "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>DOM Lifecycle</title><style>.item{padding:4px 8px;border-bottom:1px solid #eee}</style></head><body><h1>DOM生命周期实验</h1><button onclick=\"testAppend()\">逐个appendChild</button> <button onclick=\"testFragment()\">Fragment批量</button> <button onclick=\"testInner()\">innerHTML</button><div id=\"result\" style=\"margin:20px;padding:10px;background:#f5f5f5;font-family:monospace\"></div><div id=\"container\"></div><script>const N=10000,c=document.getElementById('container'),r=document.getElementById('result');function log(m){r.textContent+=m+'\\n'}function testAppend(){c.innerHTML='';const s=performance.now();for(let i=0;i<N;i++){const d=document.createElement('div');d.className='item';d.textContent='Item '+i;c.appendChild(d)}log('appendChild×'+N+': '+(performance.now()-s).toFixed(2)+'ms')}function testFragment(){c.innerHTML='';const f=document.createDocumentFragment(),s=performance.now();for(let i=0;i<N;i++){const d=document.createElement('div');d.className='item';d.textContent='Item '+i;f.appendChild(d)}c.appendChild(f);log('Fragment×'+N+': '+(performance.now()-s).toFixed(2)+'ms')}function testInner(){const s=performance.now();let h='';for(let i=0;i<N;i++)h+='<div class=\"item\">Item '+i+'</div>';c.innerHTML=h;log('innerHTML×'+N+': '+(performance.now()-s).toFixed(2)+'ms')}</script></body></html>",
+  "references": [
+    "https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model",
+    "https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML",
+    "https://developer.mozilla.org/en-US/docs/Web/API/Node/appendChild",
+    "https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment",
+    "https://web.dev/articles/detached-window-memory-leaks"
+  ]
+}

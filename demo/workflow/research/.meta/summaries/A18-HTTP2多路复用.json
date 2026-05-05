@@ -1,0 +1,23 @@
+{
+  "id": "A18",
+  "name": "HTTP/2多路复用",
+  "domain": "http_protocol",
+  "coverage": ["P4"],
+  "dependencies": [],
+  "summary": "HTTP/2引入二进制分帧层，在单个TCP连接上通过Stream ID实现多路复用，彻底解决应用层队头阻塞。HPACK头部压缩通过静态表+动态表+Huffman编码减少80%+头部开销。服务端推送已被主流浏览器移除（Chrome 106+），替代方案为link preload和103 Early Hints。流优先级在实际实现中各家不一致。HTTP/2不修改HTTP语义，所有现有应用无需修改即可运行。",
+  "bottlenecks": [
+    "TCP层队头阻塞仍在（一个丢包阻塞所有流）",
+    "单连接在高丢包网络下表现可能不如HTTP/1.x多连接",
+    "服务端推送实践困难已被废弃",
+    "二进制帧对人不可读增加调试难度",
+    "部分旧代理/防火墙不兼容二进制帧"
+  ],
+  "tradeoffs": [
+    "单连接理想 vs 高丢包下多连接实际优化",
+    "HPACK动态表大小 vs 内存占用",
+    "流优先级理论能力 vs 实现不一致性"
+  ],
+  "tools": ["Chrome DevTools Protocol列", "Wireshark h2帧解码", "curl --http2", "h2load/nghttp2", "Lighthouse"],
+  "keyTerms": ["Multiplexing", "Binary Framing", "HPACK", "Stream", "Frame", "Server Push", "Head-of-Line Blocking"],
+  "universal": true
+}

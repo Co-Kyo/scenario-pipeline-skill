@@ -1,0 +1,29 @@
+{
+  "id": "A32",
+  "name": "Web Worker多线程",
+  "domain": "browser_api",
+  "coverage": ["P7"],
+  "summary": "Web Worker 在后台线程运行 JavaScript，与主线程并行执行不阻塞 UI。数据通过 postMessage 传递（默认结构化克隆），Transferable Objects 支持零拷贝转移所有权，SharedArrayBuffer 实现真正的共享内存（需跨域隔离）。Worker 拥有独立的全局对象、事件循环和内存空间，无法访问 DOM。",
+  "keyPoints": [
+    "Dedicated Worker 一对一，SharedWorker 多 tab 共享，Service Worker 代理/离线",
+    "postMessage 默认使用结构化克隆（深拷贝），大数据开销大",
+    "Transferable Objects（ArrayBuffer 等）零拷贝转移，原线程失去访问权",
+    "SharedArrayBuffer 真正共享内存，需 Cross-Origin Isolation + Atomics 同步",
+    "Worker 无法访问 DOM 和 window，拥有独立的 V8 Isolate",
+    "Module Worker (type: 'module') 支持 ES Modules import"
+  ],
+  "bottlenecks": [
+    "结构化克隆大数据开销大",
+    "Worker 启动成本高（脚本加载解析）",
+    "Worker 需要 Pool 复用避免频繁创建/销毁",
+    "SharedArrayBuffer 竞态条件需手动 Atomics 管理",
+    "跨域限制（同源策略）",
+    "错误不会冒泡到主线程",
+    "相同数据可能在主线程和 Worker 各存一份"
+  ],
+  "tools": ["Chrome DevTools Sources Threads 面板", "Chrome DevTools Application Service Workers", "worker.onerror / worker.onmessageerror", "performance.mark() / performance.measure()", "Chrome Task Manager"],
+  "dependencies": [],
+  "related": ["A12"],
+  "language": "zh",
+  "technicalTerms": ["Web Worker", "Dedicated Worker", "SharedWorker", "Service Worker", "postMessage", "Structured Clone", "Transferable Objects", "SharedArrayBuffer", "Atomics", "Cross-Origin Isolation", "WorkerGlobalScope"]
+}

@@ -1,0 +1,23 @@
+{
+  "id": "A21",
+  "name": "接口合并与BFF",
+  "domain": "http_protocol",
+  "coverage": ["P4"],
+  "dependencies": [],
+  "summary": "BFF(Backend For Frontend)在微服务和前端间增加聚合层，将多个后端接口合并为前端友好的请求。核心模式：接口聚合（多合一）、数据裁剪（只返回必要字段）、格式统一、端适配。GraphQL天然适合BFF（一次请求获取多服务数据，按需声明字段）。接口编排支持串行（有依赖）、并行（无依赖）、扇出聚合。替代方案包括HTTP/2多路复用和preload。",
+  "bottlenecks": [
+    "BFF层成为新的单点和流量瓶颈",
+    "聚合多服务数据时存在一致性问题",
+    "部分子请求失败的降级策略复杂",
+    "聚合接口缓存失效依赖所有子服务变化",
+    "BFF代码量随业务增长膨胀"
+  ],
+  "tradeoffs": [
+    "接口合并减少请求数 vs BFF层代码和维护成本",
+    "GraphQL灵活性 vs 学习曲线和工具链成本",
+    "聚合粒度粗（缓存差）vs 细（失去合并意义）"
+  ],
+  "tools": ["GraphQL Playground/GraphiQL", "Postman/Insomnia", "Chrome DevTools Network", "Zipkin/Jaeger链路追踪"],
+  "keyTerms": ["BFF", "Backend For Frontend", "GraphQL", "API Aggregation", "Fan-out/Fan-in", "DataLoader", "接口编排"],
+  "universal": true
+}

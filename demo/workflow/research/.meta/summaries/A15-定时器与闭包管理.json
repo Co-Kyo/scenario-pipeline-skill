@@ -1,0 +1,27 @@
+{
+  "id": "A15",
+  "name": "定时器与闭包管理",
+  "domain": "ecmascript_node",
+  "coverage": ["P3"],
+  "summary": "setTimeout/setInterval 回调闭包引用的对象不会被 GC 回收，直到定时器被清除。匿名闭包持有大对象是常见泄漏模式。推荐用 setTimeout 递归替代 setInterval 避免堆叠。SPA 组件卸载时必须 clearTimeout/clearInterval。闭包最小化和置空引用是断开引用链的关键策略。",
+  "keyPoints": [
+    "定时器回调闭包持有整个作用域的引用，阻止 GC",
+    "setInterval 回调执行时间超过间隔时会堆叠",
+    "setTimeout 递归替代 setInterval 更可控",
+    "clearTimeout/clearInterval 是唯一可靠的清理手段",
+    "闭包最小化：回调只引用必要数据",
+    "置空引用：不再需要时将大对象设为 null 断开引用链"
+  ],
+  "bottlenecks": [
+    "SPA 组件卸载遗漏清除定时器",
+    "setInterval 堆叠导致内存和 CPU 压力",
+    "闭包持有已移除 DOM 节点引用",
+    "第三方库内部定时器不暴露清理接口",
+    "递归 setTimeout 可能产生多条并行链路"
+  ],
+  "tools": ["Chrome DevTools Sources Timer 监控", "monitor(setTimeout) / monitor(setInterval)", "Heap Snapshot 搜索 setInterval/setTimeout", "ESLint no-implied-eval", "Chrome Task Manager"],
+  "dependencies": [],
+  "related": ["A13", "A14", "A16"],
+  "language": "zh",
+  "technicalTerms": ["setTimeout", "setInterval", "clearTimeout", "clearInterval", "Macrotask", "Closure", "requestAnimationFrame", "requestIdleCallback"]
+}

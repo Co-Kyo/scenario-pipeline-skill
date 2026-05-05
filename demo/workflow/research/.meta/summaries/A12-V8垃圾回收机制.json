@@ -1,0 +1,27 @@
+{
+  "id": "A12",
+  "name": "V8垃圾回收机制",
+  "domain": "chrome_v8",
+  "coverage": ["P3"],
+  "summary": "V8 采用分代 GC 策略：Young Generation 使用 Semi-Space Scavenge（快速复制存活对象），Old Generation 使用 Mark-Sweep-Compact（标记-清除-压缩）。Orinoco 项目引入并发标记、增量标记、并发清除和 Idle-time GC，大幅减少主线程停顿。Write Barrier 维护跨代引用关系。",
+  "keyPoints": [
+    "分代假说：大多数对象短命，新生代 Scavenge 通常 < 1ms",
+    "Semi-Space 策略：From-Space/To-Space 互换，存活对象晋升",
+    "Mark-Sweep-Compact：标记可达对象 → 清除死对象 → 压缩碎片",
+    "增量标记：将标记拆分为 < 5ms 小步，插入主线程空闲间隙",
+    "并发标记/清除：GC 线程与主线程并行，使用 Snapshot-at-the-beginning 写屏障",
+    "Idle-time GC：利用浏览器空闲时间执行 GC，实现\"免费\"回收"
+  ],
+  "bottlenecks": [
+    "新生代 Scavenge 停顿（存活对象过多时）",
+    "老生代 Full GC 可能超过 100ms",
+    "内存碎片化触发压缩的额外开销",
+    "Write Barrier 运行时成本",
+    "对象意外晋升到老生代"
+  ],
+  "tools": ["Chrome DevTools Performance 面板", "Chrome DevTools Memory 面板", "--trace-gc", "--expose-gc", "performance.measureUserAgentSpecificMemory()"],
+  "dependencies": [],
+  "related": ["A13"],
+  "language": "zh",
+  "technicalTerms": ["V8", "GC", "Scavenge", "Mark-Sweep-Compact", "Generational Hypothesis", "Semi-Space", "Write Barrier", "Orinoco", "Incremental Marking", "Concurrent Marking", "Free-List", "Idle-time GC"]
+}

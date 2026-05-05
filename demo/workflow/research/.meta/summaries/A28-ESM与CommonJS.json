@@ -1,0 +1,31 @@
+{
+  "mechanism_summary": "ESM 使用 import/export 声明式语法，在编译期静态分析依赖图，是 Tree Shaking 的前提。CommonJS 通过 require() 运行时动态加载，导出值拷贝，无法被静态分析裁剪。import() 是唯一兼具 ESM 语法和动态加载的方式，Webpack 将其作为 Code Splitting 边界。Node.js 通过 .mjs/.cjs 后缀和 package.json type 字段管理双模块系统。",
+  "bottlenecks": [
+    "CJS 模块无法 Tree Shaking，整个包必须全部打包",
+    "混合模块系统（CJS + ESM）导致 bundler 需要复杂的互操作逻辑",
+    "循环依赖在两种模块系统中行为不同，可能引发 TDZ 或部分初始化问题",
+    "动态 require(variable) 阻碍静态分析，bundler 无法生成完整依赖图",
+    "某些 npm 包的 __esModule 标记缺失导致 named import 失败"
+  ],
+  "tradeoffs": [
+    {
+      "scenario": "选择 ESM 还是 CJS 作为项目默认模块系统",
+      "option_a": "ESM：获得 Tree Shaking、静态分析、浏览器原生支持",
+      "option_b": "CJS：最大兼容性，所有 Node.js 版本和工具链支持",
+      "consideration": "新项目优先 ESM；遗留项目逐步迁移，通过 dual package 保持兼容"
+    },
+    {
+      "scenario": "npm 包分发策略",
+      "option_a": "仅 ESM：最小包体积，强制用户升级",
+      "option_b": "CJS + ESM 双输出：兼容性最好，但维护成本高",
+      "consideration": "主流库趋向 ESM-only，但需要评估用户生态兼容性"
+    }
+  ],
+  "experiment_code": "// math.js\nexport function add(a, b) { return a + b; }\nexport function subtract(a, b) { return a - b; }\n\n// index.js\nimport { add } from './math.js';\nconsole.log(add(1, 2));\n// 构建后 subtract 应被 Tree Shaking 移除\n\n// 对比 CJS 版本\n// math-cjs.js\n// exports.add = (a, b) => a + b;\n// exports.subtract = (a, b) => a - b;\n// require('./math-cjs').add(1,2) — subtract 不会被移除",
+  "references": [
+    "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules",
+    "https://nodejs.org/api/esm.html#differences-between-es-modules-and-commonjs",
+    "https://webpack.js.org/guides/tree-shaking/",
+    "https://2ality.com/2021/06/esm-nodejs-interop.html"
+  ]
+}

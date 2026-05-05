@@ -1,0 +1,31 @@
+{
+  "mechanism_summary": "Tree Shaking 基于 ESM 静态结构，在构建阶段标记并移除未被引用的导出代码。两个层次：usedExports 标记未使用导出供 Terser 删除，sideEffects 允许跳过整个无副作用文件。CommonJS 无法被 Tree Shaking，Babel 默认转 ESM 为 CJS 会破坏此能力。需配合生产模式和正确的 sideEffects 声明才能生效。",
+  "bottlenecks": [
+    "副作用检测困难，Terser 无法可靠判断动态语言中的函数调用是否有副作用",
+    "CommonJS 库（如 lodash）无法 Tree Shaking，必须使用 ESM 版本",
+    "Babel 默认将 ESM 转为 CJS，需配置 modules: false 保留静态结构",
+    "CSS Tree Shaking 需额外工具（PurgeCSS），Webpack 原生不支持",
+    "re-export 场景可能导致误删"
+  ],
+  "tradeoffs": [
+    {
+      "scenario": "sideEffects vs usedExports 选择",
+      "option_a": "sideEffects：跳过整个未引用文件，效率最高",
+      "option_b": "usedExports：标记单个导出，粒度更细",
+      "consideration": "两者互补，建议同时启用；sideEffects 需要库作者正确声明"
+    },
+    {
+      "scenario": "开发模式是否启用 Tree Shaking",
+      "option_a": "启用：开发时即可发现未使用代码",
+      "option_b": "不启用：加快构建速度，生产模式自动启用",
+      "consideration": "Webpack 默认仅在 production 模式启用，开发模式可手动开启 usedExports"
+    }
+  ],
+  "experiment_code": "// src/math.js\nexport function square(x) { return x * x; }\nexport function cube(x) { return x * x * x; }\n\n// src/index.js\nimport { cube } from './math.js';\nconsole.log(cube(5));\n\n// webpack.config.js\nmodule.exports = {\n  mode: 'production',\n  entry: './src/index.js',\n  output: { filename: 'bundle.js' }\n};\n// 构建后 square 函数应被移除",
+  "references": [
+    "https://webpack.js.org/guides/tree-shaking/",
+    "https://webpack.js.org/guides/tree-shaking/#mark-the-file-as-side-effect-free",
+    "https://developer.mozilla.org/en-US/docs/Glossary/Tree_shaking",
+    "https://rollupjs.org/guide/en/#tree-shaking"
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "id": "A9",
+  "name": "Critical Rendering Path",
+  "mechanism_summary": "CRP是浏览器将HTML字节转换为屏幕像素的完整路径：Bytes→Characters→Tokens→DOM Tree，同时CSS→CSSOM Tree，两者合并为Render Tree（只含可见节点），再经Layout计算几何信息、Paint光栅化像素、Composite合成输出。CSS是渲染阻塞资源（必须全部解析完），JS是解析阻塞资源（无async/defer时暂停HTML解析）。关键优化目标：减少关键资源数、缩短关键路径长度、优化加载顺序。",
+  "bottlenecks": [
+    {
+      "name": "CSS阻塞渲染",
+      "trigger": "外部CSS文件大或加载慢",
+      "symptom": "白屏时间长、FCP延迟",
+      "detection": "Lighthouse render-blocking audit、Network面板CSS阻塞时间",
+      "mitigation": "内联Critical CSS、异步加载非关键CSS、CSS压缩"
+    },
+    {
+      "name": "JavaScript阻塞DOM构建",
+      "trigger": "script无async/defer位于head中",
+      "symptom": "DOM构建暂停",
+      "detection": "Performance面板Parse HTML中断",
+      "mitigation": "async/defer属性、代码分割、requestIdleCallback"
+    },
+    {
+      "name": "DOM树过大",
+      "trigger": "页面包含数千个DOM节点",
+      "symptom": "Layout和Paint耗时线性增长",
+      "detection": "Lighthouse excessive DOM size、querySelectorAll('*').length",
+      "mitigation": "虚拟列表、content-visibility:auto、懒加载"
+    },
+    {
+      "name": "Web字体阻塞文本渲染",
+      "trigger": "字体加载期间FOIT",
+      "symptom": "空白文字区域",
+      "detection": "Lighthouse text visible during webfont load",
+      "mitigation": "font-display:swap、preload关键字体"
+    },
+    {
+      "name": "关键资源链过长",
+      "trigger": "关键资源存在依赖链",
+      "symptom": "瀑布式加载总时间累加",
+      "detection": "Network面板瀑布图",
+      "mitigation": "preload预加载、preconnect预连接、内联关键CSS"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "name": "Critical CSS内联 vs 外链缓存",
+      "description": "内联消除阻塞FCP更快但无法缓存；外链可缓存但阻塞渲染"
+    },
+    {
+      "name": "SSR vs CSR",
+      "description": "SSR首屏FCP/LCP更快但TTFB可能增大；CSR TTFB快但FCP慢"
+    },
+    {
+      "name": "代码分割粒度",
+      "description": "粗粒度HTTP请求少但首次加载量大；细粒度按需加载但请求多瀑布延迟"
+    }
+  ],
+  "experiment_code": "<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\"><title>CRP Demo</title><style>body{font-family:system-ui,sans-serif;margin:20px}.hero{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;padding:40px;border-radius:12px;font-size:24px;text-align:center}.m{padding:8px;margin:4px 0;background:#f5f5f5;border-radius:4px;font-family:monospace}</style><style>.card{border:1px solid #ddd;padding:16px;margin:8px 0;border-radius:8px}</style></head><body><h1>CRP实验</h1><div class=\"hero\">CRP各阶段时间</div><div id=\"metrics\"></div><script>const s=performance.now();while(performance.now()-s<50){}</script><script defer>console.log('defer done')</script><script>window.addEventListener('load',()=>{const t=performance.timing,d=document.getElementById('metrics');const data=[['DNS',t.domainLookupEnd-t.domainLookupStart],['TCP',t.connectEnd-t.connectStart],['TTFB',t.responseStart-t.requestStart],['Download',t.responseEnd-t.responseStart],['DOM Parse',t.domInteractive-t.responseEnd],['DOMContentLoaded',t.domContentLoadedEventEnd-t.navigationStart],['Load',t.loadEventEnd-t.navigationStart]];d.innerHTML=data.map(([l,v])=>`<div class=\"m\">${l}: <strong>${v}ms</strong></div>`).join('');if('PerformanceObserver'in window){new PerformanceObserver(l=>{for(const e of l.getEntries())if(e.name==='first-contentful-paint')d.innerHTML+=`<div class=\"m\">FCP: <strong>${e.startTime.toFixed(0)}ms</strong></div>`}).observe({type:'paint',buffered:true});new PerformanceObserver(l=>{const e=l.getEntries();d.innerHTML+=`<div class=\"m\">LCP: <strong>${e[e.length-1].startTime.toFixed(0)}ms</strong></div>`}).observe({type:'largest-contentful-paint',buffered:true})}})</script></body></html>",
+  "references": [
+    "https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/Critical_rendering_path",
+    "https://web.dev/articles/critical-rendering-path",
+    "https://web.dev/articles/critical-rendering-path/render-tree-construction",
+    "https://developers.google.com/web/fundamentals/performance/critical-rendering-path"
+  ]
+}

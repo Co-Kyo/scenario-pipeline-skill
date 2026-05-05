@@ -1,0 +1,23 @@
+{
+  "id": "A19",
+  "name": "HTTP/3与QUIC",
+  "domain": "http_protocol",
+  "coverage": ["P4"],
+  "dependencies": ["A18"],
+  "summary": "HTTP/3基于QUIC协议运行在UDP之上，集成TLS 1.3握手实现1-RTT/0-RTT连接建立。QUIC为每个流独立管理丢包检测和重传，彻底消除TCP层队头阻塞。连接迁移通过Connection ID实现（非IP+Port），网络切换不断连。QPACK头部压缩适配QUIC的无序流特性。必须设计TCP回退机制应对UDP受限环境。",
+  "bottlenecks": [
+    "部分企业网络/运营商对UDP有限制或QoS降级",
+    "QUIC用户空间实现CPU消耗高于TCP",
+    "0-RTT Early Data存在重放攻击风险",
+    "UDP流量调试和中间设备排查困难",
+    "CDN边缘节点和回源链路的QUIC支持不均匀"
+  ],
+  "tradeoffs": [
+    "QUIC低延迟优势 vs 高CPU开销",
+    "0-RTT便利性 vs 重放安全性",
+    "协议演进 vs UDP网络兼容性回退"
+  ],
+  "tools": ["Chrome DevTools Protocol列(h3)", "curl --http3", "Wireshark QUIC解码", "http3check.net", "chrome://net-internals/#http3"],
+  "keyTerms": ["QUIC", "UDP", "0-RTT", "1-RTT", "Connection ID", "Connection Migration", "QPACK", "Head-of-Line Blocking Elimination"],
+  "universal": true
+}

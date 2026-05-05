@@ -1,0 +1,65 @@
+{
+  "id": "A30",
+  "name": "requestAnimationFrame调度",
+  "mechanism_summary": "requestAnimationFrame(rAF)在浏览器下一次重绘前调用回调，频率匹配显示器刷新率(60Hz=16.67ms)。回调在Style/Layout/Paint之前执行，修改DOM不会产生额外重排。rAF自动暂停于后台标签页。回调接收DOMHighResTimeStamp参数，应基于时间差计算动画进度而非帧计数。实际可用JS预算约10-12ms。",
+  "bottlenecks": [
+    {
+      "name": "rAF回调中执行耗时操作",
+      "trigger": "rAF回调执行大量计算或DOM操作超过帧预算",
+      "symptom": "掉帧，动画卡顿"
+    },
+    {
+      "name": "rAF嵌套导致帧预算超支",
+      "trigger": "在rAF中同步修改DOM触发Layout后再用rAF",
+      "symptom": "单帧内多次Layout(Layout thrashing)"
+    },
+    {
+      "name": "忘记取消rAF导致资源浪费",
+      "trigger": "组件卸载时未调用cancelAnimationFrame",
+      "symptom": "已卸载组件的回调仍在执行"
+    },
+    {
+      "name": "高刷新率屏幕性能退化",
+      "trigger": "应用在60Hz流畅但在120Hz/144Hz掉帧",
+      "symptom": "高刷屏反而更卡"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "dimension": "rAF vs setInterval/setTimeout",
+      "option_a": "rAF：帧同步，后台自动暂停，高精度",
+      "option_b": "setTimeout：独立于渲染，后台继续执行，低精度",
+      "suggestion": "所有视觉更新用rAF；定时轮询用setTimeout"
+    },
+    {
+      "dimension": "帧内切片 vs requestIdleCallback延后",
+      "option_a": "帧内切片：持续产出结果，可能降低帧率",
+      "option_b": "requestIdleCallback：利用空闲时间，不影响帧率",
+      "suggestion": "进度条/动画用切片；日志上报/预取用idle"
+    },
+    {
+      "dimension": "时间驱动 vs 帧驱动动画",
+      "option_a": "时间驱动(基于elapsed)：跨刷新率一致",
+      "option_b": "帧驱动(基于帧计数)：120Hz速度翻倍",
+      "suggestion": "始终使用时间驱动，用timestamp参数"
+    }
+  ],
+  "experiment_code": "见主文件「最小验证实验」章节：rAF动画Demo，含帧率显示、可调计算负载(5ms/12ms/20ms)、掉帧检测",
+  "references": [
+    {
+      "tier": "核心规范",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame",
+      "title": "Window.requestAnimationFrame() - MDN"
+    },
+    {
+      "tier": "HTML规范",
+      "url": "https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html",
+      "title": "AnimationFrameProvider"
+    },
+    {
+      "tier": "测试工具",
+      "url": "https://testufo.com/#test=animation-time-graph",
+      "title": "TestUFO rAF Timing Test"
+    }
+  ]
+}

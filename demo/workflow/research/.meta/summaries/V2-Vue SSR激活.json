@@ -1,0 +1,33 @@
+{
+  "id": "V2",
+  "name": "Vue SSR激活",
+  "mechanism_summary": "Vue 3 SSR Hydration 将服务端 HTML 在客户端激活为可交互应用。编译时优化标记静态节点（HOISTED）使其 hydration 时直接跳过，PatchFlag 引导只关注动态部分。Vue 3.5 引入 Lazy Hydration 实现延迟注水。async setup 在两端都会执行，数据不一致会导致 mismatch。核心矛盾是同一份代码在两个环境执行无法保证一致性。",
+  "bottlenecks": [
+    "Hydration mismatch 因 Node/Browser 环境差异根本无法完全避免",
+    "全量 hydration 遍历整棵 DOM 树开销大",
+    "async setup 在服务端/客户端可能获取不同数据",
+    "第三方库 SSR 兼容性问题（window/document 依赖）",
+    "大量组件 hydration 是 CPU 密集操作，低端设备体验差"
+  ],
+  "tradeoffs": [
+    {
+      "name": "Hydration 范围 vs 交互延迟",
+      "description": "全量 hydration 完整但慢；Lazy Hydration 快但需管理加载状态；Islands 最小化但架构复杂"
+    },
+    {
+      "name": "数据一致性 vs 性能",
+      "description": "注入 __INITIAL_DATA__ 保证一致但增加 HTML 体积；客户端重新获取可能不一致"
+    },
+    {
+      "name": "编译优化 vs 运行时灵活性",
+      "description": "编译时标记减少 hydration 工作量，但动态模板无法被优化"
+    }
+  ],
+  "experiment_code": "// Nuxt 3 pages/hydration-test.vue\n<template>\n  <div>\n    <p>当前时间: {{ currentTime }}</p> <!-- mismatch! -->\n    <p>安全时间: <ClientOnly>{{ safeTime }}</ClientOnly></p>\n  </div>\n</template>\n<script setup>\nconst currentTime = new Date().toISOString(); // SSR mismatch\nconst safeTime = ref('');\nonMounted(() => { safeTime.value = new Date().toISOString(); });\n</script>",
+  "references": [
+    "https://vuejs.org/guide/scaling-up/ssr.html",
+    "https://blog.csdn.net/lalala8866/article/details/142207077",
+    "https://www.cnblogs.com/zxlh1529/p/19950298",
+    "https://fruge365.blog.csdn.net/article/details/153964482"
+  ]
+}

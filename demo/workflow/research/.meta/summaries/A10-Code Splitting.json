@@ -1,0 +1,31 @@
+{
+  "mechanism_summary": "Code Splitting 将代码拆分为多个 chunk 按需加载，减少首屏 JS 体积。三种方式：Entry Points 手动拆分入口、SplitChunksPlugin 自动提取公共依赖、Dynamic Import 运行时懒加载。Webpack 将 import() 作为异步 chunk 边界，配合 cacheGroups 配置实现 vendor/runtime/业务代码分离。核心目标是减少首屏传输量并利用浏览器并行加载能力。",
+  "bottlenecks": [
+    "过度拆分导致 HTTP 请求过多，增加网络开销",
+    "chunk 间共享模块版本不一致导致重复打包",
+    "动态导入需要处理加载状态（React.lazy + Suspense）",
+    "首屏 vs 懒加载边界判断需要业务分析",
+    "预加载/预取时机控制不当导致带宽浪费"
+  ],
+  "tradeoffs": [
+    {
+      "scenario": "chunk 粒度选择",
+      "option_a": "细粒度拆分：按组件/路由级别拆分，减少单次传输量",
+      "option_b": "粗粒度拆分：减少请求数，降低延迟",
+      "consideration": "首屏 chunk 建议 < 100KB gzip，通过 SplitChunks 的 minSize 控制"
+    },
+    {
+      "scenario": "自动 vs 手动拆分",
+      "option_a": "SplitChunksPlugin 自动化：配置简单，粒度较粗",
+      "option_b": "手动 Entry + import()：灵活可控，维护成本高",
+      "consideration": "一般先用 SplitChunks 自动拆分，再对关键路径手动优化"
+    }
+  ],
+  "experiment_code": "// webpack.config.js\nmodule.exports = {\n  entry: './src/index.js',\n  output: { filename: '[name].[contenthash].js' },\n  optimization: {\n    splitChunks: {\n      chunks: 'all',\n      cacheGroups: {\n        vendor: { test: /[\\\\/]node_modules[\\\\/]/, name: 'vendors', chunks: 'all' }\n      }\n    }\n  }\n};\n// src/index.js\nimport _ from 'lodash';\nconst btn = document.createElement('button');\nbtn.onclick = () => import('./lazy.js').then(m => m.default());\ndocument.body.appendChild(btn);",
+  "references": [
+    "https://webpack.js.org/guides/code-splitting/",
+    "https://webpack.js.org/plugins/split-chunks-plugin/",
+    "https://webpack.js.org/guides/lazy-loading/",
+    "https://web.dev/reduce-javascript-payloads-with-code-splitting/"
+  ]
+}

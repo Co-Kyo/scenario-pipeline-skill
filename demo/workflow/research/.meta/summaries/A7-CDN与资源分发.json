@@ -1,0 +1,23 @@
+{
+  "id": "A7",
+  "name": "CDN与资源分发",
+  "domain": "http_protocol",
+  "coverage": ["P2", "P4"],
+  "dependencies": ["A6"],
+  "summary": "CDN通过全球边缘节点缓存源站内容，使用户就近获取资源减少延迟。工作流程：DNS智能解析→边缘节点响应（hit直接返回，miss回源）。HTTP/2时代应回归单域名（多域名增加DNS开销），替代HTTP/1.1的domain sharding。CDN作为共享缓存遵循HTTP缓存语义，可通过s-maxage、CDN-Cache-Control独立控制。Push CDN主动推送适合热点内容，Pull CDN按需拉取更常见。",
+  "bottlenecks": [
+    "多级缓存更新延迟导致新旧版本不一致",
+    "动态内容无法缓存需区分路由策略",
+    "缓存同时过期导致回源风暴",
+    "HTTPS证书在多边缘节点的管理复杂度",
+    "全球节点缓存刷新不同步"
+  ],
+  "tradeoffs": [
+    "缓存时长 vs 一致性（静态资源长缓存+hash vs HTML短缓存）",
+    "全球覆盖节点数 vs CDN费用",
+    "安全防护(WAF/DDoS) vs 额外故障点"
+  ],
+  "tools": ["dig", "curl -I (查看x-cache/cf-cache-status)", "CDN Dashboard", "WebPageTest多地域测试"],
+  "keyTerms": ["CDN", "Edge Node", "Origin", "Cache Hit/Miss", "Purge", "CNAME", "s-maxage", "CDN-Cache-Control", "Surrogate-Control"],
+  "universal": true
+}
