@@ -1,6 +1,6 @@
 ---
 name: scenario-pipeline
-description: "前端复合工程场景知识管线。两阶段工作流：前处理（扫描→分词→能力提取→高地识别→评估→入池）+ 后处理（能力研究并行→命题组装并行）。触发词：'扫描' / '研究' / 'deep scan' / 'deep research' / 'scenario research' / '面试题' / '技术调研'。用于：扫描技术文章提取研究主题、收集面试题、深度研究复合工程场景、构建技术知识库。"
+description: "前端复合工程场景知识管线。两阶段工作流：前处理（扫描→分词→能力提取→高地识别→评估→入池）+ 后处理（能力研究并行→命题组装并行→学习阶梯生成）。触发词：'扫描' / '研究' / 'deep scan' / 'deep research' / 'scenario research' / '面试题' / '技术调研'。用于：扫描技术文章提取研究主题、收集面试题、深度研究复合工程场景、构建技术知识库。"
 ---
 
 # Scenario Pipeline
@@ -8,7 +8,7 @@ description: "前端复合工程场景知识管线。两阶段工作流：前处
 Two-phase knowledge production pipeline for composite engineering scenarios.
 
 **Pre-processing** = scan → decompose → capability extract → highground identify → evaluate → pool
-**Post-processing** = capability research (parallel) → assembly (parallel) ⛔ 两阶段有显式 barrier
+**Post-processing** = capability research (parallel) → assembly (parallel) → learning ladder (single-thread) ⛔ 阶段间有显式 barrier
 
 ## Trigger Patterns
 
@@ -29,14 +29,13 @@ deep research：<场景描述>
 ## Architecture
 
 ```
-SKILL.md          ← Roadmap（本文件：触发方式 + 流程概览 + 导航）
-ROADMAP.md        ← 全景执行路径（完整数据流 + 上下文加载地图 + 故障恢复）
+SKILL.md          ← 入口（本文件：触发方式 + 流程概览 + 导航）
 core/             ← 元能力（定义方法论，稳定不常变）
 plugins/          ← 增强插件（可热插拔的能力扩展）
 environment/      ← 环境探测（多 Agent 能力探测 + 适配协议）
 references/       ← 流程控制
   ├── pre-process.md    ← 前处理编排（纯胶水，调用 processes/）
-  ├── post-process.md   ← 后处理编排（两阶段管线 + 执行协议 + barrier）
+  ├── post-process.md   ← 后处理编排（三阶段管线 + 执行协议 + barrier）
   └── processes/        ← 步骤实现（无序，可组合）
       ├── scan.md
       ├── decompose.md
@@ -79,8 +78,8 @@ references/       ← 流程控制
 编排文件定义步骤顺序，processes/ 定义步骤实现。
 
 - **Pre-process** — 前处理编排：[references/pre-process.md](references/pre-process.md)
-- **Post-process** — 后处理编排（两阶段管线 + 执行协议）：[references/post-process.md](references/post-process.md)
-- **Processes/** — 步骤实现（8 个可组合的独立模块）：
+- **Post-process** — 后处理编排（三阶段管线 + 执行协议）：[references/post-process.md](references/post-process.md)
+- **Processes/** — 步骤实现（9 个可组合的独立模块）：
   - [scan.md](references/processes/scan.md) — 广域扫描
   - [decompose.md](references/processes/decompose.md) — 架构分词
   - [capability-extract.md](references/processes/capability-extract.md) — 原子能力提取 → 输出 `.meta/capability-graph.json`
@@ -89,6 +88,7 @@ references/       ← 流程控制
   - [capability-research.md](references/processes/capability-research.md) — 能力研究（双写：主文件 + summary.json）→ 输出 `capabilities/` + `.meta/summaries/`
   - [briefing-assemble.md](references/processes/briefing-assemble.md) — Briefing 组装（从 summary.json 定向提取）→ 输出 `.meta/briefings/`
   - [assemble.md](references/processes/assemble.md) — 材料块组装（接收 briefing，只写不读）→ 输出 `<序号>-<命题简称>/`
+  - [learning-ladder.md](references/processes/learning-ladder.md) — 学习阶梯生成（单线程，拓扑排序→渐进路径）→ 输出 `<序号>-<命题简称>/learning-ladder.md`
 
 ## 上下文加载策略
 
@@ -112,6 +112,7 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 | 命题组装阶段 | plugins/capability-research-mode.md + processes/assemble.md | — |
 | 指令含 `--year` | 同上 | plugins/year-granularity.md |
 | 指令含 `--no-experiment` | 同上 | 象限IV 相关可省略 |
+| 学习阶梯生成阶段 | processes/learning-ladder.md + capability-graph.json + summaries + 命题产出 | — |
 | 后处理启动时 | environment/probe-protocol.md | — |
 
 ### 禁止事项
@@ -132,7 +133,7 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 
 ## Post-processing Flow
 
-> ⛔ **两阶段必须顺序执行，有显式 barrier。详见 [post-process.md](references/post-process.md) §执行协议。**
+> ⛔ **三阶段必须顺序执行，有显式 barrier。详见 [post-process.md](references/post-process.md) §执行协议。**
 
 **阶段一：能力研究（并行）**
 - 读取 `.meta/capability-graph.json`，识别需要研究的原子能力
@@ -152,6 +153,14 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 - ⚠️ spawn 后按环境档案 `preserve_level` 执行主线程保全（单例窗口下主线程易丢失）
 - 组装 agent **只写不读**，不读取 `capabilities/` 下的任何文件
 - 产出：按命题组织的深度研究 `<序号>-<命题简称>/`
+- **⛔ 全部完成后才能进入阶段三**
+
+**阶段三：学习阶梯生成（单线程）**
+- 对每个已组装的命题，主 agent 直接生成 `learning-ladder.md`
+- 基于 capability-graph.json 的能力依赖图做拓扑排序，确定学习顺序
+- 将依赖层次归纳为 3-4 个理解阶段，每步给出具体的"做什么→看到什么→说明什么→去哪"
+- 引用 pipeline 内产出（overview/experiment/trade-offs/summaries），不重写内容
+- 产出：`<序号>-<命题简称>/learning-ladder.md`
 
 ## Output Structure
 
@@ -167,7 +176,8 @@ workflow/research/
 │   ├── experiment/                    # Q4: 实验组装
 │   │   ├── README.md
 │   │   └── src/
-│   └── references.md                  # 参考资料
+│   ├── references.md                  # 参考资料
+│   └── learning-ladder.md             # 学习阶梯（阶段三产出，渐进式引导）
 │
 ├── 02-首屏白屏/
 │   └── ...
@@ -194,10 +204,11 @@ workflow/research/
         └── ...
 ```
 
-### 三层用户价值
+### 四层用户价值
 
 | 层 | 目录 | 用户价值 | 使用场景 |
 |----|------|---------|---------|
+| 学习阶梯 | `<序号>-<命题简称>/learning-ladder.md` | 渐进式引导，从不会到会 | 系统学习一个命题，跟着阶梯走 |
 | 命题研究 | `<序号>-<命题简称>/` | 面试场景的深度答案 | 面试前针对特定命题速查 |
 | 能力知识库 | `capabilities/` | 跨命题的原子能力参考 | 系统性学习某个技术点 |
 | 学习路径 | `capabilities/README.md` | 战略性修炼地图 | 规划学习优先级 |
