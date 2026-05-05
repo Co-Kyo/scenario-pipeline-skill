@@ -1,0 +1,102 @@
+{
+  "id": "A8",
+  "name": "DevTools性能分析",
+  "tech_layer": "工具",
+  "fanout": "6/8",
+  "coupling": 1,
+  "strategic_value": 6.0,
+  "mechanism_summary": "基于浏览器内置工具链的前端性能诊断体系，包含Performance面板录制分析（火焰图/Long Task/帧率）、Memory面板堆快照（Heap Snapshot/Allocation timeline/Allocation sampling）、Lighthouse自动化审计（FCP/LCP/TBT/CLS/SI）、PerformanceObserver API异步观察性能条目（longtask/LCP/CLS/paint/resource）、Long Tasks API主线程阻塞检测（>50ms任务+attribution归属）。",
+  "bottlenecks": [
+    {
+      "name": "JavaScript主线程阻塞",
+      "trigger": "大量同步JS执行、复杂计算未分片",
+      "symptom": "页面卡顿、点击无响应、LCP/INP差",
+      "detection": "Performance面板Main轨道红色块；longtask观察",
+      "mitigation": "任务分片(requestIdleCallback/scheduler.yield())、Web Worker卸载、代码拆分"
+    },
+    {
+      "name": "内存泄漏",
+      "trigger": "事件监听器未移除、闭包持有引用、DOM节点未清理",
+      "symptom": "页面长时间使用后变慢、标签页崩溃、Heap持续增长",
+      "detection": "Memory面板Heap Snapshot对比；Allocation timeline增长曲线",
+      "mitigation": "及时removeEventListener、WeakRef/WeakMap、组件卸载时清理"
+    },
+    {
+      "name": "布局抖动Layout Thrashing",
+      "trigger": "JS中交替读写layout属性",
+      "symptom": "帧率骤降、Rendering轨道密集紫色块",
+      "detection": "Performance面板Rendering轨道；layout事件频繁触发",
+      "mitigation": "批量读写分离、requestAnimationFrame、CSS contain属性"
+    },
+    {
+      "name": "不必要的重绘",
+      "trigger": "频繁修改触发paint的属性(color/box-shadow等)",
+      "symptom": "FPS下降、GPU占用高",
+      "detection": "Performance面板Paint轨道；Rendering面板Paint flashing",
+      "mitigation": "优先使用transform/opacity(仅composite)、will-change提示"
+    },
+    {
+      "name": "资源加载阻塞",
+      "trigger": "大量render-blocking CSS/JS、未优化图片",
+      "symptom": "FCP/LCP延迟、Network轨道阻塞",
+      "detection": "Lighthouse Opportunities报告；Network面板瀑布图",
+      "mitigation": "资源内联/异步加载、图片优化(WebP/AVIF)、preload/preconnect"
+    },
+    {
+      "name": "第三方脚本膨胀",
+      "trigger": "统计/广告/聊天插件等第三方脚本",
+      "symptom": "TBT过高、Long Task集中在第三方域",
+      "detection": "Performance面板Attribution视图；Lighthouse第三方代码审计",
+      "mitigation": "延迟加载(defer/async)、iframe隔离、按需加载"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "dimension": "性能监控精度",
+      "optionA": "PerformanceObserver API(实时精确浏览器原生)",
+      "optionB": "web-vitals库(封装好2KB社区维护)",
+      "recommendation": "生产环境RUM用web-vitals；自定义指标/Long Task细节用PerformanceObserver"
+    },
+    {
+      "dimension": "内存分析深度",
+      "optionA": "Heap Snapshot(完整快照精准但文件大)",
+      "optionB": "Allocation Sampling(采样方式开销低)",
+      "recommendation": "开发环境深度分析用Snapshot；线上持续监控用Sampling"
+    },
+    {
+      "dimension": "性能审计方式",
+      "optionA": "Lighthouse CLI(可集成CI/CD自动回归检测)",
+      "optionB": "DevTools手动运行(交互式可手动复现)",
+      "recommendation": "CI/CD管道用CLI；调试阶段用手动运行"
+    },
+    {
+      "dimension": "Long Task监控",
+      "optionA": "PerformanceObserver+longtask(精确有attribution)",
+      "optionB": "requestAnimationFrame+时间差检测(兼容性好)",
+      "recommendation": "现代浏览器用PerformanceObserver；兼容旧浏览器用rAF方案"
+    },
+    {
+      "dimension": "代码覆盖率分析",
+      "optionA": "Coverage工具(DevTools内置可视化好)",
+      "optionB": "webpack-bundle-analyzer(构建时分析看bundle结构)",
+      "recommendation": "运行时分析用Coverage；构建时优化用bundle-analyzer"
+    },
+    {
+      "dimension": "性能数据上报",
+      "optionA": "sendBeacon(可靠不阻塞页面卸载)",
+      "optionB": "fetch keepalive(灵活可携带更多数据)",
+      "recommendation": "页面卸载时用sendBeacon；普通上报用fetch"
+    }
+  ],
+  "experiment_code": "检测Long Task的最小验证实验：注册PerformanceObserver(type:longtask)观察器 + 人为制造100ms同步阻塞 + 同时注册LCP观察器，在DevTools中验证Long Task红色标记和attribution归属",
+  "references": [
+    "https://developer.chrome.com/docs/devtools/performance/",
+    "https://developer.chrome.com/docs/devtools/memory/",
+    "https://web.dev/articles/performance-devtools",
+    "https://developer.mozilla.org/en-US/docs/Web/API/PerformanceObserver",
+    "https://developer.mozilla.org/en-US/docs/Web/API/PerformanceLongTaskTiming",
+    "https://github.com/GoogleChrome/web-vitals",
+    "https://developer.chrome.com/docs/lighthouse/",
+    "https://developer.chrome.com/docs/devtools/coverage/"
+  ]
+}

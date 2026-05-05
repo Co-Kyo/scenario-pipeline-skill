@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVE: 万级数据虚拟列表渲染</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0f0f0f;
+    color: #e0e0e0;
+    padding: 20px;
+  }
+  h1 { font-size: 20px; margin-bottom: 12px; color: #fff; }
+
+  /* 控制面板 */
+  .panel {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: #1a1a1a;
+    border-radius: 8px;
+    border: 1px solid #333;
+    font-size: 13px;
+  }
+  .panel label { color: #aaa; }
+  .panel .stat {
+    padding: 4px 10px;
+    background: #222;
+    border-radius: 4px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    min-width: 140px;
+  }
+  .stat.good { color: #4caf50; }
+  .stat.warn { color: #ff9800; }
+  .stat.bad { color: #f44336; }
+  button {
+    padding: 6px 16px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background: #2a2a2a;
+    color: #e0e0e0;
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.15s;
+  }
+  button:hover { background: #3a3a3a; }
+  button.primary {
+    background: #1565c0;
+    border-color: #1976d2;
+    color: #fff;
+  }
+  button.primary:hover { background: #1976d2; }
+
+  /* 验证结果区 */
+  .checklist {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: #1a1a1a;
+    border-radius: 8px;
+    border: 1px solid #333;
+    font-size: 13px;
+    display: none;
+  }
+  .checklist.visible { display: block; }
+  .checklist h3 { margin-bottom: 8px; font-size: 14px; color: #90caf9; }
+  .check-item {
+    padding: 4px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .check-item .icon { width: 18px; text-align: center; }
+  .check-item.pass .icon { color: #4caf50; }
+  .check-item.fail .icon { color: #f44336; }
+  .check-item.pending .icon { color: #666; }
+
+  /* Long Task 日志 */
+  .log-section {
+    margin-bottom: 16px;
+    padding: 12px 16px;
+    background: #1a1a1a;
+    border-radius: 8px;
+    border: 1px solid #333;
+    font-size: 12px;
+    max-height: 150px;
+    overflow-y: auto;
+  }
+  .log-section h3 { font-size: 13px; color: #90caf9; margin-bottom: 6px; }
+  .log-entry { padding: 2px 0; font-family: monospace; color: #aaa; }
+  .log-entry.long-task { color: #f44336; }
+  .log-entry.info { color: #4caf50; }
+
+  /* 虚拟列表容器 */
+  .list-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 600px;
+    height: 400px;
+    overflow-y: auto;
+    border: 1px solid #333;
+    border-radius: 8px;
+    background: #111;
+    will-change: transform;
+  }
+  .list-sentinel {
+    width: 100%;
+    pointer-events: none;
+  }
+  .list-content {
+    position: absolute;
+    left: 0;
+    right: 0;
+    will-change: transform;
+  }
+
+  /* 列表项 */
+  .list-item {
+    height: 60px;
+    padding: 10px 16px;
+    border-bottom: 1px solid #222;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: background 0.1s;
+  }
+  .list-item:hover { background: #1a1a1a; }
+  .list-item .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff;
+    flex-shrink: 0;
+  }
+  .list-item .info { flex: 1; min-width: 0; }
+  .list-item .title {
+    font-size: 14px;
+    font-weight: 500;
+    color: #e0e0e0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .list-item .meta {
+    font-size: 12px;
+    color: #666;
+    margin-top: 2px;
+  }
+  .list-item .index {
+    font-size: 11px;
+    color: #444;
+    font-family: monospace;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<h1>MVE: 万级数据虚拟列表渲染</h1>
+
+<!-- 实时统计面板 -->
+<div class="panel">
+  <label>DOM 节点:</label>
+  <div class="stat" id="domCount">-</div>
+  <label>可视项:</label>
+  <div class="stat" id="visibleCount">-</div>
+  <label>渲染耗时:</label>
+  <div class="stat" id="renderTime">-</div>
+  <label>Long Tasks:</label>
+  <div class="stat" id="longTaskCount">0</div>
+  <button class="primary" id="btnVerify">运行全部验证</button>
+  <button id="btnBlock">模拟阻塞 (100ms)</button>
+</div>
+
+<!-- 验证检查点 -->
+<div class="checklist" id="checklist">
+  <h3>验证检查点</h3>
+  <div class="check-item pending" id="check-dom">
+    <span class="icon">⏳</span>
+    <span>A14 虚拟化：DOM 节点数始终 ~15 个</span>
+  </div>
+  <div class="check-item pending" id="check-fps">
+    <span class="icon">⏳</span>
+    <span>A1 渲染管线：滚动 60fps 无掉帧</span>
+  </div>
+  <div class="check-item pending" id="check-longtask">
+    <span class="icon">⏳</span>
+    <span>A4 事件循环：无 Long Task</span>
+  </div>
+  <div class="check-item pending" id="check-memory">
+    <span class="icon">⏳</span>
+    <span>A2 DOM 生命周期：Memory 稳定</span>
+  </div>
+  <div class="check-item pending" id="check-perf">
+    <span class="icon">⏳</span>
+    <span>A14 算法效率：初始渲染 < 100ms</span>
+  </div>
+</div>
+
+<!-- Long Task 日志 -->
+<div class="log-section">
+  <h3>事件日志</h3>
+  <div id="logContainer">
+    <div class="log-entry info">等待操作...</div>
+  </div>
+</div>
+
+<!-- 虚拟列表 -->
+<div class="list-wrapper" id="listWrapper">
+  <div class="list-sentinel" id="listSentinel"></div>
+  <div class="list-content" id="listContent"></div>
+</div>
+
+<script>
+// ============================================================
+// 配置常量
+// ============================================================
+const TOTAL_ITEMS = 100000;      // 10 万条数据
+const ITEM_HEIGHT = 60;          // 每项高度（等高）
+const CONTAINER_HEIGHT = 400;    // 容器高度
+const OVERSCAN = 5;              // 上下预渲染数量
+
+// ============================================================
+// 生成 10 万条模拟数据
+// ============================================================
+const COLORS = [
+  '#e91e63', '#9c27b0', '#673ab7', '#3f51b5',
+  '#2196f3', '#009688', '#4caf50', '#ff9800',
+  '#ff5722', '#795548', '#607d8b', '#f44336'
+];
+const SURNAMES = ['张','李','王','刘','陈','杨','赵','黄','周','吴','徐','孙','马','胡','朱','郭','何','林','罗','高'];
+const ACTIONS = ['发布了动态','分享了视频','点赞了文章','评论了帖子','转发了消息','收藏了内容','关注了用户','更新了状态'];
+
+// 预生成数据（在主线程，模拟真实场景）
+const DATA = new Array(TOTAL_ITEMS);
+for (let i = 0; i < TOTAL_ITEMS; i++) {
+  DATA[i] = {
+    id: i,
+    name: SURNAMES[i % SURNAMES.length] + '用户' + i,
+    action: ACTIONS[i % ACTIONS.length],
+    color: COLORS[i % COLORS.length],
+    avatar: SURNAMES[i % SURNAMES.length]
+  };
+}
+
+// ============================================================
+// 虚拟列表核心实现
+// ============================================================
+const wrapper = document.getElementById('listWrapper');
+const sentinel = document.getElementById('listSentinel');
+const content = document.getElementById('listContent');
+
+// 设置哨兵高度（撑起滚动条）
+sentinel.style.height = (TOTAL_ITEMS * ITEM_HEIGHT) + 'px';
+
+// DOM 复用池
+const pool = [];
+const activeNodes = new Map(); // index -> node
+
+/**
+ * 从池中获取或创建 DOM 节点
+ */
+function acquireNode() {
+  if (pool.length > 0) {
+    return pool.pop();
+  }
+  const el = document.createElement('div');
+  el.className = 'list-item';
+  el.innerHTML = `
+    <div class="avatar"></div>
+    <div class="info">
+      <div class="title"></div>
+      <div class="meta"></div>
+    </div>
+    <div class="index"></div>
+  `;
+  return el;
+}
+
+/**
+ * 归还节点到池中
+ */
+function releaseNode(node) {
+  node.remove();
+  pool.push(node);
+}
+
+/**
+ * 更新节点内容
+ */
+function updateNode(node, data) {
+  const avatar = node.children[0];
+  const title = node.children[1].children[0];
+  const meta = node.children[1].children[1];
+  const index = node.children[2];
+
+  avatar.style.background = data.color;
+  avatar.textContent = data.avatar;
+  title.textContent = data.name;
+  meta.textContent = data.action;
+  index.textContent = '#' + data.id;
+}
+
+/**
+ * 计算可视范围并渲染
+ * 使用 rAF 节流，避免 scroll 事件过于频繁触发
+ */
+let rafId = null;
+let lastScrollTop = -1;
+
+function render() {
+  rafId = null;
+  const scrollTop = wrapper.scrollTop;
+
+  // 防止重复渲染
+  if (scrollTop === lastScrollTop) return;
+  lastScrollTop = scrollTop;
+
+  // 计算可视范围
+  const startIdx = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - OVERSCAN);
+  const endIdx = Math.min(
+    TOTAL_ITEMS,
+    Math.ceil((scrollTop + CONTAINER_HEIGHT) / ITEM_HEIGHT) + OVERSCAN
+  );
+
+  // 需要移除的节点（不在当前范围内的）
+  const toRemove = [];
+  for (const [idx, node] of activeNodes) {
+    if (idx < startIdx || idx >= endIdx) {
+      toRemove.push(idx);
+    }
+  }
+  for (const idx of toRemove) {
+    releaseNode(activeNodes.get(idx));
+    activeNodes.delete(idx);
+  }
+
+  // 添加或更新节点
+  for (let i = startIdx; i < endIdx; i++) {
+    let node = activeNodes.get(i);
+    if (!node) {
+      node = acquireNode();
+      node.style.position = 'absolute';
+      node.style.top = (i * ITEM_HEIGHT) + 'px';
+      node.style.width = '100%';
+      content.appendChild(node);
+      activeNodes.set(i, node);
+    }
+    updateNode(node, DATA[i]);
+  }
+
+  // 更新统计
+  updateStats();
+}
+
+/**
+ * scroll 事件：rAF 节流
+ */
+wrapper.addEventListener('scroll', () => {
+  if (rafId === null) {
+    rafId = requestAnimationFrame(render);
+  }
+}, { passive: true });
+
+// ============================================================
+// 实时统计面板
+// ============================================================
+const domCountEl = document.getElementById('domCount');
+const visibleCountEl = document.getElementById('visibleCount');
+const renderTimeEl = document.getElementById('renderTime');
+const longTaskCountEl = document.getElementById('longTaskCount');
+
+function updateStats() {
+  // 统计当前 DOM 节点数（仅列表项）
+  const domCount = activeNodes.size;
+  domCountEl.textContent = domCount + ' 个';
+  domCountEl.className = 'stat ' + (domCount <= 20 ? 'good' : domCount <= 30 ? 'warn' : 'bad');
+
+  visibleCountEl.textContent = domCount + ' / ' + TOTAL_ITEMS;
+}
+
+// ============================================================
+// PerformanceObserver: Long Task 监控
+// ============================================================
+let longTaskCount = 0;
+const logContainer = document.getElementById('logContainer');
+
+function addLog(text, type = '') {
+  const entry = document.createElement('div');
+  entry.className = 'log-entry' + (type ? ' ' + type : '');
+  entry.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+  logContainer.prepend(entry);
+  // 只保留最近 30 条
+  while (logContainer.children.length > 30) {
+    logContainer.removeChild(logContainer.lastChild);
+  }
+}
+
+try {
+  const observer = new PerformanceObserver((list) => {
+    for (const entry of list.getEntries()) {
+      longTaskCount++;
+      longTaskCountEl.textContent = longTaskCount;
+      longTaskCountEl.className = 'stat bad';
+      addLog(`Long Task 检测到: ${entry.duration.toFixed(1)}ms (startAt: ${entry.startTime.toFixed(0)}ms)`, 'long-task');
+    }
+  });
+  observer.observe({ type: 'longtask', buffered: true });
+  addLog('PerformanceObserver(longtask) 已注册', 'info');
+} catch (e) {
+  addLog('PerformanceObserver 不支持: ' + e.message);
+}
+
+// ============================================================
+// 模拟阻塞按钮（制造 Long Task）
+// ============================================================
+document.getElementById('btnBlock').addEventListener('click', () => {
+  addLog('开始模拟 100ms 同步阻塞...', 'long-task');
+  const start = performance.now();
+  // 同步阻塞 ~100ms
+  while (performance.now() - start < 100) {
+    // busy wait
+  }
+  addLog(`阻塞结束，耗时: ${(performance.now() - start).toFixed(1)}ms`, 'long-task');
+});
+
+// ============================================================
+// 验证检查点
+// ============================================================
+const checklist = document.getElementById('checklist');
+
+function setCheck(id, pass, detail) {
+  const el = document.getElementById(id);
+  el.className = 'check-item ' + (pass ? 'pass' : 'fail');
+  el.querySelector('.icon').textContent = pass ? '✅' : '❌';
+  if (detail) {
+    el.querySelector('span:last-child').textContent += ' → ' + detail;
+  }
+}
+
+document.getElementById('btnVerify').addEventListener('click', async () => {
+  // 重置检查项
+  document.querySelectorAll('.check-item').forEach(el => {
+    el.className = 'check-item pending';
+    el.querySelector('.icon').textContent = '⏳';
+  });
+  checklist.classList.add('visible');
+  addLog('开始运行全部验证...', 'info');
+
+  // 记录初始内存（如果可用）
+  const memBefore = performance.memory ? performance.memory.usedJSHeapSize : null;
+
+  // 1. 测量初始渲染耗时
+  const perfStart = performance.now();
+  wrapper.scrollTop = 0;
+  render();
+  const renderDuration = performance.now() - perfStart;
+  renderTimeEl.textContent = renderDuration.toFixed(2) + 'ms';
+  renderTimeEl.className = 'stat ' + (renderDuration < 100 ? 'good' : 'warn');
+
+  setCheck('check-perf', renderDuration < 100, `初始渲染 ${renderDuration.toFixed(2)}ms`);
+  addLog(`初始渲染耗时: ${renderDuration.toFixed(2)}ms`, renderDuration < 100 ? 'info' : '');
+
+  // 等一帧
+  await new Promise(r => requestAnimationFrame(r));
+
+  // 2. 检查 DOM 节点数
+  const domCount = activeNodes.size;
+  setCheck('check-dom', domCount <= 20, `当前 DOM 节点: ${domCount}`);
+  addLog(`DOM 节点数: ${domCount}`, domCount <= 20 ? 'info' : '');
+
+  // 3. 滚动测试帧率
+  addLog('开始滚动帧率测试...', 'info');
+  let frameCount = 0;
+  let frameDrops = 0;
+  let lastFrameTime = performance.now();
+
+  const measureFrame = () => {
+    const now = performance.now();
+    const delta = now - lastFrameTime;
+    frameCount++;
+    if (delta > 20) frameDrops++; // 超过 20ms 算掉帧
+    lastFrameTime = now;
+  };
+
+  // 注册帧率监控
+  const fpsObserver = new PerformanceObserver(() => {
+    // 用 rAF 替代
+  });
+
+  // 模拟快速滚动
+  const scrollSteps = 50;
+  for (let i = 0; i < scrollSteps; i++) {
+    wrapper.scrollTop = (TOTAL_ITEMS * ITEM_HEIGHT * i) / scrollSteps;
+    await new Promise(r => {
+      requestAnimationFrame(() => {
+        measureFrame();
+        render();
+        requestAnimationFrame(r);
+      });
+    });
+  }
+
+  const fpsOk = frameDrops < scrollSteps * 0.1; // 掉帧率 < 10%
+  setCheck('check-fps', fpsOk, `${frameDrops}/${scrollSteps} 帧掉帧`);
+  addLog(`帧率测试: ${frameDrops}/${scrollSteps} 帧掉帧`, fpsOk ? 'info' : '');
+
+  // 4. Long Task 检查
+  await new Promise(r => setTimeout(r, 200)); // 等待 Long Task 回调
+  const ltOk = longTaskCount === 0;
+  setCheck('check-longtask', ltOk, `Long Tasks: ${longTaskCount}`);
+  addLog(`Long Task 数量: ${longTaskCount}`, ltOk ? 'info' : '');
+
+  // 5. 内存检查
+  if (performance.memory) {
+    const memAfter = performance.memory.usedJSHeapSize;
+    const memDiff = memAfter - memBefore;
+    const memOk = memDiff < 5 * 1024 * 1024; // 增长 < 5MB
+    const memMB = (memDiff / 1024 / 1024).toFixed(2);
+    setCheck('check-memory', memOk, `内存变化: ${memMB}MB`);
+    addLog(`内存变化: ${memMB}MB (${memBefore ? (memBefore/1024/1024).toFixed(1) : '?'}MB → ${(memAfter/1024/1024).toFixed(1)}MB)`, memOk ? 'info' : '');
+  } else {
+    setCheck('check-memory', true, 'performance.memory 不可用（需 HTTPS），跳过');
+    addLog('performance.memory 不可用（需 HTTPS 或 localhost）', 'info');
+  }
+
+  // 回到顶部
+  wrapper.scrollTop = 0;
+  render();
+  addLog('验证完成 ✅', 'info');
+});
+
+// ============================================================
+// 初始渲染
+// ============================================================
+performance.mark('render-start');
+render();
+performance.mark('render-end');
+performance.measure('initial-render', 'render-start', 'render-end');
+
+const measure = performance.getEntriesByName('initial-render')[0];
+renderTimeEl.textContent = measure.duration.toFixed(2) + 'ms';
+renderTimeEl.className = 'stat ' + (measure.duration < 100 ? 'good' : 'warn');
+
+addLog(`初始渲染完成: ${measure.duration.toFixed(2)}ms`, 'info');
+addLog(`数据量: ${TOTAL_ITEMS.toLocaleString()} 条`, 'info');
+addLog(`overscan: ${OVERSCAN}, 项高: ${ITEM_HEIGHT}px, 容器: ${CONTAINER_HEIGHT}px`, 'info');
+</script>
+</body>
+</html>

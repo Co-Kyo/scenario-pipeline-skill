@@ -1,0 +1,33 @@
+{
+  "id": "A7",
+  "name": "资源加载策略",
+  "tech_layer": "网络",
+  "fanout": "3/8",
+  "coupling": 1,
+  "strategic_value": 3.0,
+  "mechanism_summary": "通过浏览器原生 Resource Hints（preload/prefetch/preconnect/dns-prefetch）和现代加载属性（loading='lazy'/fetchpriority）实现资源优先级调度。preload 用于当前导航关键资源的高优先级预加载（需指定 as 属性），prefetch 用于未来导航资源的低优先级预获取，preconnect 提前完成 DNS+TCP+TLS 握手，lazy loading 延迟非首屏资源加载，fetchpriority 在同类资源内微调优先级（high/low/auto）。这些机制共同作用于浏览器的内部优先级模型，直接影响 LCP、FCP 等 Core Web Vitals。",
+  "bottlenecks": [
+    "preload 未被使用导致带宽浪费和 Console 警告",
+    "preload 与实际请求的 CORS 模式不匹配导致双重下载",
+    "过多 prefetch 与首屏关键资源争抢带宽导致 LCP 退化",
+    "preconnect 超过 6 个域名浪费 DNS/TCP 资源",
+    "首屏 LCP 图片错误使用 loading='lazy' 导致 LCP 延迟",
+    "所有资源都设为 fetchpriority='high' 导致优先级提示失效",
+    "preload 写在 CSS @import 内或动态注入太晚失去预加载意义"
+  ],
+  "tradeoffs": [
+    "preload 当前关键资源 vs prefetch 未来页面资源：首屏优先用 preload，交互后用 prefetch，preload 控制在 5 个以内",
+    "原生 lazy loading vs Intersection Observer JS 懒加载：优先用原生零成本方案，需要自定义阈值时用 IO",
+    "preconnect vs dns-prefetch：关键第三方域名用 preconnect，其余用 dns-prefetch，每页 preconnect 不超过 6 个"
+  ],
+  "experiment_code": null,
+  "references": [
+    "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/link",
+    "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/rel/preload",
+    "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Attributes/fetchpriority",
+    "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/img#loading",
+    "https://web.dev/articles/preload-critical-assets",
+    "https://web.dev/articles/fetch-priority",
+    "https://developer.mozilla.org/en-US/docs/Web/Performance/Guides/Speculative_loading"
+  ]
+}

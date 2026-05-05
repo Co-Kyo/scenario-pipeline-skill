@@ -1,0 +1,33 @@
+{
+  "id": "A14",
+  "name": "虚拟化算法",
+  "tech_layer": "算法",
+  "fanout": "1/8",
+  "coupling": 1,
+  "strategic_value": 1.0,
+  "mechanism_summary": "通过仅渲染可视区域内元素实现 DOM 节点数与数据量解耦。核心组成：①可视区域计算（scrollTop + clientHeight → startIndex/endIndex，变高列表用前缀和+二分查找）②动态高度预估（preHeight 预设 → 渲染后 clientHeight 修正 → 缓存 allHeightList）③滚动锚定（overscan 缓冲区 + rAF 节流防止跳动）④DOM 复用池（离开视口的节点回收复用，避免反复 createElement/removeChild）⑤IntersectionObserver（异步观察元素交叉状态，用于懒加载/预加载/广告可见性追踪，支持 rootMargin 扩展检测区域和 threshold 阈值数组）",
+  "bottlenecks": [
+    "变高列表滚动跳动：高度差异大+快速滚动时内容闪烁，需 overscan+高度缓存+平滑锚定",
+    "首屏白屏/CLS：预估高度偏差大导致布局偏移，需预估取中位数+骨架屏",
+    "滚动回调性能瓶颈：高频 scroll+复杂计算导致掉帧，需 rAF 节流或改用 IntersectionObserver",
+    "内存泄漏：DOM 池/Observer 未清理导致内存增长，需 disconnect+限制池大小",
+    "搜索/跳转定位失败：高度缓存不完整导致 scrollToIndex 偏移，需二分查找前缀和",
+    "动态插入/删除项：数据源变更导致索引偏移，需唯一 key+变更时重算 offset",
+    "IntersectionObserver 回调延迟：trackVisibility 开启后计算开销大，需增大 delay 阈值"
+  ],
+  "tradeoffs": [
+    "等高 vs 变高：等高用除法 O(1) 定位，变高用前缀和+二分 O(log n)，能固定高度就固定",
+    "DOM 回收 vs 纯销毁：回收池减少 GC 适合高频滚动，纯销毁实现简单适合低频场景",
+    "IntersectionObserver vs scroll 事件：IO 异步不阻塞主线程适合预加载，scroll 实时性高适合精确定位",
+    "Overscan 大小：小区间内存低，大区间滚动平滑，按场景权衡"
+  ],
+  "experiment_code": "最小验证实验：10 万条等高列表，固定容器 400px，overscan=5，DOM 池复用，rAF 节流 scroll 回调。验证：Elements 面板确认 DOM 节点数始终 ~15 个；Performance 面板确认 60fps 无 Long Task；Memory 面板确认无内存泄漏。详见 A14-虚拟化算法.md",
+  "references": [
+    "https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API",
+    "https://web.dev/articles/virtual-scroller",
+    "https://blog.csdn.net/weixin_47030180/article/details/136538411",
+    "https://github.com/Akryum/vue-virtual-scroller",
+    "https://github.com/bvaughn/react-window",
+    "https://github.com/petyosi/react-virtuoso"
+  ]
+}

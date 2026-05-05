@@ -1,0 +1,34 @@
+{
+  "id": "A9",
+  "name": "模块系统与构建优化",
+  "tech_layer": "构建",
+  "fanout": "2/8",
+  "coupling": 2,
+  "strategic_value": 2.0,
+  "mechanism_summary": "ES Module的静态import/export结构使构建工具能在编译期分析完整依赖图，这是Tree Shaking的前提。动态import()返回Promise实现按需加载，构建工具将其识别为split point自动生成独立chunk。Tree Shaking通过usedExports标记和sideEffects剪枝两层机制消除死代码——sideEffects声明允许跳过整个模块子树。Code Splitting有三种策略：Entry Points手动分割、SplitChunksPlugin自动提取公共依赖、Dynamic Import按需加载。Vite利用浏览器原生ESM+esbuild预构建实现极快启动，生产模式基于Rollup打包。",
+  "bottlenecks": [
+    "Tree Shaking失效：CommonJS模块混入、模块顶层副作用、require()动态导入导致未消除死代码",
+    "过度分割：minSize过小导致chunk数量爆炸，HTTP请求激增，首屏加载反而变慢",
+    "重复依赖：多chunk引用同依赖不同版本，同一库被多次打包",
+    "动态import加载抖动：网络不稳定导致chunk加载失败和白屏",
+    "CJS/ESM互操作开销：混合模块系统产生大量shim代码和运行时包装器",
+    "构建缓存失效频繁：模块边界不合理导致增量构建缓存命中率低"
+  ],
+  "tradeoffs": [
+    "分割粒度：粗粒度（少量大chunk）vs 细粒度（大量小chunk），推荐路由级中等粒度",
+    "首屏vs按需：全量打包initial chunk vs 路由/功能动态import，首屏关键路径保持initial",
+    "Tree Shaking vs 兼容性：纯ESM依赖（最佳Tree Shaking）vs CJS依赖（兼容性好），优先选ESM版本",
+    "sideEffects声明：激进false vs 逐文件声明有副作用文件，项目代码推荐false，第三方需验证",
+    "runtime chunk：独立runtimeChunk vs 内联到entry，多入口必须独立，单入口可内联",
+    "缓存策略：contenthash长期缓存 vs 版本号短期缓存，生产环境必须用contenthash"
+  ],
+  "experiment_code": "// 实验：验证Tree Shaking\n// 1. 创建src/math.js导出add/subtract/multiply/divide\n// 2. main.js仅import { add } from './math.js'\n// 3. webpack production模式构建，检查bundle中subtract/multiply/divide是否被消除\n// 4. 添加package.json的\"sideEffects\": false后重新构建对比\n// 5. 用webpack-bundle-analyzer可视化验证",
+  "references": [
+    "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import",
+    "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Modules",
+    "https://webpack.js.org/guides/code-splitting/",
+    "https://webpack.js.org/guides/tree-shaking/",
+    "https://webpack.js.org/plugins/split-chunks-plugin/",
+    "https://web.dev/articles/reduce-javascript-payloads-with-code-splitting"
+  ]
+}

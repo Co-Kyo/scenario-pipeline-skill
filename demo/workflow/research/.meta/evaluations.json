@@ -1,0 +1,106 @@
+[
+  {
+    "id": "P1",
+    "title": "长列表：万级数据的虚拟列表渲染——社交动态流/商品瀑布流场景",
+    "scores": {
+      "cross_stack": { "score": 3, "reason": "跨算法+浏览器+内存+交互4层" },
+      "doc_vacuum": { "score": 2, "reason": "社区有零散博客但无全链路文档，需跨3+篇拼凑" },
+      "experience_barrier": { "score": 2, "reason": "万级数据+动态高度在真实项目中才暴露性能瓶颈" },
+      "trend": { "score": 3, "reason": "近1月多平台密集讨论，大厂面试高频题" }
+    },
+    "total": 10,
+    "verdict": "high",
+    "reason": "跨栈耦合强+时事热度高+经验壁垒明确"
+  },
+  {
+    "id": "P2",
+    "title": "首屏白屏：SSR/SSG/CSR混合渲染的首屏加载优化——LCP≤1s目标",
+    "scores": {
+      "cross_stack": { "score": 3, "reason": "跨网络+浏览器+协议+框架4层" },
+      "doc_vacuum": { "score": 2, "reason": "Nuxt/Next有官方文档但全链路优化需拼凑" },
+      "experience_barrier": { "score": 2, "reason": "真实项目中的hydration性能问题需踩坑" },
+      "trend": { "score": 3, "reason": "Core Web Vitals成为排名因素，持续高频" }
+    },
+    "total": 10,
+    "verdict": "high",
+    "reason": "全链路复杂+SEO排名驱动+持续热度"
+  },
+  {
+    "id": "P3",
+    "title": "内存泄漏：长时间运行页面的内存泄漏排查与治理——H5/SPA场景",
+    "scores": {
+      "cross_stack": { "score": 2, "reason": "跨JS引擎+浏览器+DOM 3层" },
+      "doc_vacuum": { "score": 2, "reason": "MDN有基础文档但实战排查需经验积累" },
+      "experience_barrier": { "score": 3, "reason": "需真实H5页面运行10min+才能复现，纯学习无法深入" },
+      "trend": { "score": 2, "reason": "常驻考点，近1月有讨论" }
+    },
+    "total": 9,
+    "verdict": "high",
+    "reason": "经验壁垒极高+排查能力稀缺"
+  },
+  {
+    "id": "P4",
+    "title": "Core Web Vitals：LCP/CLS/INP三项核心指标的全链路优化",
+    "scores": {
+      "cross_stack": { "score": 3, "reason": "跨浏览器+网络+JS引擎+CSS 4层" },
+      "doc_vacuum": { "score": 1, "reason": "Google有官方文档(web.dev)但实战优化需拼凑" },
+      "experience_barrier": { "score": 2, "reason": "需真实项目中定位CWV瓶颈" },
+      "trend": { "score": 3, "reason": "Google排名因素，持续高频，INP取代FID是新热点" }
+    },
+    "total": 9,
+    "verdict": "high",
+    "reason": "SEO驱动+指标体系完整+INP新热点"
+  },
+  {
+    "id": "P5",
+    "title": "缓存策略：HTTP强缓存/协商缓存在浏览器+CDN+Service Worker三层的协作机制",
+    "scores": {
+      "cross_stack": { "score": 3, "reason": "跨协议+网络+浏览器+构建4层" },
+      "doc_vacuum": { "score": 2, "reason": "单层文档充足但三层协作机制需拼凑" },
+      "experience_barrier": { "score": 2, "reason": "CDN+SW的协作需真实部署环境才能理解" },
+      "trend": { "score": 1, "reason": "经典考点，近期无新讨论" }
+    },
+    "total": 8,
+    "verdict": "high",
+    "reason": "三层协作链路复杂+面试经典"
+  },
+  {
+    "id": "P6",
+    "title": "构建产物：Code Splitting/Tree Shaking/懒加载的工程化配置与效果验证",
+    "scores": {
+      "cross_stack": { "score": 2, "reason": "跨模块系统+构建工具+浏览器3层" },
+      "doc_vacuum": { "score": 1, "reason": "Webpack/Vite官方文档覆盖较好" },
+      "experience_barrier": { "score": 2, "reason": "需真实项目中配置splitChunks并验证效果" },
+      "trend": { "score": 2, "reason": "Vite生态持续讨论" }
+    },
+    "total": 7,
+    "verdict": "high",
+    "reason": "工程化必备+Vite迁移热点"
+  },
+  {
+    "id": "P7",
+    "title": "渲染性能：重排重绘的触发机制与CSS Containment/合成层优化",
+    "scores": {
+      "cross_stack": { "score": 2, "reason": "跨浏览器+CSS+JS引擎3层" },
+      "doc_vacuum": { "score": 1, "reason": "MDN有较完整文档" },
+      "experience_barrier": { "score": 2, "reason": "需用DevTools实测重排影响范围" },
+      "trend": { "score": 2, "reason": "CSS contain等新特性持续讨论" }
+    },
+    "total": 7,
+    "verdict": "high",
+    "reason": "渲染底层基础+新CSS特性"
+  },
+  {
+    "id": "P8",
+    "title": "长任务拆分：requestIdleCallback/Web Worker的主线程卸载策略",
+    "scores": {
+      "cross_stack": { "score": 2, "reason": "跨浏览器+JS引擎+多线程3层" },
+      "doc_vacuum": { "score": 2, "reason": "API文档充足但实际调度策略需经验" },
+      "experience_barrier": { "score": 2, "reason": "需真实场景中拆分长任务并验证INP改善" },
+      "trend": { "score": 2, "reason": "INP取代FID后，长任务优化热度上升" }
+    },
+    "total": 8,
+    "verdict": "high",
+    "reason": "INP驱动+主线程优化是新趋势"
+  }
+]

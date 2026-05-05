@@ -1,0 +1,76 @@
+{
+  "id": "A11",
+  "name": "ServiceWorker编程式缓存",
+  "tech_layer": "浏览器",
+  "fanout": "1/8",
+  "coupling": 1,
+  "strategic_value": 1.0,
+  "mechanism_summary": "Service Worker作为浏览器后台独立JS线程，通过事件驱动模型（install/activate/fetch三阶段生命周期）拦截网络请求，结合Cache API（Request/Response对的持久化KV存储）实现编程式缓存控制。核心缓存策略包括：Cache-First（缓存优先，适合静态资源）、Network-First（网络优先，适合动态内容离线兜底）、Stale-While-Revalidate（立即返回缓存+后台更新，适合高频读低频写）、Cache-Only/Network-Only（极端场景）。关键接口：navigator.serviceWorker.register()注册、caches.open()/match()/put()操作缓存、FetchEvent.respondWith()拦截请求。需注意：Cache API不遵循HTTP缓存头、跨域opaque响应限制、浏览器配额限制、版本管理与清理机制。",
+  "bottlenecks": [
+    {
+      "name": "缓存版本污染",
+      "trigger": "版本号未更新或旧缓存未清理",
+      "symptom": "用户加载到过时资源，界面行为异常",
+      "mitigation": "使用内容哈希命名缓存；activate事件中清理旧缓存"
+    },
+    {
+      "name": "首次加载延迟",
+      "trigger": "SW注册+安装+激活耗时",
+      "symptom": "首次访问页面白屏或加载变慢",
+      "mitigation": "InstallEvent.addRoutes()静态路由绕过SW；skipWaiting+clients.claim加速接管"
+    },
+    {
+      "name": "缓存配额溢出",
+      "trigger": "缓存数据超出浏览器单源配额",
+      "symptom": "新资源无法写入，旧缓存被浏览器强制清除",
+      "mitigation": "LRU淘汰策略；限制缓存资源数量；navigator.storage.estimate()监控"
+    },
+    {
+      "name": "跨域缓存失败",
+      "trigger": "跨域请求返回opaque响应",
+      "symptom": "缓存match失败或无法检查响应状态",
+      "mitigation": "使用CORS模式请求；接受opaque响应限制"
+    },
+    {
+      "name": "缓存一致性问题",
+      "trigger": "多标签页/多实例同时操作缓存",
+      "symptom": "不同标签页显示不同版本内容",
+      "mitigation": "版本化缓存名+消息通道通知客户端更新"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "dimension": "激活策略",
+      "option_a": "skipWaiting+clients.claim立即接管（实时性高）",
+      "option_b": "等待自然激活（稳定性高）",
+      "recommendation": "实时性要求高的应用用A；稳定性要求高的用B配合新版本提示"
+    },
+    {
+      "dimension": "缓存粒度",
+      "option_a": "整页缓存App Shell模式",
+      "option_b": "单资源细粒度缓存",
+      "recommendation": "SPA/PWA用A；内容型网站用B便于差异化策略"
+    },
+    {
+      "dimension": "离线策略",
+      "option_a": "Network-First全局应用（简单）",
+      "option_b": "按资源类型混合策略（灵活）",
+      "recommendation": "简单场景用A快速上线；生产环境用B"
+    },
+    {
+      "dimension": "工具链",
+      "option_a": "手写SW（理解原理）",
+      "option_b": "Workbox框架（生产可靠）",
+      "recommendation": "学习场景手写；生产环境用Workbox减少出错"
+    }
+  ],
+  "experiment_code": "const CACHE_NAME='demo-v1';self.addEventListener('install',e=>{e.waitUntil(caches.open(CACHE_NAME).then(c=>c.addAll(['/index.html','/style.css','/app.js'])));self.skipWaiting()});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(n=>Promise.all(n.filter(k=>k!==CACHE_NAME).map(k=>caches.delete(k)))));self.clients.claim()});self.addEventListener('fetch',e=>{e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))})",
+  "references": [
+    "https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API",
+    "https://developer.mozilla.org/en-US/docs/Web/API/Cache",
+    "https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API/Using_Service_Workers",
+    "https://web.dev/articles/service-worker-lifecycle",
+    "https://w3c.github.io/ServiceWorker/",
+    "https://developer.chrome.com/docs/workbox/"
+  ]
+}

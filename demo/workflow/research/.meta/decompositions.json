@@ -1,0 +1,126 @@
+[
+  {
+    "id": "P1",
+    "proposition": "长列表：万级数据的虚拟列表渲染——社交动态流/商品瀑布流场景",
+    "qualifier": "前端框架(React/Vue)",
+    "tech_keyword": "虚拟列表",
+    "generic_core": [
+      { "layer": "算法", "capabilities": ["可视区域计算", "动态高度预估", "滚动锚定"] },
+      { "layer": "浏览器", "capabilities": ["渲染管线", "DOM节点生命周期", "重排重绘"] },
+      { "layer": "内存", "capabilities": ["DOM节点回收", "GC压力控制"] },
+      { "layer": "交互", "capabilities": ["滚动性能", "惯性滚动兼容"] }
+    ],
+    "specialization": [
+      { "layer": "React", "capabilities": ["Fiber调度", "react-window/react-virtualized"] },
+      { "layer": "Vue", "capabilities": ["响应式联动", "nextTick调度"] }
+    ],
+    "content_weight": "≥ 80%",
+    "weight_reasoning": "通用层跨算法+浏览器+内存+交互4层，框架层仅提供实现载体"
+  },
+  {
+    "id": "P2",
+    "proposition": "首屏白屏：SSR/SSG/CSR混合渲染的首屏加载优化——LCP≤1s目标",
+    "qualifier": "Nuxt/Next",
+    "tech_keyword": "首屏加载",
+    "generic_core": [
+      { "layer": "网络", "capabilities": ["HTTP缓存", "CDN分发", "资源预加载"] },
+      { "layer": "浏览器", "capabilities": ["关键渲染路径CRP", "渲染阻塞资源", "预加载扫描器"] },
+      { "layer": "协议", "capabilities": ["HTTP/2多路复用", "资源优先级"] }
+    ],
+    "specialization": [
+      { "layer": "框架", "capabilities": ["SSR hydration", "流式渲染", "SSG预渲染"] },
+      { "layer": "框架生态", "capabilities": ["Nuxt/Next配置优化"] }
+    ],
+    "content_weight": "60-80%",
+    "weight_reasoning": "通用层跨网络+浏览器+协议3层，框架层有深度(hydration机制)"
+  },
+  {
+    "id": "P3",
+    "proposition": "内存泄漏：长时间运行页面的内存泄漏排查与治理——H5/SPA场景",
+    "qualifier": "无",
+    "tech_keyword": "内存泄漏",
+    "generic_core": [
+      { "layer": "JS引擎", "capabilities": ["V8 GC机制", "引用链分析", "WeakRef/WeakMap"] },
+      { "layer": "浏览器", "capabilities": ["堆快照Heap Snapshot", "Detached DOM", "内存面板"] },
+      { "layer": "DOM", "capabilities": ["事件监听器泄漏", "定时器清理", "闭包引用"] }
+    ],
+    "specialization": [],
+    "content_weight": "≥ 80%",
+    "weight_reasoning": "纯通用内核，无框架特化层，跨JS引擎+浏览器+DOM 3层"
+  },
+  {
+    "id": "P4",
+    "proposition": "Core Web Vitals：LCP/CLS/INP三项核心指标的全链路优化",
+    "qualifier": "无",
+    "tech_keyword": "Core Web Vitals",
+    "generic_core": [
+      { "layer": "浏览器", "capabilities": ["渲染管线", "布局计算Layout", "绘制Paint", "合成Composite"] },
+      { "layer": "网络", "capabilities": ["资源加载优先级", "TTFB优化", "预加载策略"] },
+      { "layer": "JS引擎", "capabilities": ["长任务检测", "主线程调度", "事件循环"] },
+      { "layer": "CSS", "capabilities": ["布局偏移控制", "contain属性", "will-change"] }
+    ],
+    "specialization": [],
+    "content_weight": "≥ 80%",
+    "weight_reasoning": "纯通用内核，跨浏览器+网络+JS引擎+CSS 4层"
+  },
+  {
+    "id": "P5",
+    "proposition": "缓存策略：HTTP强缓存/协商缓存在浏览器+CDN+Service Worker三层的协作机制",
+    "qualifier": "无",
+    "tech_keyword": "HTTP缓存",
+    "generic_core": [
+      { "layer": "协议", "capabilities": ["Cache-Control", "ETag/Last-Modified", "304协商"] },
+      { "layer": "网络", "capabilities": ["CDN缓存策略", "边缘节点", "回源机制"] },
+      { "layer": "浏览器", "capabilities": ["Service Worker Cache API", "离线策略", "缓存优先级"] },
+      { "layer": "构建", "capabilities": ["文件指纹hash", "缓存失效策略"] }
+    ],
+    "specialization": [],
+    "content_weight": "≥ 80%",
+    "weight_reasoning": "纯通用内核，跨协议+网络+浏览器+构建4层"
+  },
+  {
+    "id": "P6",
+    "proposition": "构建产物：Code Splitting/Tree Shaking/懒加载的工程化配置与效果验证",
+    "qualifier": "Webpack/Vite",
+    "tech_keyword": "构建优化",
+    "generic_core": [
+      { "layer": "模块系统", "capabilities": ["ES Module", "动态import", "模块解析"] },
+      { "layer": "构建工具", "capabilities": ["chunk划分", "splitChunks", "副作用分析"] },
+      { "layer": "浏览器", "capabilities": ["按需加载", "预获取prefetch", "预加载preload"] }
+    ],
+    "specialization": [
+      { "layer": "Webpack", "capabilities": ["optimization.splitChunks", "魔法注释"] },
+      { "layer": "Vite", "capabilities": ["Rollup配置", "动态导入"] }
+    ],
+    "content_weight": "40-60%",
+    "weight_reasoning": "通用层和框架层深度相当，构建工具配置占比大"
+  },
+  {
+    "id": "P7",
+    "proposition": "渲染性能：重排重绘的触发机制与CSS Containment/合成层优化",
+    "qualifier": "无",
+    "tech_keyword": "重排重绘",
+    "generic_core": [
+      { "layer": "浏览器", "capabilities": ["渲染管线", "Layout/Reflow", "Paint/Repaint", "Composite"] },
+      { "layer": "CSS", "capabilities": ["contain属性", "will-change", "transform动画", "图层提升"] },
+      { "layer": "JS引擎", "capabilities": ["读写分离", "批量DOM操作", "requestAnimationFrame"] }
+    ],
+    "specialization": [],
+    "content_weight": "≥ 80%",
+    "weight_reasoning": "纯通用内核，跨浏览器+CSS+JS引擎3层"
+  },
+  {
+    "id": "P8",
+    "proposition": "长任务拆分：requestIdleCallback/Web Worker的主线程卸载策略",
+    "qualifier": "无",
+    "tech_keyword": "长任务",
+    "generic_core": [
+      { "layer": "浏览器", "capabilities": ["事件循环", "requestIdleCallback", "requestAnimationFrame"] },
+      { "layer": "JS引擎", "capabilities": ["主线程阻塞", "长任务检测", "任务调度"] },
+      { "layer": "多线程", "capabilities": ["Web Worker", "postMessage", "SharedArrayBuffer"] }
+    ],
+    "specialization": [],
+    "content_weight": "≥ 80%",
+    "weight_reasoning": "纯通用内核，跨浏览器+JS引擎+多线程3层"
+  }
+]

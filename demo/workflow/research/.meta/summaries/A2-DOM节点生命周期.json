@@ -1,0 +1,98 @@
+{
+  "id": "A2",
+  "name": "DOM节点生命周期",
+  "fanout": "3/8",
+  "coupling": 1,
+  "strategic_value": 3.0,
+  "summary": "DOM节点从创建到回收的完整生命周期管理，包括创建（createElement/createTextNode）、挂载（appendChild/insertBefore）、更新（属性/子树变更）、卸载（removeChild/remove）和垃圾回收五个阶段。核心工程风险是Detached DOM内存泄漏——节点从文档树移除但JS仍持有引用导致无法GC。",
+  "key_concepts": [
+    "DOM树结构与节点类型（Element/Text/Comment/DocumentFragment）",
+    "isConnected属性判断节点连接状态",
+    "DocumentFragment批量插入优化（减少Layout次数）",
+    "Detached DOM：已断开文档树但被JS引用的节点",
+    "事件监听器泄漏：addEventListener未配套removeEventListener",
+    "MutationObserver监听DOM变化",
+    "闭包持有过期DOM引用导致的隐式泄漏",
+    "AbortController.signal统一管理事件监听器生命周期"
+  ],
+  "bottlenecks": [
+    {
+      "id": 1,
+      "name": "Detached DOM 内存泄漏",
+      "priority": "P0",
+      "trigger": "DOM节点被移除后JS仍持有引用（闭包、全局缓存、事件监听器未解绑）",
+      "symptom": "页面内存持续增长，长时间运行后卡顿",
+      "detection": "Chrome DevTools Memory Heap Snapshot过滤Detached",
+      "mitigation": "移除后置空引用；使用WeakRef/WeakMap；AbortController管理监听器"
+    },
+    {
+      "id": 2,
+      "name": "事件监听器泄漏",
+      "priority": "P0",
+      "trigger": "addEventListener后未removeEventListener，SPA路由切换时尤为突出",
+      "symptom": "事件回调重复执行，内存中保留大量闭包",
+      "detection": "Heap Snapshot搜索EventListener对象",
+      "mitigation": "AbortController+signal统一管理；框架onUnmount清理"
+    },
+    {
+      "id": 3,
+      "name": "批量DOM操作触发重排",
+      "priority": "P1",
+      "trigger": "循环中逐个appendChild，每次触发Layout",
+      "symptom": "界面闪烁，FPS下降",
+      "detection": "Performance面板Layout事件密度",
+      "mitigation": "DocumentFragment批量插入；requestAnimationFrame分帧"
+    },
+    {
+      "id": 4,
+      "name": "innerHTML安全与性能",
+      "priority": "P1",
+      "trigger": "innerHTML插入用户输入导致XSS；频繁使用触发子树重建",
+      "symptom": "安全漏洞；事件监听器丢失",
+      "detection": "CSP审计；DOM Snapshot对比",
+      "mitigation": "使用textContent或Trusted Types；优先createElement+appendChild"
+    }
+  ],
+  "tools": [
+    "Chrome DevTools Memory Heap Snapshot",
+    "Chrome DevTools Performance Monitor",
+    "Chrome DevTools Performance Recording",
+    "Chrome DevTools Elements Event Listeners面板",
+    "getEventListeners(node) Console API",
+    "Lighthouse",
+    "Memlab (Meta)",
+    "performance.measureUserAgentSpecificMemory()"
+  ],
+  "tradeoffs": [
+    {
+      "dimension": "批量插入",
+      "optionA": "DocumentFragment（保留已有节点和事件监听器）",
+      "optionB": "innerHTML（更快但销毁已有子树）",
+      "recommendation": "有交互节点用Fragment，纯展示用innerHTML"
+    },
+    {
+      "dimension": "事件绑定",
+      "optionA": "直接addEventListener到每个子节点",
+      "optionB": "事件委托绑定到父节点",
+      "recommendation": "动态列表/大量子节点用事件委托减少监听器数量"
+    },
+    {
+      "dimension": "更新策略",
+      "optionA": "直接操作DOM（原生API）",
+      "optionB": "虚拟DOM Diff（React/Vue）",
+      "recommendation": "小规模确定性更新用原生；复杂UI状态用框架声明式更新"
+    }
+  ],
+  "references": [
+    "https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model",
+    "https://developer.mozilla.org/en-US/docs/Web/API/Node",
+    "https://developer.mozilla.org/en-US/docs/Web/API/Node/isConnected",
+    "https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver",
+    "https://developer.mozilla.org/en-US/docs/Web/API/DocumentFragment",
+    "https://developer.chrome.com/docs/devtools/memory-problems/memory-101",
+    "https://web.dev/articles/dom-ppa",
+    "https://github.com/facebook/memlab",
+    "https://dom.spec.whatwg.org/"
+  ],
+  "generated_at": "2026-05-06T02:06:00+08:00"
+}

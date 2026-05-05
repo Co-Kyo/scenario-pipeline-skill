@@ -1,0 +1,155 @@
+{
+  "id": "A1",
+  "name": "浏览器渲染管线",
+  "tech_layer": "浏览器层",
+  "fanout": "4/8",
+  "coupling": 1,
+  "strategic_value": 4.0,
+  "mechanism_summary": "浏览器渲染管线（Critical Rendering Path）是将 HTML/CSS/JS 转换为屏幕像素的完整流程：DOM 构建 → CSSOM 构建 → 样式计算（Render Tree） → 布局（Layout） → 分层（Layer Tree） → 绘制（Paint） → 光栅化（Raster） → 合成（Composite）。其中 Layout 和 Paint 阶段开销最大，仅触发 Composite 的属性（transform/opacity）性能最优。管线中任何阶段都可能因 JS 介入被重新触发，形成强制同步布局或布局抖动。",
+  "bottlenecks": [
+    {
+      "name": "Layout Thrashing（布局抖动）",
+      "category": "Layout",
+      "priority": "P0",
+      "trigger": "JS 循环中交替读取布局属性（offsetWidth 等）和修改样式",
+      "symptom": "帧率骤降，长任务 >50ms，Main 火焰图密集 Layout 事件",
+      "version_sensitive": false,
+      "affected_tool": "Chrome DevTools Performance → Main",
+      "affected_versions": "所有现代浏览器",
+      "fixed_version": null,
+      "fixed_source": null
+    },
+    {
+      "name": "CSS 渲染阻塞",
+      "category": "Style",
+      "priority": "P0",
+      "trigger": "<link rel='stylesheet'> 阻塞首屏渲染，关键 CSS 体积大或网络慢",
+      "symptom": "FCP 延迟，白屏时间长",
+      "version_sensitive": false,
+      "affected_tool": "Lighthouse → Render-blocking resources",
+      "affected_versions": "所有现代浏览器",
+      "fixed_version": null,
+      "fixed_source": null
+    },
+    {
+      "name": "JS 阻塞 DOM 解析",
+      "category": "Parsing",
+      "priority": "P0",
+      "trigger": "<script> 标签无 async/defer",
+      "symptom": "DOM 构建延迟，TTFB 后长时间无内容渲染",
+      "version_sensitive": false,
+      "affected_tool": "Chrome DevTools Performance → Main",
+      "affected_versions": "所有现代浏览器",
+      "fixed_version": null,
+      "fixed_source": null
+    },
+    {
+      "name": "Paint 开销过大",
+      "category": "Paint",
+      "priority": "P1",
+      "trigger": "复杂 CSS 效果（box-shadow、filter、大图 background）",
+      "symptom": "掉帧，Paint 时间长",
+      "version_sensitive": false,
+      "affected_tool": "Chrome DevTools Performance → Paint 事件",
+      "affected_versions": "所有现代浏览器",
+      "fixed_version": null,
+      "fixed_source": null
+    },
+    {
+      "name": "图层爆炸（Layer Explosion）",
+      "category": "Composite",
+      "priority": "P1",
+      "trigger": "过度使用 will-change 或浏览器隐式创建过多图层",
+      "symptom": "内存暴涨，合成耗时增加，低端设备卡顿",
+      "version_sensitive": false,
+      "affected_tool": "Chrome DevTools → Layers 面板",
+      "affected_versions": "所有现代浏览器",
+      "fixed_version": null,
+      "fixed_source": null
+    },
+    {
+      "name": "强制同步布局（Forced Reflow）",
+      "category": "Layout",
+      "priority": "P1",
+      "trigger": "读取 getBoundingClientRect()/offsetWidth 后立即修改样式",
+      "symptom": "帧率下降，Main 中出现红色长任务标记",
+      "version_sensitive": false,
+      "affected_tool": "Chrome DevTools Performance → Layout 事件",
+      "affected_versions": "所有现代浏览器",
+      "fixed_version": null,
+      "fixed_source": null
+    },
+    {
+      "name": "大图解码阻塞",
+      "category": "Raster",
+      "priority": "P1",
+      "trigger": "高分辨率图片在 Raster 阶段解码耗时过长",
+      "symptom": "主线程阻塞，页面卡死",
+      "version_sensitive": false,
+      "affected_tool": "Chrome DevTools Performance → Raster → Image decode",
+      "affected_versions": "所有现代浏览器",
+      "fixed_version": null,
+      "fixed_source": null
+    }
+  ],
+  "tradeoffs": [
+    {
+      "dimension": "动画实现",
+      "option_a": "top/left 改变位置（触发 Layout + Paint + Composite）",
+      "option_b": "transform: translate()（仅触发 Composite）",
+      "suggestion": "优先使用 transform，性能最优"
+    },
+    {
+      "dimension": "CSS 加载",
+      "option_a": "外部 <link> 全量加载",
+      "option_b": "内联 Critical CSS + 异步加载剩余",
+      "suggestion": "首屏敏感场景用方案 B，减少渲染阻塞"
+    },
+    {
+      "dimension": "图层管理",
+      "option_a": "浏览器自动分层",
+      "option_b": "will-change 手动分层",
+      "suggestion": "混合策略，仅对高优先级动画元素手动分层"
+    },
+    {
+      "dimension": "JS 加载",
+      "option_a": "同步 <script>",
+      "option_b": "script defer/async",
+      "suggestion": "默认使用 defer，独立脚本用 async"
+    },
+    {
+      "dimension": "布局查询",
+      "option_a": "同步读取 offsetWidth",
+      "option_b": "ResizeObserver 异步监听",
+      "suggestion": "优先异步，但精确值场景仍需同步"
+    }
+  ],
+  "experiment_code": "见 workflow/research/capabilities/A1-浏览器渲染管线.md 最小验证实验章节",
+  "references": [
+    {
+      "tier": "T1",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/Performance/Critical_rendering_path",
+      "title": "MDN - Critical Rendering Path"
+    },
+    {
+      "tier": "T1",
+      "url": "https://developer.chrome.com/docs/devtools/performance/",
+      "title": "Chrome DevTools - Performance Panel（fetch 失败）"
+    },
+    {
+      "tier": "T2",
+      "url": "https://web.dev/articles/critical-rendering-path",
+      "title": "web.dev - Critical Rendering Path（fetch 失败）"
+    },
+    {
+      "tier": "T2",
+      "url": "https://www.cnblogs.com/xikui/p/17302436.html",
+      "title": "Chrome DevTools Performance 功能详解"
+    },
+    {
+      "tier": "T2",
+      "url": "https://www.cnblogs.com/MarsPGY/p/15780486.html",
+      "title": "前端性能优化-渲染优化"
+    }
+  ]
+}

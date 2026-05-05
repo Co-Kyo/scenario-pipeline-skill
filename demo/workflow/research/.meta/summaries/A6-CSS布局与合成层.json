@@ -1,0 +1,94 @@
+{
+  "id": "A6",
+  "name": "CSS布局与合成层",
+  "tech_layer": "CSS",
+  "fanout": "2/8",
+  "coupling": 1,
+  "strategic_value": 2.0,
+  "mechanism_summary": "浏览器渲染流水线包含JavaScript→Style→Layout→Paint→Composite五个阶段。CSS contain属性通过size/layout/style/paint四种隔离模式，将元素子树与外部文档解耦，使浏览器可跳过不必要的Layout和Paint重算。content-visibility:auto在contain基础上进一步自动跳过屏幕外元素的渲染，长页面首屏加载可缩短50%-90%。will-change属性向浏览器声明即将变化的属性（如transform/opacity），触发合成层提升，使后续动画仅走Composite阶段（GPU合成，60fps）。合成层提升条件包括will-change指定transform/opacity、transform不为none、backface-visibility:hidden等。核心优化思路：尽可能跳过Layout和Paint，只触发Composite。",
+  "bottlenecks": [
+    {
+      "name": "合成层爆炸（Layer Explosion）",
+      "trigger": "大量元素被提升为合成层（滥用will-change或translateZ(0)）",
+      "symptom": "内存暴涨、GPU显存不足、页面白屏或闪烁",
+      "detection": "Chrome DevTools Layers面板查看合成层数量和内存",
+      "mitigation": "限制合成层数量；动画前后动态管理will-change"
+    },
+    {
+      "name": "Layout Thrashing",
+      "trigger": "JS交替读写布局属性（offsetHeight→style.width循环）",
+      "symptom": "帧率骤降至10-20fps",
+      "detection": "Performance面板Layout任务反复出现",
+      "mitigation": "批量读取后批量写入；requestAnimationFrame分离读写；contain:layout限制范围"
+    },
+    {
+      "name": "Paint抖动（Paint Storm）",
+      "trigger": "大面积repaint（大面积background-color、box-shadow变化）",
+      "symptom": "滚动或动画时掉帧",
+      "detection": "Performance面板Paint任务耗时>4ms",
+      "mitigation": "contain:paint隔离绘制区域；用transform替代top/left动画"
+    },
+    {
+      "name": "content-visibility滚动跳动",
+      "trigger": "使用content-visibility:auto但未设置contain-intrinsic-size",
+      "symptom": "长列表滚动时滚动条突然跳动",
+      "detection": "滚动测试",
+      "mitigation": "始终配合contain-intrinsic-size使用"
+    },
+    {
+      "name": "will-change内存泄漏",
+      "trigger": "样式表中静态设置will-change且不移除",
+      "symptom": "合成层常驻内存，GPU显存持续增长",
+      "detection": "Chrome DevTools Layers面板查看常驻层",
+      "mitigation": "JS动态管理：动画前设置，动画后清除为auto"
+    },
+    {
+      "name": "contain导致布局错乱",
+      "trigger": "对position:fixed或counter元素添加contain:layout/style",
+      "symptom": "fixed定位相对contain元素而非viewport；counter被重置",
+      "detection": "视觉检查",
+      "mitigation": "理解contain副作用：layout containment创建新containing block；style containment隔离counter"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "dimension": "动画属性选择",
+      "option_a": "top/left位移动画（触发Layout+Paint）",
+      "option_b": "transform:translate位移动画（仅触发Composite）",
+      "recommendation": "选B，性能差距可达10倍以上"
+    },
+    {
+      "dimension": "合成层管理策略",
+      "option_a": "静态will-change全局应用",
+      "option_b": "动态JS管理，动画前后切换",
+      "recommendation": "选B，避免合成层常驻内存"
+    },
+    {
+      "dimension": "contain粒度",
+      "option_a": "根元素contain:strict",
+      "option_b": "组件级contain:content",
+      "recommendation": "选B，组件级隔离副作用小"
+    },
+    {
+      "dimension": "长列表优化",
+      "option_a": "content-visibility:auto零JS成本",
+      "option_b": "手动虚拟滚动",
+      "recommendation": "简单列表选A，超大数据量和复杂交互选B"
+    },
+    {
+      "dimension": "GPU加速",
+      "option_a": "translateZ(0)强制提升",
+      "option_b": "依赖浏览器自动判断",
+      "recommendation": "选B，手动hack会导致层爆炸"
+    }
+  ],
+  "experiment_code": "见A6-CSS布局与合成层.md「最小验证实验」章节，包含contain性能对比实验和will-change合成层提升验证实验的完整HTML代码",
+  "references": [
+    "https://developer.mozilla.org/en-US/docs/Web/CSS/contain",
+    "https://developer.mozilla.org/en-US/docs/Web/CSS/will-change",
+    "https://web.dev/articles/content-visibility",
+    "https://drafts.csswg.org/css-contain/",
+    "https://drafts.csswg.org/css-will-change/",
+    "https://csstriggers.com/"
+  ]
+}

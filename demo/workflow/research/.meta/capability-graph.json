@@ -1,0 +1,567 @@
+{
+  "version": "1.0",
+  "created": "2026-05-06",
+  "target_years": "L2",
+  "capabilities": [
+    {
+      "id": "A1",
+      "name": "浏览器渲染管线",
+      "layer": "浏览器",
+      "description": "CRP关键渲染路径：DOM→CSSOM→Render Tree→Layout→Paint→Composite全链路",
+      "referenced_by": [
+        "P1",
+        "P2",
+        "P4",
+        "P7"
+      ],
+      "fan_out": 4,
+      "qualifier_coupling": 1,
+      "references": {
+        "T1": "https://developer.mozilla.org/en-US/docs/Web/Performance/Critical_rendering_path",
+        "T2": ""
+      }
+    },
+    {
+      "id": "A2",
+      "name": "DOM节点生命周期",
+      "layer": "DOM",
+      "description": "节点创建/挂载/更新/卸载/回收，Detached DOM检测",
+      "referenced_by": [
+        "P1",
+        "P3",
+        "P7"
+      ],
+      "fan_out": 3,
+      "qualifier_coupling": 1,
+      "references": {
+        "T1": "https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model",
+        "T2": ""
+      }
+    },
+    {
+      "id": "A3",
+      "name": "V8 GC机制",
+      "layer": "JS引擎",
+      "description": "分代GC、标记清除、WeakRef/WeakMap、堆快照分析",
+      "referenced_by": [
+        "P3",
+        "P4"
+      ],
+      "fan_out": 2,
+      "qualifier_coupling": 1,
+      "references": {
+        "T1": "https://v8.dev/blog/trash-talk",
+        "T2": ""
+      }
+    },
+    {
+      "id": "A4",
+      "name": "事件循环与任务调度",
+      "layer": "浏览器",
+      "description": "宏任务/微任务、requestIdleCallback、requestAnimationFrame、长任务检测",
+      "referenced_by": [
+        "P1",
+        "P4",
+        "P7",
+        "P8"
+      ],
+      "fan_out": 4,
+      "qualifier_coupling": 1,
+      "references": {
+        "T1": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Event_loop",
+        "T2": ""
+      }
+    },
+    {
+      "id": "A5",
+      "name": "HTTP缓存协议",
+      "layer": "协议",
+      "description": "强缓存Cache-Control/Expires、协商缓存ETag/Last-Modified、304机制",
+      "referenced_by": [
+        "P2",
+        "P5"
+      ],
+      "fan_out": 2,
+      "qualifier_coupling": 1,
+      "references": {
+        "T1": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching",
+        "T2": ""
+      }
+    },
+    {
+      "id": "A6",
+      "name": "CSS布局与合成层",
+      "layer": "CSS",
+      "description": "contain属性、will-change、transform动画、图层提升、布局偏移控制",
+      "referenced_by": [
+        "P4",
+        "P7"
+      ],
+      "fan_out": 2,
+      "qualifier_coupling": 1,
+      "references": {
+        "T1": "https://developer.mozilla.org/en-US/docs/Web/CSS/contain",
+        "T2": ""
+      }
+    },
+    {
+      "id": "A7",
+      "name": "资源加载策略",
+      "layer": "网络",
+      "description": "预加载preload、预获取prefetch、懒加载、资源优先级fetchpriority",
+      "referenced_by": [
+        "P2",
+        "P4",
+        "P6"
+      ],
+      "fan_out": 3,
+      "qualifier_coupling": 1,
+      "references": {
+        "T1": "https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link",
+        "T2": ""
+      }
+    },
+    {
+      "id": "A8",
+      "name": "DevTools性能分析",
+      "layer": "工具",
+      "description": "Performance面板、Memory面板、Lighthouse、PerformanceObserver API",
+      "referenced_by": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P7",
+        "P8"
+      ],
+      "fan_out": 6,
+      "qualifier_coupling": 1,
+      "references": {
+        "T1": "https://developer.chrome.com/docs/devtools/performance",
+        "T2": ""
+      }
+    },
+    {
+      "id": "A9",
+      "name": "模块系统与构建优化",
+      "layer": "构建",
+      "description": "ES Module动态import、Code Splitting、Tree Shaking、splitChunks",
+      "referenced_by": [
+        "P2",
+        "P6"
+      ],
+      "fan_out": 2,
+      "qualifier_coupling": 2,
+      "references": {
+        "T1": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import",
+        "T2": ""
+      }
+    },
+    {
+      "id": "A10",
+      "name": "CDN与边缘计算",
+      "layer": "网络",
+      "description": "CDN缓存策略、边缘节点回源、缓存失效、多级缓存协作",
+      "referenced_by": [
+        "P2",
+        "P5"
+      ],
+      "fan_out": 2,
+      "qualifier_coupling": 1,
+      "references": {
+        "T1": "https://web.dev/articles/content-delivery-networks",
+        "T2": ""
+      }
+    },
+    {
+      "id": "A11",
+      "name": "Service Worker编程式缓存",
+      "layer": "浏览器",
+      "description": "Cache API、离线策略、缓存优先级管理",
+      "referenced_by": [
+        "P5"
+      ],
+      "fan_out": 1,
+      "qualifier_coupling": 1,
+      "references": {
+        "T1": "https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API",
+        "T2": ""
+      }
+    },
+    {
+      "id": "A12",
+      "name": "Web Worker多线程",
+      "layer": "多线程",
+      "description": "Worker创建/通信postMessage、SharedArrayBuffer、主线程卸载",
+      "referenced_by": [
+        "P8"
+      ],
+      "fan_out": 1,
+      "qualifier_coupling": 1,
+      "references": {
+        "T1": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API",
+        "T2": ""
+      }
+    },
+    {
+      "id": "A13",
+      "name": "SSR/Hydration机制",
+      "layer": "框架",
+      "description": "服务端渲染、客户端激活hydration、流式渲染、SSG预渲染",
+      "referenced_by": [
+        "P2"
+      ],
+      "fan_out": 1,
+      "qualifier_coupling": 3,
+      "references": {
+        "T1": "https://vuejs.org/guide/scaling-up/ssr.html",
+        "T2": ""
+      }
+    },
+    {
+      "id": "A14",
+      "name": "虚拟化算法",
+      "layer": "算法",
+      "description": "可视区域计算、动态高度预估、滚动锚定、DOM复用池",
+      "referenced_by": [
+        "P1"
+      ],
+      "fan_out": 1,
+      "qualifier_coupling": 1,
+      "references": {
+        "T1": "",
+        "T2": ""
+      }
+    }
+  ],
+  "propositions": [
+    {
+      "id": "P1",
+      "title": "长列表：万级数据的虚拟列表渲染",
+      "capabilities": [
+        "A1",
+        "A2",
+        "A4",
+        "A8",
+        "A14"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "首屏白屏：SSR/SSG/CSR混合渲染的首屏加载优化",
+      "capabilities": [
+        "A1",
+        "A5",
+        "A7",
+        "A9",
+        "A10",
+        "A13"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "内存泄漏：长时间运行页面的内存泄漏排查与治理",
+      "capabilities": [
+        "A2",
+        "A3",
+        "A8"
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Core Web Vitals：LCP/CLS/INP全链路优化",
+      "capabilities": [
+        "A1",
+        "A4",
+        "A6",
+        "A7",
+        "A8"
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "缓存策略：HTTP缓存在浏览器+CDN+SW三层的协作机制",
+      "capabilities": [
+        "A5",
+        "A10",
+        "A11"
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "构建产物：Code Splitting/Tree Shaking工程化配置",
+      "capabilities": [
+        "A7",
+        "A9"
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "渲染性能：重排重绘触发机制与合成层优化",
+      "capabilities": [
+        "A1",
+        "A2",
+        "A4",
+        "A6",
+        "A8"
+      ]
+    },
+    {
+      "id": "P8",
+      "title": "长任务拆分：requestIdleCallback/Web Worker主线程卸载",
+      "capabilities": [
+        "A4",
+        "A8",
+        "A12"
+      ]
+    }
+  ],
+  "highgrounds": [
+    {
+      "id": "A8",
+      "name": "DevTools性能分析",
+      "fan_out": 6,
+      "coupling": 1,
+      "strategic_value": 6.0,
+      "cumulative_value": 6.0,
+      "referenced_by": [
+        "P1",
+        "P2",
+        "P3",
+        "P4",
+        "P7",
+        "P8"
+      ],
+      "tier": "🏔️ 一级高地"
+    },
+    {
+      "id": "A1",
+      "name": "浏览器渲染管线",
+      "fan_out": 4,
+      "coupling": 1,
+      "strategic_value": 4.0,
+      "cumulative_value": 4.0,
+      "referenced_by": [
+        "P1",
+        "P2",
+        "P4",
+        "P7"
+      ],
+      "tier": "🏔️ 一级高地"
+    },
+    {
+      "id": "A4",
+      "name": "事件循环与任务调度",
+      "fan_out": 4,
+      "coupling": 1,
+      "strategic_value": 4.0,
+      "cumulative_value": 4.0,
+      "referenced_by": [
+        "P1",
+        "P4",
+        "P7",
+        "P8"
+      ],
+      "tier": "🏔️ 一级高地"
+    },
+    {
+      "id": "A2",
+      "name": "DOM节点生命周期",
+      "fan_out": 3,
+      "coupling": 1,
+      "strategic_value": 3.0,
+      "cumulative_value": 3.0,
+      "referenced_by": [
+        "P1",
+        "P3",
+        "P7"
+      ],
+      "tier": "⛰️ 二级高地"
+    },
+    {
+      "id": "A7",
+      "name": "资源加载策略",
+      "fan_out": 3,
+      "coupling": 1,
+      "strategic_value": 3.0,
+      "cumulative_value": 3.0,
+      "referenced_by": [
+        "P2",
+        "P4",
+        "P6"
+      ],
+      "tier": "⛰️ 二级高地"
+    },
+    {
+      "id": "A3",
+      "name": "V8 GC机制",
+      "fan_out": 2,
+      "coupling": 1,
+      "strategic_value": 2.0,
+      "cumulative_value": 2.0,
+      "referenced_by": [
+        "P3",
+        "P4"
+      ],
+      "tier": "⛰️ 二级高地"
+    },
+    {
+      "id": "A5",
+      "name": "HTTP缓存协议",
+      "fan_out": 2,
+      "coupling": 1,
+      "strategic_value": 2.0,
+      "cumulative_value": 2.0,
+      "referenced_by": [
+        "P2",
+        "P5"
+      ],
+      "tier": "⛰️ 二级高地"
+    },
+    {
+      "id": "A6",
+      "name": "CSS布局与合成层",
+      "fan_out": 2,
+      "coupling": 1,
+      "strategic_value": 2.0,
+      "cumulative_value": 2.0,
+      "referenced_by": [
+        "P4",
+        "P7"
+      ],
+      "tier": "⛰️ 二级高地"
+    },
+    {
+      "id": "A10",
+      "name": "CDN与边缘计算",
+      "fan_out": 2,
+      "coupling": 1,
+      "strategic_value": 2.0,
+      "cumulative_value": 2.0,
+      "referenced_by": [
+        "P2",
+        "P5"
+      ],
+      "tier": "⛰️ 二级高地"
+    },
+    {
+      "id": "A9",
+      "name": "模块系统与构建优化",
+      "fan_out": 2,
+      "coupling": 2,
+      "strategic_value": 1.0,
+      "cumulative_value": 1.0,
+      "referenced_by": [
+        "P2",
+        "P6"
+      ],
+      "tier": "🏕️ 三级营地"
+    },
+    {
+      "id": "A11",
+      "name": "Service Worker编程式缓存",
+      "fan_out": 1,
+      "coupling": 1,
+      "strategic_value": 1.0,
+      "cumulative_value": 1.0,
+      "referenced_by": [
+        "P5"
+      ],
+      "tier": "🏕️ 三级营地"
+    },
+    {
+      "id": "A12",
+      "name": "Web Worker多线程",
+      "fan_out": 1,
+      "coupling": 1,
+      "strategic_value": 1.0,
+      "cumulative_value": 1.0,
+      "referenced_by": [
+        "P8"
+      ],
+      "tier": "🏕️ 三级营地"
+    },
+    {
+      "id": "A14",
+      "name": "虚拟化算法",
+      "fan_out": 1,
+      "coupling": 1,
+      "strategic_value": 1.0,
+      "cumulative_value": 1.0,
+      "referenced_by": [
+        "P1"
+      ],
+      "tier": "🏕️ 三级营地"
+    },
+    {
+      "id": "A13",
+      "name": "SSR/Hydration机制",
+      "fan_out": 1,
+      "coupling": 3,
+      "strategic_value": 0.3,
+      "cumulative_value": 0.3,
+      "referenced_by": [
+        "P2"
+      ],
+      "tier": "⚪ 基础设施"
+    }
+  ],
+  "learning_path": [
+    {
+      "step": 1,
+      "id": "A8",
+      "name": "DevTools性能分析",
+      "coverage": "6/8",
+      "reason": "所有诊断的起点，覆盖全部命题"
+    },
+    {
+      "step": 2,
+      "id": "A1",
+      "name": "浏览器渲染管线",
+      "coverage": "4/8",
+      "reason": "框架无关的底层基础，理解渲染全链路"
+    },
+    {
+      "step": 3,
+      "id": "A4",
+      "name": "事件循环与任务调度",
+      "coverage": "4/8",
+      "reason": "渲染调度层，理解主线程阻塞机制"
+    },
+    {
+      "step": 4,
+      "id": "A2",
+      "name": "DOM节点生命周期",
+      "coverage": "3/8",
+      "reason": "深化渲染下游理解，内存泄漏排查基础"
+    },
+    {
+      "step": 5,
+      "id": "A6",
+      "name": "CSS布局与合成层",
+      "coverage": "2/8",
+      "reason": "补齐渲染优化的CSS层手段"
+    },
+    {
+      "step": 6,
+      "id": "A5",
+      "name": "HTTP缓存协议",
+      "coverage": "2/8",
+      "reason": "网络层基础，首屏+缓存命题核心"
+    },
+    {
+      "step": 7,
+      "id": "A7",
+      "name": "资源加载策略",
+      "coverage": "3/8",
+      "reason": "补齐网络层，连接缓存与构建"
+    },
+    {
+      "step": 8,
+      "id": "A3",
+      "name": "V8 GC机制",
+      "coverage": "2/8",
+      "reason": "深化内存治理"
+    }
+  ]
+}

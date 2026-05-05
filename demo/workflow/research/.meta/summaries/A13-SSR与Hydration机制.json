@@ -1,0 +1,37 @@
+{
+  "id": "A13",
+  "name": "SSR与Hydration机制",
+  "tech_layer": "框架",
+  "fanout": "1/8",
+  "coupling": 3,
+  "strategic_value": 1.0,
+  "mechanism_summary": "SSR在服务端将组件树渲染为HTML字符串发送给浏览器，客户端通过Hydration将静态HTML激活为可交互应用。核心流程：服务端renderToString/renderToReadableStream → HTML传输 → 客户端hydrateRoot/app.mount绑定事件与状态。React 18引入Streaming SSR（Suspense分段流式传输+Selective Hydration），Vue 3.5引入Lazy Hydration（onInteraction/onVisible/whenIdle）。SSG为SSR的构建时变体，输出静态HTML。关键约束：客户端首次渲染必须与服务端HTML完全一致，否则触发hydration mismatch。",
+  "bottlenecks": [
+    "Hydration Mismatch：客户端与服务端HTML不一致导致事件错位",
+    "服务端CPU瓶颈：高并发下单线程Node.js渲染阻塞",
+    "JS Bundle过大：Hydration需加载完整客户端JS，FCP快但TTI慢",
+    "数据获取瓶颈：SSR预取数据受数据库/API延迟制约",
+    "跨请求状态污染：单例store在请求间共享状态",
+    "浏览器API不可用：服务端引用window/document报错",
+    "第三方库兼容性：npm包在服务端环境无法运行"
+  ],
+  "tradeoffs": [
+    "SSR vs SSG：动态内容需SSR，静态内容用SSG更高效",
+    "流式 vs 同步渲染：延迟高选Streaming，SEO严格选同步+allReady",
+    "全量 vs Selective Hydration：首屏交互要求高选全量，长页面选Selective",
+    "Node.js vs 边缘运行时：需数据库选Node.js，延迟敏感选边缘",
+    "页面级 vs 组件级缓存：高流量选组件级(ESI)，中小站点页面级足够",
+    "纯SSR vs Islands架构：交互密集选Islands，整体性强选纯SSR"
+  ],
+  "experiment_code": "vue-ssr-demo: createSSRApp + renderToString + client hydration; react-streaming-demo: renderToReadableStream + hydrateRoot + Suspense boundary",
+  "references": [
+    "https://vuejs.org/guide/scaling-up/ssr.html",
+    "https://react.dev/reference/react-dom/server",
+    "https://react.dev/reference/react-dom/server/renderToReadableStream",
+    "https://react.dev/reference/react-dom/client/hydrateRoot",
+    "https://zhuanlan.zhihu.com/p/589621349",
+    "https://juejin.cn/post/7410710728783462451",
+    "https://nuxt.com/",
+    "https://nextjs.org/docs"
+  ]
+}

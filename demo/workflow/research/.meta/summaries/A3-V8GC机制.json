@@ -1,0 +1,41 @@
+{
+  "id": "A3",
+  "name": "V8GC机制",
+  "fanout": "2/8",
+  "coupling": 1,
+  "strategic_value": 2.0,
+  "summary": "V8 引擎的垃圾回收机制，基于分代 GC 架构将堆分为新生代和老生代，分别采用 Scavenge（Semi-Space evacuation）和 Mark-Sweep/Mark-Compact 算法。Orinoco 项目将 GC 从 stop-the-world 演进为 Parallel + Concurrent + Incremental 混合策略，大幅降低主线程暂停时间。支持 WeakRef/WeakMap/WeakSet 管理弱引用，以及 FinalizationRegistry 清理回调。",
+  "core_mechanisms": [
+    "分代GC（Generational GC）—— 新生代/老生代划分，基于分代假说优化",
+    "新生代 Scavenge —— Semi-Space 算法，Parallel Scavenger 多线程并行疏散",
+    "老生代 Mark-Sweep / Mark-Compact —— 并发标记 + 并行压缩 + 并发清扫",
+    "并发GC（Orinoco）—— Parallel / Incremental / Concurrent 三种策略混合",
+    "Idle-Time GC —— 利用浏览器空闲时间执行GC任务",
+    "WeakRef / WeakMap / WeakSet / FinalizationRegistry —— 弱引用与清理机制"
+  ],
+  "engineering_bottlenecks": [
+    "Scavenge 停顿：大量短生命周期对象存活导致主线程卡顿",
+    "Major GC 长暂停：老生代碎片化严重时暂停超100ms",
+    "内存泄漏：闭包持有引用、全局缓存无上限、事件监听器未清理",
+    "堆碎片化：频繁分配/释放不同大小对象导致内存浪费",
+    "GC与渲染竞争：并发GC同步开销叠加高渲染压力"
+  ],
+  "debugging_tools": [
+    "Chrome DevTools Memory / Performance 面板",
+    "node --trace-gc / --trace-gc-verbose",
+    "node --expose-gc --inspect",
+    "process.memoryUsage()",
+    "Heapdump 离线分析"
+  ],
+  "key_tradeoffs": [
+    "Map vs WeakMap 缓存策略选择",
+    "大对象手动解除引用 vs 依赖自动GC",
+    "增大堆上限 vs 优化代码减少内存使用",
+    "SharedArrayBuffer（无GC）vs 普通对象（受GC管理）"
+  ],
+  "sources": [
+    "https://v8.dev/blog/trash-talk",
+    "https://v8.dev/blog/free-garbage-collection",
+    "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Memory_management"
+  ]
+}

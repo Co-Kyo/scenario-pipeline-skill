@@ -1,0 +1,44 @@
+{
+  "id": "A4",
+  "name": "事件循环与任务调度",
+  "layer": "浏览器",
+  "description": "宏任务/微任务队列模型、requestAnimationFrame/requestIdleCallback调度策略、Long Tasks API长任务检测",
+  "fanout": 4,
+  "coupling": 1,
+  "strategic_value": 4.0,
+  "referenced_by": ["P1", "P4", "P7", "P8"],
+  "key_concepts": [
+    "Event Loop 单线程异步模型",
+    "Macrotask vs Microtask 执行优先级",
+    "requestAnimationFrame 渲染同步调度",
+    "requestIdleCallback 空闲期调度",
+    "Long Tasks API (50ms 阈值)",
+    "Run-to-completion 保证",
+    "微任务队列饥饿风险"
+  ],
+  "bottlenecks": [
+    "主线程长任务阻塞（>50ms）导致 INP 劣化",
+    "微任务队列过长造成宏任务饥饿",
+    "rAF 回调过重引发掉帧",
+    "rIC 在 Safari 不支持/高负载下不触发"
+  ],
+  "tools": [
+    "Chrome DevTools Performance 面板",
+    "PerformanceObserver (longtask)",
+    "performance.mark/measure",
+    "Lighthouse TBT/INP 审计",
+    "web-vitals npm 包"
+  ],
+  "references": {
+    "T1": [
+      "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model",
+      "https://developer.mozilla.org/en-US/docs/Web/API/Window/requestIdleCallback",
+      "https://developer.mozilla.org/en-US/docs/Web/API/Window/requestAnimationFrame"
+    ],
+    "T2": [
+      "https://web.dev/articles/long-tasks-devtools"
+    ]
+  },
+  "generic_content_ratio": "≥70%",
+  "created": "2026-05-06"
+}

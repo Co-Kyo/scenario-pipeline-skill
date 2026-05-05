@@ -1,0 +1,81 @@
+{
+  "id": "A10",
+  "name": "CDN与边缘计算",
+  "tech_layer": "网络",
+  "fanout": "2/8",
+  "coupling": 1,
+  "strategic_value": 2.0,
+  "mechanism_summary": "CDN通过全球分布的边缘节点缓存静态资源，基于DNS智能解析将用户请求导向最近节点，减少延迟和源站负载。核心机制包括：多级缓存架构（浏览器→边缘→汇聚层→源站）、基于URL/Header的Cache Key生成、TTL/版本化URL/Purge等缓存失效策略、Origin Shield保护源站免受回源风暴。边缘计算将计算能力下沉到CDN节点，支持在缓存层执行动态逻辑（鉴权、格式转换、路由），进一步减少回源。",
+  "bottlenecks": [
+    {
+      "name": "缓存命中率低",
+      "trigger": "动态内容过多、Cache Key过细、TTL设置不合理",
+      "symptom": "回源率>20%，源站压力大，延迟升高",
+      "detection": "CDN控制台命中率监控、回源QPS统计",
+      "mitigation": "合并Cache Key维度、增大TTL、引入Origin Shield、Stale-While-Revalidate"
+    },
+    {
+      "name": "回源风暴",
+      "trigger": "热点内容同时过期、大促秒杀场景",
+      "symptom": "瞬间大量回源请求冲击源站，源站超时或宕机",
+      "detection": "源站QPS突增监控、5xx错误率",
+      "mitigation": "源站限流、分层缓存、Jittered TTL、Request Coalescing"
+    },
+    {
+      "name": "缓存一致性延迟",
+      "trigger": "内容更新后缓存未及时失效",
+      "symptom": "用户看到旧版本内容",
+      "detection": "用户反馈+缓存版本比对",
+      "mitigation": "版本化URL、主动Purge+预热、缩短热点资源TTL"
+    },
+    {
+      "name": "CDN故障/单点依赖",
+      "trigger": "CDN服务商宕机或区域网络故障",
+      "symptom": "网站不可访问或大面积5xx",
+      "detection": "多源监控、用户端RUM",
+      "mitigation": "Multi-CDN策略、DNS Failover、静态资源自托管回退"
+    },
+    {
+      "name": "缓存投毒",
+      "trigger": "未过滤的用户输入成为Cache Key一部分",
+      "symptom": "恶意内容被缓存并分发给其他用户",
+      "detection": "安全审计、异常内容检测",
+      "mitigation": "严格校验Cache Key组成、忽略不可信Header、使用Vary Header"
+    }
+  ],
+  "tradeoffs": [
+    {
+      "dimension": "缓存粒度",
+      "option_a": "粗粒度（仅URL）：命中率高，无法差异化",
+      "option_b": "细粒度（URL+Header/Cookie）：个性化，命中率低",
+      "recommendation": "静态资源用粗粒度；动态个性化用Edge Computing处理"
+    },
+    {
+      "dimension": "缓存TTL",
+      "option_a": "长TTL（7天+）：命中率高，更新慢",
+      "option_b": "短TTL（分钟级）：实时性好，回源多",
+      "recommendation": "稳定资源用长TTL+版本化URL；频繁变更用短TTL+Stale-While-Revalidate"
+    },
+    {
+      "dimension": "部署架构",
+      "option_a": "单CDN：管理简单，有单点风险",
+      "option_b": "Multi-CDN：高可用，复杂度和成本翻倍",
+      "recommendation": "中小项目单CDN+自托管回退；高可用场景用Multi-CDN+DNS Failover"
+    },
+    {
+      "dimension": "边缘计算",
+      "option_a": "纯缓存CDN：性能最优，功能有限",
+      "option_b": "Edge Computing：灵活强大，增加延迟和复杂度",
+      "recommendation": "简单加速用纯缓存；需要路由逻辑/鉴权/内容转换时引入Edge Functions"
+    }
+  ],
+  "experiment_code": "#!/bin/bash\nDOMAIN=\"your-cdn-domain.example.com\"\nASSET=\"/path/to/static-asset.css\"\necho \"=== 首次请求 ===\"\ncurl -sI \"https://${DOMAIN}${ASSET}\" | grep -iE \"x-cache|age|cache-control\"\necho \"=== 二次请求 ===\"\ncurl -sI \"https://${DOMAIN}${ASSET}\" | grep -iE \"x-cache|age|cache-control\"\necho \"=== TTFB测量 ===\"\ncurl -o /dev/null -s -w \"TTFB: %{time_starttransfer}s\\n\" \"https://${DOMAIN}${ASSET}\"",
+  "references": [
+    "https://developer.mozilla.org/en-US/docs/Glossary/CDN",
+    "https://web.dev/articles/content-delivery-networks",
+    "https://www.ctyun.cn/developer/article/611748830158917",
+    "https://www.cnblogs.com/pingan8787/p/11838084.html",
+    "https://www.varnish-software.com/solutions/origin-shield/",
+    "https://httpwg.org/specs/rfc7234.html"
+  ]
+}
