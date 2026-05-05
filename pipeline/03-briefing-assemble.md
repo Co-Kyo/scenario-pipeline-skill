@@ -61,7 +61,7 @@
 | 目标文件 | 从 summary 提取 | 不提取 |
 |---------|----------------|--------|
 | overview | mechanism_summary | bottlenecks, tradeoffs, experiment_code |
-| edge-cases | bottlenecks(name+trigger+symptom) | mechanism_summary, experiment_code |
+| edge-cases | bottlenecks(name+category+priority+trigger+symptom) | mechanism_summary, experiment_code |
 | trade-offs | tradeoffs(完整四列) | mechanism_summary, experiment_code |
 | experiment | experiment_code | mechanism_summary, bottlenecks |
 | references | references(tier+url+title) | 正文内容 |

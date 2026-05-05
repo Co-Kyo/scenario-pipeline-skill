@@ -70,9 +70,9 @@ capability_block:
 
 | 深度 | mechanism | bottlenecks | tools | tradeoffs | experiments | references |
 |------|-----------|-------------|-------|-----------|-------------|------------|
-| shallow | ✅ 必填 | ✅ 2-3 个 | ✅ 1-2 个 | ⬜ 可选 | ⬜ 跳过 | ✅ T1 |
-| normal | ✅ 必填 | ✅ 3-5 个 | ✅ 2-3 个 | ✅ 2 个 | ⬜ 可选 | ✅ T1+T2 |
-| deep | ✅ 必填 | ✅ 5+ 个 | ✅ 3+ 个 | ✅ 3 个 | ✅ 必填 | ✅ T1+T2+T3 |
+| shallow | ✅ 必填 | ✅ P0 必覆盖 | ✅ 1-2 个 | ⬜ 可选 | ⬜ 跳过 | ✅ T1 |
+| normal | ✅ 必填 | ✅ P0+P1 必覆盖 | ✅ 2-3 个 | ✅ 2 个 | ⬜ 可选 | ✅ T1+T2 |
+| deep | ✅ 必填 | ✅ P0+P1+P2 必覆盖 | ✅ 3+ 个 | ✅ 3 个 | ✅ 必填 | ✅ T1+T2+T3 |
 
 ### 深度选择规则
 
@@ -118,7 +118,7 @@ capability_block:
 | 检查项 | 规则 |
 |--------|------|
 | mechanism 不为空 | 必须包含该能力的核心机制描述 |
-| bottlenecks ≥ 2 | 至少 2 个瓶颈点 |
+| bottlenecks 覆盖 P0/P1 | shallow: P0 必覆盖; normal: P0+P1 必覆盖; deep: P0+P1+P2 必覆盖 |
 | 每个 bottleneck 有 detection | 必须可检测，不能只描述症状 |
 | tradeoffs 有 dimension | 必须标注两个对立维度 |
 | references 至少 1 个 T1 | 必须有权威来源 |
