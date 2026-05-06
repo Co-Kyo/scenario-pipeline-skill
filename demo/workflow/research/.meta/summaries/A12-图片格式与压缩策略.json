@@ -1,0 +1,17 @@
+{
+  "id": "A12", "name": "图片格式与压缩策略", "tech_layer": "媒体层",
+  "fanout": "2/8", "coupling": 1, "strategic_value": 1.0,
+  "mechanism_summary": "WebP 比 JPEG 小 25-34%，AVIF 比 WebP 再小 20%。用 <picture> 多格式回退。渐进式 JPEG 先加载低分辨率轮廓。CDN 动态处理图片压缩和格式转换。",
+  "bottlenecks": [
+    {"name": "格式兼容性", "category": "输入变异", "priority": "P1", "trigger": "AVIF 老浏览器不支持", "symptom": "图片不显示", "version_sensitive": "strong", "affected_tool": "Safari", "affected_versions": "< 16.4", "fixed_version": "16.4", "fixed_source": "caniuse.com"},
+    {"name": "图片过大未压缩", "category": "资源边界", "priority": "P0", "trigger": "上传未压缩原始图片", "symptom": "LCP 慢，带宽浪费", "version_sensitive": "none"}
+  ],
+  "tradeoffs": [
+    {"dimension": "格式选择", "option_a": "WebP（兼容性好）", "option_b": "AVIF（压缩率最高但编码慢）", "suggestion": "用 <picture> 同时提供 AVIF+WebP+JPEG 回退"}
+  ],
+  "experiment_code": null,
+  "references": [
+    {"tier": "T1", "url": "https://developer.mozilla.org/en-US/docs/Web/Media/Formats/Image_types", "title": "MDN: Image Types"},
+    {"tier": "T2", "url": "https://web.dev/articles/uses-responsive-images", "title": "web.dev: Responsive Images"}
+  ]
+}

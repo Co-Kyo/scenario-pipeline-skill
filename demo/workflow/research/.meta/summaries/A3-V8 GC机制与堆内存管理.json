@@ -1,0 +1,18 @@
+{
+  "id": "A3", "name": "V8 GC 机制与堆内存管理", "tech_layer": "浏览器层",
+  "fanout": "2/8", "coupling": 1, "strategic_value": 1.0,
+  "mechanism_summary": "V8 分代 GC：新生代用 Scavenge（半空间复制，快），老生代用 Mark-Sweep-Compact（增量/并发标记减少停顿）。对象经历两次 Scavenge 存活则晋升老生代。WeakRef/WeakMap 不阻止 GC 回收。",
+  "bottlenecks": [
+    {"name": "Detached DOM 节点", "category": "资源边界", "priority": "P0", "trigger": "DOM 移除但 JS 仍持有引用", "symptom": "内存持续增长不回落", "version_sensitive": "none", "affected_tool": null, "affected_versions": null, "fixed_version": null, "fixed_source": null},
+    {"name": "全局缓存无界增长", "category": "资源边界", "priority": "P0", "trigger": "Map/Set 无淘汰策略", "symptom": "老生代占用持续上升", "version_sensitive": "none", "affected_tool": null, "affected_versions": null, "fixed_version": null, "fixed_source": null},
+    {"name": "GC 停顿掉帧", "category": "时序竞争", "priority": "P1", "trigger": "老生代 GC 标记-清除阶段", "symptom": "周期性帧率下降", "version_sensitive": "weak", "affected_tool": "V8", "affected_versions": "all", "fixed_version": null, "fixed_source": null}
+  ],
+  "tradeoffs": [
+    {"dimension": "引用类型", "option_a": "强引用 Map（保证不被回收）", "option_b": "弱引用 WeakMap（允许 GC 回收）", "suggestion": "缓存关联数据用 WeakMap，业务状态用 Map"}
+  ],
+  "experiment_code": null,
+  "references": [
+    {"tier": "T1", "url": "https://v8.dev/blog/garbage-collection-2024", "title": "V8: Garbage Collection"},
+    {"tier": "T2", "url": "https://developer.chrome.com/docs/devtools/memory-problems", "title": "Chrome DevTools: Memory Problems"}
+  ]
+}

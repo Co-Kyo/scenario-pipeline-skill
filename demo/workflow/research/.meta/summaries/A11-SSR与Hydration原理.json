@@ -1,0 +1,17 @@
+{
+  "id": "A11", "name": "SSR/Hydration 原理", "tech_layer": "框架层",
+  "fanout": "1/8", "coupling": 3, "strategic_value": 0.33,
+  "mechanism_summary": "SSR 服务端渲染 HTML→浏览器显示→加载JS→Hydration 绑定事件→可交互。流式渲染分块传输减少 TTFB。Selective Hydration 优先 hydrate 交互组件。Hydration 不匹配会导致全量重渲染。",
+  "bottlenecks": [
+    {"name": "Hydration 不匹配", "category": "输入变异", "priority": "P0", "trigger": "SSR/CSR 输出不一致", "symptom": "控制台警告+全量重渲染", "version_sensitive": "none"},
+    {"name": "Hydration 阻塞交互", "category": "时序竞争", "priority": "P0", "trigger": "首屏 JS 过大", "symptom": "FCP 快但 TTI 慢", "version_sensitive": "none"}
+  ],
+  "tradeoffs": [
+    {"dimension": "渲染策略", "option_a": "SSR（首屏快，服务端开销大）", "option_b": "SSG（构建时生成，无服务端开销）", "suggestion": "内容不常变用 SSG，个性化用 SSR"}
+  ],
+  "experiment_code": null,
+  "references": [
+    {"tier": "T1", "url": "https://vuejs.org/guide/scaling-up/ssr.html", "title": "Vue: SSR"},
+    {"tier": "T1", "url": "https://react.dev/reference/react-dom/server", "title": "React: Server DOM"}
+  ]
+}

@@ -1,0 +1,146 @@
+[
+  {
+    "id": "P1",
+    "proposition": "长列表渲染：万级数据的虚拟列表实现——社交动态流/聊天记录场景",
+    "scores": {
+      "cross_stack": 3,
+      "doc_vacuum": 2,
+      "experience_barrier": 2,
+      "trending_heat": 3,
+      "total": 10
+    },
+    "verdict": "high",
+    "highground_hits": ["A1", "A2", "A5", "A9", "A13"],
+    "evidence": {
+      "t1_sources": ["MDN IntersectionObserver", "MDN 渲染管线"],
+      "t2_sources": ["web.dev Virtual Lists", "掘金-虚拟列表及白屏原因浅析"],
+      "t3_sources": ["CSDN-2025高频场景题", "掘金-2025前端面试场景题"]
+    }
+  },
+  {
+    "id": "P2",
+    "proposition": "内存泄漏排查：SPA 长时间运行后卡顿——事件监听/定时器/Detached DOM",
+    "scores": {
+      "cross_stack": 2,
+      "doc_vacuum": 2,
+      "experience_barrier": 3,
+      "trending_heat": 3,
+      "total": 10
+    },
+    "verdict": "high",
+    "highground_hits": ["A3", "A4", "A14"],
+    "evidence": {
+      "t1_sources": ["V8 GC 博客", "Chrome DevTools Memory 文档"],
+      "t2_sources": ["博客园-大型前端项目内存泄漏排查", "web.dev Memory"],
+      "t3_sources": ["CSDN-前端面试场景题", "掘金-2025面试题"]
+    }
+  },
+  {
+    "id": "P3",
+    "proposition": "首屏优化：SSR/SSG 首屏加载慢——Vue3/React 项目如何提升到 1s 内",
+    "scores": {
+      "cross_stack": 3,
+      "doc_vacuum": 2,
+      "experience_barrier": 2,
+      "trending_heat": 3,
+      "total": 10
+    },
+    "verdict": "high",
+    "highground_hits": ["A1", "A6", "A7", "A8", "A11"],
+    "evidence": {
+      "t1_sources": ["Vue SSR 文档", "web.dev Core Web Vitals"],
+      "t2_sources": ["CSDN-2025前端场景题解析"],
+      "t3_sources": ["掘金-2025前端面试制胜法则"]
+    }
+  },
+  {
+    "id": "P4",
+    "proposition": "构建产物优化：Webpack/Vite 打包体积过大——首屏 JS 超过 500KB",
+    "scores": {
+      "cross_stack": 2,
+      "doc_vacuum": 1,
+      "experience_barrier": 2,
+      "trending_heat": 2,
+      "total": 7
+    },
+    "verdict": "high",
+    "highground_hits": ["A6", "A7"],
+    "evidence": {
+      "t1_sources": ["Webpack Code Splitting 文档"],
+      "t2_sources": ["web.dev Tree Shaking"],
+      "t3_sources": ["掘金-前端面试场景题"]
+    }
+  },
+  {
+    "id": "P5",
+    "proposition": "网络请求优化：接口串行导致首屏阻塞——瀑布流请求与并发控制",
+    "scores": {
+      "cross_stack": 2,
+      "doc_vacuum": 2,
+      "experience_barrier": 2,
+      "trending_heat": 2,
+      "total": 8
+    },
+    "verdict": "high",
+    "highground_hits": ["A1", "A6", "A8", "A9", "A15"],
+    "evidence": {
+      "t1_sources": ["MDN HTTP Caching", "MDN Promise.all"],
+      "t2_sources": ["web.dev HTTP Cache"],
+      "t3_sources": ["CSDN-前端面试题"]
+    }
+  },
+  {
+    "id": "P6",
+    "proposition": "渲染卡顿排查：主线程长任务阻塞交互——动画掉帧/输入延迟",
+    "scores": {
+      "cross_stack": 2,
+      "doc_vacuum": 2,
+      "experience_barrier": 2,
+      "trending_heat": 3,
+      "total": 9
+    },
+    "verdict": "high",
+    "highground_hits": ["A1", "A2", "A4", "A8", "A10", "A13", "A16"],
+    "evidence": {
+      "t1_sources": ["MDN Long Tasks API", "MDN 事件循环"],
+      "t2_sources": ["web.dev Optimize Long Tasks", "web.dev INP"],
+      "t3_sources": ["掘金-虚拟列表及渲染机制"]
+    }
+  },
+  {
+    "id": "P7",
+    "proposition": "滚动性能：长页面大量图片的懒加载与滚动优化——电商商品列表",
+    "scores": {
+      "cross_stack": 2,
+      "doc_vacuum": 1,
+      "experience_barrier": 2,
+      "trending_heat": 2,
+      "total": 7
+    },
+    "verdict": "high",
+    "highground_hits": ["A1", "A9", "A13"],
+    "evidence": {
+      "t1_sources": ["MDN IntersectionObserver", "MDN CSS contain"],
+      "t2_sources": ["web.dev Lazy Loading Images"],
+      "t3_sources": ["CSDN-前端场景题"]
+    }
+  },
+  {
+    "id": "P8",
+    "proposition": "图片优化：WebP/AVIF 格式选择与加载策略——多端适配场景",
+    "scores": {
+      "cross_stack": 2,
+      "doc_vacuum": 1,
+      "experience_barrier": 1,
+      "trending_heat": 1,
+      "total": 5
+    },
+    "verdict": "medium",
+    "highground_hits": ["A12"],
+    "evidence": {
+      "t1_sources": ["MDN Image Types"],
+      "t2_sources": ["web.dev Responsive Images"],
+      "t3_sources": []
+    }
+  }
+]

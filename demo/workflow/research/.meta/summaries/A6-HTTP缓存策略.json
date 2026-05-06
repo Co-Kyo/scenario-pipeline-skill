@@ -1,0 +1,17 @@
+{
+  "id": "A6", "name": "HTTP 缓存策略", "tech_layer": "网络层",
+  "fanout": "3/8", "coupling": 1, "strategic_value": 3.0,
+  "mechanism_summary": "两层缓存：强缓存（Cache-Control max-age/Expires，不发请求直接用缓存）和协商缓存（ETag/If-None-Match 或 Last-Modified/If-Modified-Since，发请求验证，304 用缓存）。CDN 在浏览器和源站之间增加一层缓存。静态资源用 hash 文件名 + 长期缓存，HTML 用 no-cache。",
+  "bottlenecks": [
+    {"name": "缓存失效全量回源", "category": "状态跃迁", "priority": "P0", "trigger": "部署时 hash 或 Cache-Control 配置错误", "symptom": "用户看到旧版本或每次都重新下载", "version_sensitive": "none", "affected_tool": null, "affected_versions": null, "fixed_version": null, "fixed_source": null},
+    {"name": "CDN 与浏览器缓存不一致", "category": "状态跃迁", "priority": "P1", "trigger": "CDN 更新但浏览器强缓存未过期", "symptom": "部分用户新版本部分旧版本", "version_sensitive": "none", "affected_tool": null, "affected_versions": null, "fixed_version": null, "fixed_source": null}
+  ],
+  "tradeoffs": [
+    {"dimension": "静态资源缓存", "option_a": "长期缓存 + hash 文件名（最优性能）", "option_b": "no-cache 协商缓存（简单但每次请求）", "suggestion": "构建工具完善用 hash 文件名，否则协商缓存"}
+  ],
+  "experiment_code": null,
+  "references": [
+    {"tier": "T1", "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching", "title": "MDN: HTTP Caching"},
+    {"tier": "T2", "url": "https://web.dev/articles/http-cache", "title": "web.dev: HTTP Cache"}
+  ]
+}

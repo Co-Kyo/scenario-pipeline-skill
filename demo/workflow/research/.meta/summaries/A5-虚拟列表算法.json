@@ -1,0 +1,17 @@
+{
+  "id": "A5", "name": "虚拟列表算法", "tech_layer": "算法层",
+  "fanout": "2/8", "coupling": 1, "strategic_value": 1.0,
+  "mechanism_summary": "虚拟列表只渲染可视区域 DOM，通过 scrollTop→起始索引映射+缓冲区实现。动态高度需前缀和数组+二分查找定位，高度变化时滚动锚定防跳动。DOM 池复用已离开视口的节点。",
+  "bottlenecks": [
+    {"name": "动态高度滚动跳动", "category": "状态跃迁", "priority": "P0", "trigger": "项高度渲染后才确定，更新缓存触发重算", "symptom": "滚动位置突然偏移", "version_sensitive": "none"},
+    {"name": "快速滚动白屏", "category": "资源边界", "priority": "P1", "trigger": "缓冲区太小", "symptom": "短暂空白区域", "version_sensitive": "none"}
+  ],
+  "tradeoffs": [
+    {"dimension": "高度策略", "option_a": "固定高度（O(1)定位，简单）", "option_b": "动态高度（灵活，需前缀和+二分）", "suggestion": "高度一致用固定，高度差异大用动态"}
+  ],
+  "experiment_code": null,
+  "references": [
+    {"tier": "T1", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API", "title": "MDN: IntersectionObserver"},
+    {"tier": "T2", "url": "https://web.dev/articles/virtualize-long-lists-react-virtual", "title": "web.dev: Virtual Lists"}
+  ]
+}

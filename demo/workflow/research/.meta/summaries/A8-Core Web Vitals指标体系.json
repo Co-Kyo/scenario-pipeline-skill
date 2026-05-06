@@ -1,0 +1,18 @@
+{
+  "id": "A8", "name": "Core Web Vitals 指标体系", "tech_layer": "性能标准层",
+  "fanout": "4/8", "coupling": 1, "strategic_value": 4.0,
+  "mechanism_summary": "三大核心指标：LCP（加载性能，最大内容渲染 ≤2.5s）、INP（交互响应性，交互到下一帧 ≤200ms，替代 FID）、CLS（视觉稳定性，布局偏移 ≤0.1）。通过 PerformanceObserver 采集，Lighthouse 审计，web-vitals 库上报真实用户数据。",
+  "bottlenecks": [
+    {"name": "LCP 元素加载慢", "category": "资源边界", "priority": "P0", "trigger": "首屏最大图片/文本块渲染延迟", "symptom": "LCP > 4s", "version_sensitive": "none", "affected_tool": null, "affected_versions": null, "fixed_version": null, "fixed_source": null},
+    {"name": "INP 响应延迟", "category": "时序竞争", "priority": "P0", "trigger": "事件处理函数 >200ms", "symptom": "点击后明显卡顿", "version_sensitive": "none", "affected_tool": null, "affected_versions": null, "fixed_version": null, "fixed_source": null},
+    {"name": "CLS 布局偏移", "category": "状态跃迁", "priority": "P1", "trigger": "图片/广告/字体加载导致元素位移", "symptom": "页面内容跳动", "version_sensitive": "none", "affected_tool": null, "affected_versions": null, "fixed_version": null, "fixed_source": null}
+  ],
+  "tradeoffs": [
+    {"dimension": "LCP 优化", "option_a": "预加载关键资源（preload）", "option_b": "SSR 直出 HTML", "suggestion": "资源型 LCP 用 preload，文本型用 SSR"}
+  ],
+  "experiment_code": null,
+  "references": [
+    {"tier": "T1", "url": "https://web.dev/articles/vitals", "title": "web.dev: Core Web Vitals"},
+    {"tier": "T2", "url": "https://developer.chrome.com/docs/lighthouse/performance", "title": "Chrome: Lighthouse Performance"}
+  ]
+}

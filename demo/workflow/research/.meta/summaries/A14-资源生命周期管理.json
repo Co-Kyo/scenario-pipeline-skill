@@ -1,0 +1,16 @@
+{
+  "id": "A14", "name": "资源生命周期管理", "tech_layer": "编程规范层",
+  "fanout": "2/8", "coupling": 1, "strategic_value": 1.0,
+  "mechanism_summary": "所有异步资源必须绑定与清理成对：addEventListener/removeEventListener、setInterval/clearInterval、observe/disconnect、fetch/AbortController.abort。AbortController 可统一取消多个资源。",
+  "bottlenecks": [
+    {"name": "事件监听未解绑", "category": "资源边界", "priority": "P0", "trigger": "SPA 路由切换未清理监听", "symptom": "内存增长+重复回调", "version_sensitive": "none"},
+    {"name": "Observer 未 disconnect", "category": "资源边界", "priority": "P1", "trigger": "组件销毁后 Observer 仍运行", "symptom": "CPU 持续占用", "version_sensitive": "none"}
+  ],
+  "tradeoffs": [
+    {"dimension": "清理模式", "option_a": "手动逐个清理（精确但易遗漏）", "option_b": "AbortController 统一取消（简单但需封装）", "suggestion": "多个资源用 AbortController"}
+  ],
+  "experiment_code": null,
+  "references": [
+    {"tier": "T1", "url": "https://developer.mozilla.org/en-US/docs/Web/API/AbortController", "title": "MDN: AbortController"}
+  ]
+}

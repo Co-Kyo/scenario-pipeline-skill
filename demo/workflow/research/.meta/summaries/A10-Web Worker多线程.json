@@ -1,0 +1,17 @@
+{
+  "id": "A10", "name": "Web Worker 多线程", "tech_layer": "浏览器层",
+  "fanout": "2/8", "coupling": 1, "strategic_value": 1.0,
+  "mechanism_summary": "Worker 在独立线程运行 JS，通过 postMessage 通信（结构化克隆）。Transferable Objects 零拷贝传递 ArrayBuffer。Worker 无法访问 DOM，可用 fetch/WebSocket/IndexedDB。",
+  "bottlenecks": [
+    {"name": "序列化开销", "category": "资源边界", "priority": "P1", "trigger": "postMessage 传递大量数据", "symptom": "通信延迟>计算节省", "version_sensitive": "none"},
+    {"name": "Worker 初始化延迟", "category": "时序竞争", "priority": "P2", "trigger": "首次创建 Worker 需下载解析", "symptom": "首次交互延迟", "version_sensitive": "none"}
+  ],
+  "tradeoffs": [
+    {"dimension": "通信方式", "option_a": "postMessage（有序列化开销）", "option_b": "SharedArrayBuffer（零拷贝需Atomics）", "suggestion": "大数据用 SharedArrayBuffer"}
+  ],
+  "experiment_code": null,
+  "references": [
+    {"tier": "T1", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API", "title": "MDN: Web Workers"},
+    {"tier": "T2", "url": "https://web.dev/articles/off-main-thread", "title": "web.dev: Off Main Thread"}
+  ]
+}

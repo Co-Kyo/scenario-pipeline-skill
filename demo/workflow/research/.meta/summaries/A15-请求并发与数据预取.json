@@ -1,0 +1,16 @@
+{
+  "id": "A15", "name": "请求并发与数据预取", "tech_layer": "编程模式层",
+  "fanout": "2/8", "coupling": 1, "strategic_value": 1.0,
+  "mechanism_summary": "Promise.all 并发多个请求，BFF 聚合层减少网络往返，数据预取在用户操作前加载。并发限制避免浏览器 6 连接限制。React Query/SWR 自动缓存+去重+重试。",
+  "bottlenecks": [
+    {"name": "请求瀑布流", "category": "时序竞争", "priority": "P0", "trigger": "多接口串行调用", "symptom": "首屏加载=所有请求时间之和", "version_sensitive": "none"},
+    {"name": "请求竞态", "category": "时序竞争", "priority": "P1", "trigger": "快速切换页面旧请求覆盖新数据", "symptom": "显示过期数据", "version_sensitive": "none"}
+  ],
+  "tradeoffs": [
+    {"dimension": "数据获取", "option_a": "客户端并发（灵活但请求数多）", "option_b": "BFF 聚合（减少请求但增加服务端复杂度）", "suggestion": "接口>3个时用 BFF 聚合"}
+  ],
+  "experiment_code": null,
+  "references": [
+    {"tier": "T1", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all", "title": "MDN: Promise.all"}
+  ]
+}

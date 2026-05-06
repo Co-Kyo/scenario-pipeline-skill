@@ -1,0 +1,17 @@
+{
+  "id": "A13", "name": "CSS contain 与合成层", "tech_layer": "CSS层",
+  "fanout": "3/8", "coupling": 1, "strategic_value": 3.0,
+  "mechanism_summary": "contain 属性隔离子树，允许浏览器跳过不必要的布局/绘制。content-visibility:auto 自动跳过视口外元素渲染。will-change:transform 提升为独立合成层 GPU 加速，但每个层消耗 GPU 内存。",
+  "bottlenecks": [
+    {"name": "层爆炸", "category": "资源边界", "priority": "P1", "trigger": "大量元素使用 will-change", "symptom": "GPU 内存暴涨", "version_sensitive": "none"},
+    {"name": "contain 尺寸异常", "category": "输入变异", "priority": "P1", "trigger": "contain:size 未显式设尺寸", "symptom": "元素高度塌陷", "version_sensitive": "none"}
+  ],
+  "tradeoffs": [
+    {"dimension": "隔离粒度", "option_a": "contain:content（轻量）", "option_b": "contain:strict（完全隔离需手动设尺寸）", "suggestion": "默认用 content"}
+  ],
+  "experiment_code": null,
+  "references": [
+    {"tier": "T1", "url": "https://developer.mozilla.org/en-US/docs/Web/CSS/contain", "title": "MDN: CSS contain"},
+    {"tier": "T2", "url": "https://web.dev/articles/content-visibility", "title": "web.dev: Content Visibility"}
+  ]
+}

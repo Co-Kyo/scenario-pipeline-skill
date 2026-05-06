@@ -1,0 +1,17 @@
+{
+  "id": "A4", "name": "DevTools 性能分析", "tech_layer": "调试工具层",
+  "fanout": "4/8", "coupling": 1, "strategic_value": 4.0,
+  "mechanism_summary": "Performance 面板录制时间线火焰图，识别 Long Task（>50ms）、Layout/Paint 热点和 FPS 掉帧。Memory 面板拍摄 Heap Snapshot 对比定位内存泄漏，通过 Retainers 链追踪对象为何无法 GC。Lighthouse 自动化审计 Core Web Vitals。",
+  "bottlenecks": [
+    {"name": "未识别 Long Task", "category": "资源边界", "priority": "P0", "trigger": "不知道哪些代码阻塞主线程", "symptom": "用户反馈卡顿但无法定位", "version_sensitive": "none", "affected_tool": null, "affected_versions": null, "fixed_version": null, "fixed_source": null},
+    {"name": "Detached DOM 未检测", "category": "资源边界", "priority": "P0", "trigger": "不知道有 DOM 节点泄漏", "symptom": "内存持续增长", "version_sensitive": "none", "affected_tool": null, "affected_versions": null, "fixed_version": null, "fixed_source": null}
+  ],
+  "tradeoffs": [
+    {"dimension": "分析方式", "option_a": "Performance 面板（精确但需手动）", "option_b": "Lighthouse（自动化但可能不够精确）", "suggestion": "开发用 Performance 深入分析，CI 用 Lighthouse 回归"}
+  ],
+  "experiment_code": null,
+  "references": [
+    {"tier": "T1", "url": "https://developer.chrome.com/docs/devtools/performance", "title": "Chrome DevTools: Performance"},
+    {"tier": "T2", "url": "https://web.dev/articles/devtools-memory", "title": "web.dev: DevTools Memory"}
+  ]
+}

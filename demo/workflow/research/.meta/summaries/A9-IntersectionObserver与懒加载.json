@@ -1,0 +1,17 @@
+{
+  "id": "A9", "name": "IntersectionObserver 与懒加载", "tech_layer": "浏览器层",
+  "fanout": "3/8", "coupling": 1, "strategic_value": 3.0,
+  "mechanism_summary": "IO 异步观察目标元素与视口的交叉状态，浏览器空闲时计算，不阻塞主线程。rootMargin 控制提前加载距离。用于图片懒加载、无限滚动、广告曝光。",
+  "bottlenecks": [
+    {"name": "懒加载图片闪烁", "category": "状态跃迁", "priority": "P0", "trigger": "图片未加载时无占位", "symptom": "CLS 增加", "version_sensitive": "none"},
+    {"name": "观察器未清理", "category": "资源边界", "priority": "P1", "trigger": "组件销毁未 disconnect", "symptom": "内存泄漏", "version_sensitive": "none"}
+  ],
+  "tradeoffs": [
+    {"dimension": "懒加载触发", "option_a": "IO（异步，性能好）", "option_b": "scroll+getBoundingClientRect（同步，兼容IE）", "suggestion": "现代浏览器用 IO"}
+  ],
+  "experiment_code": null,
+  "references": [
+    {"tier": "T1", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Intersection_Observer_API", "title": "MDN: IntersectionObserver"},
+    {"tier": "T2", "url": "https://web.dev/articles/lazy-loading-images", "title": "web.dev: Lazy Loading Images"}
+  ]
+}

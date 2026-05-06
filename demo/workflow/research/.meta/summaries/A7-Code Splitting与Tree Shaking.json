@@ -1,0 +1,17 @@
+{
+  "id": "A7", "name": "Code Splitting 与 Tree Shaking", "tech_layer": "构建层",
+  "fanout": "2/8", "coupling": 2, "strategic_value": 1.0,
+  "mechanism_summary": "Code Splitting 通过动态 import() 生成独立 chunk，路由级/组件级按需加载。Tree Shaking 基于 ESM 静态分析删除未使用代码。持久化缓存通过 contenthash 文件名实现。前提：必须使用 ESM，CommonJS 无法 tree shake。",
+  "bottlenecks": [
+    {"name": "Tree Shaking 失效", "category": "输入变异", "priority": "P0", "trigger": "使用 CommonJS 或 sideEffects 未配置", "symptom": "未使用代码仍在产物中", "version_sensitive": "none", "affected_tool": null, "affected_versions": null, "fixed_version": null, "fixed_source": null},
+    {"name": "vendor chunk 膨胀", "category": "规模拐点", "priority": "P1", "trigger": "大库污染 vendor chunk", "symptom": "vendor.js > 500KB", "version_sensitive": "none", "affected_tool": null, "affected_versions": null, "fixed_version": null, "fixed_source": null}
+  ],
+  "tradeoffs": [
+    {"dimension": "分割粒度", "option_a": "路由级分割（简单）", "option_b": "组件级分割（精细但复杂）", "suggestion": "默认路由级，大组件再做组件级"}
+  ],
+  "experiment_code": null,
+  "references": [
+    {"tier": "T1", "url": "https://webpack.js.org/guides/code-splitting/", "title": "Webpack: Code Splitting"},
+    {"tier": "T2", "url": "https://web.dev/articles/reduce-javascript-payloads-with-tree-shaking", "title": "web.dev: Tree Shaking"}
+  ]
+}

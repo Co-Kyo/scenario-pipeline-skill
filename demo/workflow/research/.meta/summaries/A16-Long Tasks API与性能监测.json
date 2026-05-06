@@ -1,0 +1,17 @@
+{
+  "id": "A16", "name": "Long Tasks API 与性能监测", "tech_layer": "性能API层",
+  "fanout": "2/8", "coupling": 1, "strategic_value": 1.0,
+  "mechanism_summary": "Long Tasks API 监测主线程 >50ms 的任务。PerformanceObserver 支持 longtask/largest-contentful-paint/layout-shift/event 等 entry types。INP 通过 event type 采集交互延迟。",
+  "bottlenecks": [
+    {"name": "Long Task 未被发现", "category": "资源边界", "priority": "P0", "trigger": "未部署监测", "symptom": "用户体验差但无告警", "version_sensitive": "none"},
+    {"name": "监测本身消耗性能", "category": "时序竞争", "priority": "P2", "trigger": "回调过重", "symptom": "回调成为新的 Long Task", "version_sensitive": "none"}
+  ],
+  "tradeoffs": [
+    {"dimension": "采集方式", "option_a": "PerformanceObserver（实时）", "option_b": "web-vitals 库（封装好但额外JS）", "suggestion": "推荐 web-vitals 库"}
+  ],
+  "experiment_code": null,
+  "references": [
+    {"tier": "T1", "url": "https://developer.mozilla.org/en-US/docs/Web/API/Long_Tasks_API", "title": "MDN: Long Tasks API"},
+    {"tier": "T2", "url": "https://web.dev/articles/inp", "title": "web.dev: INP"}
+  ]
+}

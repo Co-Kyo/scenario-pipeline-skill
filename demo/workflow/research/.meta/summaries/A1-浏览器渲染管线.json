@@ -1,0 +1,66 @@
+{
+  "id": "A1",
+  "name": "浏览器渲染管线",
+  "tech_layer": "浏览器层",
+  "fanout": "6/8",
+  "coupling": 1,
+  "strategic_value": 6.0,
+  "mechanism_summary": "关键渲染路径（CRP）：HTML→DOM Tree、CSS→CSSOM，合并为 Render Tree，经 Layout（计算位置尺寸）→ Paint（绘制像素）→ Composite（合成图层）生成最终画面。transform/opacity 只触发 Composite 最高效，width/height 触发 Layout 最昂贵。",
+  "bottlenecks": [
+    {
+      "name": "强制同步布局（Layout Thrashing）",
+      "category": "时序竞争",
+      "priority": "P0",
+      "trigger": "JS 中交替读写布局属性（读 offsetHeight 后立即写 style.width）",
+      "symptom": "单帧 Layout 次数暴增，帧率骤降至 15fps",
+      "version_sensitive": "weak",
+      "affected_tool": "Chrome",
+      "affected_versions": "all",
+      "fixed_version": null,
+      "fixed_source": null
+    },
+    {
+      "name": "过深 DOM 嵌套",
+      "category": "规模拐点",
+      "priority": "P1",
+      "trigger": "DOM 树超过 32 层或节点数超过 1500 个",
+      "symptom": "Layout 计算时间线性增长",
+      "version_sensitive": "weak",
+      "affected_tool": null,
+      "affected_versions": null,
+      "fixed_version": null,
+      "fixed_source": null
+    },
+    {
+      "name": "触发布局属性的动画",
+      "category": "时序竞争",
+      "priority": "P1",
+      "trigger": "用 width/height/margin 做 CSS 动画",
+      "symptom": "每帧触发 Layout+Paint，CPU 占用高，动画卡顿",
+      "version_sensitive": "none",
+      "affected_tool": null,
+      "affected_versions": null,
+      "fixed_version": null,
+      "fixed_source": null
+    }
+  ],
+  "tradeoffs": [
+    {
+      "dimension": "动画属性选择",
+      "option_a": "transform/opacity → Composite only，GPU 加速",
+      "option_b": "width/height/margin → Layout+Paint，CPU 密集",
+      "suggestion": "优先用 transform/opacity，只在无法避免时触发 Layout"
+    },
+    {
+      "dimension": "图层策略",
+      "option_a": "will-change 创建独立图层 → GPU 内存增加但 Paint 隔离",
+      "option_b": "不提升图层 → 整体重绘，GPU 内存节省",
+      "suggestion": "仅对频繁重绘的动画元素提升，静态元素不要提升"
+    }
+  ],
+  "experiment_code": null,
+  "references": [
+    {"tier": "T1", "url": "https://developer.mozilla.org/en-US/docs/Web/Performance/Critical_rendering_path", "title": "MDN: Critical Rendering Path"},
+    {"tier": "T2", "url": "https://web.dev/articles/rendering-performance", "title": "web.dev: Rendering Performance"}
+  ]
+}
