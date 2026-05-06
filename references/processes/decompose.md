@@ -4,8 +4,11 @@
 
 ## 输入
 
-- `proposition`：命题文本（如"Vue3 虚拟列表：万级数据渲染"）
+- `raw_materials`：扫描阶段的原始素材（来自 processes/scan.md 的输出，含 title/url/summary）
+- `proposition`：命题文本（从 raw_materials 中提取/构造，如"Vue3 虚拟列表：万级数据渲染"）
 - `qualifier_context`：限定词上下文（可选，如框架/平台/架构模式）
+
+> 注：编排层（pre-process.md）负责从 raw_materials 中提取命题文本传入本步骤。如果直接调用本步骤，需自行提供 proposition。
 
 ## 执行步骤
 

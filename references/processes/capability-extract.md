@@ -27,6 +27,12 @@
 
 每个原子能力的前置依赖（A 依赖 B = 理解 A 之前必须先理解 B）
 
+> ⛔ **校验点**：完成后立即检查——每个能力是否都有 `dependencies` 字段？
+> - 空数组 `[]` 表示"无前置依赖"，但字段**必须存在**
+> - 基础能力（如渲染管线）的 dependencies 为 `[]`
+> - 下游能力（如 DOM 生命周期）的 dependencies 必须引用上游能力 ID
+> - **缺失任何一个能力的 dependencies → 回退重做 Step 3**
+
 ### Step 4：计算扇出度
 
 ```
@@ -36,6 +42,12 @@
 ### Step 5：限定词注入分析
 
 分析不同限定词向命题注入的特化能力集
+
+> ⛔ **校验点**：完成后立即检查——
+> - `qualifier_injection` 对象是否包含所有出现过的限定词？（如 React、Vue、Webpack、Vite 等）
+> - 每个限定词必须有 `injects`（注入的特化能力列表）和 `replaces`（替换的通用能力列表）两个 key
+> - 如果命题没有限定词（纯通用），该限定词分析结果为空对象 `{}`
+> - **qualifier_injection 字段缺失或结构不完整 → 回退重做 Step 5**
 
 ### Step 6：信源 URL 预查找（强制）
 
@@ -124,6 +136,25 @@
 | 黑名单过滤 | 命中 blacklist 的 URL | 直接丢弃，不写入 JSON |
 | 验证完整性 | **每个写入 JSON 的 URL 都必须经过上述全部校验** | 未验证 → 禁止写入，verified 字段不得为 true |
 
+### Step 6.5：⛔ 结构完整性强制校验（写入前必须通过）
+
+在写入 capability-graph.json 之前，逐项检查以下字段是否存在且格式正确：
+
+| # | 字段 | 位置 | 格式要求 | 缺失处理 |
+|---|------|------|---------|---------|
+| 1 | `$schema` | 顶层 | `"capability-graph-v1"` | 必须补充 |
+| 2 | `meta` | 顶层 | `{scan_date, target_years, total_propositions, scan_scope}` | 必须补充 |
+| 3 | `dependencies` | 每个 capability 内 | 数组，可为空 `[]` | 必须补充 |
+| 4 | `tags` | 每个 capability 内 | 数组，≥1 个标签 | 必须补充 |
+| 5 | `source_domain` | 每个 capability 内 | 字符串，来自 source-registry 技术域 | 必须补充 |
+| 6 | `covers` | 每个 capability 内 | 数组，引用命题 ID（如 `["P1", "P2"]`） | 必须补充 |
+| 7 | `fanout` | 每个 capability 内 | **对象** `{count, total, ratio, level}` | **禁止简化为数字** |
+| 8 | `references` | 每个 capability 内 | **对象** `{t1: [], t2: [], t1_missing}` | **禁止简化为 URL 字符串** |
+| 9 | `dependency_graph` | 顶层 | 对象，key=能力ID, value=依赖ID数组 | 必须从 Step 3 结果汇总生成 |
+| 10 | `qualifier_injection` | 顶层 | 对象，key=限定词, value={injects, replaces} | 必须从 Step 5 结果汇总生成 |
+
+**任何一项缺失 → 禁止写入，返回对应步骤补全后重新校验。**
+
 ### Step 7：生成 capability-graph.json
 
 将全部结果写入 `.meta/capability-graph.json`。
@@ -131,6 +162,14 @@
 ---
 
 ## 输出：capability-graph.json
+
+> ⚠️ **反精简规则**：本文件是下游所有步骤（highground-identify、briefing-assemble、assemble、learning-ladder）的唯一数据源。禁止任何形式的字段省略或结构简化。
+>
+> - `decompositions.json` 是前处理的中间产物，**不替代**本文件的任何字段。本文件的 `propositions` 必须保留完整的 `generic_core`/`specialization`/`content_weight`/`weight_reasoning` 结构
+> - `dependency_graph` 和 `qualifier_injection` 是**必填顶层字段**，不可省略
+> - 每个 capability 的 `fanout` 必须是对象 `{count, total, ratio, level}`，**禁止简化为数字**
+> - 每个 capability 必须包含 `dependencies`、`tags`、`source_domain`、`covers` 字段，**禁止省略**
+> - 每个 capability 的 `references` 必须是对象 `{t1: [], t2: [], t1_missing}`，**禁止简化为 URL 字符串**
 
 ```jsonc
 {
@@ -153,7 +192,7 @@
         "count": 5,
         "total": 7,
         "ratio": "5/7",
-        "level": "core"
+        "level": "核心"
       },
       "coupling": 1,
       "covers": ["P1", "P2", "P3", "P5", "P6"],

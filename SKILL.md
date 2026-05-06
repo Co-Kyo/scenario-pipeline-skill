@@ -44,7 +44,8 @@ references/       ← 流程控制
       ├── evaluate.md
       ├── capability-research.md  ← 输出 capabilities/<id>-<name>.md
       ├── briefing-assemble.md    ← 输出 .meta/briefings/<命题简称>.md
-      └── assemble.md             ← 输出 <序号>-<命题简称>/
+      ├── assemble.md             ← 输出 <序号>-<命题简称>/
+      └── learning-ladder.md      ← 输出 <序号>-<命题简称>/learning-ladder.md
 ```
 
 ### Core — 元能力
@@ -168,6 +169,7 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 workflow/research/
 │
 ├── README.md                          ← 总览导航（研究范围 + 命题索引 + 学习路径摘要）
+├── learning-ladder.md                 ← 全局学习阶梯（跨命题的渐进式引导路径）
 │
 ├── 01-长列表渲染/                      ← 命题研究（用户的主要交付物）
 │   ├── overview.md                    # Q1: 链路编排
@@ -182,7 +184,7 @@ workflow/research/
 ├── 02-首屏白屏/
 │   └── ...
 │
-├── 03-网络优化/
+├── 03-内存泄漏/
 │   └── ...
 │
 ├── capabilities/                      ← 原子能力知识库（跨命题复用的参考手册）
@@ -194,6 +196,8 @@ workflow/research/
 └── .meta/                             ← 内部数据（pipeline 工具用）
     ├── capability-graph.json          # 结构化图谱（供后处理 agent 读取）
     ├── candidates.md                  # 原始候选池记录
+    ├── decompositions.json            # 命题分解记录（前处理 decompose 步骤产出）
+    ├── evaluations.json               # 评估结果记录（前处理 evaluate 步骤产出）
     ├── summaries/                     # 结构化摘要（阶段一双写，Briefing 组装时消费）
     │   ├── A1-浏览器渲染管线.json
     │   ├── A2-DOM节点生命周期.json
