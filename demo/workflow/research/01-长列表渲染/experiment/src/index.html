@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVE: 虚拟列表 vs 全量渲染</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+  .header { padding: 24px; background: #1e293b; border-bottom: 1px solid #334155; }
+  .header h1 { font-size: 20px; margin-bottom: 8px; }
+  .header p { font-size: 13px; color: #94a3b8; }
+  .controls { display: flex; gap: 12px; padding: 16px 24px; background: #1e293b; border-bottom: 1px solid #334155; flex-wrap: wrap; align-items: center; }
+  .controls label { font-size: 13px; color: #94a3b8; }
+  .controls input[type=range] { width: 120px; }
+  .controls button { padding: 6px 16px; border: 1px solid #475569; background: #334155; color: #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .controls button:hover { background: #475569; }
+  .controls button.active { background: #3b82f6; border-color: #3b82f6; }
+  .stats { display: flex; gap: 24px; padding: 12px 24px; background: #1e293b; border-bottom: 1px solid #334155; font-size: 13px; }
+  .stat { display: flex; align-items: center; gap: 6px; }
+  .stat .label { color: #64748b; }
+  .stat .value { color: #3b82f6; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stat .value.warn { color: #f59e0b; }
+  .stat .value.danger { color: #ef4444; }
+  .split { display: flex; height: calc(100vh - 180px); }
+  .panel { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #334155; }
+  .panel:last-child { border-right: none; }
+  .panel-header { padding: 10px 16px; background: #1e293b; border-bottom: 1px solid #334155; font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  .panel-header .badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+  .badge.naive { background: #7f1d1d; color: #fca5a5; }
+  .badge.virtual { background: #14532d; color: #86efac; }
+  .list-container { flex: 1; overflow-y: auto; position: relative; }
+  .item { padding: 12px 16px; border-bottom: 1px solid #1e293b; display: flex; align-items: center; gap: 12px; }
+  .item .avatar { width: 36px; height: 36px; border-radius: 50%; background: #334155; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .item .content { flex: 1; min-width: 0; }
+  .item .name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .item .text { font-size: 12px; color: #94a3b8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .virtual-inner { position: relative; }
+  .virtual-spacer { width: 100%; }
+  .fps-graph { height: 40px; background: #0f172a; border-top: 1px solid #334155; position: relative; overflow: hidden; }
+  .fps-bar { position: absolute; bottom: 0; width: 2px; background: #3b82f6; transition: height 0.1s; }
+  .fps-bar.drop { background: #ef4444; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>MVE: 虚拟列表 vs 全量渲染</h1>
+  <p>验证能力：A5-虚拟列表算法 · A1-浏览器渲染管线 · A2-事件循环机制 · A13-CSS contain</p>
+</div>
+<div class="controls">
+  <label>数据量: <span id="countLabel">10000</span></label>
+  <input type="range" id="countSlider" min="1000" max="100000" step="1000" value="10000">
+  <button id="btnNaive" class="active" onclick="switchMode('naive')">全量渲染</button>
+  <button id="btnVirtual" onclick="switchMode('virtual')">虚拟列表</button>
+  <button onclick="startScrollTest()">▶ 自动滚动测试</button>
+  <button onclick="resetTest()">↻ 重置</button>
+</div>
+<div class="stats">
+  <div class="stat"><span class="label">DOM 节点:</span><span class="value" id="statDom">-</span></div>
+  <div class="stat"><span class="label">渲染耗时:</span><span class="value" id="statRender">-</span></div>
+  <div class="stat"><span class="label">FPS:</span><span class="value" id="statFps">-</span></div>
+  <div class="stat"><span class="label">内存:</span><span class="value" id="statMem">-</span></div>
+  <div class="stat"><span class="label">可见项:</span><span class="value" id="statVisible">-</span></div>
+</div>
+<div class="split">
+  <div class="panel">
+    <div class="panel-header">
+      <span>列表视图</span>
+      <span class="badge" id="modeBadge">全量渲染</span>
+    </div>
+    <div class="list-container" id="listContainer"></div>
+    <div class="fps-graph" id="fpsGraph"></div>
+  </div>
+</div>
+
+<script>
+const TOTAL_ITEMS = () => parseInt(countSlider.value);
+const ITEM_HEIGHT = 60;
+const BUFFER = 5;
+
+let mode = 'naive';
+let items = [];
+let fpsHistory = [];
+let scrollTestRunning = false;
+let lastFrameTime = performance.now();
+let frameCount = 0;
+let currentFps = 60;
+
+// Generate mock data
+function generateItems(count) {
+  const names = ['张三', 'Li Ming', '王芳', 'Sarah', '李四', 'Alex', '赵六', 'Emily', '钱七', 'David'];
+  const texts = [
+    '刚刚发布了新的性能优化方案，效果显著！',
+    '这个虚拟列表的实现真的很巧妙，只渲染可见区域的DOM节点',
+    '前端性能优化是永恒的话题，特别是在处理大量数据时',
+    '使用 IntersectionObserver 可以优雅地实现懒加载',
+    'CSS contain 属性可以有效隔离渲染子树',
+    'requestAnimationFrame 确保动画在正确的时机执行',
+    'Web Worker 可以将计算密集型任务移到后台线程',
+    'HTTP/2 的多路复用解决了队头阻塞问题',
+  ];
+  const arr = [];
+  for (let i = 0; i < count; i++) {
+    arr.push({
+      id: i,
+      name: names[i % names.length] + ` #${i}`,
+      text: texts[i % texts.length],
+      avatar: ['🐱','🐶','🦊','🐻','🐼','🐨','🐯','🦁','🐮','🐷'][i % 10],
+    });
+  }
+  return arr;
+}
+
+// Naive rendering: render ALL items
+function renderNaive() {
+  const t0 = performance.now();
+  const container = document.getElementById('listContainer');
+  const html = items.map(item => `
+    <div class="item" data-id="${item.id}">
+      <div class="avatar">${item.avatar}</div>
+      <div class="content">
+        <div class="name">${item.name}</div>
+        <div class="text">${item.text}</div>
+      </div>
+    </div>
+  `).join('');
+  container.innerHTML = `<div class="virtual-inner">${html}</div>`;
+  const t1 = performance.now();
+  updateStat('statRender', `${(t1 - t0).toFixed(1)}ms`, t1 - t0 > 100 ? 'danger' : t1 - t0 > 32 ? 'warn' : '');
+  updateDomCount();
+}
+
+// Virtual list rendering
+let virtualState = { scrollTop: 0, startIndex: 0, endIndex: 0 };
+
+function renderVirtual() {
+  const t0 = performance.now();
+  const container = document.getElementById('listContainer');
+  const containerHeight = container.clientHeight;
+  const totalHeight = items.length * ITEM_HEIGHT;
+  const scrollTop = container.scrollTop;
+
+  const startIndex = Math.max(0, Math.floor(scrollTop / ITEM_HEIGHT) - BUFFER);
+  const endIndex = Math.min(items.length, Math.ceil((scrollTop + containerHeight) / ITEM_HEIGHT) + BUFFER);
+  const visibleCount = endIndex - startIndex;
+
+  virtualState = { scrollTop, startIndex, endIndex };
+
+  const visibleItems = items.slice(startIndex, endIndex);
+  const topSpacer = startIndex * ITEM_HEIGHT;
+  const bottomSpacer = (items.length - endIndex) * ITEM_HEIGHT;
+
+  const html = `
+    <div class="virtual-spacer" style="height:${topSpacer}px"></div>
+    ${visibleItems.map(item => `
+      <div class="item" style="height:${ITEM_HEIGHT}px">
+        <div class="avatar">${item.avatar}</div>
+        <div class="content">
+          <div class="name">${item.name}</div>
+          <div class="text">${item.text}</div>
+        </div>
+      </div>
+    `).join('')}
+    <div class="virtual-spacer" style="height:${bottomSpacer}px"></div>
+  `;
+
+  container.innerHTML = `<div class="virtual-inner">${html}</div>`;
+  container.scrollTop = scrollTop; // maintain scroll position
+
+  const t1 = performance.now();
+  updateStat('statRender', `${(t1 - t0).toFixed(1)}ms`, t1 - t0 > 16 ? 'warn' : '');
+  updateStat('statVisible', `${visibleCount} / ${items.length}`);
+  updateDomCount();
+}
+
+function render() {
+  items = generateItems(TOTAL_ITEMS());
+  if (mode === 'naive') {
+    renderNaive();
+    updateStat('statVisible', `${items.length} / ${items.length}`);
+  } else {
+    renderVirtual();
+  }
+}
+
+function switchMode(m) {
+  mode = m;
+  document.getElementById('btnNaive').classList.toggle('active', m === 'naive');
+  document.getElementById('btnVirtual').classList.toggle('active', m === 'virtual');
+  const badge = document.getElementById('modeBadge');
+  badge.textContent = m === 'naive' ? '全量渲染' : '虚拟列表';
+  badge.className = 'badge ' + m;
+  render();
+}
+
+function updateStat(id, value, cls) {
+  const el = document.getElementById(id);
+  el.textContent = value;
+  el.className = 'value' + (cls ? ' ' + cls : '');
+}
+
+function updateDomCount() {
+  const count = document.getElementById('listContainer').querySelectorAll('.item').length;
+  updateStat('statDom', count.toLocaleString());
+}
+
+function updateMemory() {
+  if (performance.memory) {
+    const mb = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
+    updateStat('statMem', `${mb}MB`, mb > 100 ? 'warn' : '');
+  }
+}
+
+// FPS tracking
+function trackFps() {
+  const now = performance.now();
+  frameCount++;
+  if (now - lastFrameTime >= 1000) {
+    currentFps = frameCount;
+    frameCount = 0;
+    lastFrameTime = now;
+    updateStat('statFps', currentFps, currentFps < 30 ? 'danger' : currentFps < 55 ? 'warn' : '');
+    addFpsBar(currentFps);
+  }
+  requestAnimationFrame(trackFps);
+}
+
+function addFpsBar(fps) {
+  fpsHistory.push(fps);
+  if (fpsHistory.length > 200) fpsHistory.shift();
+  const graph = document.getElementById('fpsGraph');
+  const bars = graph.children;
+  if (bars.length > 200) graph.removeChild(bars[0]);
+  const bar = document.createElement('div');
+  bar.className = 'fps-bar' + (fps < 30 ? ' drop' : '');
+  bar.style.height = `${(fps / 60) * 100}%`;
+  bar.style.right = '0px';
+  graph.appendChild(bar);
+  // reposition
+  const allBars = graph.children;
+  for (let i = 0; i < allBars.length; i++) {
+    allBars[i].style.left = `${i * 3}px`;
+  }
+}
+
+// Scroll test
+function startScrollTest() {
+  if (scrollTestRunning) return;
+  scrollTestRunning = true;
+  const container = document.getElementById('listContainer');
+  const maxScroll = container.scrollHeight - container.clientHeight;
+  let scrollPos = 0;
+  const speed = mode === 'naive' ? 50 : 200;
+
+  function step() {
+    if (!scrollTestRunning || scrollPos >= maxScroll) {
+      scrollTestRunning = false;
+      return;
+    }
+    scrollPos += speed;
+    container.scrollTop = scrollPos;
+    if (mode === 'virtual') renderVirtual();
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function resetTest() {
+  scrollTestRunning = false;
+  fpsHistory = [];
+  document.getElementById('fpsGraph').innerHTML = '';
+  document.getElementById('listContainer').scrollTop = 0;
+  render();
+}
+
+// Event listeners
+document.getElementById('countSlider').addEventListener('input', (e) => {
+  document.getElementById('countLabel').textContent = parseInt(e.target.value).toLocaleString();
+  resetTest();
+});
+
+document.getElementById('listContainer').addEventListener('scroll', () => {
+  if (mode === 'virtual') {
+    requestAnimationFrame(renderVirtual);
+  }
+});
+
+// Init
+render();
+trackFps();
+setInterval(updateMemory, 2000);
+</script>
+</body>
+</html>

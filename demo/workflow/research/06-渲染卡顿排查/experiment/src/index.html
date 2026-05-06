@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVE: 渲染卡顿排查 — Long Task 与强制同步布局</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+  .header { padding: 24px; background: #1e293b; border-bottom: 1px solid #334155; }
+  .header h1 { font-size: 20px; margin-bottom: 8px; }
+  .header p { font-size: 13px; color: #94a3b8; }
+  .controls { display: flex; gap: 12px; padding: 16px 24px; background: #1e293b; border-bottom: 1px solid #334155; flex-wrap: wrap; align-items: center; }
+  button { padding: 8px 16px; border: 1px solid #475569; background: #334155; color: #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  button:hover { background: #475569; }
+  button.active { background: #3b82f6; border-color: #3b82f6; }
+  button.danger { background: #7f1d1d; border-color: #991b1b; }
+  .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 24px; max-width: 1200px; margin: 0 auto; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
+  .card h3 { font-size: 14px; margin-bottom: 12px; color: #94a3b8; }
+  .card.full { grid-column: 1 / -1; }
+  .fps-display { text-align: center; padding: 20px; }
+  .fps-number { font-size: 72px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .fps-label { font-size: 13px; color: #64748b; margin-top: 4px; }
+  .frame-timeline { height: 60px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; position: relative; overflow: hidden; margin-top: 12px; }
+  .frame-bar { position: absolute; bottom: 0; width: 3px; transition: height 0.05s; }
+  .frame-bar.ok { background: #22c55e; }
+  .frame-bar.slow { background: #f59e0b; }
+  .frame-bar.jank { background: #ef4444; }
+  .box-container { display: flex; flex-wrap: wrap; gap: 4px; padding: 12px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; min-height: 100px; }
+  .box { width: 8px; height: 8px; border-radius: 2px; background: #3b82f6; }
+  .box.layout { background: #ef4444; }
+  .log { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; max-height: 250px; overflow-y: auto; }
+  .log-entry { padding: 2px 0; }
+  .log-entry.warn { color: #f59e0b; }
+  .log-entry.error { color: #ef4444; }
+  .log-entry.ok { color: #22c55e; }
+  .code-block { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; overflow-x: auto; white-space: pre; color: #94a3b8; margin-top: 12px; }
+  .code-block .hl { color: #ef4444; }
+  .code-block .good { color: #22c55e; }
+  .tabs { display: flex; background: #1e293b; border-bottom: 1px solid #334155; }
+  .tab { padding: 10px 20px; cursor: pointer; font-size: 13px; color: #94a3b8; border-bottom: 2px solid transparent; }
+  .tab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+  [hidden] { display: none; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>MVE: 渲染卡顿排查 — Long Task 与强制同步布局</h1>
+  <p>验证能力：A1-渲染管线 · A2-事件循环 · A4-DevTools · A8-INP · A16-Long Tasks API</p>
+</div>
+<div class="tabs">
+  <div class="tab active" onclick="showTab('reflow')">🔴 强制同步布局</div>
+  <div class="tab" onclick="showTab('longtask')">⏱️ Long Task</div>
+  <div class="tab" onclick="showTab('raf')">🎬 rAF 调度</div>
+</div>
+
+<!-- Tab 1: Forced Reflow -->
+<div id="tab-reflow">
+  <div class="controls">
+    <button class="danger" onclick="runBadLayout()">❌ 读写交替（强制同步布局）</button>
+    <button onclick="runGoodLayout()">✅ 读写分离（批量操作）</button>
+    <button onclick="runRAFLayout()">🎬 rAF 调度</button>
+    <button onclick="clearBoxes()">清空</button>
+    <span style="font-size:13px;color:#64748b">DOM 数量: <input type="range" id="boxCount" min="100" max="5000" value="1000" style="width:120px" oninput="document.getElementById('boxLabel').textContent=this.value"><span id="boxLabel">1000</span></span>
+  </div>
+  <div class="dashboard">
+    <div class="card">
+      <div class="fps-display">
+        <div class="fps-number" id="fpsValue">60</div>
+        <div class="fps-label">FPS</div>
+      </div>
+      <div class="frame-timeline" id="frameTimeline"></div>
+    </div>
+    <div class="card">
+      <h3>📊 执行日志</h3>
+      <div class="log" id="layoutLog"></div>
+    </div>
+    <div class="card full">
+      <h3>📦 渲染区域</h3>
+      <div class="box-container" id="boxContainer"></div>
+      <div class="code-block"><span class="hl">// ❌ 强制同步布局 (Layout Thrashing)</span>
+for (let i = 0; i < boxes.length; i++) {
+  const height = boxes[i].offsetHeight;  // <span class="hl">读</span> → 触发 Layout
+  boxes[i].style.height = height + 1 + 'px';  // <span class="hl">写</span> → 标记 Layout 脏
+}
+// 每次循环都触发一次 Layout！N 个元素 = N 次 Layout
+
+<span class="good">// ✅ 读写分离 (Batch Operations)</span>
+const heights = boxes.map(el => el.offsetHeight);  // <span class="good">批量读</span>
+boxes.forEach((el, i) => { el.style.height = heights[i] + 1 + 'px' });  // <span class="good">批量写</span>
+// 只触发 1 次 Layout！
+
+<span class="good">// ✅ rAF 调度</span>
+requestAnimationFrame(() => {
+  const heights = boxes.map(el => el.offsetHeight);
+  boxes.forEach((el, i) => { el.style.height = heights[i] + 1 + 'px' });
+});</div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab 2: Long Task -->
+<div id="tab-longtask" hidden>
+  <div class="controls">
+    <button class="danger" onclick="runLongTask()">❌ 同步长任务 (200ms)</button>
+    <button onclick="runChunkedTask()">✅ 分片执行 (requestIdleCallback)</button>
+    <button onclick="runWorkerTask()">🔧 Web Worker</button>
+  </div>
+  <div class="dashboard">
+    <div class="card">
+      <h3>⏱️ Long Task 监测</h3>
+      <div class="log" id="longTaskLog" style="height:300px"></div>
+    </div>
+    <div class="card">
+      <h3>📊 帧率影响</h3>
+      <div class="fps-display">
+        <div class="fps-number" id="fpsValue2">60</div>
+        <div class="fps-label">FPS（执行长任务时）</div>
+      </div>
+      <div class="frame-timeline" id="frameTimeline2"></div>
+    </div>
+    <div class="card full">
+      <div class="code-block"><span class="hl">// ❌ 同步长任务 — 阻塞主线程 >50ms</span>
+function processData(items) {
+  let result = 0;
+  for (let i = 0; i < items.length; i++) {
+    result += heavyComputation(items[i]); // 200ms 同步计算
+  }
+  return result;
+}
+// → Long Task! 用户点击无响应，INP > 200ms
+
+<span class="good">// ✅ 分片执行 — 每片 <5ms</span>
+function processChunked(items, chunkSize = 100) {
+  let i = 0;
+  function processNext(deadline) {
+    while (i < items.length && deadline.timeRemaining() > 1) {
+      heavyComputation(items[i++]);
+    }
+    if (i < items.length) requestIdleCallback(processNext);
+  }
+  requestIdleCallback(processNext);
+}
+
+<span class="good">// ✅ Web Worker — 完全不阻塞主线程</span>
+const worker = new Worker('compute.js');
+worker.postMessage(items);
+worker.onmessage = (e) => updateUI(e.data);</div>
+    </div>
+  </div>
+</div>
+
+<!-- Tab 3: rAF -->
+<div id="tab-raf" hidden>
+  <div class="controls">
+    <button onclick="startAnimation('naive')">❌ setTimeout 动画</button>
+    <button onclick="startAnimation('raf')">✅ rAF 动画</button>
+    <button onclick="startAnimation('transform')">🚀 transform 动画</button>
+    <button onclick="stopAnimation()">停止</button>
+  </div>
+  <div class="dashboard">
+    <div class="card full">
+      <h3>🎬 动画演示</h3>
+      <div style="height:200px;background:#0f172a;border:1px solid #334155;border-radius:8px;position:relative;overflow:hidden">
+        <div id="ball" style="width:40px;height:40px;border-radius:50%;background:#3b82f6;position:absolute;top:80px;left:10px"></div>
+      </div>
+      <div style="margin-top:12px;font-size:13px;color:#94a3b8" id="animInfo">选择动画模式开始演示</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let fpsFrames = [];
+let fpsLastTime = performance.now();
+let animId = null;
+
+// FPS tracking
+function trackFps() {
+  const now = performance.now();
+  fpsFrames.push(now);
+  fpsFrames = fpsFrames.filter(t => now - t < 1000);
+  const fps = fpsFrames.length;
+  const el1 = document.getElementById('fpsValue');
+  const el2 = document.getElementById('fpsValue2');
+  if (el1) { el1.textContent = fps; el1.style.color = fps < 30 ? '#ef4444' : fps < 55 ? '#f59e0b' : '#22c55e'; }
+  if (el2) { el2.textContent = fps; el2.style.color = fps < 30 ? '#ef4444' : fps < 55 ? '#f59e0b' : '#22c55e'; }
+  addFrameBar(fps);
+  requestAnimationFrame(trackFps);
+}
+
+function addFrameBar(fps) {
+  const tl = document.getElementById('frameTimeline');
+  if (!tl) return;
+  const bar = document.createElement('div');
+  bar.className = 'frame-bar ' + (fps >= 55 ? 'ok' : fps >= 30 ? 'slow' : 'jank');
+  bar.style.height = `${(fps / 60) * 100}%`;
+  bar.style.right = '0px';
+  tl.appendChild(bar);
+  const bars = tl.children;
+  if (bars.length > 200) tl.removeChild(bars[0]);
+  for (let i = 0; i < bars.length; i++) bars[i].style.left = `${i * 4}px`;
+}
+
+function showTab(name) {
+  ['reflow','longtask','raf'].forEach(t => {
+    document.getElementById('tab-' + t).hidden = t !== name;
+  });
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function log(msg, cls) {
+  const el = document.getElementById('layoutLog') || document.getElementById('longTaskLog');
+  if (!el) return;
+  const div = document.createElement('div');
+  div.className = 'log-entry' + (cls ? ' ' + cls : '');
+  div.textContent = `[${performance.now().toFixed(0)}ms] ${msg}`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+// Forced reflow demo
+function createBoxes() {
+  const count = parseInt(document.getElementById('boxCount').value);
+  const container = document.getElementById('boxContainer');
+  container.innerHTML = '';
+  for (let i = 0; i < count; i++) {
+    const box = document.createElement('div');
+    box.className = 'box';
+    container.appendChild(box);
+  }
+  return container.querySelectorAll('.box');
+}
+
+function clearBoxes() {
+  document.getElementById('boxContainer').innerHTML = '';
+  document.getElementById('layoutLog').innerHTML = '';
+}
+
+function runBadLayout() {
+  const boxes = createBoxes();
+  log(`开始强制同步布局：${boxes.length} 个元素，读写交替...`, 'error');
+  const t0 = performance.now();
+  for (let i = 0; i < boxes.length; i++) {
+    const h = boxes[i].offsetHeight; // READ → force layout
+    boxes[i].style.height = (h + 1) + 'px'; // WRITE → mark dirty
+  }
+  const elapsed = performance.now() - t0;
+  log(`完成！耗时 ${elapsed.toFixed(1)}ms（触发了 ${boxes.length} 次 Layout）`, elapsed > 50 ? 'error' : 'warn');
+  log(`⚠️ 每次读写交替都强制浏览器同步 Layout，这就是 "Layout Thrashing"`, 'warn');
+}
+
+function runGoodLayout() {
+  const boxes = createBoxes();
+  log(`开始读写分离：批量读 → 批量写...`, 'ok');
+  const t0 = performance.now();
+  const heights = Array.from(boxes).map(el => el.offsetHeight); // Batch READ
+  boxes.forEach((el, i) => { el.style.height = (heights[i] + 1) + 'px' }); // Batch WRITE
+  const elapsed = performance.now() - t0;
+  log(`完成！耗时 ${elapsed.toFixed(1)}ms（只触发 1 次 Layout）`, 'ok');
+  log(`✅ 读写分离：所有读操作完成后才执行写操作，Layout 只触发一次`, 'ok');
+}
+
+function runRAFLayout() {
+  const boxes = createBoxes();
+  log(`开始 rAF 调度...`, 'ok');
+  requestAnimationFrame(() => {
+    const t0 = performance.now();
+    const heights = Array.from(boxes).map(el => el.offsetHeight);
+    boxes.forEach((el, i) => { el.style.height = (heights[i] + 1) + 'px' });
+    const elapsed = performance.now() - t0;
+    log(`rAF 回调内完成！耗时 ${elapsed.toFixed(1)}ms`, 'ok');
+    log(`✅ rAF 确保读写在渲染帧的正确时机执行，避免不必要的中间 Layout`, 'ok');
+  });
+}
+
+// Long Task demo
+function runLongTask() {
+  log('开始同步长任务（200ms 计算）...', 'error');
+  const t0 = performance.now();
+  let result = 0;
+  for (let i = 0; i < 50000000; i++) result += Math.sqrt(i); // ~200ms
+  const elapsed = performance.now() - t0;
+  log(`长任务完成：${elapsed.toFixed(1)}ms — 这期间页面完全无响应！`, 'error');
+  log(`⚠️ >50ms 的任务会被 Long Tasks API 标记为 Long Task`, 'warn');
+}
+
+function runChunkedTask() {
+  log('开始分片执行（requestIdleCallback）...', 'ok');
+  let i = 0;
+  const total = 50000000;
+  function processNext() {
+    const deadline = performance.now();
+    while (i < total && performance.now() - deadline < 4) { // 每片 <4ms
+      Math.sqrt(i++);
+    }
+    if (i < total) {
+      log(`  分片完成：${(i/total*100).toFixed(0)}%，未阻塞主线程`, 'ok');
+      requestAnimationFrame(processNext);
+    } else {
+      log(`全部完成！主线程始终保持响应`, 'ok');
+    }
+  }
+  requestAnimationFrame(processNext);
+}
+
+function runWorkerTask() {
+  log('Web Worker 模式：计算完全在后台线程，主线程 0 阻塞', 'ok');
+  log('（此演示省略 Worker 创建，实际代码见上方）', 'ok');
+}
+
+// Animation demo
+function startAnimation(type) {
+  stopAnimation();
+  const ball = document.getElementById('ball');
+  let pos = 10;
+  const info = document.getElementById('animInfo');
+
+  if (type === 'naive') {
+    info.textContent = '❌ setTimeout 每 16ms 触发，但实际时间不精确，且读写交替触发 Layout';
+    function step() {
+      pos += 2;
+      if (pos > 600) pos = 10;
+      ball.style.left = pos + 'px'; // triggers Layout
+      animId = setTimeout(step, 16);
+    }
+    step();
+  } else if (type === 'raf') {
+    info.textContent = '✅ requestAnimationFrame 与浏览器刷新率同步，每帧只执行一次';
+    function step() {
+      pos += 2;
+      if (pos > 600) pos = 10;
+      ball.style.left = pos + 'px'; // still Layout, but synced to frame
+      animId = requestAnimationFrame(step);
+    }
+    animId = requestAnimationFrame(step);
+  } else if (type === 'transform') {
+    info.textContent = '🚀 transform 只触发 Composite，跳过 Layout 和 Paint，性能最优';
+    function step() {
+      pos += 2;
+      if (pos > 600) pos = 10;
+      ball.style.transform = `translateX(${pos}px)`; // Composite only!
+      animId = requestAnimationFrame(step);
+    }
+    animId = requestAnimationFrame(step);
+  }
+}
+
+function stopAnimation() {
+  if (animId) { cancelAnimationFrame(animId); clearTimeout(animId); animId = null; }
+  document.getElementById('ball').style.transform = '';
+  document.getElementById('ball').style.left = '10px';
+}
+
+// Long Tasks API observer
+if ('PerformanceObserver' in window) {
+  try {
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        log(`🔴 Long Task detected: ${entry.duration.toFixed(1)}ms (at ${entry.startTime.toFixed(0)}ms)`, 'error');
+      }
+    });
+    observer.observe({ entryTypes: ['longtask'] });
+  } catch(e) {}
+}
+
+trackFps();
+</script>
+</body>
+</html>

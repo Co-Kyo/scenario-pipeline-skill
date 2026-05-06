@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVE: 网络请求优化 — 瀑布流 vs 并发 vs 聚合</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+  .header { padding: 24px; background: #1e293b; border-bottom: 1px solid #334155; }
+  .header h1 { font-size: 20px; margin-bottom: 8px; }
+  .header p { font-size: 13px; color: #94a3b8; }
+  .controls { display: flex; gap: 12px; padding: 16px 24px; background: #1e293b; border-bottom: 1px solid #334155; flex-wrap: wrap; align-items: center; }
+  button { padding: 8px 16px; border: 1px solid #475569; background: #334155; color: #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  button:hover { background: #475569; }
+  button.active { background: #3b82f6; border-color: #3b82f6; }
+  .dashboard { display: grid; grid-template-columns: 1fr; gap: 16px; padding: 24px; max-width: 1200px; margin: 0 auto; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
+  .card h3 { font-size: 14px; margin-bottom: 12px; color: #94a3b8; }
+  .metrics-row { display: flex; gap: 24px; margin-bottom: 16px; flex-wrap: wrap; }
+  .metric { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .metric .name { font-size: 11px; color: #64748b; }
+  .metric .val { font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .metric .val.good { color: #22c55e; }
+  .metric .val.warn { color: #f59e0b; }
+  .metric .val.bad { color: #ef4444; }
+  .waterfall-container { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 16px; min-height: 300px; position: relative; }
+  .wf-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; height: 28px; }
+  .wf-label { width: 80px; font-size: 11px; color: #64748b; text-align: right; flex-shrink: 0; }
+  .wf-track { flex: 1; height: 20px; position: relative; background: #1e293b; border-radius: 3px; }
+  .wf-bar { position: absolute; height: 100%; border-radius: 3px; display: flex; align-items: center; padding: 0 6px; font-size: 10px; color: #fff; white-space: nowrap; }
+  .wf-bar.api { background: #3b82f6; }
+  .wf-bar.wait { background: #475569; opacity: 0.5; }
+  .wf-bar.parallel { background: #22c55e; }
+  .wf-time { position: absolute; right: -60px; top: 0; font-size: 10px; color: #64748b; height: 20px; display: flex; align-items: center; }
+  .wf-axis { display: flex; justify-content: space-between; font-size: 10px; color: #475569; margin-top: 8px; }
+  .code-block { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; overflow-x: auto; white-space: pre; color: #94a3b8; margin-top: 12px; }
+  .code-block .hl { color: #ef4444; }
+  .code-block .good { color: #22c55e; }
+  .slider-group { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #94a3b8; }
+  .slider-group input { width: 100px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>MVE: 网络请求优化 — 瀑布流 vs 并发 vs 聚合</h1>
+  <p>验证能力：A15-请求并发与数据预取 · A6-HTTP 缓存 · A8-Core Web Vitals</p>
+</div>
+<div class="controls">
+  <button class="active" onclick="switchMode('serial')">❌ 串行请求</button>
+  <button onclick="switchMode('parallel')">⚡ 并发请求</button>
+  <button onclick="switchMode('bff')">🔀 BFF 聚合</button>
+  <button onclick="switchMode('prefetch')">🚀 预取 + 缓存</button>
+  <div class="slider-group">
+    API 延迟: <input type="range" id="delaySlider" min="100" max="800" value="200" oninput="updateDelay()">
+    <span id="delayLabel">200ms</span>
+  </div>
+</div>
+
+<div class="dashboard">
+  <div class="card">
+    <h3>📊 性能指标</h3>
+    <div class="metrics-row">
+      <div class="metric"><span class="name">总耗时</span><span class="val" id="totalTime">-</span></div>
+      <div class="metric"><span class="name">请求数</span><span class="val" id="reqCount">-</span></div>
+      <div class="metric"><span class="name">并发连接</span><span class="val" id="conns">-</span></div>
+      <div class="metric"><span class="name">阻塞时间</span><span class="val" id="blockTime">-</span></div>
+      <div class="metric"><span class="name">首屏可用</span><span class="val" id="firstPaint">-</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🌊 请求瀑布图</h3>
+    <div class="waterfall-container" id="waterfall"></div>
+    <div class="wf-axis" id="wfAxis"></div>
+  </div>
+
+  <div class="card">
+    <h3>💡 方案说明</h3>
+    <div id="modeDesc" style="font-size:13px;color:#94a3b8;line-height:1.6;margin-bottom:12px"></div>
+    <div class="code-block" id="modeCode"></div>
+  </div>
+</div>
+
+<script>
+let delay = 200;
+
+const apis = [
+  { name: '用户信息', id: 'user', size: '2KB' },
+  { name: '订单列表', id: 'orders', size: '15KB' },
+  { name: '推荐商品', id: 'recommend', size: '20KB' },
+  { name: '消息通知', id: 'messages', size: '5KB' },
+  { name: '广告位', id: 'ads', size: '8KB' },
+];
+
+const modes = {
+  serial: {
+    name: '串行请求',
+    desc: '每个请求等待前一个完成后才发起。总耗时 = 所有请求时间之和。典型的 "瀑布流" 问题。',
+    code: `// ❌ 串行请求 — 总耗时 = sum(所有请求)
+const user = await fetch('/api/user');         // 200ms
+const orders = await fetch('/api/orders');     // 200ms (等 user 完成)
+const recommend = await fetch('/api/recommend'); // 200ms (等 orders 完成)
+const messages = await fetch('/api/messages'); // 200ms
+const ads = await fetch('/api/ads');           // 200ms
+// 总耗时: 1000ms! 首屏需要所有数据才能渲染`,
+    compute: (d) => {
+      let start = 0;
+      return apis.map(api => {
+        const entry = { name: api.name, start, dur: d, type: 'api' };
+        start += d;
+        return entry;
+      });
+    },
+    metrics: (d) => ({ total: d * 5, reqs: 5, conns: 1, block: d * 4, first: d * 5 }),
+  },
+  parallel: {
+    name: '并发请求',
+    desc: 'Promise.all 同时发起所有请求。总耗时 = 最慢单个请求时间。受浏览器 6 连接限制。',
+    code: `// ✅ 并发请求 — 总耗时 = max(所有请求)
+const [user, orders, recommend, messages, ads] = await Promise.all([
+  fetch('/api/user'),
+  fetch('/api/orders'),
+  fetch('/api/recommend'),
+  fetch('/api/messages'),
+  fetch('/api/ads'),
+]);
+// 总耗时: 200ms（并行完成）
+// 注意：浏览器同域 6 连接限制，超过 6 个请求会排队`,
+    compute: (d) => apis.map(api => ({ name: api.name, start: 0, dur: d, type: 'parallel' })),
+    metrics: (d) => ({ total: d, reqs: 5, conns: 5, block: 0, first: d }),
+  },
+  bff: {
+    name: 'BFF 聚合',
+    desc: '后端聚合多个接口为一个请求。消除客户端瀑布流，减少 HTTP 连接数。适合微服务架构。',
+    code: `// ✅ BFF 聚合 — 1 个请求获取所有数据
+const data = await fetch('/api/bff/home');
+// BFF 层内部并发调用微服务，聚合后返回
+// {
+//   user: {...},
+//   orders: [...],
+//   recommend: [...],
+//   messages: [...],
+//   ads: [...]
+// }
+
+// BFF 层 (Node.js)
+router.get('/api/bff/home', async (req, res) => {
+  const [user, orders, recommend, messages, ads] = await Promise.all([
+    userService.get(req.userId),
+    orderService.list(req.userId),
+    recommendService.get(req.userId),
+    messageService.unread(req.userId),
+    adService.get('home'),
+  ]);
+  res.json({ user, orders, recommend, messages, ads });
+});`,
+    compute: (d) => [{ name: 'BFF 聚合接口', start: 0, dur: d + 30, type: 'api' }],
+    metrics: (d) => ({ total: d + 30, reqs: 1, conns: 1, block: 0, first: d + 30 }),
+  },
+  prefetch: {
+    name: '预取 + 缓存',
+    desc: '首屏关键数据优先，非关键数据预取。结合 HTTP 缓存和 SWR 策略。',
+    code: `// ✅ 分级加载 + 预取
+// 1. 首屏关键数据立即请求
+const user = await fetch('/api/user');      // 首屏必须
+const orders = await fetch('/api/orders');   // 首屏必须
+
+// 2. 非关键数据预取（不阻塞渲染）
+const recommendPromise = fetch('/api/recommend');
+const messagesPromise = fetch('/api/messages');
+const adsPromise = fetch('/api/ads');
+
+// 3. 渲染首屏
+renderPage({ user, orders });
+
+// 4. 预取数据到达后增量更新
+recommendPromise.then(r => r.json()).then(data => updateRecommend(data));
+messagesPromise.then(r => r.json()).then(data => updateMessages(data));
+
+// 5. React Query / SWR 自动缓存 + 重新验证
+const { data } = useQuery('recommend', fetchRecommend, {
+  staleTime: 5 * 60 * 1000,  // 5 分钟内不重新请求
+  prefetch: true,              // 预取
+});`,
+    compute: (d) => [
+      { name: '用户信息', start: 0, dur: d, type: 'parallel' },
+      { name: '订单列表', start: 0, dur: d, type: 'parallel' },
+      { name: '推荐商品', start: d, dur: d, type: 'api' },
+      { name: '消息通知', start: d, dur: d * 0.6, type: 'api' },
+      { name: '广告位', start: d, dur: d * 0.8, type: 'api' },
+    ],
+    metrics: (d) => ({ total: d + d, reqs: 5, conns: 3, block: 0, first: d }),
+  },
+};
+
+let currentMode = 'serial';
+
+function updateDelay() {
+  delay = parseInt(document.getElementById('delaySlider').value);
+  document.getElementById('delayLabel').textContent = delay + 'ms';
+  render();
+}
+
+function switchMode(name) {
+  currentMode = name;
+  document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  render();
+}
+
+function render() {
+  const mode = modes[currentMode];
+  const entries = mode.compute(delay);
+  const m = mode.metrics(delay);
+  const maxTime = Math.max(...entries.map(e => e.start + e.dur));
+
+  // Metrics
+  const totalEl = document.getElementById('totalTime');
+  totalEl.textContent = m.total + 'ms';
+  totalEl.className = 'val ' + (m.total < 300 ? 'good' : m.total < 600 ? 'warn' : 'bad');
+
+  document.getElementById('reqCount').textContent = m.reqs;
+  const connEl = document.getElementById('conns');
+  connEl.textContent = m.conns;
+  connEl.className = 'val ' + (m.conns <= 2 ? 'good' : m.conns <= 4 ? 'warn' : 'bad');
+
+  const blockEl = document.getElementById('blockTime');
+  blockEl.textContent = m.block + 'ms';
+  blockEl.className = 'val ' + (m.block === 0 ? 'good' : m.block < 300 ? 'warn' : 'bad');
+
+  const firstEl = document.getElementById('firstPaint');
+  firstEl.textContent = m.first + 'ms';
+  firstEl.className = 'val ' + (m.first < 300 ? 'good' : m.first < 600 ? 'warn' : 'bad');
+
+  // Waterfall
+  const wf = document.getElementById('waterfall');
+  wf.innerHTML = entries.map(e => {
+    const left = (e.start / maxTime * 100).toFixed(1);
+    const width = Math.max((e.dur / maxTime * 100), 3).toFixed(1);
+    return `<div class="wf-row">
+      <span class="wf-label">${e.name}</span>
+      <div class="wf-track">
+        <div class="wf-bar ${e.type}" style="left:${left}%;width:${width}%">${e.dur}ms</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Axis
+  const axis = document.getElementById('wfAxis');
+  const steps = 5;
+  axis.innerHTML = Array.from({length: steps + 1}, (_, i) =>
+    `<span>${Math.round(maxTime / steps * i)}ms</span>`
+  ).join('');
+
+  // Description
+  document.getElementById('modeDesc').textContent = mode.desc;
+  document.getElementById('modeCode').textContent = mode.code;
+}
+
+render();
+</script>
+</body>
+</html>

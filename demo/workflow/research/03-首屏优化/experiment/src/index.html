@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVE: 首屏优化 — Code Splitting 与懒加载</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+  .header { padding: 24px; background: #1e293b; border-bottom: 1px solid #334155; }
+  .header h1 { font-size: 20px; margin-bottom: 8px; }
+  .header p { font-size: 13px; color: #94a3b8; }
+  .controls { display: flex; gap: 12px; padding: 16px 24px; background: #1e293b; border-bottom: 1px solid #334155; flex-wrap: wrap; }
+  button { padding: 8px 16px; border: 1px solid #475569; background: #334155; color: #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  button:hover { background: #475569; }
+  button.active { background: #3b82f6; border-color: #3b82f6; }
+  .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 24px; max-width: 1200px; margin: 0 auto; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
+  .card h3 { font-size: 14px; margin-bottom: 12px; color: #94a3b8; }
+  .waterfall { display: flex; flex-direction: column; gap: 4px; }
+  .bar-row { display: flex; align-items: center; gap: 8px; height: 24px; }
+  .bar-label { width: 120px; font-size: 11px; color: #64748b; text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 16px; background: #0f172a; border-radius: 4px; position: relative; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; position: absolute; left: 0; top: 0; transition: width 0.5s ease; }
+  .bar-fill.html { background: #f59e0b; }
+  .bar-fill.css { background: #3b82f6; }
+  .bar-fill.js { background: #ef4444; }
+  .bar-fill.img { background: #22c55e; }
+  .bar-fill.api { background: #a855f7; }
+  .bar-time { width: 60px; font-size: 11px; color: #64748b; font-variant-numeric: tabular-nums; }
+  .metric { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #334155; }
+  .metric:last-child { border-bottom: none; }
+  .metric .name { font-size: 13px; }
+  .metric .val { font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .metric .val.good { color: #22c55e; }
+  .metric .val.warn { color: #f59e0b; }
+  .metric .val.bad { color: #ef4444; }
+  .timeline { height: 80px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; position: relative; overflow: hidden; }
+  .timeline-block { position: absolute; height: 20px; border-radius: 3px; display: flex; align-items: center; padding: 0 6px; font-size: 10px; color: #fff; white-space: nowrap; }
+  .scenario-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+  .full-width { grid-column: 1 / -1; }
+  .code-block { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; overflow-x: auto; white-space: pre; color: #94a3b8; margin-top: 12px; }
+  .code-block .hl { color: #3b82f6; }
+  .code-block .good { color: #22c55e; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>MVE: 首屏优化 — Code Splitting 与懒加载</h1>
+  <p>验证能力：A7-Code Splitting · A6-HTTP 缓存 · A8-Core Web Vitals · A11-SSR/Hydration</p>
+</div>
+<div class="controls">
+  <div class="scenario-tabs">
+    <button class="active" onclick="switchScenario('naive')">❌ 无优化</button>
+    <button onclick="switchScenario('split')">✂️ Code Splitting</button>
+    <button onclick="switchScenario('lazy')">⏳ 懒加载</button>
+    <button onclick="switchScenario('full')">🚀 全量优化</button>
+  </div>
+  <button onclick="simulateLoad()">▶ 模拟加载</button>
+</div>
+
+<div class="dashboard">
+  <div class="card">
+    <h3>📊 Web Vitals 指标</h3>
+    <div class="metric"><span class="name">FCP (首次内容绘制)</span><span class="val" id="fcp">-</span></div>
+    <div class="metric"><span class="name">LCP (最大内容绘制)</span><span class="val" id="lcp">-</span></div>
+    <div class="metric"><span class="name">TTI (可交互时间)</span><span class="val" id="tti">-</span></div>
+    <div class="metric"><span class="name">CLS (布局偏移)</span><span class="val" id="cls">-</span></div>
+    <div class="metric"><span class="name">首屏 JS 体积</span><span class="val" id="jsSize">-</span></div>
+  </div>
+
+  <div class="card">
+    <h3>📦 资源加载瀑布图</h3>
+    <div class="waterfall" id="waterfall"></div>
+  </div>
+
+  <div class="card full-width">
+    <h3>⏱️ 加载时间线</h3>
+    <div class="timeline" id="timeline"></div>
+  </div>
+
+  <div class="card full-width">
+    <h3>💡 当前方案说明</h3>
+    <div id="scenarioDesc" style="font-size:13px;color:#94a3b8;line-height:1.6"></div>
+    <div class="code-block" id="scenarioCode"></div>
+  </div>
+</div>
+
+<script>
+const scenarios = {
+  naive: {
+    name: '无优化',
+    resources: [
+      { name: 'index.html', type: 'html', size: '5KB', start: 0, dur: 50 },
+      { name: 'styles.css', type: 'css', size: '120KB', start: 50, dur: 200 },
+      { name: 'vendor.js', type: 'js', size: '450KB', start: 50, dur: 800 },
+      { name: 'app.js', type: 'js', size: '280KB', start: 50, dur: 500 },
+      { name: 'api/data', type: 'api', size: '30KB', start: 850, dur: 300 },
+      { name: 'hero.webp', type: 'img', size: '200KB', start: 850, dur: 400 },
+    ],
+    metrics: { fcp: 850, lcp: 1500, tti: 1800, cls: 0.25, jsSize: '730KB' },
+    desc: '所有 JS 打包为一个文件（730KB），无 Code Splitting，无懒加载。vendor.js 包含所有依赖（moment/lodash/框架），首屏加载全部资源。',
+    code: `// webpack.config.js — 无优化
+entry: './src/index.js',
+output: { filename: 'bundle.js' }
+// 结果：730KB 单文件，包含所有路由代码`,
+  },
+  split: {
+    name: 'Code Splitting',
+    resources: [
+      { name: 'index.html', type: 'html', size: '5KB', start: 0, dur: 50 },
+      { name: 'styles.css', type: 'css', size: '120KB', start: 50, dur: 200 },
+      { name: 'vendor.js', type: 'js', size: '180KB', start: 50, dur: 350 },
+      { name: 'app.js', type: 'js', size: '45KB', start: 50, dur: 100 },
+      { name: 'chunk-home.js', type: 'js', size: '35KB', start: 150, dur: 80 },
+      { name: 'api/data', type: 'api', size: '30KB', start: 250, dur: 300 },
+      { name: 'hero.webp', type: 'img', size: '200KB', start: 250, dur: 400 },
+    ],
+    metrics: { fcp: 450, lcp: 900, tti: 1000, cls: 0.25, jsSize: '260KB' },
+    desc: '路由级 Code Splitting：vendor.js 拆分后 180KB（tree shaking 生效），app.js 45KB（路由配置+公共组件），首页 chunk 35KB 按需加载。',
+    code: `// webpack.config.js — Code Splitting
+optimization: {
+  splitChunks: { chunks: 'all' }  // 自动拆分 vendor
+}
+// 路由级懒加载
+const Home = lazy(() => import('./pages/Home'));
+const About = lazy(() => import('./pages/About'));
+// 结果：vendor 180KB + app 45KB + 按需 chunks`,
+  },
+  lazy: {
+    name: '懒加载',
+    resources: [
+      { name: 'index.html', type: 'html', size: '5KB', start: 0, dur: 50 },
+      { name: 'styles.css', type: 'css', size: '120KB', start: 50, dur: 200 },
+      { name: 'vendor.js', type: 'js', size: '180KB', start: 50, dur: 350 },
+      { name: 'app.js', type: 'js', size: '45KB', start: 50, dur: 100 },
+      { name: 'chunk-home.js', type: 'js', size: '35KB', start: 150, dur: 80 },
+      { name: 'hero-lcp.webp', type: 'img', size: '50KB', start: 50, dur: 120 },
+      { name: 'api/data', type: 'api', size: '30KB', start: 250, dur: 300 },
+    ],
+    metrics: { fcp: 350, lcp: 500, tti: 600, cls: 0.05, jsSize: '260KB' },
+    desc: '在 Code Splitting 基础上：LCP 图片 preload 优先加载（50KB 优化后），非首屏图片懒加载（IntersectionObserver），图片设 width/height 避免 CLS。',
+    code: `<!-- preload LCP 图片 -->
+<link rel="preload" as="image" href="hero-lcp.webp">
+<!-- 非首屏图片懒加载 -->
+<img loading="lazy" width="300" height="200" src="product.webp">
+<!-- srcset 响应式 -->
+<img srcset="small.webp 480w, large.webp 1080w"
+     sizes="(max-width: 600px) 480px, 1080px">`,
+  },
+  full: {
+    name: '全量优化',
+    resources: [
+      { name: 'index.html (SSR)', type: 'html', size: '8KB', start: 0, dur: 30 },
+      { name: 'critical.css (inline)', type: 'css', size: '5KB', start: 0, dur: 10 },
+      { name: 'vendor.js', type: 'js', size: '180KB', start: 30, dur: 350 },
+      { name: 'app.js', type: 'js', size: '45KB', start: 30, dur: 100 },
+      { name: 'hero-lcp.webp (preload)', type: 'img', size: '50KB', start: 0, dur: 120 },
+      { name: 'chunk-home.js', type: 'js', size: '35KB', start: 130, dur: 80 },
+    ],
+    metrics: { fcp: 100, lcp: 350, tti: 400, cls: 0.02, jsSize: '260KB' },
+    desc: 'SSR 直出 HTML（FCP 最快）+ Critical CSS 内联 + LCP 图片 preload + Code Splitting + 长期缓存（contenthash）。Nuxt/Next 生产级配置。',
+    code: `// nuxt.config.ts — 全量优化
+export default {
+  ssr: true,                    // SSR 直出
+  experimental: { payloadExtraction: false },
+  nitro: { routeRules: {
+    '/': { prerender: true },   // 首页 SSG
+  }},
+  vite: {
+    build: { rollupOptions: {
+      output: { manualChunks: { vendor: ['vue', 'pinia'] }}
+    }}
+  },
+  image: { provider: 'ipx' }   // 图片优化
+}
+// 结果：FCP < 100ms, LCP < 350ms, CLS < 0.02`,
+  },
+};
+
+let currentScenario = 'naive';
+
+function switchScenario(name) {
+  currentScenario = name;
+  document.querySelectorAll('.scenario-tabs button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderScenario();
+}
+
+function renderScenario() {
+  const s = scenarios[currentScenario];
+
+  // Metrics
+  const m = s.metrics;
+  setMetric('fcp', m.fcp + 'ms', m.fcp < 300 ? 'good' : m.fcp < 800 ? 'warn' : 'bad');
+  setMetric('lcp', m.lcp + 'ms', m.lcp < 500 ? 'good' : m.lcp < 1200 ? 'warn' : 'bad');
+  setMetric('tti', m.tti + 'ms', m.tti < 500 ? 'good' : m.tti < 1000 ? 'warn' : 'bad');
+  setMetric('cls', m.cls.toFixed(2), m.cls < 0.1 ? 'good' : m.cls < 0.25 ? 'warn' : 'bad');
+  setMetric('jsSize', m.jsSize, parseInt(m.jsSize) < 300 ? 'good' : parseInt(m.jsSize) < 500 ? 'warn' : 'bad');
+
+  // Waterfall
+  const maxTime = Math.max(...s.resources.map(r => r.start + r.dur));
+  const wf = document.getElementById('waterfall');
+  wf.innerHTML = s.resources.map(r => {
+    const left = (r.start / maxTime * 100).toFixed(1);
+    const width = (r.dur / maxTime * 100).toFixed(1);
+    return `<div class="bar-row">
+      <span class="bar-label">${r.name}</span>
+      <div class="bar-track">
+        <div class="bar-fill ${r.type}" style="left:${left}%;width:${width}%"></div>
+      </div>
+      <span class="bar-time">${r.start + r.dur}ms</span>
+    </div>`;
+  }).join('');
+
+  // Timeline
+  const tl = document.getElementById('timeline');
+  const colors = { html: '#f59e0b', css: '#3b82f6', js: '#ef4444', img: '#22c55e', api: '#a855f7' };
+  const rows = { html: 0, css: 1, js: 2, img: 3, api: 4 };
+  tl.innerHTML = s.resources.map(r => {
+    const left = (r.start / maxTime * 100).toFixed(1);
+    const width = (r.dur / maxTime * 100).toFixed(1);
+    const top = (rows[r.type] || 0) * 16 + 2;
+    return `<div class="timeline-block" style="left:${left}%;width:${width}%;top:${top}px;background:${colors[r.type]}">${r.name}</div>`;
+  }).join('');
+
+  // Description
+  document.getElementById('scenarioDesc').textContent = s.desc;
+  document.getElementById('scenarioCode').textContent = s.code;
+}
+
+function setMetric(id, value, cls) {
+  const el = document.getElementById(id);
+  el.textContent = value;
+  el.className = 'val ' + cls;
+}
+
+function simulateLoad() {
+  // Animate waterfall bars
+  const bars = document.querySelectorAll('.bar-fill');
+  bars.forEach(bar => {
+    const targetWidth = bar.style.width;
+    bar.style.width = '0%';
+    setTimeout(() => { bar.style.width = targetWidth; }, 50);
+  });
+}
+
+renderScenario();
+</script>
+</body>
+</html>

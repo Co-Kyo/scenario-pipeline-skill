@@ -19,12 +19,13 @@
 ### 你将理解什么
 为什么 CommonJS 会让 Tree Shaking 失效？ESM 的静态分析是怎么工作的？
 
-### Step 1：理解 ESM vs CommonJS 的本质区别
+### Step 1：理解 ESM vs CommonJS 的本质区别，用 Treemap 直观感受
 **做**：阅读 `04-构建产物优化/overview.md` 的 A7 节点。理解 ESM 是静态分析（编译时确定 import/export），CommonJS 是动态加载（运行时确定 require/module.exports）。
-**你会看到什么**：Tree Shaking 基于 ESM 的静态分析——编译器能确定哪些 export 没有被 import，从而删除。
+**然后动手**：打开 `experiment/src/index.html`，默认「Treemap 视图」。观察优化前（730KB）的模块分布：moment 290KB、antd 340KB、lodash 72KB。再看优化后（260KB）：moment 68KB、antd 85KB、lodash 4KB。
+**你会看到什么**：Tree Shaking 基于 ESM 的静态分析——lodash-es 具名导入只保留 4KB，而全量导入的 lodash 是 72KB。
 **这说明了什么**：用 CommonJS 写的库（如 moment.js）无法被 Tree Shaking，整个库都会打进 bundle。
 **接下来去哪**：阅读 `edge-cases.md` 的 EC1（Tree Shaking 失效）。
-**做到才算过**：能解释为什么 `import { debounce } from 'lodash-es'` 能 Tree Shaking 而 `const _ = require('lodash')` 不能。
+**做到才算过**：能解释为什么 `import { debounce } from 'lodash-es'` 能 Tree Shaking 而 `const _ = require('lodash')` 不能。能在 Treemap 中直观看到体积差异。
 
 ### Step 2：理解 sideEffects 配置
 **做**：阅读 `edge-cases.md` 的 EC1。理解 `sideEffects: false` 和 `sideEffects: ["*.css"]` 的含义。
@@ -48,10 +49,11 @@
 
 ### Step 3：理解 contenthash 缓存策略
 **做**：阅读 `04-构建产物优化/overview.md` 的 A6 节点。理解 contenthash 文件名 + 长期缓存（`max-age=31536000`）的机制。
-**你会看到什么**：文件内容不变 → hash 不变 → 浏览器命中缓存；内容变了 → hash 变了 → 浏览器拉新文件。
+**然后动手**：在实验中点击「💾 缓存策略」，查看持久化缓存配置。理解 vendor.[hash].js 设 1 年缓存、index.html 用 no-cache 协商缓存的策略。
+**你会看到什么**：文件内容不变 → hash 不变 → 浏览器命中缓存；内容变了 → hash 变了 → 浏览器拉新文件。带 contenthash 的资源可以安全地设长期缓存。
 **这说明了什么**：contenthash 是"永久缓存 + 即时更新"的基石。
 **接下来去哪**：阅读 `edge-cases.md` 的 EC4（缓存失效全量回源）。
-**做到才算过**：能解释 contenthash 和 hash 的区别，以及为什么 contenthash 更适合长期缓存。
+**做到才算过**：能解释 contenthash 和 hash 的区别，以及为什么 contenthash 更适合长期缓存。能在实验中查看缓存策略配置。
 
 ### Step 4：理解 chunk 粒度的权衡
 **做**：阅读 `trade-offs.md` 的"Code Splitting 粒度"和"Vendor Chunk 策略"。

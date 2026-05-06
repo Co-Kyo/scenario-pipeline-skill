@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVE: 滚动性能 — 懒加载与 contain 隔离</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+  .header { padding: 24px; background: #1e293b; border-bottom: 1px solid #334155; }
+  .header h1 { font-size: 20px; margin-bottom: 8px; }
+  .header p { font-size: 13px; color: #94a3b8; }
+  .controls { display: flex; gap: 12px; padding: 16px 24px; background: #1e293b; border-bottom: 1px solid #334155; flex-wrap: wrap; align-items: center; }
+  button { padding: 8px 16px; border: 1px solid #475569; background: #334155; color: #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  button:hover { background: #475569; }
+  button.active { background: #3b82f6; border-color: #3b82f6; }
+  .split { display: flex; height: calc(100vh - 130px); }
+  .panel { flex: 1; display: flex; flex-direction: column; border-right: 1px solid #334155; }
+  .panel:last-child { border-right: none; }
+  .panel-header { padding: 10px 16px; background: #1e293b; border-bottom: 1px solid #334155; font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  .panel-header .badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+  .badge.naive { background: #7f1d1d; color: #fca5a5; }
+  .badge.optimized { background: #14532d; color: #86efac; }
+  .stats-bar { display: flex; gap: 16px; padding: 8px 16px; background: #1e293b; border-bottom: 1px solid #334155; font-size: 12px; }
+  .stat { display: flex; gap: 4px; }
+  .stat .label { color: #64748b; }
+  .stat .value { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .scroll-container { flex: 1; overflow-y: auto; position: relative; }
+  .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; padding: 16px; }
+  .product-card { background: #1e293b; border: 1px solid #334155; border-radius: 8px; overflow: hidden; }
+  .product-img { width: 100%; aspect-ratio: 1; background: #334155; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+  .product-img.lazy { opacity: 0; transition: opacity 0.3s; }
+  .product-img.loaded { opacity: 1; }
+  .product-img.placeholder { background: linear-gradient(135deg, #1e293b, #334155); }
+  .product-info { padding: 10px; }
+  .product-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .product-price { font-size: 14px; color: #f59e0b; }
+  .product-meta { font-size: 11px; color: #64748b; margin-top: 4px; }
+  .fps-overlay { position: fixed; top: 130px; right: 16px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; z-index: 100; min-width: 120px; }
+  .fps-big { font-size: 36px; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
+  .fps-label { font-size: 11px; color: #64748b; text-align: center; }
+  .cls-badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .cls-good { background: #14532d; color: #86efac; }
+  .cls-warn { background: #78350f; color: #fcd34d; }
+  .cls-bad { background: #7f1d1d; color: #fca5a5; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>MVE: 滚动性能 — 懒加载与 contain 隔离</h1>
+  <p>验证能力：A9-IntersectionObserver · A12-图片格式 · A13-CSS contain · A8-CLS</p>
+</div>
+<div class="controls">
+  <button class="active" onclick="switchMode('naive')">❌ 无优化</button>
+  <button onclick="switchMode('lazy')">⏳ 图片懒加载</button>
+  <button onclick="switchMode('contain')">📦 contain 隔离</button>
+  <button onclick="switchMode('full')">🚀 全量优化</button>
+  <button onclick="autoScroll()">▶ 自动滚动</button>
+  <span style="font-size:13px;color:#64748b">商品数: <input type="range" id="countSlider" min="50" max="500" value="200" style="width:100px" oninput="document.getElementById('countLabel').textContent=this.value;render()"><span id="countLabel">200</span></span>
+</div>
+
+<div class="fps-overlay">
+  <div class="fps-big" id="fpsValue">60</div>
+  <div class="fps-label">FPS</div>
+  <div style="margin-top:8px;text-align:center">
+    <span class="cls-badge cls-good" id="clsBadge">CLS: 0.00</span>
+  </div>
+  <div style="margin-top:8px;font-size:11px;color:#64748b;text-align:center" id="ioStatus">IO: -</div>
+</div>
+
+<div class="split">
+  <div class="panel" style="flex:2">
+    <div class="panel-header">
+      <span>商品列表</span>
+      <span class="badge" id="modeBadge">无优化</span>
+    </div>
+    <div class="stats-bar">
+      <div class="stat"><span class="label">DOM:</span><span class="value" id="statDom">-</span></div>
+      <div class="stat"><span class="label">图片:</span><span class="value" id="statImg">-</span></div>
+      <div class="stat"><span class="label">已加载:</span><span class="value" id="statLoaded">-</span></div>
+      <div class="stat"><span class="label">Layout:</span><span class="value" id="statLayout">-</span></div>
+    </div>
+    <div class="scroll-container" id="scrollContainer">
+      <div class="product-grid" id="productGrid"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const emojis = ['📱','💻','⌚','🎧','👟','👜','🎮','📷','🖥️','⌨️','🖱️','🔌','💡','🔋','📺','🎽','👔','👗','🧴','🧸'];
+let mode = 'naive';
+let products = [];
+let loadedImages = new Set();
+let clsValue = 0;
+let observer = null;
+let fpsFrames = [];
+
+function generateProducts(count) {
+  return Array.from({length: count}, (_, i) => ({
+    id: i,
+    emoji: emojis[i % emojis.length],
+    name: `商品 #${i + 1}`,
+    price: (Math.random() * 999 + 10).toFixed(0),
+    rating: (Math.random() * 2 + 3).toFixed(1),
+    sales: Math.floor(Math.random() * 10000),
+    hasImage: Math.random() > 0.1,
+  }));
+}
+
+function render() {
+  const count = parseInt(document.getElementById('countSlider').value);
+  products = generateProducts(count);
+  loadedImages.clear();
+  clsValue = 0;
+  updateCLS();
+
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = products.map(p => `
+    <div class="product-card" data-id="${p.id}">
+      <div class="product-img ${mode === 'naive' ? '' : 'lazy placeholder'}" data-src="${p.id}">
+        ${mode === 'naive' ? p.emoji : ''}
+      </div>
+      <div class="product-info">
+        <div class="product-name">${p.name}</div>
+        <div class="product-price">¥${p.price}</div>
+        <div class="product-meta">⭐${p.rating} · ${p.sales}人付款</div>
+      </div>
+    </div>
+  `).join('');
+
+  if (mode === 'contain' || mode === 'full') {
+    grid.querySelectorAll('.product-card').forEach(card => {
+      card.style.contain = 'content';
+    });
+  }
+
+  if (mode !== 'naive') {
+    setupLazyLoad();
+  }
+
+  updateStats();
+}
+
+function setupLazyLoad() {
+  if (observer) observer.disconnect();
+  const options = {
+    root: document.getElementById('scrollContainer'),
+    rootMargin: mode === 'full' ? '200px' : '50px',
+  };
+
+  observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const img = entry.target;
+        const id = img.dataset.src;
+        const product = products[id];
+        if (product && !loadedImages.has(id)) {
+          // Simulate image load delay
+          setTimeout(() => {
+            img.textContent = product.emoji;
+            img.classList.remove('lazy', 'placeholder');
+            img.classList.add('loaded');
+            loadedImages.add(id);
+            updateStats();
+            // Simulate CLS on naive lazy load
+            if (mode === 'lazy') {
+              clsValue += 0.02;
+              updateCLS();
+            }
+          }, mode === 'full' ? 50 : 150);
+        }
+        observer.unobserve(img);
+      }
+    });
+  }, options);
+
+  document.querySelectorAll('.product-img.lazy').forEach(el => observer.observe(el));
+  document.getElementById('ioStatus').textContent = `IO: 观察 ${document.querySelectorAll('.product-img.lazy').length} 个`;
+}
+
+function updateStats() {
+  document.getElementById('statDom').textContent = document.querySelectorAll('*').length;
+  document.getElementById('statImg').textContent = products.filter(p => p.hasImage).length;
+  document.getElementById('statLoaded').textContent = loadedImages.size;
+}
+
+function updateCLS() {
+  const badge = document.getElementById('clsBadge');
+  badge.textContent = `CLS: ${clsValue.toFixed(2)}`;
+  badge.className = 'cls-badge ' + (clsValue < 0.1 ? 'cls-good' : clsValue < 0.25 ? 'cls-warn' : 'cls-bad');
+}
+
+function switchMode(name) {
+  mode = name;
+  document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const badges = { naive: '无优化', lazy: '图片懒加载', contain: 'contain 隔离', full: '全量优化' };
+  document.getElementById('modeBadge').textContent = badges[name];
+  document.getElementById('modeBadge').className = 'badge ' + (name === 'naive' ? 'naive' : 'optimized');
+  render();
+}
+
+function autoScroll() {
+  const container = document.getElementById('scrollContainer');
+  let pos = 0;
+  const maxScroll = container.scrollHeight - container.clientHeight;
+  function step() {
+    if (pos >= maxScroll) return;
+    pos += 8;
+    container.scrollTop = pos;
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// FPS
+function trackFps() {
+  const now = performance.now();
+  fpsFrames.push(now);
+  fpsFrames = fpsFrames.filter(t => now - t < 1000);
+  const fps = fpsFrames.length;
+  const el = document.getElementById('fpsValue');
+  el.textContent = fps;
+  el.style.color = fps < 30 ? '#ef4444' : fps < 55 ? '#f59e0b' : '#22c55e';
+  requestAnimationFrame(trackFps);
+}
+
+render();
+trackFps();
+</script>
+</body>
+</html>

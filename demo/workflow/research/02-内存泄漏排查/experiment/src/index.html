@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVE: 内存泄漏排查</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+  .header { padding: 24px; background: #1e293b; border-bottom: 1px solid #334155; }
+  .header h1 { font-size: 20px; margin-bottom: 8px; }
+  .header p { font-size: 13px; color: #94a3b8; }
+  .tabs { display: flex; background: #1e293b; border-bottom: 1px solid #334155; }
+  .tab { padding: 10px 20px; cursor: pointer; font-size: 13px; color: #94a3b8; border-bottom: 2px solid transparent; }
+  .tab.active { color: #3b82f6; border-bottom-color: #3b82f6; }
+  .content { padding: 24px; max-width: 900px; margin: 0 auto; }
+  .section { margin-bottom: 32px; background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid #334155; }
+  .section h3 { font-size: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .section h3 .tag { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+  .tag.leak { background: #7f1d1d; color: #fca5a5; }
+  .tag.fix { background: #14532d; color: #86efac; }
+  .tag.detect { background: #1e3a5f; color: #93c5fd; }
+  .btn-group { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  button { padding: 8px 16px; border: 1px solid #475569; background: #334155; color: #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  button:hover { background: #475569; }
+  button.danger { border-color: #991b1b; background: #7f1d1d; }
+  button.danger:hover { background: #991b1b; }
+  button.success { border-color: #166534; background: #14532d; }
+  button.success:hover { background: #166534; }
+  .stats-row { display: flex; gap: 24px; margin-bottom: 16px; font-size: 13px; }
+  .stat { display: flex; align-items: center; gap: 6px; }
+  .stat .label { color: #64748b; }
+  .stat .value { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .mem-chart { height: 120px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; position: relative; overflow: hidden; margin-bottom: 16px; }
+  .mem-line { position: absolute; bottom: 0; left: 0; right: 0; }
+  .mem-point { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: #3b82f6; transform: translate(-2px, 2px); }
+  .mem-point.leak { background: #ef4444; }
+  .dom-list { max-height: 200px; overflow-y: auto; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 8px; font-family: monospace; font-size: 12px; }
+  .dom-item { padding: 4px 8px; border-bottom: 1px solid #1e293b; display: flex; justify-content: space-between; }
+  .dom-item .detached { color: #ef4444; }
+  .dom-item .attached { color: #22c55e; }
+  .leak-container { min-height: 100px; border: 2px dashed #334155; border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+  .leak-card { background: #334155; padding: 10px 14px; border-radius: 6px; margin-bottom: 8px; display: inline-block; }
+  .code-block { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; overflow-x: auto; margin-bottom: 12px; white-space: pre; color: #94a3b8; }
+  .code-block .highlight { color: #ef4444; }
+  .code-block .good { color: #22c55e; }
+  .log { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; }
+  .log-entry { padding: 2px 0; }
+  .log-entry.warn { color: #f59e0b; }
+  .log-entry.error { color: #ef4444; }
+  .log-entry.ok { color: #22c55e; }
+  [hidden] { display: none; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>MVE: 内存泄漏排查</h1>
+  <p>验证能力：A3-V8 GC 机制 · A4-DevTools 性能分析 · A14-资源生命周期管理</p>
+</div>
+<div class="tabs">
+  <div class="tab active" onclick="showTab('leak')">🔴 泄漏演示</div>
+  <div class="tab" onclick="showTab('detect')">🔍 泄漏检测</div>
+  <div class="tab" onclick="showTab('fix')">✅ 修复方案</div>
+</div>
+
+<!-- Tab 1: Leak Demo -->
+<div class="content" id="tab-leak">
+  <div class="section">
+    <h3>📊 内存追踪 <span class="tag detect">A3-V8 GC</span></h3>
+    <div class="stats-row">
+      <div class="stat"><span class="label">堆内存:</span><span class="value" id="heapSize">-</span></div>
+      <div class="stat"><span class="label">DOM 节点:</span><span class="value" id="domNodes">-</span></div>
+      <div class="stat"><span class="label">Detached 节点:</span><span class="value" id="detachedNodes">-</span></div>
+      <div class="stat"><span class="label">事件监听器:</span><span class="value" id="listeners">-</span></div>
+    </div>
+    <div class="mem-chart" id="memChart"></div>
+  </div>
+
+  <div class="section">
+    <h3>💥 泄漏 1: Detached DOM <span class="tag leak">P0-必现</span></h3>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:12px">DOM 从页面移除，但 JS 仍持有引用 → GC 无法回收</p>
+    <div class="btn-group">
+      <button class="danger" onclick="leakDetachedDOM()">创建 Detached DOM × 100</button>
+      <button onclick="forceGC()">强制 GC（如果可用）</button>
+    </div>
+    <div class="leak-container" id="detachedContainer"></div>
+    <div class="code-block"><span class="highlight">// ❌ 泄漏代码</span>
+const nodes = [];
+function addCard() {
+  const el = document.createElement('div');
+  el.textContent = 'I am leaked';
+  container.appendChild(el);
+  container.removeChild(el);  // 从 DOM 移除
+  nodes.push(el);             // 但 JS 仍持有引用！GC 无法回收
+}
+
+<span class="good">// ✅ 修复：移除引用</span>
+function removeCard() {
+  container.removeChild(el);
+  el = null;  // 断开引用，允许 GC 回收
+}</div>
+  </div>
+
+  <div class="section">
+    <h3>💥 泄漏 2: 事件监听未解绑 <span class="tag leak">P0-必现</span></h3>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:12px">组件销毁后事件监听器仍在 → 回调持有闭包引用 → 内存增长</p>
+    <div class="btn-group">
+      <button class="danger" onclick="leakEventListener()">模拟 SPA 路由切换 × 50</button>
+    </div>
+    <div class="log" id="listenerLog"></div>
+    <div class="code-block"><span class="highlight">// ❌ 泄漏：组件销毁未移除监听</span>
+useEffect(() => {
+  window.addEventListener('scroll', onScroll);
+  // 缺少 return () => window.removeEventListener('scroll', onScroll);
+}, []);
+
+<span class="good">// ✅ 修复：cleanup 函数</span>
+useEffect(() => {
+  window.addEventListener('scroll', onScroll);
+  return () => window.removeEventListener('scroll', onScroll);
+}, []);</div>
+  </div>
+
+  <div class="section">
+    <h3>💥 泄漏 3: 全局缓存无界增长 <span class="tag leak">P0-必现</span></h3>
+    <p style="font-size:13px;color:#94a3b8;margin-bottom:12px">Map/Set 不断添加但无淘汰策略 → 老生代持续上升</p>
+    <div class="btn-group">
+      <button class="danger" onclick="leakCache()">缓存追加 × 1000</button>
+      <button class="success" onclick="fixCache()">应用 WeakMap 修复</button>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><span class="label">缓存条目:</span><span class="value" id="cacheSize">0</span></div>
+      <div class="stat"><span class="label">缓存类型:</span><span class="value" id="cacheType">Map (强引用)</span></div>
+    </div>
+    <div class="code-block"><span class="highlight">// ❌ Map 强引用，永不回收</span>
+const cache = new Map();
+items.forEach(item => cache.set(item.id, item.data));
+
+<span class="good">// ✅ WeakMap 允许 GC 回收</span>
+const cache = new WeakMap();
+items.forEach(item => cache.set(item, item.data));
+// 当 item 被 GC 回收，cache 中的条目自动消失</div>
+  </div>
+</div>
+
+<!-- Tab 2: Detection -->
+<div class="content" id="tab-detect" hidden>
+  <div class="section">
+    <h3>🔍 DevTools 检测方法 <span class="tag detect">A4-DevTools</span></h3>
+    <div class="code-block">**Heap Snapshot 对比法（定位 Detached DOM）：**
+
+1. Chrome DevTools → Memory → Take heap snapshot (Snapshot 1)
+2. 执行可疑操作（如反复切换路由）
+3. 再次 Take heap snapshot (Snapshot 2)
+4. Comparison 视图 → 筛选 "Detached" 关键字
+5. 看 #Delta 列：正数 = 新增的 Detached 节点 = 泄漏
+
+**Allocation Timeline（实时追踪）：**
+
+1. Chrome DevTools → Memory → Allocation instrumentation on timeline
+2. 执行操作，观察蓝色竖线（分配）是否持续增长
+3. 停止操作后，蓝色不回落 = 内存泄漏
+
+**Performance Monitor（快速巡检）：**
+
+1. Chrome DevTools → Performance Monitor（左侧面板）
+2. 观察 JS heap size 趋势：锯齿形 = 正常 GC，持续上升 = 泄漏
+3. 观察 DOM Nodes 趋势：操作后不回落 = Detached DOM 泄漏</div>
+  </div>
+
+  <div class="section">
+    <h3>🔎 自动化检测脚本 <span class="tag detect">运行时检测</span></h3>
+    <button onclick="runLeakDetection()" style="margin-bottom:12px">▶ 运行泄漏检测</button>
+    <div class="log" id="detectLog"></div>
+  </div>
+</div>
+
+<!-- Tab 3: Fix -->
+<div class="content" id="tab-fix" hidden>
+  <div class="section">
+    <h3>✅ 资源清理规范 <span class="tag fix">A14-生命周期</span></h3>
+    <div class="code-block"><span class="good">// AbortController 统一取消模式</span>
+function loadData(url, signal) {
+  return fetch(url, { signal })
+    .then(res => res.json())
+    .catch(err => {
+      if (err.name === 'AbortError') return null; // 正常取消
+      throw err;
+    });
+}
+
+// 组件级别
+useEffect(() => {
+  const controller = new AbortController();
+  loadData('/api/data', controller.signal);
+  return () => controller.abort(); // 统一清理
+}, []);
+
+<span class="good">// WeakRef + FinalizationRegistry 模式</span>
+class Cache {
+  #cache = new Map();
+  #registry = new FinalizationRegistry(key => {
+    this.#cache.delete(key); // GC 回收时自动清理
+  });
+  set(key, value) {
+    const ref = new WeakRef(value);
+    this.#cache.set(key, ref);
+    this.#registry.register(value, key);
+  }
+  get(key) {
+    const ref = this.#cache.get(key);
+    return ref?.deref(); // 可能已被 GC
+  }
+}</div>
+  </div>
+
+  <div class="section">
+    <h3>📋 React/Vue 清单 <span class="tag fix">框架最佳实践</span></h3>
+    <div class="code-block">**React useEffect 清理清单：**
+□ addEventListener → return 中 removeEventListener
+□ setInterval/setTimeout → return 中 clearInterval/clearTimeout
+□ fetch/axios → return 中 controller.abort()
+□ subscribe → return 中 unsubscribe
+□ IntersectionObserver/ResizeObserver → return 中 disconnect()
+
+**Vue onUnmounted 清理清单：**
+□ onMounted 中的 addEventListener → onUnmounted 中移除
+□ watch/computed 中的副作用 → onUnmounted 中清理
+□ 第三方库实例 → onUnmounted 中 destroy()
+□ 定时器 → onUnmounted 中清除</div>
+  </div>
+</div>
+
+<script>
+// State
+let detachedNodes = [];
+let eventListeners = [];
+let cacheMap = new Map();
+let memoryHistory = [];
+let useWeakMap = false;
+
+function showTab(name) {
+  document.querySelectorAll('.content').forEach(el => el.hidden = true);
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).hidden = false;
+  document.querySelectorAll('.tab').forEach(el => {
+    if (el.textContent.includes(name === 'leak' ? '泄漏' : name === 'detect' ? '检测' : '修复')) el.classList.add('active');
+  });
+}
+
+// Memory tracking
+function updateStats() {
+  if (performance.memory) {
+    const mb = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
+    document.getElementById('heapSize').textContent = mb + 'MB';
+    memoryHistory.push(parseFloat(mb));
+    if (memoryHistory.length > 60) memoryHistory.shift();
+    drawMemChart();
+  }
+  document.getElementById('domNodes').textContent = document.querySelectorAll('*').length;
+  document.getElementById('detachedNodes').textContent = detachedNodes.length;
+  document.getElementById('listeners').textContent = eventListeners.length;
+  document.getElementById('cacheSize').textContent = cacheMap.size;
+}
+
+function drawMemChart() {
+  const chart = document.getElementById('memChart');
+  const max = Math.max(...memoryHistory, 50);
+  const points = memoryHistory.map((v, i) => {
+    const x = (i / 59) * 100;
+    const y = 100 - (v / max) * 90;
+    return `${x},${y}`;
+  }).join(' ');
+  chart.innerHTML = `<svg viewBox="0 0 100 100" preserveAspectRatio="none" style="width:100%;height:100%">
+    <polyline points="${points}" fill="none" stroke="#3b82f6" stroke-width="0.5"/>
+  </svg>`;
+}
+
+// Leak 1: Detached DOM
+function leakDetachedDOM() {
+  const container = document.getElementById('detachedContainer');
+  for (let i = 0; i < 100; i++) {
+    const el = document.createElement('div');
+    el.className = 'leak-card';
+    el.textContent = `Detached #${detachedNodes.length + i}`;
+    container.appendChild(el);
+    container.removeChild(el); // remove from DOM
+    detachedNodes.push(el);    // but keep JS reference!
+  }
+  updateStats();
+  log('listenerLog', `创建了 100 个 Detached DOM 节点（总计: ${detachedNodes.length}）`, 'warn');
+}
+
+// Leak 2: Event listeners
+function leakEventListener() {
+  for (let i = 0; i < 50; i++) {
+    const handler = function onScroll() { /* leaked closure */ };
+    window.addEventListener('scroll', handler);
+    eventListeners.push({ handler, id: eventListeners.length + 1 });
+  }
+  updateStats();
+  log('listenerLog', `添加了 50 个 scroll 监听器（总计: ${eventListeners.length}）— 模拟 SPA 路由切换未清理`, 'warn');
+}
+
+// Leak 3: Cache
+function leakCache() {
+  for (let i = 0; i < 1000; i++) {
+    const key = `item-${cacheMap.size}`;
+    cacheMap.set(key, { data: new Array(100).fill('x'), timestamp: Date.now() });
+  }
+  updateStats();
+  document.getElementById('cacheType').textContent = 'Map (强引用)';
+}
+
+function fixCache() {
+  cacheMap.clear();
+  useWeakMap = true;
+  const wm = new WeakMap();
+  // Demo with a few objects
+  for (let i = 0; i < 5; i++) {
+    const obj = { id: i };
+    wm.set(obj, { data: 'cached' });
+  }
+  cacheMap = new Map(); // Reset for display
+  updateStats();
+  document.getElementById('cacheType').textContent = 'WeakMap (弱引用, GC 可回收)';
+  log('listenerLog', '已切换到 WeakMap 模式，缓存条目将在 GC 后自动清理', 'ok');
+}
+
+// Detection
+function runLeakDetection() {
+  const log = document.getElementById('detectLog');
+  log.innerHTML = '';
+  const entries = [
+    { msg: '📊 Performance Monitor 扫描...', delay: 0 },
+    { msg: `   JS Heap: ${performance.memory ? (performance.memory.usedJSHeapSize/1048576).toFixed(1) + 'MB' : 'N/A'}`, delay: 200 },
+    { msg: `   DOM Nodes: ${document.querySelectorAll('*').length}`, delay: 400 },
+    { msg: `   Detached DOM 引用: ${detachedNodes.length} 个`, delay: 600, cls: detachedNodes.length > 0 ? 'warn' : 'ok' },
+    { msg: `   未清理事件监听器: ${eventListeners.length} 个`, delay: 800, cls: eventListeners.length > 0 ? 'warn' : 'ok' },
+    { msg: '', delay: 1000 },
+    { msg: detachedNodes.length > 0 ? '⚠️ 发现 Detached DOM 泄漏！在 Heap Snapshot 中搜索 "Detached" 确认' : '✅ 无 Detached DOM 泄漏', delay: 1200, cls: detachedNodes.length > 0 ? 'error' : 'ok' },
+    { msg: eventListeners.length > 0 ? `⚠️ 发现 ${eventListeners.length} 个未清理的事件监听器！` : '✅ 事件监听器已清理', delay: 1400, cls: eventListeners.length > 0 ? 'error' : 'ok' },
+    { msg: '', delay: 1600 },
+    { msg: '💡 建议：打开 Chrome DevTools → Memory → Take heap snapshot', delay: 1800, cls: 'ok' },
+  ];
+  entries.forEach(({ msg, delay, cls }) => {
+    setTimeout(() => {
+      const div = document.createElement('div');
+      div.className = 'log-entry' + (cls ? ' ' + cls : '');
+      div.textContent = msg;
+      document.getElementById('detectLog').appendChild(div);
+    }, delay);
+  });
+}
+
+function forceGC() {
+  // Chrome DevTools: Performance → Collect garbage button
+  log('listenerLog', '💡 在 Chrome DevTools 中：Memory → 点击垃圾桶图标强制 GC', 'ok');
+}
+
+function log(id, msg, cls) {
+  const el = document.getElementById(id);
+  const div = document.createElement('div');
+  div.className = 'log-entry' + (cls ? ' ' + cls : '');
+  div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+setInterval(updateStats, 500);
+updateStats();
+</script>
+</body>
+</html>

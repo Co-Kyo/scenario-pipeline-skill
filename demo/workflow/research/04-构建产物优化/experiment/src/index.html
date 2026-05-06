@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVE: 构建产物优化 — Tree Shaking 与 Chunk 分析</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+  .header { padding: 24px; background: #1e293b; border-bottom: 1px solid #334155; }
+  .header h1 { font-size: 20px; margin-bottom: 8px; }
+  .header p { font-size: 13px; color: #94a3b8; }
+  .controls { display: flex; gap: 12px; padding: 16px 24px; background: #1e293b; border-bottom: 1px solid #334155; flex-wrap: wrap; align-items: center; }
+  button { padding: 8px 16px; border: 1px solid #475569; background: #334155; color: #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  button:hover { background: #475569; }
+  button.active { background: #3b82f6; border-color: #3b82f6; }
+  .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 24px; max-width: 1200px; margin: 0 auto; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
+  .card h3 { font-size: 14px; margin-bottom: 12px; color: #94a3b8; }
+  .card.full { grid-column: 1 / -1; }
+  .treemap { display: flex; flex-wrap: wrap; gap: 2px; min-height: 200px; }
+  .treemap-item { border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #fff; position: relative; overflow: hidden; cursor: pointer; transition: opacity 0.2s; }
+  .treemap-item:hover { opacity: 0.8; }
+  .treemap-item .tooltip { display: none; position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #0f172a; border: 1px solid #475569; padding: 6px 10px; border-radius: 6px; font-size: 11px; white-space: nowrap; z-index: 10; }
+  .treemap-item:hover .tooltip { display: block; }
+  .bar-chart { display: flex; flex-direction: column; gap: 8px; }
+  .bar-row { display: flex; align-items: center; gap: 8px; }
+  .bar-label { width: 100px; font-size: 12px; color: #94a3b8; text-align: right; flex-shrink: 0; }
+  .bar-track { flex: 1; height: 24px; background: #0f172a; border-radius: 4px; position: relative; overflow: hidden; }
+  .bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding: 0 8px; font-size: 11px; color: #fff; transition: width 0.6s ease; }
+  .bar-val { width: 70px; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .metric { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #334155; font-size: 13px; }
+  .metric:last-child { border-bottom: none; }
+  .metric .val { font-weight: 600; }
+  .metric .val.good { color: #22c55e; }
+  .metric .val.warn { color: #f59e0b; }
+  .metric .val.bad { color: #ef4444; }
+  .code-block { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; overflow-x: auto; white-space: pre; color: #94a3b8; }
+  .code-block .hl { color: #ef4444; }
+  .code-block .good { color: #22c55e; }
+  .diff-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
+  .diff-table th, .diff-table td { padding: 8px; text-align: left; border-bottom: 1px solid #334155; }
+  .diff-table th { color: #64748b; font-weight: 500; }
+  .diff-table .before { color: #ef4444; }
+  .diff-table .after { color: #22c55e; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>MVE: 构建产物优化 — Tree Shaking 与 Chunk 分析</h1>
+  <p>验证能力：A7-Code Splitting 与 Tree Shaking · A6-HTTP 缓存策略</p>
+</div>
+<div class="controls">
+  <button class="active" onclick="switchView('treemap')">📦 Treemap 视图</button>
+  <button onclick="switchView('compare')">📊 前后对比</button>
+  <button onclick="switchView('cache')">💾 缓存策略</button>
+</div>
+
+<div class="dashboard" id="view-treemap">
+  <div class="card">
+    <h3>❌ 优化前：单 bundle (730KB)</h3>
+    <div class="treemap" id="treemapBefore"></div>
+  </div>
+  <div class="card">
+    <h3>✅ 优化后：Code Splitting + Tree Shaking (260KB)</h3>
+    <div class="treemap" id="treemapAfter"></div>
+  </div>
+  <div class="card full">
+    <h3>📋 体积明细对比</h3>
+    <div class="bar-chart" id="sizeCompare"></div>
+  </div>
+  <div class="card full">
+    <div class="code-block"><span class="hl">// ❌ 问题1：CommonJS 导入导致 Tree Shaking 失效</span>
+import _ from 'lodash';           // 导入整个库 (72KB)
+_.get(obj, 'a.b.c');
+
+<span class="good">// ✅ 修复：具名导入</span>
+import get from 'lodash/get';     // 只导入 get 函数 (3KB)
+
+<span class="hl">// ❌ 问题2：moment.js 打包所有 locale</span>
+import moment from 'moment';      // 包含 50+ locale (290KB → 68KB gzipped)
+
+<span class="good">// ✅ 修复：手动指定 locale</span>
+import moment from 'moment';
+import 'moment/locale/zh-cn';     // 只加载中文 locale
+
+<span class="hl">// ❌ 问题3：sideEffects 未标记</span>
+// webpack 不确定模块是否有副作用，不敢删除未使用代码
+
+<span class="good">// ✅ 修复：package.json 标记</span>
+{ "sideEffects": ["*.css", "*.global.js"] }
+
+<span class="good">// ✅ Vite 配置（生产环境自动 Tree Shaking）</span>
+// vite.config.ts
+export default {
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['vue', 'pinia'],      // 框架单独 chunk
+          utils: ['lodash', 'dayjs'],     // 工具库单独 chunk
+        }
+      }
+    }
+  }
+}</div>
+  </div>
+</div>
+
+<div class="dashboard" id="view-compare" hidden>
+  <div class="card full">
+    <h3>📊 优化效果对比</h3>
+    <table class="diff-table">
+      <tr><th>模块</th><th>优化前</th><th>优化后</th><th>节省</th><th>方法</th></tr>
+      <tr><td>moment.js</td><td class="before">290KB</td><td class="after">68KB</td><td class="after">-77%</td><td>locale 精简 + tree shaking</td></tr>
+      <tr><td>lodash</td><td class="before">72KB</td><td class="after">4KB</td><td class="after">-94%</td><td>lodash-es 具名导入</td></tr>
+      <tr><td>antd (按需)</td><td class="before">340KB</td><td class="after">85KB</td><td class="after">-75%</td><td>babel-plugin-import</td></tr>
+      <tr><td>业务代码</td><td class="before">180KB</td><td class="after">65KB</td><td class="after">-64%</td><td>路由级 Code Splitting</td></tr>
+      <tr><td><strong>总计</strong></td><td class="before"><strong>730KB</strong></td><td class="after"><strong>260KB</strong></td><td class="after"><strong>-64%</strong></td><td></td></tr>
+    </table>
+  </div>
+</div>
+
+<div class="dashboard" id="view-cache" hidden>
+  <div class="card full">
+    <h3>💾 持久化缓存策略</h3>
+    <div class="metric"><span>vendor.[hash].js</span><span class="val good">Cache-Control: max-age=31536000 (1年)</span></div>
+    <div class="metric"><span>app.[hash].js</span><span class="val good">Cache-Control: max-age=31536000 (1年)</span></div>
+    <div class="metric"><span>chunk-*.js</span><span class="val good">Cache-Control: max-age=31536000 (1年)</span></div>
+    <div class="metric"><span>index.html</span><span class="val warn">Cache-Control: no-cache (协商缓存)</span></div>
+    <div class="code-block"><span class="good">// 核心原则：文件名带 contenthash + 长期缓存</span>
+// 内容不变 → hash 不变 → 缓存命中
+// 内容变化 → hash 变化 → 获取新文件
+
+// nginx 配置
+location /assets/ {
+  add_header Cache-Control "public, max-age=31536000, immutable";
+}
+location / {
+  add_header Cache-Control "no-cache";  // HTML 协商缓存
+}
+
+<span class="good">// chunk 粒度控制</span>
+// 太粗 → 一个小改动整个 vendor 缓存失效
+// 太细 → HTTP 请求数过多（HTTP/2 多路复用缓解）
+// 建议：框架 + 大型库 各一个 chunk，业务代码按路由分割</div>
+  </div>
+</div>
+
+<script>
+// Treemap data
+const beforeModules = [
+  { name: 'moment + locales', size: 290, color: '#ef4444' },
+  { name: 'antd (full)', size: 340, color: '#f59e0b' },
+  { name: 'lodash', size: 72, color: '#a855f7' },
+  { name: 'vue + pinia', size: 95, color: '#3b82f6' },
+  { name: '业务代码', size: 180, color: '#22c55e' },
+  // overlap - these get tree-shaken but not split
+];
+
+const afterModules = [
+  { name: 'moment (精简)', size: 68, color: '#ef4444' },
+  { name: 'antd (按需)', size: 85, color: '#f59e0b' },
+  { name: 'lodash-es', size: 4, color: '#a855f7' },
+  { name: 'vue + pinia', size: 95, color: '#3b82f6' },
+  { name: '业务 (分割)', size: 65, color: '#22c55e' },
+];
+
+function renderTreemap(containerId, modules) {
+  const container = document.getElementById(containerId);
+  const total = modules.reduce((s, m) => s + m.size, 0);
+  const containerWidth = container.clientWidth || 500;
+  container.innerHTML = modules.map(m => {
+    const pct = (m.size / total * 100);
+    const width = Math.max(pct * 2, 60);
+    const height = Math.max(pct * 1.5, 40);
+    return `<div class="treemap-item" style="width:${width}%;min-height:${height}px;background:${m.color}">
+      ${m.name}
+      <div class="tooltip">${m.name}: ${m.size}KB (${pct.toFixed(1)}%)</div>
+    </div>`;
+  }).join('');
+}
+
+function renderCompare() {
+  const allNames = [...new Set([...beforeModules.map(m => m.name), ...afterModules.map(m => m.name)])];
+  const max = 340;
+  const chart = document.getElementById('sizeCompare');
+  chart.innerHTML = allNames.map(name => {
+    const before = beforeModules.find(m => m.name === name);
+    const after = afterModules.find(m => m.name === name);
+    const bSize = before ? before.size : 0;
+    const aSize = after ? after.size : 0;
+    const bWidth = (bSize / max * 100).toFixed(1);
+    const aWidth = (aSize / max * 100).toFixed(1);
+    return `
+      <div style="margin-bottom:12px">
+        <div style="font-size:12px;color:#94a3b8;margin-bottom:4px">${name}</div>
+        <div class="bar-row">
+          <span class="bar-label">优化前</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${bWidth}%;background:#ef4444">${bSize > 20 ? bSize + 'KB' : ''}</div></div>
+          <span class="bar-val before">${bSize}KB</span>
+        </div>
+        <div class="bar-row">
+          <span class="bar-label">优化后</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${aWidth}%;background:#22c55e">${aSize > 20 ? aSize + 'KB' : ''}</div></div>
+          <span class="bar-val after">${aSize}KB</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function switchView(name) {
+  ['treemap','compare','cache'].forEach(v => {
+    document.getElementById('view-' + v).hidden = v !== name;
+  });
+  document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+renderTreemap('treemapBefore', beforeModules);
+renderTreemap('treemapAfter', afterModules);
+renderCompare();
+</script>
+</body>
+</html>

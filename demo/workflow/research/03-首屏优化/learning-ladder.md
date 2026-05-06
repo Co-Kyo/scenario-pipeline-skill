@@ -20,12 +20,13 @@
 ### 你将理解什么
 首屏慢的瓶颈在哪？从 URL 输入到像素显示经历了哪些步骤？
 
-### Step 1：画出 CRP 全链路
+### Step 1：画出 CRP 全链路，用实验感受加载瓶颈
 **做**：阅读 `03-首屏优化/overview.md` 的 CRP 部分。理解 DOM+CSSOM→Render Tree→Layout→Paint→Composite 的完整流程。
-**你会看到什么**：CSS 是渲染阻塞的（必须全部解析完才能构建 Render Tree），JS 是解析阻塞的。
+**然后动手**：打开 `experiment/src/index.html`，保持「❌ 无优化」模式。观察 Web Vitals 指标：FCP ~850ms, LCP ~1500ms, TTI ~1800ms。观察瀑布图中 vendor.js (450KB) 如何阻塞首屏。然后切换到「✂️ Code Splitting」→「⏳ 懒加载」→「🚀 全量优化」，逐步观察指标变化。
+**你会看到什么**：CSS 是渲染阻塞的，JS 是解析阻塞的。vendor.js 450KB 阻塞了整个首屏。Code Splitting 后 JS 降到 260KB，SSR 后 FCP 降到 100ms。
 **这说明了什么**：首屏优化的核心是减少关键资源的数量和体积，缩短关键路径长度。
 **接下来去哪**：带着"哪些资源在关键路径上"这个问题，进入 Step 2。
-**做到才算过**：能画出 CRP 流程图，标注哪些资源是渲染阻塞的。
+**做到才算过**：能画出 CRP 流程图，标注哪些资源是渲染阻塞的。能在实验中观察四种方案的指标差异。
 
 ### Step 2：理解 HTTP 缓存的作用
 **做**：阅读 `03-首屏优化/overview.md` 的 A6 节点 + `edge-cases.md` 的缓存相关坑点。
@@ -47,12 +48,13 @@
 ### 你将理解什么
 如何把首屏 JS 从 500KB 压缩到 100KB？Code Splitting 和 Tree Shaking 的原理是什么？
 
-### Step 3：理解 Code Splitting
+### Step 3：理解 Code Splitting，用实验观察体积变化
 **做**：阅读 `03-首屏优化/overview.md` 的 A7 节点。理解动态 `import()` 生成独立 chunk 的机制。
-**你会看到什么**：路由级分割（按页面拆分）是最大收益点，组件级分割是精细化补充。
+**然后动手**：在实验中对比「❌ 无优化」（JS 730KB, FCP 850ms）和「✂️ Code Splitting」（JS 260KB, FCP 450ms）。观察瀑布图中 vendor.js 从 450KB 阻塞变成 180KB + 45KB + 35KB 分离加载。
+**你会看到什么**：路由级分割（按页面拆分）是最大收益点。JS 体积从 730KB 降到 260KB (-64%)，FCP 从 850ms 降到 450ms。
 **这说明了什么**：Code Splitting 的本质是"只加载当前页面需要的代码"。
 **接下来去哪**：阅读 `trade-offs.md` 的"路由级 vs 组件级"对比。
-**做到才算过**：能在一个 Vue/React 项目中配置路由级 Code Splitting。
+**做到才算过**：能在一个 Vue/React 项目中配置路由级 Code Splitting。能在实验中观察 Code Splitting 的体积和时间收益。
 
 ### Step 4：理解 Tree Shaking 为什么失效
 **做**：阅读 `edge-cases.md` 的 A7 相关坑点。理解 CommonJS 污染和 sideEffects 误配导致 Tree Shaking 失效。

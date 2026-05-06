@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MVE: 图片优化 — 格式选择与响应式策略</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; }
+  .header { padding: 24px; background: #1e293b; border-bottom: 1px solid #334155; }
+  .header h1 { font-size: 20px; margin-bottom: 8px; }
+  .header p { font-size: 13px; color: #94a3b8; }
+  .controls { display: flex; gap: 12px; padding: 16px 24px; background: #1e293b; border-bottom: 1px solid #334155; flex-wrap: wrap; align-items: center; }
+  button { padding: 8px 16px; border: 1px solid #475569; background: #334155; color: #e2e8f0; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  button:hover { background: #475569; }
+  button.active { background: #3b82f6; border-color: #3b82f6; }
+  .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; padding: 24px; max-width: 1200px; margin: 0 auto; }
+  .card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; }
+  .card h3 { font-size: 14px; margin-bottom: 12px; color: #94a3b8; }
+  .card.full { grid-column: 1 / -1; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #334155; }
+  th { color: #64748b; font-weight: 500; font-size: 12px; }
+  td { font-variant-numeric: tabular-nums; }
+  .bar { height: 8px; border-radius: 4px; background: #3b82f6; transition: width 0.6s; }
+  .bar.best { background: #22c55e; }
+  .bar.worst { background: #ef4444; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+  .badge.good { background: #14532d; color: #86efac; }
+  .badge.warn { background: #78350f; color: #fcd34d; }
+  .badge.bad { background: #7f1d1d; color: #fca5a5; }
+  .format-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .format-card { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 16px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+  .format-card:hover, .format-card.active { border-color: #3b82f6; }
+  .format-card .icon { font-size: 32px; margin-bottom: 8px; }
+  .format-card .name { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+  .format-card .size { font-size: 12px; color: #94a3b8; }
+  .code-block { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; font-family: monospace; font-size: 12px; overflow-x: auto; white-space: pre; color: #94a3b8; }
+  .code-block .hl { color: #ef4444; }
+  .code-block .good { color: #22c55e; }
+  .preview-area { display: flex; gap: 16px; flex-wrap: wrap; }
+  .preview-box { flex: 1; min-width: 200px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 16px; text-align: center; }
+  .preview-box .img-sim { width: 100%; height: 150px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 48px; margin-bottom: 8px; }
+  .select-group { display: flex; gap: 8px; align-items: center; }
+  select { padding: 6px 12px; background: #334155; border: 1px solid #475569; color: #e2e8f0; border-radius: 6px; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>MVE: 图片优化 — 格式选择与响应式策略</h1>
+  <p>验证能力：A12-图片格式与压缩策略 · A8-Core Web Vitals · A6-HTTP 缓存</p>
+</div>
+<div class="controls">
+  <button class="active" onclick="showView('compare')">📊 格式对比</button>
+  <button onclick="showView('responsive')">📐 响应式图片</button>
+  <button onclick="showView('strategy')">🎯 加载策略</button>
+</div>
+
+<!-- View 1: Format Comparison -->
+<div class="dashboard" id="view-compare">
+  <div class="card">
+    <h3>📦 格式规格对比</h3>
+    <table>
+      <tr><th>格式</th><th>压缩方式</th><th>透明度</th><th>动画</th><th>浏览器支持</th></tr>
+      <tr><td>JPEG</td><td>有损 DCT</td><td>❌</td><td>❌</td><td>100%</td></tr>
+      <tr><td>PNG</td><td>无损 DEFLATE</td><td>✅</td><td>❌</td><td>100%</td></tr>
+      <tr><td>WebP</td><td>有损/无损</td><td>✅</td><td>✅</td><td><span class="badge good">97%+</span></td></tr>
+      <tr><td>AVIF</td><td>有损/无损 AV1</td><td>✅</td><td>✅</td><td><span class="badge warn">93%</span></td></tr>
+      <tr><td>JPEG XL</td><td>有损/无损</td><td>✅</td><td>✅</td><td><span class="badge bad">仅 Chrome</span></td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>📊 体积对比（同一张 1920×1080 照片）</h3>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>JPEG (quality 80)</span><span>240KB</span></div>
+        <div style="background:#0f172a;border-radius:4px;height:20px"><div class="bar worst" style="width:100%"></div></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>PNG</span><span>1.2MB</span></div>
+        <div style="background:#0f172a;border-radius:4px;height:20px"><div class="bar worst" style="width:100%;background:#991b1b"></div></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>WebP (quality 80)</span><span>156KB <span class="badge good">-35%</span></span></div>
+        <div style="background:#0f172a;border-radius:4px;height:20px"><div class="bar" style="width:65%"></div></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>AVIF (quality 60)</span><span>98KB <span class="badge good">-59%</span></span></div>
+        <div style="background:#0f172a;border-radius:4px;height:20px"><div class="bar best" style="width:41%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card full">
+    <h3>💡 格式选择决策树</h3>
+    <div class="code-block"><span class="good">// 最佳实践：&lt;picture&gt; 多格式回退</span>
+&lt;picture&gt;
+  &lt;source srcset="hero.avif" type="image/avif"&gt;      <span class="good">← 优先 AVIF（最小）</span>
+  &lt;source srcset="hero.webp" type="image/webp"&gt;      <span class="good">← 回退 WebP（兼容好）</span>
+  &lt;img src="hero.jpg" alt="Hero"                     <span class="good">← 兜底 JPEG（100% 兼容）</span>
+       width="1920" height="1080"&gt;                    <span class="good">← 设尺寸避免 CLS</span>
+&lt;/picture&gt;
+
+<span class="good">// CDN 动态处理（推荐）</span>
+// 只需上传原图，CDN 根据 Accept 头自动返回最优格式
+&lt;img src="https://cdn.example.com/hero?w=800&amp;q=80&amp;fmt=auto" alt="Hero"&gt;
+
+<span class="good">// srcset 响应式</span>
+&lt;img srcset="hero-480.webp 480w,
+             hero-800.webp 800w,
+             hero-1200.webp 1200w"
+     sizes="(max-width: 600px) 480px,
+            (max-width: 1000px) 800px,
+            1200px"
+     src="hero-800.webp" alt="Hero"&gt;</div>
+  </div>
+</div>
+
+<!-- View 2: Responsive -->
+<div class="dashboard" id="view-responsive" hidden>
+  <div class="card">
+    <h3>📐 srcset 可视化</h3>
+    <div class="select-group" style="margin-bottom:12px">
+      <span style="font-size:13px;color:#94a3b8">视口宽度:</span>
+      <select id="viewportSelect" onchange="updateResponsive()">
+        <option value="375">375px (手机)</option>
+        <option value="768">768px (平板)</option>
+        <option value="1200" selected>1200px (桌面)</option>
+        <option value="1920">1920px (大屏)</option>
+      </select>
+    </div>
+    <div id="responsiveResult" style="font-size:13px;color:#94a3b8;line-height:1.8"></div>
+  </div>
+
+  <div class="card">
+    <h3>⚠️ sizes 配置错误示例</h3>
+    <div class="code-block"><span class="hl">// ❌ 错误：sizes 写死 100vw</span>
+&lt;img srcset="small.webp 480w, large.webp 1200w"
+     <span class="hl">sizes="100vw"</span>&gt;
+// 问题：桌面端也会加载 large.webp（1200w）
+// 但实际显示区域可能只有 400px
+
+<span class="good">// ✅ 正确：sizes 匹配实际显示宽度</span>
+&lt;img srcset="small.webp 480w, large.webp 1200w"
+     <span class="good">sizes="(max-width: 600px) 100vw, 50vw"</span>&gt;
+// 手机端：100vw → 选 small.webp (480w)
+// 桌面端：50vw → 选 small.webp (600px < 800w)
+
+<span class="hl">// ❌ 错误：忘记设 width/height</span>
+&lt;img src="hero.webp" alt="Hero"&gt;
+// 图片加载前浏览器不知道尺寸 → CLS!
+
+<span class="good">// ✅ 正确：始终设 width/height</span>
+&lt;img src="hero.webp" alt="Hero" <span class="good">width="800" height="600"</span>&gt;
+// 浏览器提前预留空间 → CLS = 0</div>
+  </div>
+</div>
+
+<!-- View 3: Loading Strategy -->
+<div class="dashboard" id="view-strategy" hidden>
+  <div class="card full">
+    <h3>🎯 图片加载策略全景</h3>
+    <table>
+      <tr><th>策略</th><th>适用场景</th><th>实现方式</th><th>对 LCP 的影响</th></tr>
+      <tr><td><strong>Preload</strong></td><td>LCP 首屏大图</td><td>&lt;link rel="preload" as="image"&gt;</td><td><span class="badge good">显著提升</span></td></tr>
+      <tr><td><strong>Lazy Load</strong></td><td>非首屏图片</td><td>loading="lazy" / IO</td><td><span class="badge good">减少竞争</span></td></tr>
+      <tr><td><strong>Placeholder</strong></td><td>防止 CLS</td><td>LQIP / 骨架屏 / 固定尺寸</td><td><span class="badge good">CLS=0</span></td></tr>
+      <tr><td><strong>渐进式 JPEG</strong></td><td>感知加载速度</td><td>编码器选项</td><td><span class="badge warn">感知提升</span></td></tr>
+      <tr><td><strong>CDN fmt=auto</strong></td><td>自动格式选择</td><td>Accept 头检测</td><td><span class="good">体积最优</span></td></tr>
+    </table>
+    <div class="code-block" style="margin-top:16px"><span class="good">// Next.js Image 组件（最佳实践）</span>
+import Image from 'next/image';
+
+&lt;Image
+  src="/hero.jpg"
+  alt="Hero"
+  width={800}
+  height={600}
+  priority                    <span class="good">// LCP 图片：preload</span>
+  placeholder="blur"
+  blurDataURL="data:image/..." <span class="good">// LQIP 占位</span>
+  sizes="(max-width: 768px) 100vw, 50vw"
+/&gt;
+
+<span class="good">// Vue + Nuxt Image</span>
+&lt;NuxtImg
+  src="/hero.jpg"
+  width="800"
+  height="600"
+  loading="lazy"              <span class="good">// 非首屏懒加载</span>
+  format="webp"               <span class="good">// 自动转 WebP</span>
+  quality="80"
+/&gt;</div>
+  </div>
+</div>
+
+<script>
+function showView(name) {
+  ['compare','responsive','strategy'].forEach(v => {
+    document.getElementById('view-' + v).hidden = v !== name;
+  });
+  document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function updateResponsive() {
+  const vw = parseInt(document.getElementById('viewportSelect').value);
+  const sizes = `(max-width: 600px) 100vw, (max-width: 1000px) 50vw, 33vw`;
+  const effectiveWidth = vw <= 600 ? vw : vw <= 1000 ? vw * 0.5 : vw * 0.33;
+
+  const sources = [
+    { w: 480, file: 'hero-480.webp', size: '60KB' },
+    { w: 800, file: 'hero-800.webp', size: '120KB' },
+    { w: 1200, file: 'hero-1200.webp', size: '200KB' },
+  ];
+
+  const selected = sources.reduce((best, s) =>
+    Math.abs(s.w - effectiveWidth) < Math.abs(best.w - effectiveWidth) ? s : best
+  );
+
+  document.getElementById('responsiveResult').innerHTML = `
+    <div>视口: <strong>${vw}px</strong></div>
+    <div>sizes: <code>${sizes}</code></div>
+    <div>有效显示宽度: <strong>${effectiveWidth.toFixed(0)}px</strong></div>
+    <div style="margin-top:8px;padding:12px;background:#14532d;border-radius:8px">
+      浏览器选择: <strong>${selected.file}</strong> (${selected.size})<br>
+      <span style="font-size:12px;color:#86efac">匹配 ${selected.w}w 描述符</span>
+    </div>
+    <div style="margin-top:12px;font-size:12px;color:#64748b">
+      可用候选: ${sources.map(s => `${s.file} (${s.w}w)`).join(' · ')}
+    </div>
+  `;
+}
+
+updateResponsive();
+</script>
+</body>
+</html>

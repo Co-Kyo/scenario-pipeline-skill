@@ -20,12 +20,13 @@
 ### 你将理解什么
 为什么 60fps 是目标？事件循环的执行顺序是什么？长任务如何阻塞渲染？
 
-### Step 1：理解 16ms 帧预算
+### Step 1：理解 16ms 帧预算，用实验感受掉帧
 **做**：阅读 `06-渲染卡顿排查/overview.md` 的"渲染管线与帧预算"章节。理解每帧 16ms 的预算分配。
-**你会看到什么**：一帧内 JS 执行 + 样式计算 + 布局 + 绘制 + 合成必须在 16ms 内完成，否则掉帧。
-**这说明了什么**：卡顿的本质是"某个任务占用了太多帧预算"。
+**然后动手**：打开 `experiment/src/index.html`，切换到「强制同步布局」标签页。点击「❌ 读写交替」（DOM 数量 1000），观察 FPS 骤降和日志中的耗时。然后点击「✅ 读写分离」，对比 FPS 恢复正常。
+**你会看到什么**：读写交替触发 N 次 Layout，FPS 跌到个位数；读写分离只触发 1 次 Layout，FPS 稳定在 60。
+**这说明了什么**：卡顿的本质是"某个任务占用了太多帧预算"。Layout Thrashing 是最常见的帧预算超支原因。
 **接下来去哪**：带着"什么任务最容易超时"这个问题，进入 Step 2。
-**做到才算过**：能说出一帧内 5 个阶段的顺序和总预算。
+**做到才算过**：能说出一帧内 5 个阶段的顺序和总预算。能在实验中观察到强制同步布局的 FPS 骤降。
 
 ### Step 2：理解事件循环与长任务
 **做**：阅读 `overview.md` 的"事件循环与长任务"章节 + `edge-cases.md` 的微任务风暴和宏任务饥饿。
@@ -47,12 +48,13 @@
 ### 你将理解什么
 如何用 DevTools 找到卡顿的根因？Long Tasks API 如何自动监测？
 
-### Step 3：用 Performance 面板定位 Long Task
+### Step 3：用实验观察 Long Task，用 Performance 面板定位
 **做**：打开 Chrome DevTools → Performance 面板，录制一个卡顿页面的操作。找到红色三角标记的 Long Task。
-**你会看到什么**：Long Task 会显示调用栈，精确到哪一行代码耗时最长。
+**然后动手**：在实验中切换到「Long Task」标签页。点击「❌ 同步长任务 (200ms)」，观察日志中 `🔴 Long Task detected: ~200ms`，FPS 降到接近 0。然后点击「✅ 分片执行」，观察主线程保持响应。
+**你会看到什么**：Long Task 会显示调用栈，精确到哪一行代码耗时最长。实验中同步 200ms 计算完全阻塞主线程，分片执行每片 <4ms 不影响帧率。
 **这说明了什么**：Performance 面板是"定位根因"的精确武器——不是猜，而是看。
 **接下来去哪**：阅读 `edge-cases.md` 的"未识别 Long Task"坑点。
-**做到才算过**：能用 Performance 面板找到一个 Long Task 并读出其调用栈。
+**做到才算过**：能用 Performance 面板找到一个 Long Task 并读出其调用栈。能在实验中对比同步长任务 vs 分片执行的 FPS 差异。
 
 ### Step 4：部署 Long Tasks API 监测
 **做**：阅读 `overview.md` 的 A16 节点。在项目中用 PerformanceObserver 监听 Long Task。
@@ -74,12 +76,16 @@
 ### 你将理解什么
 如何把计算密集型任务从主线程移走？CSS contain 如何减少布局计算？
 
-### Step 5：用 Web Worker 卸载计算
+### Step 5：用 Web Worker 卸载计算，用实验对比动画模式
 **做**：阅读 `overview.md` 的 A10 节点 + `trade-offs.md` 的 Worker 通信对比。写一个 Worker 示例：主线程发数据→Worker 计算→Worker 返回结果。
-**你会看到什么**：Worker 在独立线程运行，不阻塞主线程渲染；但 postMessage 有序列化开销。
-**这说明了什么**：Worker 适合"计算密集但通信量小"的场景（排序、搜索、加密）。
+**然后动手**：在实验中切换到「rAF 调度」标签页。依次点击三种动画模式：
+1. 「❌ setTimeout 动画」→ FPS 波动，因为 setTimeout 不精确且触发 Layout
+2. 「✅ rAF 动画」→ FPS 稳定 60，与浏览器刷新率同步
+3. 「🚀 transform 动画」→ 最优，只触发 Composite，跳过 Layout 和 Paint
+**你会看到什么**：Worker 在独立线程运行，不阻塞主线程渲染；但 postMessage 有序列化开销。transform 动画比 left 动画少两个渲染阶段。
+**这说明了什么**：Worker 适合"计算密集但通信量小"的场景（排序、搜索、加密）。动画属性选择直接影响渲染管线的参与阶段。
 **接下来去哪**：阅读 `trade-offs.md` 的 postMessage vs SharedArrayBuffer。
-**做到才算过**：能写一个 Worker 示例，理解 Transferable Objects 零拷贝。
+**做到才算过**：能写一个 Worker 示例，理解 Transferable Objects 零拷贝。能在实验中对比三种动画模式的 FPS 差异。
 
 ### Step 6：用 CSS contain 隔离子树
 **做**：阅读 `overview.md` 的 A13 节点 + `edge-cases.md` 的层爆炸坑点。在页面中给一个复杂组件添加 `contain: layout paint`。
