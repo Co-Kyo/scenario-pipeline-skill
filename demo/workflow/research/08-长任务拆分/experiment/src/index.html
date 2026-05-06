@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P8 实验 — 长任务检测 + Worker 卸载验证</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; padding: 24px; }
+    h1 { font-size: 20px; margin-bottom: 16px; color: #38bdf8; }
+    .panel { background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+    .panel h2 { font-size: 14px; color: #94a3b8; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px; }
+    .controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+    .btn-block { background: #ef4444; color: white; }
+    .btn-chunk { background: #f59e0b; color: #1e293b; }
+    .btn-worker { background: #10b981; color: white; }
+    .btn-clear { background: #475569; color: white; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+    .metric { background: #334155; border-radius: 8px; padding: 14px; text-align: center; }
+    .metric .value { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .metric .label { font-size: 11px; color: #94a3b8; margin-top: 4px; text-transform: uppercase; }
+    .metric.good .value { color: #10b981; }
+    .metric.warn .value { color: #f59e0b; }
+    .metric.bad .value { color: #ef4444; }
+    .log { background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 12px; max-height: 200px; overflow-y: auto; font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.6; }
+    .log-entry { padding: 2px 0; }
+    .log-entry.long-task { color: #ef4444; }
+    .log-entry.info { color: #38bdf8; }
+    .log-entry.success { color: #10b981; }
+    .interactive-test { display: flex; align-items: center; gap: 12px; }
+    .interactive-test input { flex: 1; padding: 8px 12px; border-radius: 6px; border: 1px solid #475569; background: #1e293b; color: #e2e8f0; font-size: 14px; }
+    .click-counter { font-size: 14px; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <h1>🔬 P8 实验 — 长任务检测 + Worker 卸载验证</h1>
+
+  <div class="panel">
+    <h2>操作面板</h2>
+    <div class="controls">
+      <button class="btn btn-block" onclick="runBlocking()">🚫 主线程阻塞模式</button>
+      <button class="btn btn-chunk" onclick="runChunked()">✂️ 主线程分片模式</button>
+      <button class="btn btn-worker" onclick="runWorker()">⚡ Worker 卸载模式</button>
+      <button class="btn btn-clear" onclick="resetAll()">🔄 重置</button>
+    </div>
+    <div class="interactive-test">
+      <input type="text" id="inputTest" placeholder="试试在计算过程中输入文字（测试主线程是否阻塞）">
+      <span class="click-counter">点击计数: <strong id="clickCount">0</strong></span>
+      <button class="btn btn-clear" onclick="document.getElementById('clickCount').textContent=0">重置</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>性能指标</h2>
+    <div class="metrics">
+      <div class="metric" id="metricTasks">
+        <div class="value" id="longTaskCount">0</div>
+        <div class="label">Long Tasks</div>
+      </div>
+      <div class="metric" id="metricDuration">
+        <div class="value" id="totalDuration">0ms</div>
+        <div class="label">总阻塞时长</div>
+      </div>
+      <div class="metric" id="metricLongest">
+        <div class="value" id="longestTask">0ms</div>
+        <div class="label">最长单任务</div>
+      </div>
+      <div class="metric" id="metricInput">
+        <div class="value" id="inputLatency">-</div>
+        <div class="label">输入响应延迟</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>事件日志</h2>
+    <div class="log" id="log"></div>
+  </div>
+
+  <script>
+    // ========== 状态 ==========
+    let longTasks = [];
+    let clickCount = 0;
+    let worker = null;
+
+    // 点击计数器（测试主线程响应性）
+    document.addEventListener('click', (e) => {
+      if (e.target.tagName === 'BUTTON') return;
+      clickCount++;
+      document.getElementById('clickCount').textContent = clickCount;
+    });
+
+    // ========== Long Tasks 检测 ==========
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        const duration = Math.round(entry.duration);
+        longTasks.push({ duration, startTime: entry.startTime, attribution: entry.attribution });
+        addLog(`🔴 Long Task: ${duration}ms — ${entry.attribution?.[0]?.name || 'unknown'}`, 'long-task');
+        updateMetrics();
+      }
+    });
+    observer.observe({ entryTypes: ['longtask'] });
+
+    // ========== 计算任务：斐波那契（故意阻塞） ==========
+    function heavyCompute(n = 42) {
+      // 递归斐波那契，故意制造 CPU 密集型长任务
+      function fib(num) {
+        if (num <= 1) return num;
+        return fib(num - 1) + fib(num - 2);
+      }
+      return fib(n);
+    }
+
+    // ========== 模式1：主线程阻塞 ==========
+    function runBlocking() {
+      resetAll();
+      addLog('🚫 启动主线程阻塞模式 — 计算 fib(42)...', 'info');
+
+      const start = performance.now();
+      const result = heavyCompute(42);
+      const elapsed = Math.round(performance.now() - start);
+
+      addLog(`✅ 完成: fib(42) = ${result}, 耗时 ${elapsed}ms`, 'success');
+    }
+
+    // ========== 模式2：主线程分片 ==========
+    async function runChunked() {
+      resetAll();
+      addLog('✂️ 启动主线程分片模式 — 分批计算 fib(1000) 的迭代版本...', 'info');
+
+      const start = performance.now();
+      // 模拟大量数据处理，分批执行
+      const results = [];
+      const batchSize = 50;
+      const total = 2000;
+
+      for (let i = 0; i < total; i += batchSize) {
+        const batchEnd = Math.min(i + batchSize, total);
+        for (let j = i; j < batchEnd; j++) {
+          // 模拟轻量计算
+          results.push(Math.sqrt(j) * Math.sin(j));
+        }
+
+        // 每批让出主线程
+        if ('scheduler' in globalThis && 'yield' in scheduler) {
+          await scheduler.yield();
+        } else {
+          await new Promise(r => setTimeout(r, 0));
+        }
+
+        if (i % 200 === 0) {
+          addLog(`  进度: ${i}/${total}`, 'info');
+        }
+      }
+
+      const elapsed = Math.round(performance.now() - start);
+      addLog(`✅ 完成: ${results.length} 项计算, 耗时 ${elapsed}ms`, 'success');
+    }
+
+    // ========== 模式3：Worker 卸载 ==========
+    function runWorker() {
+      resetAll();
+      addLog('⚡ 启动 Worker 卸载模式 — 将计算卸载到 Worker...', 'info');
+
+      if (worker) worker.terminate();
+
+      // 创建 Worker（内联 Blob）
+      const workerCode = `
+        self.onmessage = function(e) {
+          const { task, n } = e.data;
+          const start = Date.now();
+
+          if (task === 'fib') {
+            function fib(num) {
+              if (num <= 1) return num;
+              return fib(num - 1) + fib(num - 2);
+            }
+            const result = fib(n);
+            self.postMessage({ type: 'result', result, duration: Date.now() - start });
+          } else if (task === 'batch') {
+            const results = [];
+            const total = 2000;
+            for (let i = 0; i < total; i++) {
+              results.push(Math.sqrt(i) * Math.sin(i));
+              if (i % 500 === 0 && i > 0) {
+                self.postMessage({ type: 'progress', current: i, total });
+              }
+            }
+            self.postMessage({ type: 'result', result: results.length, duration: Date.now() - start });
+          }
+        };
+      `;
+
+      const blob = new Blob([workerCode], { type: 'application/javascript' });
+      worker = new Worker(URL.createObjectURL(blob));
+
+      const workerStart = performance.now();
+
+      worker.onmessage = (e) => {
+        if (e.data.type === 'progress') {
+          addLog(`  Worker 进度: ${e.data.current}/${e.data.total}`, 'info');
+        } else if (e.data.type === 'result') {
+          const elapsed = Math.round(performance.now() - workerStart);
+          addLog(`✅ Worker 完成: 结果=${e.data.result}, Worker内部耗时=${e.data.duration}ms, 总耗时=${elapsed}ms`, 'success');
+          addLog(`📊 主线程 Long Tasks: ${longTasks.length} (应为 0)`, 'info');
+        }
+      };
+
+      worker.onerror = (e) => {
+        addLog(`❌ Worker 错误: ${e.message}`, 'long-task');
+      };
+
+      // 选择计算任务
+      worker.postMessage({ task: 'fib', n: 42 });
+      addLog('  已发送 fib(42) 到 Worker，主线程继续响应...', 'info');
+    }
+
+    // ========== 工具函数 ==========
+    function resetAll() {
+      longTasks = [];
+      if (worker) { worker.terminate(); worker = null; }
+      document.getElementById('log').innerHTML = '';
+      updateMetrics();
+      addLog('🔄 已重置', 'info');
+    }
+
+    function updateMetrics() {
+      document.getElementById('longTaskCount').textContent = longTasks.length;
+
+      const totalDur = longTasks.reduce((s, t) => s + t.duration, 0);
+      document.getElementById('totalDuration').textContent = Math.round(totalDur) + 'ms';
+
+      const longest = longTasks.length > 0 ? Math.max(...longTasks.map(t => t.duration)) : 0;
+      document.getElementById('longestTask').textContent = Math.round(longest) + 'ms';
+
+      // 颜色阈值
+      const taskEl = document.getElementById('metricTasks');
+      taskEl.className = 'metric ' + (longTasks.length === 0 ? 'good' : longTasks.length < 3 ? 'warn' : 'bad');
+
+      const durationEl = document.getElementById('metricDuration');
+      durationEl.className = 'metric ' + (totalDur < 100 ? 'good' : totalDur < 500 ? 'warn' : 'bad');
+    }
+
+    function addLog(msg, cls = 'info') {
+      const log = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${cls}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    // 输入延迟测量
+    const inputEl = document.getElementById('inputTest');
+    let inputStart = 0;
+    inputEl.addEventListener('keydown', () => { inputStart = performance.now(); });
+    inputEl.addEventListener('input', () => {
+      const latency = Math.round(performance.now() - inputStart);
+      const el = document.getElementById('inputLatency');
+      el.textContent = latency + 'ms';
+      el.parentElement.parentElement.className = 'metric ' + (latency < 50 ? 'good' : latency < 100 ? 'warn' : 'bad');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Splitting + Tree Shaking 实验</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: #38bdf8;
+    }
+    .section {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #334155;
+    }
+    .section h2 {
+      font-size: 1.1rem;
+      color: #7dd3fc;
+      margin-bottom: 0.75rem;
+    }
+    button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    button:hover { background: #1d4ed8; }
+    .result {
+      background: #0f172a;
+      border-radius: 6px;
+      padding: 1rem;
+      margin-top: 0.75rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      white-space: pre-wrap;
+      color: #94a3b8;
+      min-height: 2rem;
+    }
+    .highlight { color: #4ade80; }
+    .warn { color: #fbbf24; }
+    .error { color: #f87171; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Code Splitting + Tree Shaking 实验</h1>
+
+  <!-- 实验一：Tree Shaking -->
+  <div class="section">
+    <h2>实验一：Tree Shaking 验证</h2>
+    <p style="margin-bottom: 0.75rem; color: #94a3b8;">
+      math.js 导出 add/subtract/multiply/divide，main.js 仅使用 add。<br>
+      检查 bundle 中是否消除了未使用的导出。
+    </p>
+    <button id="btn-add">计算 add(10, 3)</button>
+    <div id="tree-shaking-result" class="result">点击按钮测试 add 函数...</div>
+  </div>
+
+  <!-- 实验二：Code Splitting -->
+  <div class="section">
+    <h2>实验二：Code Splitting（动态 import）</h2>
+    <p style="margin-bottom: 0.75rem; color: #94a3b8;">
+      heavy.js 通过动态 import 加载。观察 Network 面板：点击前不会加载此 chunk。
+    </p>
+    <button id="btn-heavy">加载 heavy 模块</button>
+    <div id="code-splitting-result" class="result">点击按钮触发动态 import...</div>
+  </div>
+
+  <!-- 实验三：副作用验证 -->
+  <div class="section">
+    <h2>实验三：sideEffects 验证</h2>
+    <p style="margin-bottom: 0.75rem; color: #94a3b8;">
+      utils.js 包含副作用代码（console.log + 全局变量赋值）。<br>
+      未被 import 时，观察构建产物是否包含它。
+    </p>
+    <button id="btn-utils">加载 utils 模块</button>
+    <div id="side-effects-result" class="result">点击按钮按需加载 utils...</div>
+  </div>
+
+  <!-- 构建信息 -->
+  <div class="section">
+    <h2>构建信息</h2>
+    <div id="build-info" class="result">加载中...</div>
+  </div>
+
+  <script>
+    // === 实验一：Tree Shaking ===
+    // 只导入 add，其他导出应被 Tree Shaking 消除
+    import { add } from './math.js';
+
+    document.getElementById('btn-add').addEventListener('click', () => {
+      const result = add(10, 3);
+      document.getElementById('tree-shaking-result').innerHTML =
+        `<span class="highlight">✓ add(10, 3) = ${result}</span>\n` +
+        `Bundle 中应仅包含 add 函数，subtract/multiply/divide 已被消除。\n` +
+        `请用 webpack-bundle-analyzer 验证。`;
+    });
+
+    // === 实验二：Code Splitting ===
+    // 动态 import 生成独立 chunk
+    document.getElementById('btn-heavy').addEventListener('click', async () => {
+      const resultEl = document.getElementById('code-splitting-result');
+      const start = performance.now();
+      resultEl.innerHTML = '<span class="warn">⏳ 正在加载 heavy chunk...</span>';
+
+      try {
+        const { default: heavyCompute } = await import('./heavy.js');
+        const elapsed = (performance.now() - start).toFixed(1);
+        const result = heavyCompute(100);
+        resultEl.innerHTML =
+          `<span class="highlight">✓ heavy chunk 加载完成 (${elapsed}ms)</span>\n` +
+          `heavyCompute(100) = ${result}\n` +
+          `Network 面板应显示独立的 heavy.[hash].js 请求。`;
+      } catch (err) {
+        resultEl.innerHTML = `<span class="error">✗ 加载失败: ${err.message}</span>`;
+      }
+    });
+
+    // === 实验三：sideEffects ===
+    // 按需加载 utils，验证 sideEffects 声明的影响
+    document.getElementById('btn-utils').addEventListener('click', async () => {
+      const resultEl = document.getElementById('side-effects-result');
+      resultEl.innerHTML = '<span class="warn">⏳ 正在加载 utils...</span>';
+
+      try {
+        const utils = await import('./utils.js');
+        resultEl.innerHTML =
+          `<span class="highlight">✓ utils 加载成功</span>\n` +
+          `formatDate: ${utils.formatDate(new Date())}\n` +
+          `Check console for side effects (console.log from utils.js)\n` +
+          `若 sideEffects: false 且未 import，utils.js 不应出现在 bundle 中。`;
+      } catch (err) {
+        resultEl.innerHTML = `<span class="error">✗ 加载失败: ${err.message}</span>`;
+      }
+    });
+
+    // === 构建信息 ===
+    document.getElementById('build-info').innerHTML =
+      `构建工具: Webpack (production mode)\n` +
+      `Tree Shaking: usedExports + sideEffects\n` +
+      `Code Splitting: dynamic import()\n` +
+      `验证方法: webpack-bundle-analyzer + Network 面板`;
+  </script>
+</body>
+</html>

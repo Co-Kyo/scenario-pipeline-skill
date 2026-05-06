@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>三层缓存协作演示</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <h1>🔄 三层缓存协作演示</h1>
+  <p class="subtitle">HTTP 缓存 → CDN 边缘缓存 → Service Worker 编程式缓存</p>
+
+  <!-- 操作按钮 -->
+  <div class="actions">
+    <button id="btn-fetch">📡 发送请求</button>
+    <button id="btn-clear">🗑️ 清除所有缓存</button>
+    <button id="btn-refresh">↻ 刷新页面</button>
+  </div>
+
+  <!-- 请求时间线 -->
+  <div class="card">
+    <h2><span class="icon">📡</span> 请求流转时间线</h2>
+    <div class="timeline">
+      <div class="timeline-node" id="node-browser">
+        <div class="dot"></div>
+        <span>浏览器缓存</span>
+      </div>
+      <div class="timeline-arrow"></div>
+      <div class="timeline-node" id="node-sw">
+        <div class="dot"></div>
+        <span>SW Cache</span>
+      </div>
+      <div class="timeline-arrow"></div>
+      <div class="timeline-node" id="node-cdn">
+        <div class="dot"></div>
+        <span>CDN 边缘</span>
+      </div>
+      <div class="timeline-arrow"></div>
+      <div class="timeline-node" id="node-origin">
+        <div class="dot"></div>
+        <span>源站</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- 缓存状态 -->
+    <div class="card">
+      <h2><span class="icon">💾</span> 缓存状态</h2>
+      <div class="status-row">
+        <span class="label">浏览器缓存</span>
+        <span id="browser-cache" class="badge badge-pending">检查中...</span>
+      </div>
+      <div class="status-row">
+        <span class="label">SW Cache API</span>
+        <span id="sw-cache" class="badge badge-pending">检查中...</span>
+      </div>
+      <div class="status-row">
+        <span class="label">网络请求</span>
+        <span id="network-status" class="badge badge-pending">待请求</span>
+      </div>
+    </div>
+
+    <!-- API 响应 -->
+    <div class="card">
+      <h2><span class="icon">📦</span> API 响应</h2>
+      <div class="api-response" id="api-response">等待请求...</div>
+    </div>
+  </div>
+
+  <!-- 请求日志 -->
+  <div class="card">
+    <h2><span class="icon">📋</span> 请求日志</h2>
+    <div class="log-area" id="log"></div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

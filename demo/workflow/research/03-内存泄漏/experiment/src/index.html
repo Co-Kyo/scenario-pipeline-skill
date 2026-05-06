@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>内存泄漏复现实验</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, system-ui, sans-serif; padding: 20px; background: #f5f5f5; }
+    h1 { font-size: 20px; margin-bottom: 16px; color: #333; }
+    .section { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .section h2 { font-size: 16px; color: #d32f2f; margin-bottom: 8px; }
+    .section.fix h2 { color: #388e3c; }
+    .section p { font-size: 14px; color: #666; margin-bottom: 12px; line-height: 1.5; }
+    button { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-right: 8px; margin-bottom: 8px; }
+    .btn-leak { background: #d32f2f; color: #fff; }
+    .btn-fix { background: #388e3c; color: #fff; }
+    .btn-info { background: #1976d2; color: #fff; }
+    .stats { font-family: monospace; font-size: 13px; background: #f5f5f5; padding: 8px 12px; border-radius: 4px; margin-top: 8px; color: #333; }
+    #container { border: 2px dashed #ccc; padding: 8px; min-height: 50px; margin-top: 8px; border-radius: 4px; }
+    .note { font-size: 12px; color: #999; margin-top: 8px; font-style: italic; }
+  </style>
+</head>
+<body>
+  <h1>🔬 内存泄漏复现实验</h1>
+
+  <!-- 泄漏 1: Detached DOM -->
+  <div class="section">
+    <h2>泄漏 1: Detached DOM</h2>
+    <p>每次点击创建 100 个 DOM 节点并从文档树移除，但 JS 仍持有引用。在 DevTools Memory 的 Heap Snapshot 中搜索 <code>Detached</code> 可看到泄漏节点。</p>
+    <button class="btn-leak" onclick="createDetachedDOM()">创建 Detached DOM</button>
+    <button class="btn-fix" onclick="fixDetachedDOM()">修复：释放引用</button>
+    <div class="stats" id="detached-stats">已创建: 0 个 Detached 节点</div>
+  </div>
+
+  <!-- 泄漏 2: 事件监听器泄漏 -->
+  <div class="section">
+    <h2>泄漏 2: 事件监听器泄漏</h2>
+    <p>每次点击添加 10 个事件监听器到 window，但不移除。Heap Snapshot 中搜索 <code>EventListener</code> 可看到数量增长。</p>
+    <button class="btn-leak" onclick="addLeakedListeners()">添加事件监听器</button>
+    <button class="btn-fix" onclick="fixListeners()">修复：AbortController 清理</button>
+    <div class="stats" id="listener-stats">已添加: 0 个未清理的监听器</div>
+  </div>
+
+  <!-- 泄漏 3: 闭包捕获泄漏 -->
+  <div class="section">
+    <h2>泄漏 3: 闭包捕获泄漏</h2>
+    <p>每次点击创建一个闭包，该闭包捕获了 1MB 的大字符串，但闭包本身只做简单打印。Heap Snapshot 中展开 Closure 对象的 <code>[[Scopes]]</code> 可看到被捕获的数据。</p>
+    <button class="btn-leak" onclick="createClosureLeak()">创建闭包泄漏</button>
+    <button class="btn-fix" onclick="fixClosureLeak()">修复：缩小作用域</button>
+    <div class="stats" id="closure-stats">已创建: 0 个泄漏闭包 (累计约 0 MB)</div>
+  </div>
+
+  <!-- 修复方案对比 -->
+  <div class="section fix">
+    <h2>✅ 修复方案</h2>
+    <p>点击"修复"按钮后手动 GC，再拍 Heap Snapshot 对比，确认泄漏对象被回收。</p>
+    <button class="btn-info" onclick="triggerGC()">手动触发 GC（也可点 DevTools 垃圾桶图标）</button>
+    <div class="note">注意：GC 时机由 V8 引擎决定，修复后可能需要等几秒才生效。</div>
+  </div>
+
+  <script>
+    // ============================================
+    // 泄漏 1: Detached DOM
+    // ============================================
+    let detachedNodes = [];
+    let detachedCount = 0;
+
+    function createDetachedDOM() {
+      const container = document.getElementById('container');
+      for (let i = 0; i < 100; i++) {
+        const div = document.createElement('div');
+        div.textContent = `Detached Node #${detachedCount++}`;
+        div.style.padding = '2px 4px';
+        div.style.fontSize = '12px';
+        container.appendChild(div);
+        // 从文档树移除，但保持 JS 引用
+        container.removeChild(div);
+        detachedNodes.push(div); // 泄漏：强引用阻止 GC
+      }
+      updateStats();
+    }
+
+    function fixDetachedDOM() {
+      detachedNodes = []; // 释放所有引用
+      detachedCount = 0;
+      updateStats();
+    }
+
+    function updateStats() {
+      document.getElementById('detached-stats').textContent = 
+        `已创建: ${detachedNodes.length} 个 Detached 节点`;
+    }
+
+    // ============================================
+    // 泄漏 2: 事件监听器泄漏
+    // ============================================
+    let leakedHandlers = [];
+    let listenerCount = 0;
+    let abortController = null;
+
+    function addLeakedListeners() {
+      for (let i = 0; i < 10; i++) {
+        const handler = () => {
+          // 这个回调永远不应该被调用
+          console.log(`Leaked handler #${listenerCount - 10 + i}`);
+        };
+        window.addEventListener('resize', handler);
+        leakedHandlers.push(handler);
+        listenerCount++;
+      }
+      document.getElementById('listener-stats').textContent = 
+        `已添加: ${listenerCount} 个未清理的监听器`;
+    }
+
+    function fixListeners() {
+      // 逐一移除（演示旧方式）
+      leakedHandlers.forEach(h => window.removeEventListener('resize', h));
+      leakedHandlers = [];
+      listenerCount = 0;
+      document.getElementById('listener-stats').textContent = 
+        `已添加: 0 个未清理的监听器`;
+    }
+
+    // 演示 AbortController 方式（推荐）
+    function addListenersWithAbortController() {
+      if (abortController) abortController.abort();
+      abortController = new AbortController();
+      window.addEventListener('scroll', () => {}, { signal: abortController.signal });
+      window.addEventListener('resize', () => {}, { signal: abortController.signal });
+      window.addEventListener('click', () => {}, { signal: abortController.signal });
+      // 一行清理所有：abortController.abort()
+    }
+
+    // ============================================
+    // 泄漏 3: 闭包捕获泄漏
+    // ============================================
+    let closureLeaks = [];
+    let closureCount = 0;
+
+    function createClosureLeak() {
+      // 创建 1MB 的大字符串
+      const hugeData = new Array(1024 * 1024).fill('X').join('');
+      
+      // 创建一个闭包，它捕获了 hugeData，但从未使用它
+      const handler = function() {
+        console.log('I do nothing with hugeData, but it is captured in my scope');
+      };
+      
+      // 闭包的 [[Scopes]] 中包含 hugeData
+      // 因为 JS 引擎可能认为 hugeData 是活跃的（闭包引用了整个作用域）
+      closureLeaks.push(handler);
+      closureCount++;
+      
+      document.getElementById('closure-stats').textContent = 
+        `已创建: ${closureCount} 个泄漏闭包 (累计约 ${closureCount} MB)`;
+    }
+
+    function fixClosureLeak() {
+      closureLeaks = [];
+      closureCount = 0;
+      document.getElementById('closure-stats').textContent = 
+        `已创建: 0 个泄漏闭包 (累计约 0 MB)`;
+    }
+
+    // ============================================
+    // 工具函数
+    // ============================================
+    function triggerGC() {
+      // 浏览器中无法直接调用 GC，提示用户操作
+      alert('请在 DevTools Memory 面板中点击垃圾桶图标（Collect garbage）手动触发 GC。\n\n或者在 DevTools Console 中执行：window.gc()（需启动 Chrome 时加 --js-flags="--expose-gc"）');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>P2-首屏白屏：SSR vs SSG vs CSR 加载对比实验</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    h1 { text-align: center; font-size: 1.8rem; margin-bottom: 0.5rem; background: linear-gradient(135deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { text-align: center; color: #94a3b8; margin-bottom: 2rem; font-size: 0.9rem; }
+    .controls { display: flex; gap: 1rem; justify-content: center; margin-bottom: 2rem; flex-wrap: wrap; }
+    .controls button { padding: 0.6rem 1.5rem; border: 1px solid #334155; border-radius: 8px; background: #1e293b; color: #e2e8f0; cursor: pointer; font-size: 0.9rem; transition: all 0.2s; }
+    .controls button:hover { border-color: #38bdf8; background: #1e3a5f; }
+    .controls button.active { border-color: #38bdf8; background: #1e3a5f; color: #38bdf8; }
+    .sim-area { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem; }
+    @media (max-width: 768px) { .sim-area { grid-template-columns: 1fr; } }
+    .sim-panel { background: #1e293b; border-radius: 12px; padding: 1.5rem; border: 1px solid #334155; }
+    .sim-panel h3 { font-size: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .sim-panel h3 .badge { font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; }
+    .badge-csr { background: #ef4444; color: white; }
+    .badge-ssr { background: #22c55e; color: white; }
+    .badge-ssg { background: #3b82f6; color: white; }
+    .browser-frame { background: #0f172a; border-radius: 8px; overflow: hidden; border: 1px solid #334155; }
+    .browser-bar { background: #334155; padding: 8px 12px; display: flex; align-items: center; gap: 8px; }
+    .browser-dots { display: flex; gap: 4px; }
+    .browser-dots span { width: 8px; height: 8px; border-radius: 50%; }
+    .browser-dots .red { background: #ef4444; }
+    .browser-dots .yellow { background: #eab308; }
+    .browser-dots .green { background: #22c55e; }
+    .browser-url { background: #1e293b; padding: 4px 12px; border-radius: 4px; flex: 1; font-size: 0.75rem; color: #94a3b8; }
+    .browser-content { padding: 1rem; min-height: 180px; position: relative; }
+    .white-screen { background: #fff; width: 100%; height: 100%; min-height: 160px; border-radius: 4px; display: flex; align-items: center; justify-content: center; }
+    .white-screen .spinner { width: 24px; height: 24px; border: 3px solid #e2e8f0; border-top-color: #38bdf8; border-radius: 50%; animation: spin 0.8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .content-loaded { background: #fff; border-radius: 4px; padding: 1rem; color: #1e293b; }
+    .content-loaded h4 { font-size: 0.9rem; color: #334155; margin-bottom: 0.5rem; }
+    .content-loaded .skeleton { height: 12px; background: #e2e8f0; border-radius: 4px; margin-bottom: 8px; }
+    .content-loaded .skeleton.done { background: #38bdf8; }
+    .timeline { margin-top: 1rem; }
+    .timeline-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 4px; font-size: 0.75rem; }
+    .timeline-label { width: 60px; text-align: right; color: #94a3b8; }
+    .timeline-bar { height: 16px; border-radius: 3px; position: relative; transition: width 0.3s; }
+    .timeline-bar.html { background: #38bdf8; }
+    .timeline-bar.css { background: #a78bfa; }
+    .timeline-bar.js { background: #fbbf24; }
+    .timeline-bar.render { background: #22c55e; }
+    .timeline-bar.hydrate { background: #f97316; }
+    .timeline-bar.white { background: #64748b; }
+    .timeline-bar .time { position: absolute; right: 4px; top: 1px; font-size: 0.65rem; color: #0f172a; font-weight: 600; }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 1rem; }
+    .metric { background: #0f172a; border-radius: 6px; padding: 0.5rem; text-align: center; }
+    .metric .value { font-size: 1.2rem; font-weight: 700; }
+    .metric .label { font-size: 0.65rem; color: #94a3b8; }
+    .metric.good .value { color: #22c55e; }
+    .metric.ok .value { color: #eab308; }
+    .metric.bad .value { color: #ef4444; }
+    .explanation { background: #1e293b; border-radius: 12px; padding: 1.5rem; border: 1px solid #334155; margin-top: 1.5rem; }
+    .explanation h3 { margin-bottom: 1rem; }
+    .explanation ul { list-style: none; padding: 0; }
+    .explanation li { padding: 0.5rem 0; border-bottom: 1px solid #334155; font-size: 0.85rem; line-height: 1.6; }
+    .explanation li:last-child { border-bottom: none; }
+    .explanation li strong { color: #38bdf8; }
+    .legend { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .legend-item { display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: #94a3b8; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+    .status-text { text-align: center; padding: 2rem; color: #94a3b8; font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>首屏白屏：SSR vs SSG vs CSR 加载对比</h1>
+    <p class="subtitle">直观对比三种渲染策略的首屏加载性能差异 | 模拟网络延迟和资源加载</p>
+
+    <div class="controls">
+      <button onclick="runSimulation('3g')" id="btn-3g">📶 模拟 3G (1.5s RTT)</button>
+      <button onclick="runSimulation('4g')" id="btn-4g" class="active">📶 模拟 4G (150ms RTT)</button>
+      <button onclick="runSimulation('fast')" id="btn-fast">⚡ 快速网络 (30ms RTT)</button>
+      <button onclick="runSimulation('cached')" id="btn-cached">💾 缓存命中</button>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#38bdf8"></div>HTML</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#a78bfa"></div>CSS</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>JS</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div>渲染</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>Hydration</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#64748b"></div>白屏</div>
+    </div>
+
+    <div class="sim-area" id="sim-area">
+      <div class="status-text">点击上方按钮开始模拟</div>
+    </div>
+
+    <div class="explanation">
+      <h3>💡 关键观察</h3>
+      <ul>
+        <li><strong>CSR</strong>：白屏时间 = HTML下载 + JS下载 + JS执行 + 首次渲染。所有逻辑在客户端完成，首屏最慢。</li>
+        <li><strong>SSR</strong>：HTML 已包含内容，FCP 极快。但 Hydration 需加载完整 JS bundle，TTI 可能滞后。瓶颈在服务端渲染耗时和 JS bundle 大小。</li>
+        <li><strong>SSG</strong>：构建时预生成 HTML，CDN 直接返回，TTFB 最快。适合静态内容，但数据新鲜度受限于构建频率。</li>
+        <li><strong>缓存命中</strong>：强缓存命中时跳过网络请求，首屏时间接近 0。这是 CDN + HTTP 缓存协作的核心价值。</li>
+        <li><strong>网络影响</strong>：3G 下差异被放大——CSR 白屏可达数秒，SSR 仍能快速显示内容骨架。</li>
+      </ul>
+    </div>
+  </div>
+
+  <script>
+    const NETWORK_PROFILES = {
+      '3g':   { rtt: 1500, bandwidth: 50,  label: '3G (50KB/s)' },
+      '4g':   { rtt: 150,  bandwidth: 500, label: '4G (500KB/s)' },
+      'fast': { rtt: 30,   bandwidth: 2000,label: '快速网络 (2MB/s)' },
+      'cached': { rtt: 5,  bandwidth: 5000, label: '缓存命中' }
+    };
+
+    const RESOURCE_SIZES = {
+      html: 8,      // KB
+      css: 15,      // KB
+      js: 120,      // KB (initial bundle)
+      jsLazy: 45,   // KB (lazy chunk)
+      ssrHtml: 12,  // KB (SSR rendered HTML)
+      ssgHtml: 10   // KB (SSG static HTML)
+    };
+
+    function calcTransferTime(sizeKB, bandwidthKBps) {
+      return sizeKB / bandwidthKBps * 1000; // ms
+    }
+
+    function runSimulation(profile) {
+      // Update button states
+      document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-' + profile).classList.add('active');
+
+      const net = NETWORK_PROFILES[profile];
+      const isCached = profile === 'cached';
+
+      const simArea = document.getElementById('sim-area');
+
+      // Calculate timings for each strategy
+      const csr = calcCSR(net, isCached);
+      const ssr = calcSSR(net, isCached);
+      const ssg = calcSSG(net, isCached);
+
+      simArea.innerHTML = '';
+      simArea.appendChild(createPanel('CSR (客户端渲染)', 'csr', csr, 'badge-csr', isCached));
+      simArea.appendChild(createPanel('SSR (服务端渲染)', 'ssr', ssr, 'badge-ssr', isCached));
+    }
+
+    function calcCSR(net, cached) {
+      const rtt = net.rtt;
+      const bw = net.bandwidth;
+      if (cached) {
+        return {
+          htmlTransfer: 2, cssTransfer: 3, jsTransfer: 10,
+          renderTime: 20, hydrationTime: 0,
+          phases: [
+            { name: 'HTML', cls: 'html', start: 0, dur: 2 },
+            { name: 'CSS', cls: 'css', start: 2, dur: 3 },
+            { name: 'JS', cls: 'js', start: 2, dur: 10 },
+            { name: '渲染', cls: 'render', start: 12, dur: 20 },
+          ],
+          fcp: 34, tti: 34, whiteTime: 32
+        };
+      }
+      const htmlT = rtt + calcTransferTime(RESOURCE_SIZES.html, bw);
+      const cssT = rtt + calcTransferTime(RESOURCE_SIZES.css, bw);
+      const jsT = rtt + calcTransferTime(RESOURCE_SIZES.js, bw);
+      const renderT = 30;
+      return {
+        htmlTransfer: htmlT, cssTransfer: cssT, jsTransfer: jsT,
+        renderTime: renderT, hydrationTime: 0,
+        phases: [
+          { name: 'HTML', cls: 'html', start: 0, dur: htmlT },
+          { name: 'CSS', cls: 'css', start: htmlT, dur: cssT },
+          { name: '白屏', cls: 'white', start: 0, dur: htmlT + cssT + jsT + renderT },
+          { name: 'JS', cls: 'js', start: htmlT, dur: jsT },
+          { name: '渲染', cls: 'render', start: htmlT + Math.max(cssT, jsT), dur: renderT },
+        ],
+        fcp: Math.round(htmlT + Math.max(cssT, jsT) + renderT),
+        tti: Math.round(htmlT + Math.max(cssT, jsT) + renderT),
+        whiteTime: Math.round(htmlT + Math.max(cssT, jsT) + renderT)
+      };
+    }
+
+    function calcSSR(net, cached) {
+      const rtt = net.rtt;
+      const bw = net.bandwidth;
+      if (cached) {
+        return {
+          htmlTransfer: 3, cssTransfer: 3, jsTransfer: 10,
+          renderTime: 5, hydrationTime: 15,
+          phases: [
+            { name: 'HTML', cls: 'html', start: 0, dur: 3 },
+            { name: 'CSS', cls: 'css', start: 3, dur: 3 },
+            { name: '渲染', cls: 'render', start: 3, dur: 5 },
+            { name: 'JS', cls: 'js', start: 3, dur: 10 },
+            { name: 'Hydration', cls: 'hydrate', start: 13, dur: 15 },
+          ],
+          fcp: 8, tti: 28, whiteTime: 3
+        };
+      }
+      const ssrRenderT = 80; // server render time
+      const htmlT = rtt + ssrRenderT + calcTransferTime(RESOURCE_SIZES.ssrHtml, bw);
+      const cssT = rtt + calcTransferTime(RESOURCE_SIZES.css, bw);
+      const jsT = rtt + calcTransferTime(RESOURCE_SIZES.js, bw);
+      const renderT = 10;
+      const hydrationT = 50;
+      return {
+        htmlTransfer: htmlT, cssTransfer: cssT, jsTransfer: jsT,
+        renderTime: renderT, hydrationTime: hydrationT,
+        phases: [
+          { name: 'HTML', cls: 'html', start: 0, dur: htmlT },
+          { name: 'CSS', cls: 'css', start: htmlT, dur: cssT },
+          { name: '渲染', cls: 'render', start: htmlT, dur: renderT },
+          { name: 'JS', cls: 'js', start: htmlT, dur: jsT },
+          { name: 'Hydration', cls: 'hydrate', start: htmlT + Math.max(cssT, jsT), dur: hydrationT },
+        ],
+        fcp: Math.round(htmlT + renderT),
+        tti: Math.round(htmlT + Math.max(cssT, jsT) + hydrationT),
+        whiteTime: Math.round(htmlT)
+      };
+    }
+
+    function calcSSG(net, cached) {
+      const rtt = net.rtt;
+      const bw = net.bandwidth;
+      if (cached) {
+        return {
+          htmlTransfer: 2, cssTransfer: 3, jsTransfer: 10,
+          renderTime: 3, hydrationTime: 15,
+          phases: [
+            { name: 'HTML', cls: 'html', start: 0, dur: 2 },
+            { name: 'CSS', cls: 'css', start: 2, dur: 3 },
+            { name: '渲染', cls: 'render', start: 2, dur: 3 },
+            { name: 'JS', cls: 'js', start: 2, dur: 10 },
+            { name: 'Hydration', cls: 'hydrate', start: 12, dur: 15 },
+          ],
+          fcp: 5, tti: 27, whiteTime: 2
+        };
+      }
+      const htmlT = rtt + calcTransferTime(RESOURCE_SIZES.ssgHtml, bw);
+      const cssT = rtt + calcTransferTime(RESOURCE_SIZES.css, bw);
+      const jsT = rtt + calcTransferTime(RESOURCE_SIZES.js, bw);
+      const renderT = 8;
+      const hydrationT = 50;
+      return {
+        htmlTransfer: htmlT, cssTransfer: cssT, jsTransfer: jsT,
+        renderTime: renderT, hydrationTime: hydrationT,
+        phases: [
+          { name: 'HTML', cls: 'html', start: 0, dur: htmlT },
+          { name: 'CSS', cls: 'css', start: htmlT, dur: cssT },
+          { name: '渲染', cls: 'render', start: htmlT, dur: renderT },
+          { name: 'JS', cls: 'js', start: htmlT, dur: jsT },
+          { name: 'Hydration', cls: 'hydrate', start: htmlT + Math.max(cssT, jsT), dur: hydrationT },
+        ],
+        fcp: Math.round(htmlT + renderT),
+        tti: Math.round(htmlT + Math.max(cssT, jsT) + hydrationT),
+        whiteTime: Math.round(htmlT)
+      };
+    }
+
+    function createPanel(title, type, data, badgeClass, isCached) {
+      const panel = document.createElement('div');
+      panel.className = 'sim-panel';
+
+      const maxTime = Math.max(...data.phases.map(p => p.start + p.dur));
+
+      let timelineHtml = data.phases.map(p => {
+        const w = Math.max((p.dur / maxTime) * 100, 2);
+        const l = (p.start / maxTime) * 100;
+        return `<div class="timeline-row">
+          <span class="timeline-label">${p.name}</span>
+          <div style="flex:1;position:relative;">
+            <div class="timeline-bar ${p.cls}" style="width:${w}%;margin-left:${l}%">
+              <span class="time">${Math.round(p.dur)}ms</span>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+
+      const fcpClass = data.fcp < 500 ? 'good' : data.fcp < 1500 ? 'ok' : 'bad';
+      const ttiClass = data.tti < 1000 ? 'good' : data.tti < 3000 ? 'ok' : 'bad';
+      const whiteClass = data.whiteTime < 200 ? 'good' : data.whiteTime < 1000 ? 'ok' : 'bad';
+
+      panel.innerHTML = `
+        <h3>${title} <span class="badge ${badgeClass}">${isCached ? 'cached' : 'network'}</span></h3>
+        <div class="timeline">${timelineHtml}</div>
+        <div class="metrics">
+          <div class="metric ${whiteClass}"><div class="value">${data.whiteTime}ms</div><div class="label">白屏时间</div></div>
+          <div class="metric ${fcpClass}"><div class="value">${data.fcp}ms</div><div class="label">FCP</div></div>
+          <div class="metric ${ttiClass}"><div class="value">${data.tti}ms</div><div class="label">TTI</div></div>
+        </div>
+      `;
+      return panel;
+    }
+
+    // Auto-run with 4G on load
+    window.addEventListener('DOMContentLoaded', () => runSimulation('4g'));
+  </script>
+</body>
+</html>

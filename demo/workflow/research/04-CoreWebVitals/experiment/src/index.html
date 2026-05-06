@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CWV 指标监测 + 优化对比实验</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; color: #333; }
+    .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+    h1 { text-align: center; margin-bottom: 30px; color: #1a1a1a; }
+
+    /* CWV 仪表盘 */
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 30px;
+      position: sticky;
+      top: 0;
+      background: #f5f5f5;
+      padding: 16px 0;
+      z-index: 10;
+    }
+    .metric-card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: border-color 0.3s;
+    }
+    .metric-card.good { border: 3px solid #0cce6b; }
+    .metric-card.needs-improvement { border: 3px solid #ffa400; }
+    .metric-card.poor { border: 3px solid #ff4e42; }
+    .metric-name { font-size: 14px; color: #666; margin-bottom: 8px; }
+    .metric-value { font-size: 32px; font-weight: 700; }
+    .metric-threshold { font-size: 12px; color: #999; margin-top: 4px; }
+    .good .metric-value { color: #0cce6b; }
+    .needs-improvement .metric-value { color: #ffa400; }
+    .poor .metric-value { color: #ff4e42; }
+
+    /* 实验区域 */
+    .experiment {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .experiment h2 { margin-bottom: 12px; font-size: 18px; }
+    .experiment p { margin-bottom: 16px; color: #666; line-height: 1.6; }
+    .controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: #4285f4; color: white; }
+    .btn-primary:hover { background: #3367d6; }
+    .btn-danger { background: #ff4e42; color: white; }
+    .btn-danger:hover { background: #d63a30; }
+    .btn-success { background: #0cce6b; color: white; }
+    .btn-success:hover { background: #0aad5a; }
+
+    /* Hero 图片区域 */
+    .hero-section { margin-bottom: 16px; }
+    .hero-image {
+      width: 100%;
+      height: 300px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    /* CLS 实验 */
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .image-slot {
+      border-radius: 8px;
+      overflow: hidden;
+      background: #e0e0e0;
+      min-height: 150px;
+      position: relative;
+    }
+    .image-slot img {
+      width: 100%;
+      display: block;
+      transition: opacity 0.3s;
+    }
+    .image-slot.with-dimensions { aspect-ratio: 16/9; }
+    .image-slot .label {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    /* INP 实验 */
+    .click-area {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+    .click-btn {
+      padding: 24px;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      background: #fafafa;
+      cursor: pointer;
+      text-align: center;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+    .click-btn:hover { border-color: #4285f4; background: #f0f4ff; }
+    .click-btn .count { font-size: 36px; font-weight: 700; color: #4285f4; }
+    .click-btn .label { margin-top: 8px; color: #666; }
+    .click-btn.blocking { border-color: #ff4e42; }
+    .click-btn.blocking:hover { border-color: #ff4e42; background: #fff0f0; }
+    .click-btn.blocking .count { color: #ff4e42; }
+    .click-btn.chopped { border-color: #0cce6b; }
+    .click-btn.chopped:hover { border-color: #0cce6b; background: #f0fff4; }
+    .click-btn.chopped .count { color: #0cce6b; }
+
+    /* 日志区域 */
+    .log-area {
+      background: #1a1a2e;
+      color: #0f0;
+      font-family: 'Fira Code', monospace;
+      font-size: 13px;
+      padding: 16px;
+      border-radius: 8px;
+      max-height: 300px;
+      overflow-y: auto;
+      line-height: 1.8;
+    }
+    .log-area .timestamp { color: #666; }
+    .log-area .metric { color: #ffa400; }
+    .log-area .good { color: #0cce6b; }
+    .log-area .poor { color: #ff4e42; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔬 Core Web Vitals 指标监测 + 优化对比实验</h1>
+
+    <!-- CWV 仪表盘 -->
+    <div class="dashboard">
+      <div class="metric-card" id="lcp-card">
+        <div class="metric-name">LCP (Largest Contentful Paint)</div>
+        <div class="metric-value" id="lcp-value">⏳</div>
+        <div class="metric-threshold">目标 ≤ 2.5s</div>
+      </div>
+      <div class="metric-card" id="cls-card">
+        <div class="metric-name">CLS (Cumulative Layout Shift)</div>
+        <div class="metric-value" id="cls-value">⏳</div>
+        <div class="metric-threshold">目标 ≤ 0.1</div>
+      </div>
+      <div class="metric-card" id="inp-card">
+        <div class="metric-name">INP (Interaction to Next Paint)</div>
+        <div class="metric-value" id="inp-value">⏳</div>
+        <div class="metric-threshold">目标 ≤ 200ms</div>
+      </div>
+    </div>
+
+    <!-- 实验 1：LCP -->
+    <div class="experiment">
+      <h2>实验 1：LCP 优化对比</h2>
+      <p>点击按钮切换 Hero 图片的加载策略，观察 LCP 变化。</p>
+      <div class="controls">
+        <button class="btn btn-danger" onclick="loadLCPImage('lazy')">❌ lazy loading（劣化 LCP）</button>
+        <button class="btn btn-success" onclick="loadLCPImage('high')">✅ fetchpriority="high"</button>
+        <button class="btn btn-primary" onclick="resetLCP()">🔄 重置</button>
+      </div>
+      <div class="hero-section" id="hero-container">
+        <div class="hero-image">Hero 区域 — 等待加载图片</div>
+      </div>
+    </div>
+
+    <!-- 实验 2：CLS -->
+    <div class="experiment">
+      <h2>实验 2：CLS 优化对比</h2>
+      <p>对比无尺寸声明 vs 有尺寸声明的图片对 CLS 的影响。点击加载图片观察布局偏移。</p>
+      <div class="controls">
+        <button class="btn btn-danger" onclick="loadCLSImages('no-dimensions')">❌ 无尺寸声明</button>
+        <button class="btn btn-success" onclick="loadCLSImages('with-dimensions')">✅ 有尺寸声明</button>
+        <button class="btn btn-primary" onclick="resetCLS()">🔄 重置</button>
+      </div>
+      <div class="image-grid" id="cls-grid">
+        <div class="image-slot" id="cls-img-1">
+          <span class="label">图片 1</span>
+        </div>
+        <div class="image-slot" id="cls-img-2">
+          <span class="label">图片 2</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 实验 3：INP -->
+    <div class="experiment">
+      <h2>实验 3：INP 优化对比</h2>
+      <p>分别点击两个按钮：左侧执行 200ms 同步阻塞，右侧使用 scheduler.yield() 分片。快速连续点击观察响应差异。</p>
+      <div class="click-area">
+        <div class="click-btn blocking" onclick="blockingClick(this)">
+          <div class="count" id="blocking-count">0</div>
+          <div class="label">❌ 同步阻塞 200ms</div>
+        </div>
+        <div class="click-btn chopped" onclick="choppedClick(this)">
+          <div class="count" id="chopped-count">0</div>
+          <div class="label">✅ yield 分片</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 日志 -->
+    <div class="experiment">
+      <h2>📋 CWV 实时日志</h2>
+      <div class="log-area" id="log-area">
+        <div><span class="timestamp">[初始化]</span> CWV 监测已启动，等待指标数据...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ============ CWV 监测 ============
+
+    const logArea = document.getElementById('log-area');
+    let clsValue = 0;
+    let inpValue = 0;
+
+    function log(msg, type = 'info') {
+      const time = new Date().toLocaleTimeString();
+      const cls = type === 'good' ? 'good' : type === 'poor' ? 'poor' : 'metric';
+      logArea.innerHTML += `<div><span class="timestamp">[${time}]</span> <span class="${cls}">${msg}</span></div>`;
+      logArea.scrollTop = logArea.scrollHeight;
+    }
+
+    function updateCard(id, value, threshold, unit) {
+      const card = document.getElementById(id + '-card');
+      const valueEl = document.getElementById(id + '-value');
+      let rating;
+      if (id === 'lcp') {
+        rating = value <= 2500 ? 'good' : value <= 4000 ? 'needs-improvement' : 'poor';
+      } else if (id === 'cls') {
+        rating = value <= 0.1 ? 'good' : value <= 0.25 ? 'needs-improvement' : 'poor';
+      } else {
+        rating = value <= 200 ? 'good' : value <= 500 ? 'needs-improvement' : 'poor';
+      }
+      card.className = 'metric-card ' + rating;
+      valueEl.textContent = unit === 's' ? (value / 1000).toFixed(2) + 's' : value < 1 ? value.toFixed(3) : Math.round(value) + unit;
+    }
+
+    // LCP 监测
+    if ('PerformanceObserver' in window) {
+      try {
+        const lcpObserver = new PerformanceObserver((list) => {
+          const entries = list.getEntries();
+          const lastEntry = entries[entries.length - 1];
+          const lcp = lastEntry.startTime;
+          updateCard('lcp', lcp, 2500, 's');
+          log(`LCP: ${(lcp / 1000).toFixed(2)}s — 元素: ${lastEntry.element?.tagName || 'unknown'}`, lcp <= 2500 ? 'good' : 'poor');
+        });
+        lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true });
+      } catch (e) {
+        log('LCP PerformanceObserver 不支持', 'poor');
+      }
+
+      // CLS 监测
+      try {
+        const clsObserver = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (!entry.hadRecentInput) {
+              clsValue += entry.value;
+              updateCard('cls', clsValue, 0.1, '');
+              log(`CLS 偏移: +${entry.value.toFixed(4)} (累计: ${clsValue.toFixed(4)})`, clsValue <= 0.1 ? 'good' : 'poor');
+            }
+          }
+        });
+        clsObserver.observe({ type: 'layout-shift', buffered: true });
+      } catch (e) {
+        log('CLS PerformanceObserver 不支持', 'poor');
+      }
+
+      // INP 监测
+      try {
+        const inpObserver = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (entry.interactionId) {
+              const duration = entry.duration;
+              if (duration > inpValue) {
+                inpValue = duration;
+                updateCard('inp', inpValue, 200, 'ms');
+                log(`INP 交互: ${Math.round(duration)}ms (${entry.name})`, duration <= 200 ? 'good' : 'poor');
+              }
+            }
+          }
+        });
+        inpObserver.observe({ type: 'event', buffered: true, durationThreshold: 0 });
+      } catch (e) {
+        log('INP PerformanceObserver 不支持，尝试 longtask', 'poor');
+        // fallback: longtask
+        try {
+          const ltObserver = new PerformanceObserver((list) => {
+            for (const entry of list.getEntries()) {
+              log(`Long Task: ${Math.round(entry.duration)}ms`, entry.duration > 50 ? 'poor' : 'good');
+            }
+          });
+          ltObserver.observe({ type: 'longtask', buffered: true });
+        } catch (e2) {
+          log('Long Tasks API 也不支持', 'poor');
+        }
+      }
+    }
+
+    // ============ 实验 1：LCP ============
+
+    function loadLCPImage(strategy) {
+      resetLCP();
+      setTimeout(() => {
+        const container = document.getElementById('hero-container');
+        const img = document.createElement('img');
+        // 使用渐变色模拟大图（避免外部资源依赖）
+        img.style.cssText = 'width:100%;height:300px;object-fit:cover;border-radius:8px;';
+        // 创建一个 canvas 来生成大图模拟 LCP 元素
+        const canvas = document.createElement('canvas');
+        canvas.width = 1200;
+        canvas.height = 600;
+        const ctx = canvas.getContext('2d');
+        const gradient = ctx.createLinearGradient(0, 0, 1200, 600);
+        gradient.addColorStop(0, '#667eea');
+        gradient.addColorStop(0.5, '#764ba2');
+        gradient.addColorStop(1, '#f093fb');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, 1200, 600);
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 48px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(strategy === 'lazy' ? '❌ lazy loading' : '✅ fetchpriority="high"', 600, 320);
+
+        img.src = canvas.toDataURL('image/png');
+        if (strategy === 'lazy') {
+          img.loading = 'lazy';
+          log('加载 Hero 图片: loading="lazy" — LCP 将被延迟', 'poor');
+        } else {
+          img.fetchPriority = 'high';
+          log('加载 Hero 图片: fetchpriority="high" — LCP 优先加载', 'good');
+        }
+        container.innerHTML = '';
+        container.appendChild(img);
+      }, 100);
+    }
+
+    function resetLCP() {
+      document.getElementById('hero-container').innerHTML = '<div class="hero-image">Hero 区域 — 等待加载图片</div>';
+      log('LCP 实验已重置');
+    }
+
+    // ============ 实验 2：CLS ============
+
+    function loadCLSImages(mode) {
+      resetCLS();
+      setTimeout(() => {
+        for (let i = 1; i <= 2; i++) {
+          const slot = document.getElementById('cls-img-' + i);
+          const canvas = document.createElement('canvas');
+          canvas.width = 800;
+          canvas.height = 450;
+          const ctx = canvas.getContext('2d');
+          const gradient = ctx.createLinearGradient(0, 0, 800, 450);
+          gradient.addColorStop(0, i === 1 ? '#43e97b' : '#fa709a');
+          gradient.addColorStop(1, i === 1 ? '#38f9d7' : '#fee140');
+          ctx.fillStyle = gradient;
+          ctx.fillRect(0, 0, 800, 450);
+          ctx.fillStyle = 'rgba(0,0,0,0.3)';
+          ctx.font = 'bold 32px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.fillText(mode === 'no-dimensions' ? '❌ 无尺寸' : '✅ 有尺寸', 400, 240);
+
+          const img = document.createElement('img');
+          img.src = canvas.toDataURL('image/png');
+
+          if (mode === 'with-dimensions') {
+            img.width = 800;
+            img.height = 450;
+            slot.classList.add('with-dimensions');
+            log(`图片 ${i}: 设置 width=800 height=450 — 无布局偏移`, 'good');
+          } else {
+            log(`图片 ${i}: 无尺寸声明 — 加载后将产生布局偏移`, 'poor');
+          }
+
+          // 模拟延迟加载
+          setTimeout(() => {
+            slot.appendChild(img);
+          }, i * 300);
+        }
+      }, 100);
+    }
+
+    function resetCLS() {
+      for (let i = 1; i <= 2; i++) {
+        const slot = document.getElementById('cls-img-' + i);
+        slot.innerHTML = `<span class="label">图片 ${i}</span>`;
+        slot.classList.remove('with-dimensions');
+      }
+      log('CLS 实验已重置');
+    }
+
+    // ============ 实验 3：INP ============
+
+    let blockingCount = 0;
+    let choppedCount = 0;
+
+    function blockingClick(btn) {
+      blockingCount++;
+      document.getElementById('blocking-count').textContent = blockingCount;
+      log(`阻塞点击 #${blockingCount}: 开始执行 200ms 同步任务...`, 'poor');
+
+      const start = performance.now();
+      // 同步阻塞 200ms
+      while (performance.now() - start < 200) {
+        // busy wait
+      }
+      log(`阻塞点击 #${blockingCount}: 完成，耗时 ${Math.round(performance.now() - start)}ms — 主线程被阻塞！`, 'poor');
+    }
+
+    async function choppedClick(btn) {
+      choppedCount++;
+      document.getElementById('chopped-count').textContent = choppedCount;
+      log(`分片点击 #${choppedCount}: 开始执行分片任务...`, 'good');
+
+      const start = performance.now();
+      // 分片执行：每次处理 16ms，然后 yield
+      const totalWork = 200;
+      const chunkSize = 16;
+      let done = 0;
+
+      while (done < totalWork) {
+        const chunkStart = performance.now();
+        while (performance.now() - chunkStart < chunkSize && done < totalWork) {
+          done++;
+        }
+        // 让出主线程
+        if ('scheduler' in window && 'yield' in scheduler) {
+          await scheduler.yield();
+        } else {
+          await new Promise(r => setTimeout(r, 0));
+        }
+      }
+
+      log(`分片点击 #${choppedCount}: 完成，耗时 ${Math.round(performance.now() - start)}ms — 主线程保持响应！`, 'good');
+    }
+
+    // 初始化日志
+    log('实验页面加载完成');
+    log('提示：打开 DevTools → Performance 面板录制可观察更详细的指标');
+    log('提示：快速连续点击 INP 实验按钮，对比阻塞 vs 分片的响应差异');
+  </script>
+</body>
+</html>

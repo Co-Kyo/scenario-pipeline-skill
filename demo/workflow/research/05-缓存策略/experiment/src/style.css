@@ -1,0 +1,181 @@
+/* 三层缓存协作演示 - 样式 */
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --border: #334155;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --accent: #38bdf8;
+  --success: #4ade80;
+  --warning: #fbbf24;
+  --danger: #f87171;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding: 2rem;
+}
+
+h1 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--accent);
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: 2rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.card h2 {
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card h2 .icon { font-size: 1.2rem; }
+
+.status-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.status-row:last-child { border-bottom: none; }
+
+.label { color: var(--text-muted); }
+
+.badge {
+  padding: 0.15rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-hit { background: rgba(74, 222, 128, 0.15); color: var(--success); }
+.badge-miss { background: rgba(248, 113, 113, 0.15); color: var(--danger); }
+.badge-stale { background: rgba(251, 191, 36, 0.15); color: var(--warning); }
+.badge-pending { background: rgba(56, 189, 248, 0.15); color: var(--accent); }
+
+.log-area {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
+  font-size: 0.8rem;
+  max-height: 300px;
+  overflow-y: auto;
+  line-height: 1.6;
+}
+
+.log-entry { margin-bottom: 0.25rem; }
+.log-entry .time { color: var(--text-muted); }
+.log-entry .hit { color: var(--success); }
+.log-entry .miss { color: var(--danger); }
+.log-entry .info { color: var(--accent); }
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+button {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+button:active { transform: scale(0.97); }
+
+.api-response {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem;
+  font-size: 0.8rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.timeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin: 1rem 0;
+  font-size: 0.75rem;
+}
+
+.timeline-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 80px;
+}
+
+.timeline-node .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: background 0.3s;
+}
+
+.timeline-node .dot.active { background: var(--success); }
+.timeline-node .dot.miss { background: var(--danger); }
+
+.timeline-arrow {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  min-width: 20px;
+  position: relative;
+}
+
+.timeline-arrow::after {
+  content: '→';
+  position: absolute;
+  top: -8px;
+  right: -4px;
+  color: var(--text-muted);
+}

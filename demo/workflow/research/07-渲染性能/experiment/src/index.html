@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P7-渲染性能 · 重排重绘性能对比实验</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, system-ui, sans-serif; background: #0f172a; color: #e2e8f0; padding: 20px; }
+  h1 { font-size: 24px; margin-bottom: 8px; color: #38bdf8; }
+  .subtitle { color: #94a3b8; margin-bottom: 24px; font-size: 14px; }
+  .fps-display {
+    position: fixed; top: 10px; right: 10px;
+    background: rgba(0,0,0,0.8); padding: 8px 16px;
+    border-radius: 8px; font-size: 18px; z-index: 9999;
+    font-family: monospace;
+  }
+  .fps-display .value { color: #4ade80; font-weight: bold; }
+  .fps-display.warn .value { color: #fbbf24; }
+  .fps-display.bad .value { color: #ef4444; }
+  .metric-bar {
+    position: fixed; top: 10px; left: 10px;
+    background: rgba(0,0,0,0.8); padding: 8px 16px;
+    border-radius: 8px; font-size: 12px; z-index: 9999;
+    font-family: monospace; line-height: 1.8;
+  }
+  .metric-bar .label { color: #94a3b8; }
+  .metric-bar .val { color: #38bdf8; }
+  .scenario {
+    background: #1e293b; border-radius: 12px; padding: 24px;
+    margin-bottom: 24px; border: 1px solid #334155;
+  }
+  .scenario h2 { font-size: 18px; color: #f1f5f9; margin-bottom: 4px; }
+  .scenario .desc { color: #94a3b8; font-size: 13px; margin-bottom: 16px; }
+  .btn-group { display: flex; gap: 12px; margin-bottom: 16px; }
+  .btn {
+    padding: 8px 20px; border: none; border-radius: 8px;
+    cursor: pointer; font-size: 14px; font-weight: 600;
+    transition: all 0.2s;
+  }
+  .btn-slow { background: #ef4444; color: white; }
+  .btn-slow:hover { background: #dc2626; }
+  .btn-fast { background: #22c55e; color: white; }
+  .btn-fast:hover { background: #16a34a; }
+  .btn-reset { background: #475569; color: white; }
+  .btn-reset:hover { background: #64748b; }
+  .result { color: #94a3b8; font-size: 13px; margin-top: 8px; min-height: 20px; }
+  .sandbox {
+    position: relative; overflow: hidden;
+    background: #0f172a; border-radius: 8px;
+    border: 1px solid #334155; min-height: 200px;
+  }
+  .sandbox .box {
+    position: absolute; width: 40px; height: 40px;
+    background: #38bdf8; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: bold; color: #0f172a;
+  }
+  .sandbox .card {
+    width: 120px; height: 60px; background: #334155;
+    border-radius: 8px; margin: 4px; display: inline-flex;
+    align-items: center; justify-content: center;
+    font-size: 11px; color: #94a3b8;
+    transition: transform 0.3s;
+  }
+  .sandbox .card:hover { transform: scale(1.05); }
+  .sandbox .card.static-will-change { will-change: transform; }
+  #fragment-sandbox { min-height: 300px; padding: 8px; }
+  .instructions { color: #64748b; font-size: 12px; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<h1>🔬 P7-渲染性能 · 重排重绘对比实验</h1>
+<p class="subtitle">点击按钮运行不同场景，观察 FPS 和性能指标差异。配合 DevTools Performance 面板效果更佳。</p>
+
+<div class="fps-display" id="fpsDisplay">
+  FPS: <span class="value" id="fpsValue">--</span>
+</div>
+<div class="metric-bar" id="metricBar">
+  <div><span class="label">Layout 事件:</span> <span class="val" id="layoutCount">0</span></div>
+  <div><span class="label">Paint 事件:</span> <span class="val" id="paintCount">0</span></div>
+  <div><span class="label">总耗时:</span> <span class="val" id="totalTime">0ms</span></div>
+</div>
+
+<!-- 场景一：Layout Thrashing -->
+<div class="scenario">
+  <h2>场景一：Layout Thrashing vs 批量读写</h2>
+  <p class="desc">慢路径：循环交替读 offsetWidth + 写 style.width → 每次触发 Layout<br>快路径：先批量读取，再批量写入 → 仅触发 1 次 Layout</p>
+  <div class="btn-group">
+    <button class="btn btn-slow" onclick="runScenario1Slow()">🔴 慢路径（Layout Thrashing）</button>
+    <button class="btn btn-fast" onclick="runScenario1Fast()">🟢 快路径（批量读写）</button>
+    <button class="btn btn-reset" onclick="resetSandbox('sandbox1')">重置</button>
+  </div>
+  <div class="sandbox" id="sandbox1" style="height: 100px;"></div>
+  <div class="result" id="result1"></div>
+</div>
+
+<!-- 场景二：top/left vs transform -->
+<div class="scenario">
+  <h2>场景二：top/left 动画 vs transform 动画</h2>
+  <p class="desc">慢路径：用 top/left 实现位移动画（Layout + Paint + Composite）<br>快路径：用 transform:translate 实现（仅 Composite）</p>
+  <div class="btn-group">
+    <button class="btn btn-slow" onclick="runScenario2Slow()">🔴 慢路径（top/left）</button>
+    <button class="btn btn-fast" onclick="runScenario2Fast()">🟢 快路径（transform）</button>
+    <button class="btn btn-reset" onclick="resetSandbox('sandbox2')">重置</button>
+  </div>
+  <div class="sandbox" id="sandbox2" style="height: 120px;"></div>
+  <div class="result" id="result2"></div>
+</div>
+
+<!-- 场景三：逐个插入 vs DocumentFragment -->
+<div class="scenario">
+  <h2>场景三：逐个 appendChild vs DocumentFragment 批量插入</h2>
+  <p class="desc">慢路径：循环中逐个 appendChild（每次触发 Layout）<br>快路径：DocumentFragment 组装后一次插入（单次 Layout）</p>
+  <div class="btn-group">
+    <button class="btn btn-slow" onclick="runScenario3Slow()">🔴 慢路径（逐个插入）</button>
+    <button class="btn btn-fast" onclick="runScenario3Fast()">🟢 快路径（Fragment）</button>
+    <button class="btn btn-reset" onclick="resetSandbox('sandbox3')">重置</button>
+  </div>
+  <div class="sandbox" id="sandbox3" style="height: 300px; overflow-y: auto;"></div>
+  <div class="result" id="result3"></div>
+</div>
+
+<!-- 场景四：合成层管理 -->
+<div class="scenario">
+  <h2>场景四：静态 will-change vs 动态管理</h2>
+  <p class="desc">慢路径：所有卡片静态 will-change:transform（常驻合成层）<br>快路径：仅 hover 时动态设置 will-change</p>
+  <div class="btn-group">
+    <button class="btn btn-slow" onclick="runScenario4Slow()">🔴 慢路径（静态 will-change）</button>
+    <button class="btn btn-fast" onclick="runScenario4Fast()">🟢 快路径（动态管理）</button>
+    <button class="btn btn-reset" onclick="resetSandbox('sandbox4')">重置</button>
+  </div>
+  <div class="sandbox" id="sandbox4" style="min-height: 200px;"></div>
+  <div class="result" id="result4"></div>
+  <p class="instructions">💡 打开 DevTools → Layers 面板查看合成层数量差异</p>
+</div>
+
+<p class="instructions">💡 建议：打开 DevTools Performance 面板录制后点击按钮，对比火焰图中 Layout/Paint 事件的差异。</p>
+
+<script>
+// ==================== FPS 监控 ====================
+let frameCount = 0;
+let lastTime = performance.now();
+let fpsRAFId = null;
+
+function startFPSMonitor() {
+  frameCount = 0;
+  lastTime = performance.now();
+  function tick() {
+    frameCount++;
+    const now = performance.now();
+    if (now - lastTime >= 1000) {
+      const fps = Math.round(frameCount * 1000 / (now - lastTime));
+      const el = document.getElementById('fpsValue');
+      const display = document.getElementById('fpsDisplay');
+      el.textContent = fps;
+      display.className = 'fps-display ' + (fps >= 50 ? '' : fps >= 30 ? 'warn' : 'bad');
+      frameCount = 0;
+      lastTime = now;
+    }
+    fpsRAFId = requestAnimationFrame(tick);
+  }
+  fpsRAFId = requestAnimationFrame(tick);
+}
+
+function stopFPSMonitor() {
+  if (fpsRAFId) cancelAnimationFrame(fpsRAFId);
+}
+
+// ==================== 工具函数 ====================
+function resetSandbox(id) {
+  const el = document.getElementById(id);
+  el.innerHTML = '';
+  document.getElementById('result' + id.replace('sandbox', '')).textContent = '';
+  stopFPSMonitor();
+}
+
+function setResult(id, text) {
+  document.getElementById('result' + id).textContent = text;
+}
+
+function measureExecution(fn, label, resultId) {
+  startFPSMonitor();
+  const start = performance.now();
+  fn();
+  const elapsed = performance.now() - start;
+  setResult(resultId, `✅ ${label}完成，耗时 ${elapsed.toFixed(1)}ms`);
+  setTimeout(stopFPSMonitor, 3000);
+}
+
+// ==================== 场景一：Layout Thrashing ====================
+const BOX_COUNT_S1 = 200;
+
+function setupSandbox1() {
+  const sandbox = document.getElementById('sandbox1');
+  sandbox.innerHTML = '';
+  for (let i = 0; i < BOX_COUNT_S1; i++) {
+    const box = document.createElement('div');
+    box.className = 'box';
+    box.style.left = (i % 50) * 50 + 'px';
+    box.style.top = Math.floor(i / 50) * 50 + 'px';
+    box.style.width = '40px';
+    box.textContent = i;
+    sandbox.appendChild(box);
+  }
+}
+
+function runScenario1Slow() {
+  setupSandbox1();
+  const boxes = document.querySelectorAll('#sandbox1 .box');
+  measureExecution(() => {
+    // ❌ Layout Thrashing: 交替读写
+    for (let i = 0; i < boxes.length; i++) {
+      const w = boxes[i].offsetWidth;              // 读 → 强制 Layout
+      boxes[i].style.width = (w + 5) + 'px';      // 写 → 脏标记
+    }
+  }, '慢路径（Layout Thrashing）', '1');
+}
+
+function runScenario1Fast() {
+  setupSandbox1();
+  const boxes = document.querySelectorAll('#sandbox1 .box');
+  measureExecution(() => {
+    // ✅ 批量读
+    const widths = [];
+    for (let i = 0; i < boxes.length; i++) {
+      widths.push(boxes[i].offsetWidth);
+    }
+    // ✅ 批量写
+    for (let i = 0; i < boxes.length; i++) {
+      boxes[i].style.width = (widths[i] + 5) + 'px';
+    }
+  }, '快路径（批量读写）', '1');
+}
+
+// ==================== 场景二：top/left vs transform ====================
+function runScenario2Slow() {
+  const sandbox = document.getElementById('sandbox2');
+  sandbox.innerHTML = '';
+  const box = document.createElement('div');
+  box.className = 'box';
+  box.style.left = '0px';
+  box.style.top = '40px';
+  box.textContent = 'TL';
+  sandbox.appendChild(box);
+  startFPSMonitor();
+  let x = 0;
+  let dir = 1;
+  function animate() {
+    x += dir * 3;
+    if (x > 600 || x < 0) dir *= -1;
+    box.style.left = x + 'px';  // ❌ 触发 Layout + Paint + Composite
+    if (x !== 0 || dir === 1) {
+      requestAnimationFrame(animate);
+    } else {
+      stopFPSMonitor();
+      setResult(2, '✅ 慢路径动画完成（top/left）');
+    }
+  }
+  setResult(2, '⏳ 运行中... 打开 Rendering 面板的 Paint flashing 查看');
+  requestAnimationFrame(animate);
+}
+
+function runScenario2Fast() {
+  const sandbox = document.getElementById('sandbox2');
+  sandbox.innerHTML = '';
+  const box = document.createElement('div');
+  box.className = 'box';
+  box.style.left = '0px';
+  box.style.top = '40px';
+  box.textContent = 'TF';
+  sandbox.appendChild(box);
+  startFPSMonitor();
+  let x = 0;
+  let dir = 1;
+  function animate() {
+    x += dir * 3;
+    if (x > 600 || x < 0) dir *= -1;
+    box.style.transform = `translateX(${x}px)`;  // ✅ 仅 Composite
+    if (x !== 0 || dir === 1) {
+      requestAnimationFrame(animate);
+    } else {
+      stopFPSMonitor();
+      setResult(2, '✅ 快路径动画完成（transform）');
+    }
+  }
+  setResult(2, '⏳ 运行中... 打开 Rendering 面板的 Paint flashing 查看');
+  requestAnimationFrame(animate);
+}
+
+// ==================== 场景三：逐个插入 vs Fragment ====================
+const NODE_COUNT_S3 = 1000;
+
+function runScenario3Slow() {
+  const sandbox = document.getElementById('sandbox3');
+  sandbox.innerHTML = '';
+  startFPSMonitor();
+  const start = performance.now();
+  for (let i = 0; i < NODE_COUNT_S3; i++) {
+    const div = document.createElement('div');
+    div.className = 'box';
+    div.style.position = 'relative';
+    div.style.display = 'inline-block';
+    div.style.margin = '2px';
+    div.textContent = i;
+    sandbox.appendChild(div);  // ❌ 每次 appendChild 都可能触发 Layout
+  }
+  const elapsed = performance.now() - start;
+  setResult(3, `✅ 慢路径完成：${NODE_COUNT_S3} 个节点，耗时 ${elapsed.toFixed(1)}ms`);
+  setTimeout(stopFPSMonitor, 2000);
+}
+
+function runScenario3Fast() {
+  const sandbox = document.getElementById('sandbox3');
+  sandbox.innerHTML = '';
+  startFPSMonitor();
+  const start = performance.now();
+  const fragment = document.createDocumentFragment();
+  for (let i = 0; i < NODE_COUNT_S3; i++) {
+    const div = document.createElement('div');
+    div.className = 'box';
+    div.style.position = 'relative';
+    div.style.display = 'inline-block';
+    div.style.margin = '2px';
+    div.textContent = i;
+    fragment.appendChild(div);  // ✅ 在 fragment 中操作，不触发 Layout
+  }
+  sandbox.appendChild(fragment);  // ✅ 一次性插入，单次 Layout
+  const elapsed = performance.now() - start;
+  setResult(3, `✅ 快路径完成：${NODE_COUNT_S3} 个节点，耗时 ${elapsed.toFixed(1)}ms`);
+  setTimeout(stopFPSMonitor, 2000);
+}
+
+// ==================== 场景四：合成层管理 ====================
+function setupSandbox4(useStaticWillChange) {
+  const sandbox = document.getElementById('sandbox4');
+  sandbox.innerHTML = '';
+  for (let i = 0; i < 50; i++) {
+    const card = document.createElement('div');
+    card.className = 'card' + (useStaticWillChange ? ' static-will-change' : '');
+    card.textContent = `Card ${i}`;
+    if (!useStaticWillChange) {
+      // 动态管理：hover 时设置，离开时清除
+      card.addEventListener('mouseenter', () => {
+        card.style.willChange = 'transform';
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.willChange = 'auto';
+      });
+    }
+    sandbox.appendChild(card);
+  }
+}
+
+function runScenario4Slow() {
+  setupSandbox4(true);
+  setResult(4, '🔴 所有 50 个卡片已设置 will-change:transform。打开 Layers 面板查看合成层数量。');
+}
+
+function runScenario4Fast() {
+  setupSandbox4(false);
+  setResult(4, '🟢 动态管理模式。hover 卡片时才会提升合成层。打开 Layers 面板查看合成层数量。');
+}
+
+// ==================== Performance Observer ====================
+let layoutEventCount = 0;
+let paintEventCount = 0;
+
+try {
+  // Long Task 监控
+  const longTaskObserver = new PerformanceObserver((list) => {
+    for (const entry of list.getEntries()) {
+      console.warn(`⚠️ Long Task: ${entry.duration.toFixed(1)}ms`, entry.attribution);
+    }
+  });
+  longTaskObserver.observe({ type: 'longtask', buffered: true });
+} catch(e) { /* 部分浏览器不支持 */ }
+
+// 页面加载后显示提示
+window.addEventListener('load', () => {
+  console.log('%c🔬 P7 渲染性能实验', 'font-size:16px;color:#38bdf8;font-weight:bold');
+  console.log('打开 DevTools → Performance 面板录制后点击按钮，对比火焰图差异');
+  console.log('打开 Rendering 面板 → Paint flashing 查看重绘区域');
+  console.log('打开 Layers 面板查看场景四的合成层数量差异');
+});
+</script>
+</body>
+</html>
