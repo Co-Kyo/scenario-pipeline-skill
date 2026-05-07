@@ -8,7 +8,7 @@ description: "前端复合工程场景知识管线。两阶段工作流：前处
 Two-phase knowledge production pipeline for composite engineering scenarios.
 
 **Pre-processing** = scan → decompose → capability extract → highground identify → evaluate → pool
-**Post-processing** = capability research (parallel) → assembly (parallel) → learning ladder (single-thread) ⛔ 阶段间有显式 barrier
+**Post-processing** = capability research (parallel) → ⓔ → briefing → ⓓ → assembly (parallel) → ⓕ → learning ladder (single-thread) → ⓖ ⛔ 阶段间有显式 barrier + 检查点
 
 ## Trigger Patterns
 
@@ -135,26 +135,27 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 ## Post-processing Flow
 
 > ⛔ **三阶段必须顺序执行，有显式 barrier。详见 [post-process.md](references/post-process.md) §执行协议。**
+> 每个阶段产物节点有检查点（ⓔⓓⓕⓖ）主动暂停，等待用户审查确认后才放行。
 
 **阶段一：能力研究（并行）**
 - 读取 `.meta/capability-graph.json`，识别需要研究的原子能力
 - 对每个缺失材料块的能力，并行调用 [processes/capability-research.md](references/processes/capability-research.md)
 - ⚠️ spawn 后按环境档案 `preserve_level` 执行主线程保全（单例窗口下主线程易丢失）
 - 每个 agent 双写：主文件 `capabilities/<id>-<name>.md` + 结构化摘要 `.meta/summaries/<id>-<name>.json`
-- **⛔ 全部完成后才能进入 Briefing 组装**
+- **⛔ 全部完成后 → ⓔ 检查点 E（能力研究审查）**
 
 **中间步骤：Briefing 组装**
 - 调用 [processes/briefing-assemble.md](references/processes/briefing-assemble.md)
 - 读取 `.meta/summaries/` 下的摘要，按命题+文件类型定向提取，组装为 briefing
 - 保存到 `.meta/briefings/<命题简称>.md`
-- **⛔ 全部 briefing 生成后才能进入阶段二**
+- **⛔ 全部完成后 → ⓓ 检查点 D（Briefing 预审）**
 
 **阶段二：命题组装（并行）**
 - 将 briefing 内联到 agent task，对每个待处理命题并行调用 [processes/assemble.md](references/processes/assemble.md)
 - ⚠️ spawn 后按环境档案 `preserve_level` 执行主线程保全（单例窗口下主线程易丢失）
 - 组装 agent **只写不读**，不读取 `capabilities/` 下的任何文件
 - 产出：按命题组织的深度研究 `<序号>-<命题简称>/`
-- **⛔ 全部完成后才能进入阶段三**
+- **⛔ 全部完成后 → ⓕ 检查点 F（命题组装审查）**
 
 **阶段三：学习阶梯生成（单线程）**
 - 对每个已组装的命题，主 agent 直接生成 `learning-ladder.md`
@@ -162,6 +163,7 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 - 将依赖层次归纳为 3-4 个理解阶段，每步给出具体的"做什么→看到什么→说明什么→去哪"
 - 引用 pipeline 内产出（overview/experiment/trade-offs/summaries），不重写内容
 - 产出：`<序号>-<命题简称>/learning-ladder.md`
+- **⛔ 全部完成后 → ⓖ 检查点 G（全局收尾确认）**
 
 ## Output Structure
 
