@@ -1,9 +1,9 @@
-# 后处理·中间步骤：Briefing 组装
+# 后处理·阶段一步骤2：Briefing 组装
 
 > ⚠️ **架构观测文档** — 不是 skill 执行配置
-> 执行真相：`references/post-process.md §Briefing 组装`、`references/processes/briefing-assemble.md`
+> 执行真相：`references/post-process.md §阶段一步骤2`、`references/processes/briefing-assemble.md`
 
-> 触发：阶段一（能力研究）全部完成后自动执行
+> 触发：阶段一步骤1（能力研究）全部完成后自动执行
 > 执行者：主 agent 单线程，不 spawn
 
 ---

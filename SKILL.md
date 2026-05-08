@@ -97,13 +97,11 @@ references/       ← 流程控制
 > ⛔ **三阶段必须顺序执行，有显式 barrier。详见 [post-process.md](references/post-process.md) §执行协议。**
 > 每个阶段产物节点有检查点（ⓔⓓⓕⓖ）主动暂停，等待用户审查确认后才放行。
 
-**阶段一：能力研究（并行）**
-- 并行调用 [processes/capability-research.md](references/processes/capability-research.md)
+**阶段一：能力研究 + Briefing 组装（两步骤）**
+- 步骤1：并行调用 [processes/capability-research.md](references/processes/capability-research.md)
 - **⛔ ⓔ 检查点 E（能力研究审查）**
-
-**中间步骤：Briefing 组装**
-- 调用 [processes/briefing-assemble.md](references/processes/briefing-assemble.md)
-- **⛔ ⓓ 检查点 D（Briefing 预审）**
+- 步骤2：调用 [processes/briefing-assemble.md](references/processes/briefing-assemble.md)
+- **⛔ ⓓ 检查点 D（Briefing 预审 - 阶段一完成）**
 
 **阶段二：命题组装（并行）**
 - 并行调用 [processes/assemble.md](references/processes/assemble.md)
