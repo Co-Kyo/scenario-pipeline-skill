@@ -100,15 +100,15 @@ references/       ← 流程控制
 **阶段一：能力研究 + Briefing 组装（两步骤）**
 - 步骤1：并行调用 [processes/capability-research.md](references/processes/capability-research.md)
 - **⛔ ⓔ 检查点 E（能力研究审查）**
-- 步骤2：调用 [processes/briefing-assemble.md](references/processes/briefing-assemble.md)
+- 步骤2：并行调用 [processes/briefing-assemble.md](references/processes/briefing-assemble.md)
 - **⛔ ⓓ 检查点 D（Briefing 预审 - 阶段一完成）**
 
 **阶段二：命题组装（并行）**
-- 并行调用 [processes/assemble.md](references/processes/assemble.md)
+- 并行调用 [processes/assemble.md](references/processes/assemble.md)（每agent 1个命题：Markdown组装 + 实验组装）
 - **⛔ ⓕ 检查点 F（命题组装审查）**
 
-**阶段三：学习阶梯生成（单线程）**
-- 生成 `learning-ladder.md`
+**阶段三：学习阶梯生成**
+- 并行生成 `learning-ladder.md`
 - **⛔ ⓖ 检查点 G（全局收尾确认）**
 
 ## Output Structure

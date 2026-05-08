@@ -49,12 +49,18 @@
 
 ## 执行逻辑
 
+### 执行逻辑
+
 ```
 对每个待处理命题：
-  1. 从 capability-graph.json 获取该命题涉及的能力 ID 列表
-  2. 读取这些能力的 summary.json
-  3. 按 5 种文件类型定向提取，组装为 briefing
-  4. 保存到 .meta/briefings/<命题简称>.md
+  spawn 一个独立 agent
+  task = Briefing组装模板
+  输入：
+    - proposition（命题文本）
+    - capability_ids（该命题涉及的能力ID列表）
+    - summary_files（这些能力的summary.json内容）
+  输出：
+    - .meta/briefings/<命题简称>.md
 ```
 
 ## 定向提取规则
