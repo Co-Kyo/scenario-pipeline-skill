@@ -5,44 +5,7 @@
 
 ---
 
-## 一、运行时适配层
-
-spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配** 实现跨平台兼容：
-
-| 层 | 文件 | 职责 |
-|----|------|------|
-| 探测 + 适配 | `environment/probe-protocol.md` | 自然语言诱导实验 → 7 维能力档案 → 执行策略适配 |
-
-**执行流程前必须**：
-1. 加载 `environment/probe-protocol.md`，执行/读取环境档案
-2. 按档案中 C1-C7 能力指标选择执行策略
-
----
-
-## 二、多线程主线程保全协议
-
-> **平台已知 Bug**：单例模式 agent 窗口下，主线程 spawn 子 agent 后，
-> 主窗口上下文可能潜入子 agent 调用链，导致主线程丢失。
-
-**保全策略**：从环境档案 `execution_mode` + `C7` 组合推断风险等级，映射到分级保全策略。
-
-| 保全级别 | spawn 后立即输出 | 周期性轮询 | 收尾确认 |
-|---------|:---:|:---:|:---:|
-| mandatory（🔴） | ✅ 必须 | ✅ 必须 | ✅ 必须 |
-| enabled（🟡） | ✅ 必须 | ✅ 必须 | ✅ 必须 |
-| suggested（🟢） | ✅ 建议 | — | ✅ 建议 |
-| optional（⚪） | 可选 | — | — |
-
-**行为定义**：
-1. **spawn 后立即输出**：向用户输出状态确认（"已启动 N 个子任务"），强制主线程保持对话轮次
-2. **周期性轮询**：主动检查产出文件（非静默等待），每次轮询是主线程的活跃 turn
-3. **收尾确认**：输出完成确认（"子任务 X 已完成"），再进入下一步
-
-**核心原则**：主线程永远不能在 spawn 后"静默等待"。
-
----
-
-## 三、滑动窗口并行调度
+## 一、滑动窗口并行调度
 
 ### 核心原则
 
@@ -58,25 +21,16 @@ spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配**
 进行中集合 running = {}
 完成集合 done = {}
 
-读取 preserve_level = environment-profile.efficiency.main_thread_preservation.preserve_level
-
 循环：
   while |running| < W 且 Q 非空：
     task = Q.dequeue()
     agent = spawn(task)
     running.add(agent)
-    if preserve_level ∈ {"mandatory", "enabled", "suggested"}:
-      ⚠️ 立即输出状态确认
 
-  if preserve_level ∈ {"mandatory", "enabled"}:
-    ⚠️ 主动轮询检查产出文件
-  else:
-    等待任意一个 agent 完成
+  等待任意一个 agent 完成
 
   running.remove(完成的 agent)
   done.add(完成的 agent)
-  if preserve_level ∈ {"mandatory", "enabled", "suggested"}:
-    ⚠️ 输出完成确认
 
   if 该 agent 失败：
     记录失败原因，可选择重入 Q
@@ -129,10 +83,6 @@ plugins/capability-research-mode.md
 plugins/source-registry.md
   ├── 被 capability-extract.md 必须加载（信源URL预查找）
   └── 被 capability-research.md 必须加载（fallback搜索）
-
-environment/probe-protocol.md
-  ├── 被 post-process.md 必须加载（后处理启动时）
-  └── 探测结果写入 .meta/environment-profile.json
 ```
 
 ---
@@ -149,10 +99,7 @@ environment/probe-protocol.md
 | 阶段三生成的阶梯质量差 | 步骤不可操作或引用错误 | 重跑：基于同样的命题产出重新生成 |
 | 阶段三依赖的命题产出缺失 | overview/experiment 未生成 | 先补完阶段二，再生成阶梯 |
 | summary 与主文件不一致 | 摘要过时 | 从主文件重新提取（增量修复） |
-| 运行时 spawn 失败 | agent 无法创建 | 检查 environment-profile.json 中 C1 |
-| 运行时 barrier 失败 | 结果未回传 | 检查 C7，若 ⚠️ 则降级为轮询文件 |
-| 诱导实验全部失败 | C1=❌ | 确认平台支持多 Agent；手动写 environment-profile.json 绕过 |
-| 缓存过期（spawn 连续失败） | 能力档案与实际不匹配 | 删除 environment-profile.json，重新探测 |
+| 运行时 spawn 失败 | agent 无法创建 | 检查平台是否支持多 agent，降级为单线程执行 |
 
 ---
 

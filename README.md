@@ -124,8 +124,6 @@ scenario-pipeline-skill/
 │   ├── capability-research-mode.md     材料块格式 + 深度分级
 │   ├── source-registry.md             信源白名单 + 黑名单
 │   └── year-granularity.md             年限→颗粒度映射
-├── environment/
-│   └── probe-protocol.md              多 Agent 能力探测协议
 ├── references/                     ← 流程编排 + 步骤实现
 │   ├── pre-process.md                  前处理编排
 │   ├── post-process.md                 后处理编排

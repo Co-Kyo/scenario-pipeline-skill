@@ -33,7 +33,6 @@
 | `plugins/capability-research-mode.md` | 必须：材料块格式规范 |
 | `plugins/source-registry.md` | 必须：信源白名单（fallback 搜索） |
 | `core/capability-graph.md` | 能力定义参考 |
-| `environment/probe-protocol.md` | Step 0：环境探测 |
 
 ### 产物文件（读取）
 
@@ -97,8 +96,3 @@
 |---------|---------|
 | 能力研究阶段 | plugins/capability-research-mode.md + processes/capability-research.md |
 
----
-
-## ⚠️ 主线程保全
-
-spawn 后按环境档案 `preserve_level` 执行保全行为（见 `99-shared.md §多线程主线程保全协议`）。

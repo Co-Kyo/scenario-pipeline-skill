@@ -32,7 +32,6 @@ deep research：<场景描述>
 SKILL.md          ← 入口（本文件：触发方式 + 流程概览 + 导航）
 core/             ← 元能力（定义方法论，稳定不常变）
 plugins/          ← 增强插件（可热插拔的能力扩展）
-environment/      ← 环境探测（多 Agent 能力探测 + 适配协议）
 references/       ← 流程控制
   ├── pre-process.md    ← 前处理编排（纯胶水，调用 processes/）
   ├── post-process.md   ← 后处理编排（三阶段管线 + 执行协议 + barrier）
@@ -64,21 +63,6 @@ references/       ← 流程控制
 - **Year-Granularity** — 经验年限与命题颗粒度匹配规则（增强分词能力）：[plugins/year-granularity.md](plugins/year-granularity.md)
 - **Capability Research Mode** — 材料块标准格式 + 研究深度分级（增强能力研究）：[plugins/capability-research-mode.md](plugins/capability-research-mode.md)
 - **Source Registry** — 信源质量白名单 + 域名映射 + 反爬黑名单（增强信源获取）：[plugins/source-registry.md](plugins/source-registry.md)
-
-### Environment — 环境探测
-
-跨平台多 Agent 能力探测与动态适配。
-
-- **Probe Protocol** — 三层优先级探测（P1 agentTeam → P2 自定义 agent → P3 内置 agent）+ C1-C7 能力探测 + 自然语言诱导实验 + Seed Profiles + 手动覆盖 + 动态适配：[environment/probe-protocol.md](environment/probe-protocol.md)
-
-> 后处理启动时加载 probe-protocol，按以下优先级获取环境配置：
-> 1. 用户手动指定（`--env-profile`）→ 最高优先级
-> 2. 平台 seed profile（`--platform=CodeBuddy` 等）→ 次高优先级
-> 3. 缓存的环境档案 → 中等优先级
-> 4. 自然语言诱导探测 → 最低优先级（默认）
->
-> 获取配置后，按 P1→P2→P3 优先级选择最优执行模式，
-> 再用诱导实验探测 C1-C7 能力维度，按能力指标选择执行策略。
 
 ### References — 流程控制
 
@@ -120,7 +104,6 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 | 指令含 `--year` | 同上 | plugins/year-granularity.md |
 | 指令含 `--no-experiment` | 同上 | 象限IV 相关可省略 |
 | 学习阶梯生成阶段 | processes/learning-ladder.md + capability-graph.json + summaries + 命题产出 | — |
-| 后处理启动时 | environment/probe-protocol.md | — |
 
 ### 禁止事项
 
@@ -156,7 +139,6 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 **阶段一：能力研究（并行）**
 - 读取 `.meta/capability-graph.json`，识别需要研究的原子能力
 - 对每个缺失材料块的能力，并行调用 [processes/capability-research.md](references/processes/capability-research.md)
-- ⚠️ spawn 后按环境档案 `preserve_level` 执行主线程保全（单例窗口下主线程易丢失）
 - 每个 agent 双写：主文件 `capabilities/<id>-<name>.md` + 结构化摘要 `.meta/summaries/<id>-<name>.json`
 - **⛔ 全部完成后 → ⓔ 检查点 E（能力研究审查）**
 
@@ -168,7 +150,6 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 
 **阶段二：命题组装（并行）**
 - 将 briefing 内联到 agent task，对每个待处理命题并行调用 [processes/assemble.md](references/processes/assemble.md)
-- ⚠️ spawn 后按环境档案 `preserve_level` 执行主线程保全（单例窗口下主线程易丢失）
 - 组装 agent **只写不读**，不读取 `capabilities/` 下的任何文件
 - 产出：按命题组织的深度研究 `<序号>-<命题简称>/`
 - **⛔ 全部完成后 → ⓕ 检查点 F（命题组装审查）**
