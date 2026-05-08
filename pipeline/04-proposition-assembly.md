@@ -1,9 +1,10 @@
 # 后处理·阶段二：命题组装
 
+> ⚠️ **架构观测文档** — 不是 skill 执行配置
+> 执行真相：`references/post-process.md §阶段二`、`references/processes/assemble.md`
+
 > 触发：Briefing 组装全部完成后自动执行
 > 执行者：滑动窗口并行 spawn（每 agent 1 个命题的 1 个象限文件）
-> 编排文件：`references/post-process.md §阶段二`
-> 实现文件：`references/processes/assemble.md`
 
 ---
 

@@ -1,5 +1,8 @@
 # 管道总览
 
+> ⚠️ **架构观测文档** — 不是 skill 执行配置
+> 执行真相：`references/pre-process.md`、`references/post-process.md`
+
 > 本文档是 Scenario Pipeline 的全局视图，定义数据流和阶段边界。
 > 各阶段的详细输入/输出/涉及文件见对应的阶段文件。
 
@@ -118,7 +121,7 @@
 | [03-briefing-assemble.md](03-briefing-assemble.md) | 后处理·中间步骤：Briefing 组装 | 阶段一完成后自动触发 |
 | [04-proposition-assembly.md](04-proposition-assembly.md) | 后处理·阶段二：命题组装 | Briefing 组装完成后自动触发 |
 | [05-learning-ladder.md](05-learning-ladder.md) | 后处理·阶段三：学习阶梯 | 阶段二完成后自动触发 |
-| [99-shared.md](99-shared.md) | 共享协议 | 运行时适配、调度算法、故障恢复 |
+| [99-shared.md](99-shared.md) | 跨阶段共享参考 | 数据实体、插件关系、故障模式 |
 
 ---
 

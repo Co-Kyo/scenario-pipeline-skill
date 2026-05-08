@@ -1,9 +1,10 @@
 # 后处理·阶段一：能力研究
 
+> ⚠️ **架构观测文档** — 不是 skill 执行配置
+> 执行真相：`references/post-process.md §阶段一`、`references/processes/capability-research.md`
+
 > 触发：`研究：<场景描述>` / `deep research：<场景描述>`（后处理启动后自动进入）
 > 执行者：滑动窗口并行 spawn（每 agent 1 个能力文件）
-> 编排文件：`references/post-process.md §阶段一`
-> 实现文件：`references/processes/capability-research.md`
 
 ---
 

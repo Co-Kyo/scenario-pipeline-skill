@@ -1,59 +1,14 @@
-# 共享协议：运行时适配、调度、故障恢复
+# 跨阶段共享参考
 
-> 本文档包含跨阶段共享的协议和参考信息。
-> 各阶段文件引用本文档的对应章节。
+> ⚠️ **架构观测文档** — 不是 skill 执行配置
+> 执行真相：`references/post-process.md`
 
----
-
-## 一、滑动窗口并行调度
-
-### 核心原则
-
-- **每 agent 只负责 1 个文件**
-- **滑动窗口**：维持 N 个并发 agent，谁完成谁补位，不等整批
-- **窗口大小**：默认 4（可根据系统并发能力调整）
-
-### 调度算法
-
-```
-窗口大小 W = 4
-待处理队列 Q = [任务1, 任务2, ..., 任务N]
-进行中集合 running = {}
-完成集合 done = {}
-
-循环：
-  while |running| < W 且 Q 非空：
-    task = Q.dequeue()
-    agent = spawn(task)
-    running.add(agent)
-
-  等待任意一个 agent 完成
-
-  running.remove(完成的 agent)
-  done.add(完成的 agent)
-
-  if 该 agent 失败：
-    记录失败原因，可选择重入 Q
-
-  重复直到 Q 为空且 running 为空
-```
-
-### 状态追踪
-
-主 agent 维护状态表，每个 agent 完成时更新：
-
-```
-| 能力ID | 状态 | agent session | 备注 |
-|--------|------|--------------|------|
-| A1     | ✅ done | xxx | 主文件+摘要均已写入 |
-| A2     | ⏳ running | xxx | |
-| A3     | ❌ failed | xxx | 超时，已重入队列 |
-| A4     | ⬜ pending | — | |
-```
+> 本文档记录跨阶段共享的参考信息：数据实体、插件依赖、故障模式。
+> 调度算法、增量复用等执行细节见 `references/post-process.md`。
 
 ---
 
-## 四、核心数据实体生命周期
+## 核心数据实体生命周期
 
 | 数据实体 | 诞生步骤 | 消费步骤 | 消费方式 |
 |---------|---------|---------|---------|
@@ -70,7 +25,7 @@
 
 ---
 
-## 五、插件引用关系
+## 插件引用关系
 
 ```
 plugins/year-granularity.md
@@ -87,7 +42,7 @@ plugins/source-registry.md
 
 ---
 
-## 六、故障模式与恢复
+## 故障模式与恢复
 
 | 故障点 | 表现 | 恢复策略 |
 |--------|------|---------|
@@ -100,41 +55,3 @@ plugins/source-registry.md
 | 阶段三依赖的命题产出缺失 | overview/experiment 未生成 | 先补完阶段二，再生成阶梯 |
 | summary 与主文件不一致 | 摘要过时 | 从主文件重新提取（增量修复） |
 | 运行时 spawn 失败 | agent 无法创建 | 检查平台是否支持多 agent，降级为单线程执行 |
-
----
-
-## 七、增量复用
-
-### 能力知识库增量
-
-```
-检查 capabilities/ 目录中已有的能力条目
-  → 已有：直接复用，跳过
-  → 同时检查 .meta/summaries/ 中是否有对应摘要
-    → 有摘要：复用，跳过
-    → 无摘要：从已有主文件中提取补生成
-  → 缺失：调用 capability-research.md 补充研究（双写）
-```
-
-### Briefing 增量
-
-```
-检查 .meta/briefings/ 中已有的 briefing
-  → 已有该命题的 briefing：复用，跳过
-  → 缺失：从 summary.json 重新生成
-  → 命题涉及的能力有变更：重新生成该命题的 briefing
-```
-
----
-
-## 八、单命题快速路径
-
-当只处理单个命题（非批量）时，可简化为：
-
-```
-1. 从 capability-graph.json 识别该命题依赖的原子能力
-2. 增量检查 capabilities/ + .meta/summaries/，缺失的用滑动窗口并行研究（双写）
-3. 从 summary.json 组装该命题的 briefing
-4. 组装该命题（滑动窗口按文件拆分，task 内联 briefing）
-5. 生成该命题的 learning-ladder.md（单线程）
-```

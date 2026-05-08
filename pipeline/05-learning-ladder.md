@@ -1,9 +1,10 @@
 # 后处理·阶段三：学习阶梯生成
 
+> ⚠️ **架构观测文档** — 不是 skill 执行配置
+> 执行真相：`references/post-process.md §阶段三`、`references/processes/learning-ladder.md`
+
 > 触发：阶段二（命题组装）全部完成后自动执行
 > 执行者：主 agent 单线程，不 spawn
-> 编排文件：`references/post-process.md §阶段三`
-> 实现文件：`references/processes/learning-ladder.md`
 
 ---
 
