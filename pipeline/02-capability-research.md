@@ -1,9 +1,10 @@
-# 后处理·阶段一：能力研究
+# 后处理·阶段一步骤1：能力研究
+
+> ⚠️ **架构观测文档** — 不是 skill 执行配置
+> 执行真相：`references/post-process.md §阶段一步骤1`、`references/processes/capability-research.md`
 
 > 触发：`研究：<场景描述>` / `deep research：<场景描述>`（后处理启动后自动进入）
-> 执行者：滑动窗口并行 spawn（每 agent 1 个能力文件）
-> 编排文件：`references/post-process.md §阶段一`
-> 实现文件：`references/processes/capability-research.md`
+> 执行者：滑动窗口并行 spawn（每 agent 1 个能力文件，窗口大小默认4）
 
 ---
 
@@ -33,7 +34,6 @@
 | `plugins/capability-research-mode.md` | 必须：材料块格式规范 |
 | `plugins/source-registry.md` | 必须：信源白名单（fallback 搜索） |
 | `core/capability-graph.md` | 能力定义参考 |
-| `environment/probe-protocol.md` | Step 0：环境探测 |
 
 ### 产物文件（读取）
 
@@ -64,7 +64,7 @@
    每个 agent 双写：
      → capabilities/<id>-<name>.md（主文件）
      → .meta/summaries/<id>-<name>.json（摘要）
-6. ⛔ 全部完成后才能进入 Briefing 组装
+6. ⛔ 全部完成后才能进入阶段一步骤2 Briefing 组装
 ```
 
 ## 信源获取四级优先级
@@ -97,8 +97,3 @@
 |---------|---------|
 | 能力研究阶段 | plugins/capability-research-mode.md + processes/capability-research.md |
 
----
-
-## ⚠️ 主线程保全
-
-spawn 后按环境档案 `preserve_level` 执行保全行为（见 `99-shared.md §多线程主线程保全协议`）。

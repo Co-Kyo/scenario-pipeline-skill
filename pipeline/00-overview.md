@@ -1,5 +1,8 @@
 # 管道总览
 
+> ⚠️ **架构观测文档** — 不是 skill 执行配置
+> 执行真相：`references/pre-process.md`、`references/post-process.md`
+
 > 本文档是 Scenario Pipeline 的全局视图，定义数据流和阶段边界。
 > 各阶段的详细输入/输出/涉及文件见对应的阶段文件。
 
@@ -22,11 +25,12 @@
                           ┌─────────────────────┐
                           │   后 处 理            │
                           │                     │
-                          │  阶段一：能力研究    │  ← 滑动窗口并行
-                          │    ⛔ barrier        │
-                          │  Briefing 组装       │  ← 单线程
-                          │    ⛔ barrier        │
-                          │  阶段二：命题组装    │  ← 滑动窗口并行
+                          │  阶段一：            │
+                          │    步骤1：能力研究   │  ← 滑动窗口并行（窗口=4）
+                          │      ⛔ barrier      │
+                          │    步骤2：Briefing   │  ← 单线程
+                          │      ⛔ barrier      │
+                          │  阶段二：命题组装    │  ← 滑动窗口并行（窗口=4）
                           │    ⛔ barrier        │
                           │  阶段三：学习阶梯    │  ← 单线程
                           └─────────────────────┘
@@ -67,29 +71,28 @@
 
 ┌─────────────────────── 后处理 ───────────────────────┐
 │                                                       │
-│  ┌── 阶段一：能力研究 ──────────────────────────┐    │
+│  ┌── 阶段一：能力研究 + Briefing 组装 ───────────┐    │
 │  │                                               │    │
-│  │  capability-graph.json                        │    │
-│  │       │                                       │    │
-│  │       ├── 筛选待研究能力                       │    │
-│  │       ├── 增量检查（已有→跳过）                │    │
-│  │       └── 为每个能力预查找T1/T2 URL            │    │
-│  │              │                                 │    │
-│  │              ▼  滑动窗口并行（窗口=4）          │    │
-│  │   ┌─────────────────────────────────┐         │    │
-│  │   │ agent-A1 │ agent-A2 │ agent-A8 │  ...    │    │
-│  │   │ 双写:    │ 双写:    │ 双写:    │         │    │
-│  │   │  md+json │  md+json │  md+json │         │    │
-│  │   └─────────────────────────────────┘         │    │
-│  │        │            │           │              │    │
-│  │        ▼            ▼           ▼              │    │
-│  │  capabilities/    .meta/summaries/             │    │
-│  └───────────────────────────────────────────────┘    │
-│                       │                               │
-│                  ⛔ BARRIER                           │
-│                       │                               │
-│  ┌── Briefing 组装 ────────────────────────────┐    │
-│  │  summaries × capability-graph → briefings    │    │
+│  │  步骤1：能力研究                               │    │
+│  │    capability-graph.json                        │    │
+│  │         │                                       │    │
+│  │         ├── 筛选待研究能力                       │    │
+│  │         ├── 增量检查（已有→跳过）                │    │
+│  │         └── 为每个能力预查找T1/T2 URL            │    │
+│  │                │                                 │    │
+│  │                ▼  滑动窗口并行（窗口=4）          │    │
+│  │     ┌─────────────────────────────────┐         │    │
+│  │     │ agent-A1 │ agent-A2 │ agent-A8 │  ...    │    │
+│  │     │ 双写:    │ 双写:    │ 双写:    │         │    │
+│  │     │  md+json │  md+json │  md+json │         │    │
+│  │     └─────────────────────────────────┘         │    │
+│  │          │            │           │              │    │
+│  │          ▼            ▼           ▼              │    │
+│  │    capabilities/    .meta/summaries/             │    │
+│  │                                               │    │
+│  │  步骤2：Briefing 组装（单线程）                 │    │
+│  │    summaries × capability-graph → briefings    │    │
+│  │                                               │    │
 │  └───────────────────────────────────────────────┘    │
 │                       │                               │
 │                  ⛔ BARRIER                           │
@@ -114,11 +117,11 @@
 | 文件 | 阶段 | 触发方式 |
 |------|------|---------|
 | [01-pre-process.md](01-pre-process.md) | 前处理（6 步串行） | `扫描：<描述>` / `deep scan：<描述>` |
-| [02-capability-research.md](02-capability-research.md) | 后处理·阶段一：能力研究 | `研究：<描述>` / `deep research：<描述>` |
-| [03-briefing-assemble.md](03-briefing-assemble.md) | 后处理·中间步骤：Briefing 组装 | 阶段一完成后自动触发 |
-| [04-proposition-assembly.md](04-proposition-assembly.md) | 后处理·阶段二：命题组装 | Briefing 组装完成后自动触发 |
+| [02-capability-research.md](02-capability-research.md) | 后处理·阶段一步骤1：能力研究 | `研究：<描述>` / `deep research：<描述>` |
+| [03-briefing-assemble.md](03-briefing-assemble.md) | 后处理·阶段一步骤2：Briefing 组装 | 阶段一步骤1完成后自动触发 |
+| [04-proposition-assembly.md](04-proposition-assembly.md) | 后处理·阶段二：命题组装 | 阶段一完成后自动触发 |
 | [05-learning-ladder.md](05-learning-ladder.md) | 后处理·阶段三：学习阶梯 | 阶段二完成后自动触发 |
-| [99-shared.md](99-shared.md) | 共享协议 | 运行时适配、调度算法、故障恢复 |
+| [99-shared.md](99-shared.md) | 跨阶段共享参考 | 数据实体、插件关系、故障模式 |
 
 ---
 
@@ -127,8 +130,8 @@
 | Barrier | 条件 | 原因 |
 |---------|------|------|
 | 前处理 → 后处理 | 前处理产出 capability-graph.json | 后处理全部依赖此文件 |
-| 阶段一 → Briefing | 全部 summary.json 就绪 | Briefing 从 summary 提取 |
-| Briefing → 阶段二 | 全部 briefing 就绪 | 组装 agent 的 task 内联 briefing |
+| 阶段一步骤1 → 阶段一步骤2 | 全部 summary.json 就绪 | Briefing 从 summary 提取 |
+| 阶段一 → 阶段二 | 全部 briefing 就绪 | 组装 agent 的 task 内联 briefing |
 | 阶段二 → 阶段三 | 全部命题文件就绪 | 阶梯引用 overview/experiment/trade-offs |
 
 ---

@@ -33,83 +33,43 @@ deep research：<场景描述>
 ## 三阶段管线
 
 ```
-阶段一：能力研究（滑动窗口并行）    阶段二：命题组装（滑动窗口并行）    阶段三：学习阶梯（单线程）
+阶段一：能力研究 + Briefing组装（两步骤）    阶段二：命题组装（滑动窗口并行）    阶段三：学习阶梯（并行）
 
-  ┌─────────────────┐            ┌─────────────────┐            ┌─────────────────┐
-  │ capability-      │            │ assemble        │            │ learning-       │
-  │ research × 1     │──双写──→│ × 1 命题×1象限   │──────────→│ ladder × 1 命题  │
-  │ (每 agent 1 文件) │            │ (每 agent 1 文件) │            │ (主 agent 直接生成)│
-  └─────────────────┘            └─────────────────┘            └─────────────────┘
-        ↑                              ↑                              ↑
-        │                              │                              │
-  .meta/capability-graph.json    从 summaries 组装              读取阶段二产出
-  (来自前处理)                  briefing 内联到 task            + capability-graph.json
+  ┌─────────────────────────────────┐            ┌─────────────────────┐            ┌─────────────────┐
+  │ 步骤1：capability-research × N   │            │ assemble × 1 命题    │            │ learning-       │
+  │ （滑动窗口并行，每 agent 1 文件） │            │ (overview/edge/      │            │ ladder × 1 命题  │
+  │         ↓ 双写                    │            │  trade/refs)         │            │ (每 agent 1 命题) │
+  │ 步骤2：briefing-assemble × M     │──────────→│         +            │──────────→│                 │
+  │ （并行，每 agent 1 命题）         │            │ experiment × 1 命题  │            │                 │
+  └─────────────────────────────────┘            └─────────────────────┘            └─────────────────┘
+        ↑                                              ↑                                    ↑
+        │                                              │                                    │
+  .meta/capability-graph.json                    从 briefings 内联                        读取阶段二产出
+  (来自前处理)                                    到组装 agent task                      + capability-graph.json
 ```
+
+**阶段一包含两个步骤**：
+1. **能力研究**（并行）：每个 agent 双写主文件 + summary.json
+2. **Briefing 组装**（并行）：每 agent 负责 1 个命题的 Briefing 组装
+
+**阶段二包含两类 agent**：
+1. **Markdown 组装**（每 agent 1 命题）：负责 overview / edge-cases / trade-offs / references
+2. **实验组装**（每 agent 1 命题）：负责 experiment 目录（代码逻辑，独立处理以保证稳定性）
 
 **双写**：每个能力研究 agent 产出两个文件：
 1. `capabilities/<id>-<name>.md` — 人类阅读的完整知识库
 2. `.meta/summaries/<id>-<name>.json` — 机器消费的结构化摘要
-
-**中间步骤：Briefing 组装**：阶段一与阶段二之间，读 summary.json 组装 briefing，内联到组装 agent 的 task 中。组装 agent **只写不读**。
 
 ---
 
 ## 执行协议
 
 > 本节定义后处理的执行协议。**必须严格遵循三阶段顺序，禁止合并。**
-> **spawn 机制依赖运行时平台**，具体 API 参见 §运行时适配层。
-
-### 运行时适配层
-
-spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配** 实现跨平台兼容：
-
-| 层 | 文件 | 职责 |
-|----|------|------|
-| 探测 + 适配 | [environment/probe-protocol.md](../environment/probe-protocol.md) | 自然语言诱导实验 → 7 维能力档案 → 执行策略适配 |
-
-**执行流程前必须**：
-1. 加载 `environment/probe-protocol.md`，执行/读取环境档案
-2. 按档案中 C1-C7 能力指标选择执行策略（probe-protocol §六）
 
 > ⚠️ 下文中的 `spawn(task)` 是平台无关的伪代码。
 > 用自然语言描述"创建独立助手完成 X"，环境自行选择执行方式。
 
-### ⚠️ 多线程主线程保全协议
-
-> **平台已知 Bug**：在单例模式的 agent 窗口下，主线程 spawn 子 agent 后，
-> 主窗口的上下文可能潜入子 agent 的调用链，导致主线程丢失（主 agent 的
-> 后续指令被吞入子 agent 的执行上下文，主线程无法继续推进管线）。
->
-> **保全策略**：此问题属于负行为（环境"做错了什么"），无法通过正向诱导实验直接探测。
-> 因此不新增探测维度，而是从环境档案中已有的 `execution_mode` + `C7` 组合推断风险等级，
-> 映射到分级保全策略。详见 [probe-protocol §6.5](../environment/probe-protocol.md)。
->
-> **保全行为**（按环境档案 `efficiency.main_thread_preservation.preserve_level` 分级）：
->
-> | 保全级别 | spawn 后立即输出 | 周期性轮询 | 收尾确认 |
-> |---------|:---:|:---:|:---:|
-> | mandatory（🔴 高风险） | ✅ 必须 | ✅ 必须 | ✅ 必须 |
-> | enabled（🟡 中风险） | ✅ 必须 | ✅ 必须 | ✅ 必须 |
-> | suggested（🟢 低风险） | ✅ 建议 | — | ✅ 建议 |
-> | optional（⚪ 极低风险） | 可选 | — | — |
->
-> **行为定义**：
-> 1. **spawn 后立即输出**：spawn 后立即向用户输出一条状态确认消息
->    （如"已启动 N 个子任务，正在跟踪进度"），强制主线程保持自己的对话轮次
-> 2. **周期性轮询**：在等待子 agent 完成期间，主动轮询检查产出文件
->    （而非静默等待），每次轮询都是一个主线程的活跃 turn
-> 3. **收尾确认**：子 agent 完成后，主线程必须先输出一条收尾确认
->    （如"子任务 X 已完成，继续推进"），再进入下一步骤
->
-> **核心原则**：主线程永远不能在 spawn 后"静默等待"——
-> 静默 = 主线程交出对话轮次 = 单例窗口下上下文被劫持的高危时刻。
-> 保全级别越低，此原则的强制力越弱，但防御性编程始终推荐。
-
 ### 执行流程
-
-> ⚠️ **阶段边界声明**：Step 0（环境探测）是独立的诊断阶段，与后续的研究阶段完全隔离。
-> 探测实验的目的是验证环境能力，而非执行用户的研究任务。
-> 探测完成后，必须明确声明诊断结束，才能进入正式研究流程。
 
 ```
 ═══════════════════════════════════════════════════════════════════════════════
@@ -119,48 +79,25 @@ spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配**
 0a. 展示后处理执行计划：
     - 待处理命题列表（来自 README.md / .meta/candidates.md）
     - 涉及的原子能力数量
-    - 预估 spawn agent 数量（能力数 × 1 + 命题数 × 5）
+    - 预估 spawn agent 数量：能力数 × 1 + 命题数 × 2（阶段二：markdown + experiment）+ 命题数 × 1（阶段三）+ 命题数 × 1（Briefing组装）
     - 预估执行时间
 
     用户操作：
-    - "开始" → 进入 Step 0 环境探测
+    - "开始" → 进入阶段一
     - "只研究 <命题列表>" → 缩小范围后继续
     - "跳过实验" → 添加 --no-experiment，减少 agent 数量
 
     **跳过条件**：`--batch=pending` 模式下自动跳过检查点。
 
 ═══════════════════════════════════════════════════════════════════════════════
-【阶段 0：环境探测】— 独立诊断阶段，非研究任务
-═══════════════════════════════════════════════════════════════════════════════
-
-0. 【Step 0】Environment Probe（首次执行时）
-   ├── 读取 .meta/environment-profile.json
-   │   ├── 缓存命中 + version 匹配 + 无检查点 → 跳过探测
-   │   ├── 缓存命中 + 有检查点 → 从断点恢复（见 probe-protocol §3.2.2）
-   │   └── 缓存未命中 → 执行两阶段探测
-   │       ├── Phase A：C0 元探测（分段式，可跨会话）
-   │       │   ├── C0a：发现定义路径和格式
-   │       │   ├── C0b：创建 probe-agent 定义文件
-   │       │   ├── C0c：验证可调用（可能需跨会话 → 缓存检查点）
-   │       │   └── C0=⚠️ 时当前会话用内置 agent 继续，不阻塞管线
-   │       └── Phase B：C1-C7 诱导实验（用 Phase A 确定的最优 agent）
-   │           ├── 发出诱导 prompt（读目录+搜索+写文件）
-   │           ├── 验证产出 + 分析日志 → 判定 C1-C7
-   │           └── C1=❌ → ❌ 终止，报告环境不支持多 Agent
-   ├── 写入 .meta/environment-profile.json（C0-C7 + 执行模式 + 检查点如有）
-   └── 按 probe-protocol §六 选择执行策略
-
-   ✅ 环境探测完成，进入正式研究流程
-
-═══════════════════════════════════════════════════════════════════════════════
-【阶段 1-3：正式研究】— 用户研究任务执行阶段
+【阶段 1-3：研究执行】— 用户研究任务执行阶段
 ═══════════════════════════════════════════════════════════════════════════════
 
 1. 读取前处理产出
    ├── .meta/capability-graph.json → 获取原子能力列表 + 依赖关系 + 战略高地
    └── README.md / .meta/candidates.md → 获取待处理命题列表 + 分词结果
 
-2. 【阶段一】能力研究
+2. 【阶段一步骤1】能力研究
    ├── 筛选：覆盖待处理命题的能力（或扇出度 ≥ 30% 的能力）
    ├── 增量检查：capabilities/ 中已有 → 跳过，缺失 → 研究
    ├── 为每个能力预查找 T1/T2 URL
@@ -181,43 +118,46 @@ spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配**
    │   → 全部成功且无异常 → 直接"继续"即可                        │
    │                                                               │
    │ 用户操作：                                                    │
-   │   - "继续" → 进入 Briefing 组装（推荐：全部成功时）           │
+   │   - "继续" → 进入阶段一步骤2 Briefing 组装（推荐）           │
    │   - "查看 <能力ID>" → 展示该能力的完整研究内容               │
    │   - "重跑 <能力ID>" → 重新研究指定能力                       │
    │   - "跳过 <能力ID>" → 标记跳过，不参与后续组装               │
    │   - "补充信源 <能力ID> <URL>" → 追加信源后重跑               │
    └───────────────────────────────────────────────────────────────┘
 
-3. 【Briefing 组装】（单线程，不需要 spawn）
-   ├── 读取 .meta/summaries/ 下所有相关能力的 summary.json
+3. 【阶段一步骤2】Briefing 组装（并行）
    ├── 对每个待处理命题：
+   │   ├── spawn 一个独立 agent
    │   ├── 从 capability-graph.json 确定该命题涉及的能力 ID 列表
    │   ├── 读取这些能力的 summary.json
    │   ├── 按 5 种文件类型定向提取内容（见 §Briefing 组装规则）
    │   └── 生成完整 briefing，保存到 .meta/briefings/<命题简称>.md
    └── ⛔ 全部 briefing 生成后才能进入 ⓓ 检查点
 
-   ┌─ ⓓ 检查点 D：Briefing 预审 ──────────────────────────────────┐
+   ┌─ ⓓ 检查点 D：Briefing 预审（阶段一完成）───────────────────┐
    │ 展示内容：                                                     │
    │   - 生成的 briefing 文件列表                                    │
    │   - 每个 briefing 的能力覆盖情况（哪些能力有摘要、哪些缺失）    │
-   │   - 预估阶段二 spawn 数量（命题数 × 5 文件）                    │
+   │   - 预估阶段二 spawn 数量：                                    │
+   │     - 命题数 × 2（每 agent 1 个命题：Markdown组装 + 实验组装）│
    │                                                                 │
    │ 推荐操作指引：                                                  │
    │   → 建议关注能力覆盖缺失的命题，缺失 = 组装时该维度空白        │
-   │   → 阶段二 agent 数 = 命题数 × 5，确认是否需跳过实验减少开销   │
+   │   → 阶段二 agent 数 = 命题数 × 2（Markdown组装 + 实验组装）│
    │   → 覆盖无缺失 + 不跳过实验 → 直接"继续"即可                  │
    │                                                                 │
    │ 用户操作：                                                      │
    │   - "继续" → 进入阶段二（推荐：覆盖无缺失时）                  │
    │   - "查看 <命题> briefing" → 展示具体内容                       │
    │   - "跳过实验" → 减少 experiment 文件的 spawn                   │
-   │   - "回退研究 <能力ID>" → 回到阶段一重跑该能力                 │
+   │   - "回退研究 <能力ID>" → 回到阶段一步骤1重跑该能力            │
    └─────────────────────────────────────────────────────────────────┘
 
-4. 【阶段二】命题组装
-   ├── 按滑动窗口并行 spawn（每 agent 1 个命题的 1 个象限文件）← 具体API见运行时适配层插件
-   ├── 每个 agent 的 task 中内联对应 briefing section
+3. 【阶段二】命题组装
+   ├── 按命题并行（每命题 2 个 agent）← 具体API见运行时适配层插件
+   │   ├── Markdown组装 agent：负责 overview / edge-cases / trade-offs / references
+   │   ├── 实验组装 agent：负责 experiment 目录（独立处理，避免高上下文压力下写代码）
+   │   └── 每个 agent 的 task 中内联完整 briefing
    └── agent 只写文件，不读任何能力文件
 
    ┌─ ⓕ 检查点 F：命题组装审查 ──────────────────────────────────┐
@@ -226,11 +166,13 @@ spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配**
    │   - 每个命题的文件完整性（5 文件是否齐全）                      │
    │   - 失败文件列表（如有）                                       │
    │   - 内容比例检查（通用 ≥ 70% vs 特化 ≤ 30%）                  │
+   │   - 预估阶段三 spawn 数量：                                    │
+   │     - 命题数 × 1（每 agent 1 个命题）                          │
    │                                                                 │
    │ 推荐操作指引：                                                  │
    │   → 建议先查看优先级最高命题的产出质量                          │
    │   → 学习阶梯依赖文件齐全，缺失文件需补齐或跳过该命题           │
-   │   → 阶段三为单线程生成，耗时短，可放心继续                      │
+   │   → 阶段三为并行生成，可放心继续│
    │   → 文件齐全 + 无异常 → 直接"继续"即可                        │
    │                                                                 │
    │ 用户操作：                                                      │
@@ -242,9 +184,13 @@ spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配**
    └─────────────────────────────────────────────────────────────────┘
 
 5. 【阶段三】学习阶梯生成
-   ├── 单线程，不需要 spawn，主 agent 直接生成
-   ├── 读取阶段二产出的命题文件 + capability-graph.json
-   └── 每个命题产出一个 learning-ladder.md
+   ├── 并行化（每 agent 1 个命题的学习阶梯）
+   │   ├── 对每个已组装的命题：
+   │   │   ├── spawn 一个独立 agent
+   │   │   ├── 读取阶段二产出的命题文件 + capability-graph.json
+   │   │   └── 生成 learning-ladder.md
+   │   └── ⛔ 全部学习阶梯生成后才能进入 ⓖ 检查点
+   └── ⛔ 全部学习阶梯生成后才能进入 ⓖ 检查点
 
    ┌─ ⓖ 检查点 G：全局收尾确认 ──────────────────────────────────┐
    │ 展示内容：                                                     │
@@ -255,7 +201,7 @@ spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配**
    │                                                                 │
    │ 推荐操作指引：                                                  │
    │   → 建议从学习阶梯入手，评估渐进路径是否合理                    │
-   │   → 阶梯可单独重跑（单线程，快），不满意随时调整                │
+   │   → 阶梯可单独重跑（并行或单线程），不满意随时调整              │
    │   → 所有产出已持久化，随时可中断、后续追加研究                  │
    │   → 产出满意 → 直接"确认完成"                                  │
    │                                                                 │
@@ -269,38 +215,40 @@ spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配**
 
 ### ⛔ 阶段间 Barrier（强制）
 
-**阶段一必须全部完成，才能开始 Briefing 组装；Briefing 组装必须全部完成，才能开始阶段二；阶段二必须全部完成，才能开始阶段三。**
+**阶段一（能力研究 + Briefing 组装）必须全部完成，才能开始阶段二；阶段二必须全部完成，才能开始阶段三。**
 
-**Barrier 通过检查点强制执行**：每个 barrier 处都有对应的检查点（ⓔⓓⓕ），检查点必须暂停等待用户确认后才放行。详见 §后处理检查点协议。
+**Barrier 通过检查点强制执行**：每个 barrier 处都有对应的检查点（ⓔⓓⓕⓖ），检查点必须暂停等待用户确认后才放行。详见 §后处理检查点协议。
 
 原因：
-- 阶段二的 briefing 依赖阶段一产出的 summary.json
-- 如果阶段一未完成就开始组装 briefing，会缺少能力摘要
-- 如果 briefing 未完成就开始阶段二，组装 agent 会缺少素材
+- 阶段一包含两个步骤：能力研究（产出 summary.json）和 Briefing 组装（消费 summary.json）
+- 如果阶段一步骤1未完成就开始组装 briefing，会缺少能力摘要
+- 如果阶段一（含 Briefing 组装）未完成就开始阶段二，组装 agent 会缺少素材
 - 阶段三（学习阶梯）依赖阶段二产出的完整命题文件（overview / edge-cases / trade-offs / experiment / references）
 - 如果阶段二未完成就开始生成阶梯，会缺少关键的内容来源
 
 错误模式（禁止）：
 ```
 ❌ 给每个命题分配一个 agent，让它自己「研究+组装」→ 知识库不共享，重复工作
-❌ 阶段一的 agent 还没完成就开始 spawn 阶段二的 agent
+❌ 阶一步骤1的 agent 还没完成就开始组装 briefing
+❌ 阶段一未完成就开始 spawn 阶段二的 agent
 ❌ 把阶段一和阶段二写在同一个 agent 的 task 里
 ❌ 组装 agent 自己去读 capabilities/ 下的完整文件
 ❌ 阶段二未完成就开始生成学习阶梯
-❌ 跳过检查点直接进入下一阶段（ⓔⓓⓕ 是强制的，不可绕过）
+❌ 跳过检查点直接进入下一阶段（ⓔⓓⓕⓖ 是强制的，不可绕过）
 ```
 
 正确模式：
 ```
-✅ 主 agent 用滑动窗口 spawn 阶段一 agent → 全部完成（API见运行时插件）
+✅ 主 agent 用滑动窗口 spawn 阶段一步骤1 agent → 全部完成（API见运行时插件）
 ✅ ⓔ 检查点 E：审查能力研究质量 → 用户确认后继续
-✅ 读 summary.json 组装 briefing → 保存到 .meta/briefings/
-✅ ⓓ 检查点 D：预审 Briefing 覆盖情况 → 用户确认后继续
-✅ 用滑动窗口 spawn 阶段二 agent，task 中内联 briefing（API见运行时插件）
+✅ 主 agent 用滑动窗口 spawn 阶段一步骤2 agent（每 agent 1 个命题的 Briefing 组装）→ 全部完成
+✅ ⓓ 检查点 D：预审 Briefing 覆盖情况（阶段一完成）→ 用户确认后继续
+✅ 用滑动窗口 spawn 阶段二 agent：
+   - Markdown 组装 agent（每 agent 1 命题，负责 overview/edge-cases/trade-offs/references）
+   - 实验组装 agent（每 agent 1 命题，负责 experiment 目录）
 ✅ ⓕ 检查点 F：审查命题组装质量 → 用户确认后继续
-✅ 阶段二全部完成后，主 agent 直接生成学习阶梯（单线程，不需要 spawn）
+✅ 用滑动窗口 spawn 阶段三 agent（每 agent 1 个命题的学习阶梯）→ 全部完成
 ✅ ⓖ 检查点 G：全局收尾确认 → 用户确认后 pipeline 结束
-✅ 每个 agent 只负责 1 个文件，任务边界清晰
 ✅ 失败的 agent 可精确重跑，不影响其他
 ```
 
@@ -314,14 +262,14 @@ spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配**
 ### 检查点总览
 
 ```
-ⓒ 启动确认 → [阶段0 环境探测] → ⓔ 能力研究审查 → [Briefing 组装] → ⓓ Briefing 预审 → [阶段二 命题组装] → ⓕ 命题组装审查 → [阶段三 学习阶梯] → ⓖ 全局收尾
+ⓒ 启动确认 → ⓔ 能力研究审查（阶段一步骤1）→ ⓓ Briefing 预审（阶段一完成）→ ⓕ 命题组装审查（阶段二完成）→ ⓖ 全局收尾（阶段三完成）
 ```
 
 | 检查点 | 位置 | 核心产物 | 介入价值 |
 |--------|------|---------|---------|
 | ⓒ C | 后处理启动前 | 执行计划 | 确认范围、调整参数、减少 agent 数量 |
-| ⓔ E | 阶段一完成后 | `capabilities/` + `.meta/summaries/` | 审查能力研究质量，决定重跑/跳过/补充 |
-| ⓓ D | Briefing 组装后 | `.meta/briefings/` | 审查素材提取完整性，决定是否跳过实验 |
+| ⓔ E | 阶段一步骤1完成后 | `capabilities/` + `.meta/summaries/` | 审查能力研究质量，决定重跑/跳过/补充 |
+| ⓓ D | 阶段一完成后（含 Briefing 组装） | `.meta/briefings/` | 审查素材提取完整性，决定是否跳过实验 |
 | ⓕ F | 阶段二完成后 | `<命题>/*.md` | 审查命题组装质量，决定阶梯侧重方向 |
 | ⓖ G | 阶段三完成后 | `learning-ladder.md` | 确认最终产出，追加研究或结束 |
 
@@ -351,40 +299,30 @@ spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配**
 
 ### 核心原则
 
-- **每 agent 只负责 1 个文件**（1 个能力文件 或 1 个命题的 1 个象限文件）
-- **阶段三例外**：学习阶梯生成是单线程，主 agent 直接生成，不需要 spawn
-- **滑动窗口**：维持 N 个并发 agent，谁完成谁补位，不等整批
-- **窗口大小**：默认 4（可根据系统并发能力调整）
+- **阶段一**：每 agent 只负责 1 个能力文件（双写主文件 + summary.json）
+- **阶段一步骤2**：每 agent 负责 1 个命题的 Briefing 组装（并行化方案）
+- **阶段二**：每 agent 负责 1 个命题的全部象限文件（Markdown组装）+ 1 个命题的experiment（实验组装）
+- **阶段三**：每 agent 负责 1 个命题的学习阶梯生成（并行化）
+- **滑动窗口**：维持 N 个并发 agent，谁完成谁补位，不等整批（避免分批等待策略）
+- **窗口大小**：默认 4（基于大部分平台最大5个并发子agent的限制，保留1个槽位给主agent）
 
 ### 调度算法
 
-> ⚠️ **主线程保全**：每次 spawn 后，按环境档案 `preserve_level` 执行对应级别的保全行为。
-> 详见 §执行协议「多线程主线程保全协议」。
-
 ```
-窗口大小 W = 4
+窗口大小 W = 4  # 基于大部分平台最大5个并发子agent的限制，保留1个槽位给主agent
 待处理队列 Q = [任务1, 任务2, ..., 任务N]
 进行中集合 running = {}
 完成集合 done = {}
-
-读取 preserve_level = environment-profile.efficiency.main_thread_preservation.preserve_level
 
 循环：
   while |running| < W 且 Q 非空：
     task = Q.dequeue()
     agent = spawn(task)  ← 具体API见运行时适配层插件
     running.add(agent)
-    if preserve_level ∈ {"mandatory", "enabled", "suggested"}:
-      ⚠️ 立即输出状态确认："已启动子任务 <task_id>，当前并发 N/W" ← 主线程保全
 
-  if preserve_level ∈ {"mandatory", "enabled"}:
-    ⚠️ 主动轮询检查产出文件（非静默等待）← 主线程保全
-  else:
-    等待任意一个 agent 完成
+  等待任意一个 agent 完成
   running.remove(完成的 agent)
   done.add(完成的 agent)
-  if preserve_level ∈ {"mandatory", "enabled", "suggested"}:
-    ⚠️ 输出完成确认："子任务 <task_id> 完成，继续推进" ← 主线程保全
 
   if 该 agent 失败：
     记录失败原因，可选择重入 Q
@@ -407,7 +345,7 @@ spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配**
 
 ---
 
-## 阶段一：能力研究（滑动窗口并行）
+## 阶段一步骤1：能力研究（滑动窗口并行）
 
 ### 输入来源
 
@@ -454,8 +392,6 @@ spawn 子 agent 的 API 因平台而异，通过 **环境探测 + 动态适配**
 - 能力之间无依赖，可完全并行
 - 使用滑动窗口调度，维持稳定并发数
 - **等待所有能力 agent 完成后才能进入 Briefing 组装**
-- ⚠️ **主线程保全**：按环境档案 `preserve_level` 执行对应级别的保全行为，
-  详见 §执行协议「多线程主线程保全协议」
 
 ### 输出
 
@@ -499,20 +435,24 @@ capabilities/                      ← 能力知识库（人类阅读）
 
 ---
 
-## Briefing 组装
+## 阶段一步骤2：Briefing 组装
 
-> 阶段一全部完成后、阶段二开始前执行此步骤。
-> **单线程，不需要 spawn，直接读取 summary.json 并生成 briefing。**
-> 实现细节见 [processes/briefing-assemble.md](processes/briefing-assemble.md)。
+> 阶段一步骤1（能力研究）全部完成后执行此步骤。
 
 ### 执行逻辑
 
+#### 并行化Briefing组装
+
 ```
 对每个待处理命题：
-  1. 从 capability-graph.json 获取该命题涉及的能力 ID 列表
-  2. 读取这些能力的 summary.json
-  3. 按 5 种文件类型定向提取，组装为 briefing
-  4. 保存到 .meta/briefings/<命题简称>.md
+  spawn 一个独立 agent
+  task = Briefing组装模板（见 processes/briefing-assemble.md）
+  输入：
+    - proposition（命题文本）
+    - capability_ids（该命题涉及的能力ID列表）
+    - summary_files（这些能力的summary.json内容）
+  输出：
+    - .meta/briefings/<命题简称>.md
 ```
 
 ### 加载条件
@@ -525,21 +465,35 @@ capabilities/                      ← 能力知识库（人类阅读）
 
 ### 输入来源
 
-- Briefing 组装产出的 `.meta/briefings/<命题简称>.md`（已内联到 agent task）
+- 阶段一产出的 `.meta/briefings/<命题简称>.md`（已内联到 agent task）
 - 前处理产出的 `README.md`（命题列表 + 分词结果）
 
 ### 执行逻辑
 
+#### 执行逻辑
+
 ```
-对每个待处理命题的每个象限文件：
-  spawn 一个独立 agent
-  task = Agent 执行指令模板（见 processes/assemble.md）
-  输入：
-    - proposition（命题文本）
-    - decomposition（分词结果）
-    - briefing（从 .meta/briefings/<命题简称>.md 中提取对应 section，内联到 task）
-    - target_file（overview / edge-cases / trade-offs / experiment / references）
-  输出：workflow/research/<序号>-<命题简称>/<target_file>.md
+对每个待处理命题：
+  spawn 两个独立 agent：
+    1. Markdown组装 agent
+       task = 命题组装模板（见 processes/assemble.md）
+       输入：
+         - proposition（命题文本）
+         - decomposition（分词结果）
+         - briefing（完整briefing，内联到task）
+       输出：
+         - workflow/research/<序号>-<命题简称>/overview.md
+         - workflow/research/<序号>-<命题简称>/edge-cases.md
+         - workflow/research/<序号>-<命题简称>/trade-offs.md
+         - workflow/research/<序号>-<命题简称>/references.md
+    2. 实验组装 agent
+       task = 实验组装模板（见 processes/assemble.md）
+       输入：
+         - proposition（命题文本）
+         - decomposition（分词结果）
+         - briefing（完整briefing，内联到task）
+       输出：
+         - workflow/research/<序号>-<命题简称>/experiment/
 ```
 
 ### 加载条件
@@ -558,12 +512,15 @@ capabilities/                      ← 能力知识库（人类阅读）
 
 ### 并行管理
 
-- 每个文件分配一个独立 agent（**一个 agent 一个文件**）
-- 同一命题的不同文件可并行
+#### 按命题并行（Markdown组装 + 实验组装）
+
+- 每个命题分配两个独立 agent：
+  - **Markdown组装 agent**：负责 overview / edge-cases / trade-offs / references
+  - **实验组装 agent**：负责 experiment 目录（独立处理，避免高上下文压力下写代码）
 - 不同命题之间可并行
-- 使用滑动窗口调度
-- ⚠️ **主线程保全**：按环境档案 `preserve_level` 执行对应级别的保全行为，
-  详见 §执行协议「多线程主线程保全协议」
+- 使用滑动窗口调度（窗口大小默认4）
+
+
 
 ### 输出
 
@@ -599,21 +556,41 @@ workflow/research/<序号>-<命题简称>/
 
 ---
 
-## ⛔ 阶段间 Barrier（阶段二 → 阶段三）
+## ⛔ 阶段间 Barrier（阶段一 → 阶段二 → 阶段三）
 
-**阶段二必须全部完成，才能开始阶段三。**
+**阶段一（能力研究 + Briefing 组装）必须全部完成，才能开始阶段二；阶段二必须全部完成，才能开始阶段三。**
 
 原因：
+- 阶段二的 briefing 依赖阶段一步骤1产出的 summary.json
+- 如果阶段一步骤1未完成就开始组装 briefing，会缺少能力摘要
+- 如果阶段一（含 Briefing 组装）未完成就开始阶段二，组装 agent 会缺少素材
 - 阶段三（学习阶梯）依赖阶段二产出的完整命题文件（overview / edge-cases / trade-offs / experiment / references）
 - 如果阶段二未完成就开始生成阶梯，会缺少关键的内容来源
 
 ---
 
-## 阶段三：学习阶梯生成（单线程）
+## 阶段三：学习阶梯生成
 
 > 阶段二全部完成后执行此步骤。
-> **单线程，不需要 spawn，主 agent 直接生成。**
-> 每个命题产出一个 `learning-ladder.md`，面向学习者的渐进式引导内容。
+
+### 执行逻辑
+
+#### 并行化学习阶梯生成
+
+```
+对每个已组装的命题：
+  spawn 一个独立 agent
+  task = 学习阶梯生成模板（见 processes/learning-ladder.md）
+  输入：
+    - proposition（命题文本）
+    - capability_graph（能力依赖图）
+    - summaries（该命题涉及的能力摘要）
+    - proposition_files（该命题的产出文件）
+  输出：
+    - <序号>-<命题简称>/learning-ladder.md
+```
+
+
 
 ### 输入
 
@@ -629,7 +606,7 @@ workflow/research/<序号>-<命题简称>/
 <命题>/learning-ladder.md    ← 每个命题一个，唯一新增文件
 ```
 
-### 执行逻辑
+### 详细执行逻辑
 
 详见 [processes/learning-ladder.md](processes/learning-ladder.md)
 
@@ -648,7 +625,7 @@ workflow/research/<序号>-<命题简称>/
   → 缺失：调用 processes/capability-research.md 补充研究（双写）
 ```
 
-### Briefing 增量
+### 阶段一步骤2增量（Briefing 组装）
 
 ```
 检查 .meta/briefings/ 中已有的 briefing
@@ -666,9 +643,9 @@ workflow/research/<序号>-<命题简称>/
 ```
 1. 从 .meta/capability-graph.json 识别该命题依赖的原子能力
 2. 增量检查 capabilities/ + .meta/summaries/，缺失的用滑动窗口并行研究（双写）
-3. 从 summary.json 组装该命题的 briefing
-4. 组装该命题（滑动窗口按文件拆分，task 内联 briefing）
-5. 生成该命题的学习阶梯（单线程，主 agent 直接生成）
+3. 阶段一步骤2：从 summary.json 组装该命题的 briefing（可并行化）
+4. 阶段二：组装该命题（1个agent负责Markdown文件，1个agent负责experiment）
+5. 阶段三：生成该命题的学习阶梯（并行化）
 ```
 
 ---
@@ -713,15 +690,20 @@ workflow/research/<序号>-<命题简称>/
   "current_step": "capability-research",
   "status": "paused",
   "phase1": {
-    "total_capabilities": 16,
-    "completed": ["A1", "A2", "A3", "A4", "A5"],
-    "running": ["A6"],
-    "pending": ["A7", "A8", "A9", "W1", "W2", "VI1", "VI2", "VI3", "R1", "R2"],
-    "failed": []
+    "step1_capability_research": {
+      "total_capabilities": 16,
+      "completed": ["A1", "A2", "A3", "A4", "A5"],
+      "running": ["A6"],
+      "pending": ["A7", "A8", "A9", "W1", "W2", "VI1", "VI2", "VI3", "R1", "R2"],
+      "failed": []
+    },
+    "step2_briefing_assemble": {
+      "completed": false,
+      "briefings_completed": []
+    }
   },
   "phase2": {
     "total_propositions": 8,
-    "briefings_completed": [],
     "assembled": [],
     "pending": []
   },
@@ -759,12 +741,14 @@ workflow/research/<序号>-<命题简称>/
 3. 增量检查：
    - capabilities/ 中已有 → 跳过
    - .meta/summaries/ 中已有 → 跳过
+   - .meta/briefings/ 中已有 → 跳过
    - 命题目录中已有文件 → 跳过
 4. 从断点继续：
-   - 阶段一中断 → 从未完成的能力继续 spawn
+   - 阶段一步骤1中断 → 从未完成的能力继续 spawn
+   - 阶段一步骤2中断 → 重新执行 Briefing 组装
    - 阶段二中断 → 从未完成的命题继续组装
    - 阶段三中断 → 从未完成的学习阶梯继续生成
-5. 展示恢复摘要："从 [阶段X] 恢复，已完成 N/M，继续处理剩余..."
+5. 展示恢复摘要："从 [阶段X-步骤Y] 恢复，已完成 N/M，继续处理剩余..."
 ```
 
 ### 接管协议（Takeover Protocol）

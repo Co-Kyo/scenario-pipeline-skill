@@ -1,9 +1,10 @@
 # 后处理·阶段二：命题组装
 
+> ⚠️ **架构观测文档** — 不是 skill 执行配置
+> 执行真相：`references/post-process.md §阶段二`、`references/processes/assemble.md`
+
 > 触发：Briefing 组装全部完成后自动执行
-> 执行者：滑动窗口并行 spawn（每 agent 1 个命题的 1 个象限文件）
-> 编排文件：`references/post-process.md §阶段二`
-> 实现文件：`references/processes/assemble.md`
+> 执行者：滑动窗口并行 spawn（每 agent 1 个命题的 1 个象限文件，窗口大小默认4）
 
 ---
 
@@ -56,16 +57,30 @@
 
 ## 执行逻辑
 
+### 执行逻辑
+
 ```
-对每个待处理命题的每个象限文件：
-  spawn 一个独立 agent
-  task = assemble.md 模板
-  输入：
-    - proposition（命题文本）
-    - decomposition（分词结果）
-    - briefing（从 .meta/briefings/ 提取对应 section，内联到 task）
-    - target_file（overview / edge-cases / trade-offs / experiment / references）
-  输出：<序号>-<命题简称>/<target_file>.md
+对每个待处理命题：
+  spawn 两个独立 agent：
+    1. Markdown组装 agent
+       task = 命题组装模板
+       输入：
+         - proposition（命题文本）
+         - decomposition（分词结果）
+         - briefing（完整briefing，内联到task）
+       输出：
+         - <序号>-<命题简称>/overview.md
+         - <序号>-<命题简称>/edge-cases.md
+         - <序号>-<命题简称>/trade-offs.md
+         - <序号>-<命题简称>/references.md
+    2. 实验组装 agent
+       task = 实验组装模板
+       输入：
+         - proposition（命题文本）
+         - decomposition（分词结果）
+         - briefing（完整briefing，内联到task）
+       输出：
+         - <序号>-<命题简称>/experiment/
 ```
 
 ## 核心约束
@@ -107,12 +122,6 @@
 
 - **上游**：全部 briefing 生成后才能进入阶段二
 - **下游**：阶段二全部完成后才能进入阶段三（学习阶梯）
-
----
-
-## ⚠️ 主线程保全
-
-spawn 后按环境档案 `preserve_level` 执行保全行为（见 `99-shared.md §多线程主线程保全协议`）。
 
 ---
 

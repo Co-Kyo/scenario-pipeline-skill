@@ -61,7 +61,7 @@ evaluate → pool          Briefing 组装（单线程）
 > - [`pipeline/03-briefing-assemble.md`](pipeline/03-briefing-assemble.md) — 后处理·Briefing 组装
 > - [`pipeline/04-proposition-assembly.md`](pipeline/04-proposition-assembly.md) — 后处理·阶段二：命题组装
 > - [`pipeline/05-learning-ladder.md`](pipeline/05-learning-ladder.md) — 后处理·阶段三：学习阶梯
-> - [`pipeline/99-shared.md`](pipeline/99-shared.md) — 共享协议（调度、保全、故障恢复）
+> - [`pipeline/99-shared.md`](pipeline/99-shared.md) — 跨阶段共享参考（数据实体、插件关系、故障模式）
 
 ### 三层产物
 
@@ -124,16 +124,15 @@ scenario-pipeline-skill/
 │   ├── capability-research-mode.md     材料块格式 + 深度分级
 │   ├── source-registry.md             信源白名单 + 黑名单
 │   └── year-granularity.md             年限→颗粒度映射
-├── environment/
-│   └── probe-protocol.md              多 Agent 能力探测协议
 ├── references/                     ← 流程编排 + 步骤实现
 │   ├── pre-process.md                  前处理编排
 │   ├── post-process.md                 后处理编排
 │   └── processes/                      9 个可组合步骤
-└── pipeline/                       ← 管道设计文档（推荐阅读）
+└── pipeline/                       ← 架构观测文档（推荐阅读，非执行配置）
+    ├── README.md                       目录定位说明
     ├── 00-overview.md                  全局数据流 + 阶段索引
-    ├── 01 ~ 05                         各阶段：输入/输出/涉及文件/执行逻辑
-    └── 99-shared.md                    共享协议（调度/保全/故障恢复）
+    ├── 01 ~ 05                         各阶段：输入/输出/涉及文件
+    └── 99-shared.md                    跨阶段参考（数据实体/插件关系/故障模式）
 ```
 
 ---

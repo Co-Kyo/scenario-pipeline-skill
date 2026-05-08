@@ -1,8 +1,10 @@
 # 前处理：6 步串行管线
 
+> ⚠️ **架构观测文档** — 不是 skill 执行配置
+> 执行真相：`references/pre-process.md`
+
 > 触发：`扫描：<信息源描述>` / `deep scan：<信息源描述>`
 > 执行者：单 agent 顺序执行（不 spawn）
-> 编排文件：`references/pre-process.md`
 
 ---
 
