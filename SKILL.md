@@ -29,107 +29,68 @@ deep research：<场景描述>
 ## Architecture
 
 ```
-SKILL.md          ← 入口（本文件：触发方式 + 流程概览 + 导航）
-core/             ← 元能力（定义方法论，稳定不常变）
-plugins/          ← 增强插件（可热插拔的能力扩展）
+SKILL.md          ← 入口（触发方式 + 流程概览 + 导航）
+core/             ← 元能力（定义方法论）
+plugins/          ← 增强插件（能力扩展）
 references/       ← 流程控制
-  ├── pre-process.md    ← 前处理编排（纯胶水，调用 processes/）
-  ├── post-process.md   ← 后处理编排（三阶段管线 + 执行协议 + barrier）
-  └── processes/        ← 步骤实现（无序，可组合）
+  ├── pre-process.md    ← 前处理编排
+  ├── post-process.md   ← 后处理编排
+  └── processes/        ← 步骤实现
       ├── scan.md
       ├── decompose.md
-      ├── capability-extract.md   ← 输出 .meta/capability-graph.json
-      ├── highground-identify.md  ← 追加 JSON 的 highgrounds + learning_path
+      ├── capability-extract.md
+      ├── highground-identify.md
       ├── evaluate.md
-      ├── capability-research.md  ← 输出 capabilities/<id>-<name>.md
-      ├── briefing-assemble.md    ← 输出 .meta/briefings/<命题简称>.md
-      ├── assemble.md             ← 输出 <序号>-<命题简称>/
-      └── learning-ladder.md      ← 输出 <序号>-<命题简称>/learning-ladder.md
+      ├── capability-research.md
+      ├── briefing-assemble.md
+      ├── assemble.md
+      └── learning-ladder.md
 ```
 
 ### Core — 元能力
 
 定义"什么是 X"以及"如何评判 X"。
 
-- **Architecture Decomposition** — 架构分词：识别命题内部的通用工程层与框架特化层结构：[core/architecture-decomposition.md](core/architecture-decomposition.md)
-- **Capability Graph** — 原子能力图谱：从分词结果中提取原子能力，建立跨命题共享关系：[core/capability-graph.md](core/capability-graph.md)
-- **Strategic Highground** — 战略高地识别：基于扇出度和限定词耦合度识别制高点：[core/strategic-highground.md](core/strategic-highground.md)
-- **Scenario Framework** — 四维评估矩阵 + 四象限研究框架：[core/scenario-matrix.md](core/scenario-matrix.md)
+- **Architecture Decomposition** — 架构分词：[core/architecture-decomposition.md](core/architecture-decomposition.md)
+- **Capability Graph** — 原子能力图谱：[core/capability-graph.md](core/capability-graph.md)
+- **Strategic Highground** — 战略高地识别：[core/strategic-highground.md](core/strategic-highground.md)
+- **Scenario Framework** — 四维评估矩阵：[core/scenario-matrix.md](core/scenario-matrix.md)
 
 ### Plugins — 增强插件
 
 对 core 能力的增强/扩展/配置化。
 
-- **Year-Granularity** — 经验年限与命题颗粒度匹配规则（增强分词能力）：[plugins/year-granularity.md](plugins/year-granularity.md)
-- **Capability Research Mode** — 材料块标准格式 + 研究深度分级（增强能力研究）：[plugins/capability-research-mode.md](plugins/capability-research-mode.md)
-- **Source Registry** — 信源质量白名单 + 域名映射 + 反爬黑名单（增强信源获取）：[plugins/source-registry.md](plugins/source-registry.md)
+- **Year-Granularity** — 经验年限与命题颗粒度匹配：[plugins/year-granularity.md](plugins/year-granularity.md)
+- **Capability Research Mode** — 材料块标准格式 + 研究深度分级：[plugins/capability-research-mode.md](plugins/capability-research-mode.md)
+- **Source Registry** — 信源质量白名单 + 域名映射：[plugins/source-registry.md](plugins/source-registry.md)
 
 ### References — 流程控制
 
 编排文件定义步骤顺序，processes/ 定义步骤实现。
 
 - **Pre-process** — 前处理编排：[references/pre-process.md](references/pre-process.md)
-- **Post-process** — 后处理编排（三阶段管线 + 执行协议）：[references/post-process.md](references/post-process.md)
-- **Processes/** — 步骤实现（9 个可组合的独立模块）：
+- **Post-process** — 后处理编排：[references/post-process.md](references/post-process.md)
+- **Processes/** — 步骤实现：
   - [scan.md](references/processes/scan.md) — 广域扫描
   - [decompose.md](references/processes/decompose.md) — 架构分词
-  - [capability-extract.md](references/processes/capability-extract.md) — 原子能力提取 → 输出 `.meta/capability-graph.json`
-  - [highground-identify.md](references/processes/highground-identify.md) — 战略高地识别 → 追加 JSON
+  - [capability-extract.md](references/processes/capability-extract.md) — 原子能力提取
+  - [highground-identify.md](references/processes/highground-identify.md) — 战略高地识别
   - [evaluate.md](references/processes/evaluate.md) — 四维评估
-  - [capability-research.md](references/processes/capability-research.md) — 能力研究（双写：主文件 + summary.json）→ 输出 `capabilities/` + `.meta/summaries/`
-  - [briefing-assemble.md](references/processes/briefing-assemble.md) — Briefing 组装（从 summary.json 定向提取）→ 输出 `.meta/briefings/`
-  - [assemble.md](references/processes/assemble.md) — 材料块组装（接收 briefing，只写不读）→ 输出 `<序号>-<命题简称>/`
-  - [learning-ladder.md](references/processes/learning-ladder.md) — 学习阶梯生成（单线程，拓扑排序→渐进路径）→ 输出 `<序号>-<命题简称>/learning-ladder.md`
-
-## 上下文加载策略
-
-Agent 执行时必须按需加载文件，禁止全量注入。
-
-### 前处理上下文
-
-| 触发条件 | 必须加载 | 按需加载 |
-|---------|---------|---------|
-| 任意扫描指令 | 编排：pre-process.md + 涉及的 processes/*.md + core/*.md | — |
-| 指令含 `--year` | 同上 | plugins/year-granularity.md |
-| 指令含 `--digest` | core/architecture-decomposition.md + core/capability-graph.md + core/scenario-matrix.md | — |
-
-### 后处理上下文
-
-| 触发条件 | 必须加载 | 按需加载 |
-|---------|---------|---------|
-| 任意研究指令 | 编排：post-process.md + 涉及的 processes/*.md + core/*.md | — |
-| 能力研究阶段 | plugins/capability-research-mode.md + processes/capability-research.md | — |
-| Briefing 组装 | processes/briefing-assemble.md | — |
-| 命题组装阶段 | plugins/capability-research-mode.md + processes/assemble.md | — |
-| 指令含 `--year` | 同上 | plugins/year-granularity.md |
-| 指令含 `--no-experiment` | 同上 | 象限IV 相关可省略 |
-| 学习阶梯生成阶段 | processes/learning-ladder.md + capability-graph.json + summaries + 命题产出 | — |
-
-### 禁止事项
-
-## 中断与恢复
-
-管线支持用户随时中断和恢复，详见 [post-process.md](references/post-process.md) §中断恢复协议。
-
-**触发中断**：用户输入"暂停"/"停"/"立即停止"
-**恢复管线**：用户输入"继续"/"恢复"
-**接管产出**：用户输入"停，我要修改 <文件>"，修改后说"继续"
-
-中断后自动持久化管线状态到 `.meta/pipeline-state.json`，恢复时从断点增量继续。
-
-- 不同时加载 pre-process.md 和 post-process.md（前后处理互斥）
-- 不加载未命中按需条件的 plugins 文件
+  - [capability-research.md](references/processes/capability-research.md) — 能力研究
+  - [briefing-assemble.md](references/processes/briefing-assemble.md) — Briefing 组装
+  - [assemble.md](references/processes/assemble.md) — 材料块组装
+  - [learning-ladder.md](references/processes/learning-ladder.md) — 学习阶梯生成
 
 ## Pre-processing Flow
 
 1. **Scan** — 调用 [processes/scan.md](references/processes/scan.md)
-2. **ⓒ 检查点 A** — 展示扫描摘要（信源数/素材数/Tier 分布），用户确认后继续
+2. **ⓒ 检查点 A** — 扫描摘要确认
 3. **Decompose** — 调用 [processes/decompose.md](references/processes/decompose.md)
-4. **Capability Extract** — 调用 [processes/capability-extract.md](references/processes/capability-extract.md) → 输出 `.meta/capability-graph.json`
-5. **Highground Identify** — 调用 [processes/highground-identify.md](references/processes/highground-identify.md) → 追加 JSON 的 `highgrounds` + `learning_path`
+4. **Capability Extract** — 调用 [processes/capability-extract.md](references/processes/capability-extract.md)
+5. **Highground Identify** — 调用 [processes/highground-identify.md](references/processes/highground-identify.md)
 6. **Evaluate** — 调用 [processes/evaluate.md](references/processes/evaluate.md)
-7. **ⓒ 检查点 B** — 展示评估结果（命题评分表/战略高地/入池统计），用户确认后入池
-8. **Pool** — 写入 `workflow/research/README.md`（总览导航）+ `.meta/candidates.md`（原始记录）
+7. **ⓒ 检查点 B** — 评估结果确认
+8. **Pool** — 写入候选池
 
 ## Post-processing Flow
 
@@ -137,30 +98,20 @@ Agent 执行时必须按需加载文件，禁止全量注入。
 > 每个阶段产物节点有检查点（ⓔⓓⓕⓖ）主动暂停，等待用户审查确认后才放行。
 
 **阶段一：能力研究（并行）**
-- 读取 `.meta/capability-graph.json`，识别需要研究的原子能力
-- 对每个缺失材料块的能力，并行调用 [processes/capability-research.md](references/processes/capability-research.md)
-- 每个 agent 双写：主文件 `capabilities/<id>-<name>.md` + 结构化摘要 `.meta/summaries/<id>-<name>.json`
-- **⛔ 全部完成后 → ⓔ 检查点 E（能力研究审查）**
+- 并行调用 [processes/capability-research.md](references/processes/capability-research.md)
+- **⛔ ⓔ 检查点 E（能力研究审查）**
 
 **中间步骤：Briefing 组装**
 - 调用 [processes/briefing-assemble.md](references/processes/briefing-assemble.md)
-- 读取 `.meta/summaries/` 下的摘要，按命题+文件类型定向提取，组装为 briefing
-- 保存到 `.meta/briefings/<命题简称>.md`
-- **⛔ 全部完成后 → ⓓ 检查点 D（Briefing 预审）**
+- **⛔ ⓓ 检查点 D（Briefing 预审）**
 
 **阶段二：命题组装（并行）**
-- 将 briefing 内联到 agent task，对每个待处理命题并行调用 [processes/assemble.md](references/processes/assemble.md)
-- 组装 agent **只写不读**，不读取 `capabilities/` 下的任何文件
-- 产出：按命题组织的深度研究 `<序号>-<命题简称>/`
-- **⛔ 全部完成后 → ⓕ 检查点 F（命题组装审查）**
+- 并行调用 [processes/assemble.md](references/processes/assemble.md)
+- **⛔ ⓕ 检查点 F（命题组装审查）**
 
 **阶段三：学习阶梯生成（单线程）**
-- 对每个已组装的命题，主 agent 直接生成 `learning-ladder.md`
-- 基于 capability-graph.json 的能力依赖图做拓扑排序，确定学习顺序
-- 将依赖层次归纳为 3-4 个理解阶段，每步给出具体的"做什么→看到什么→说明什么→去哪"
-- 引用 pipeline 内产出（overview/experiment/trade-offs/summaries），不重写内容
-- 产出：`<序号>-<命题简称>/learning-ladder.md`
-- **⛔ 全部完成后 → ⓖ 检查点 G（全局收尾确认）**
+- 生成 `learning-ladder.md`
+- **⛔ ⓖ 检查点 G（全局收尾确认）**
 
 ## Output Structure
 
