@@ -67,7 +67,7 @@
    b. 从 §三「能力 → 技术域自动映射规则」确定该能力的技术域
    c. 从 §二「技术域 → T1 域名映射」获取 T1 域名列表
    d. 对每个 T1 域名：
-      - mimo_web_search "<能力名称> site:<域名>"
+      - web_search "<能力名称> site:<域名>"
       - web_fetch 第一个结果
       - 验证：HTTP 200？内容 > 200 字？与能力相关？
       - 通过 → 使用该内容，跳出搜索
@@ -374,8 +374,8 @@ spawn 能力研究 agent 时，task 按以下模板构造：
    提取：工程实践、踩坑经验、性能数据
 
 3. 如果 URL 失败或内容不足：
-   - mimo_web_search "<能力名称> performance best practices"
-   - mimo_web_search "<能力名称> pitfalls optimization"
+   - web_search "<能力名称> performance best practices"
+   - web_search "<能力名称> pitfalls optimization"
 
 ## 产出
 

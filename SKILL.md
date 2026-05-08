@@ -69,10 +69,10 @@ references/       ← 流程控制
 
 跨平台多 Agent 能力探测与动态适配。
 
-- **Probe Protocol** — 两阶段探测（C0 元探测 → C1-C7 能力探测）+ 自然语言诱导实验 + 动态适配：[environment/probe-protocol.md](environment/probe-protocol.md)
+- **Probe Protocol** — 三层优先级探测（P1 agentTeam → P2 自定义 agent → P3 内置 agent）+ C1-C7 能力探测 + 自然语言诱导实验 + 动态适配：[environment/probe-protocol.md](environment/probe-protocol.md)
 
-> 后处理启动时加载 probe-protocol，先测 C0（能否自建子 agent），
-> 再用诱导实验探测 C1-C7，按能力指标选择执行策略。
+> 后处理启动时加载 probe-protocol，按 P1→P2→P3 优先级探测最优执行模式，
+> 再用诱导实验探测 C1-C7 能力维度，按能力指标选择执行策略。
 
 ### References — 流程控制
 

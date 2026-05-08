@@ -221,7 +221,7 @@ blacklist:
 
 1. 从 source_domain_map 获取该技术域的 T1 域名列表
 2. 对每个 T1 域名：
-   a. mimo_web_search "<能力名称> site:<域名>"
+   a. web_search "<能力名称> site:<域名>"
    b. 取第一个结果
    c. web_fetch 验证：HTTP 200？内容 > 200 字？与能力相关？
    d. 通过 → 记录 URL + title，标记 verified: true
@@ -230,7 +230,7 @@ blacklist:
    a. 获取 T2 域名列表
    b. 重复上述流程
 4. T2 也无结果：
-   a. mimo_web_search "<能力名称> official documentation"
+   a. web_search "<能力名称> official documentation"
    b. 从结果中选取最权威来源
    c. 标记 t1_missing: true
 ```

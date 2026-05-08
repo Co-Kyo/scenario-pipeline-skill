@@ -17,12 +17,12 @@
 | Tier | 来源 | 可信度 | 用途 |
 |------|------|--------|------|
 | T1 | W3C/WHATWG 规范、Chromium 官方博客、框架官方文档 | 1.0 | 事实来源 |
-| T2 | 大厂技术博客（Cloudflare/Vercel/字节/美团/阿里）、InfoQ | 0.8 | 补充验证 |
+| T2 | 大厂技术博客（Cloudflare/Vercel/字节/美团/阿里）、InfoQ | 0.7 | 补充验证 |
 | T3 | 掘金、SegmentFault、知乎、StackOverflow、V2EX、牛客 | 0.3 | 热点风向标 |
 
 ### Step 2：内容爬取
 
-- 使用 `web_fetch` 或 `mimo_web_search` 获取信源内容
+- 使用 `web_fetch` 或 `web_search` 获取信源内容
 - 每个信源提取：标题、URL、摘要、发布日期
 - 标注来源 Tier
 
