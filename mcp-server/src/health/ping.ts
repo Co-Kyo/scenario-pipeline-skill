@@ -1,8 +1,8 @@
-import { BaseTool, ToolDefinition } from "./base.js";
+import { BaseTool, ToolDefinition } from "../core/base-tool.js";
 
 export class PingTool extends BaseTool {
   readonly name = "ping";
-  readonly description = "Check if MCP server is running";
+  readonly description = "Health check tool";
 
   getInputSchema(): ToolDefinition["inputSchema"] {
     return {
@@ -11,7 +11,7 @@ export class PingTool extends BaseTool {
     };
   }
 
-  async execute(_args: Record<string, any>): Promise<any> {
+  async execute(args: Record<string, any>): Promise<any> {
     return {
       status: "ok",
       version: "1.0.0",

@@ -1,12 +1,13 @@
 # Scenario Pipeline MCP Server
 
-MCP server for scenario-pipeline skill, providing state management and template management tools.
+MCP server for scenario-pipeline skill, providing state management, template management, and source management tools.
 
 ## 功能
 
-- **状态管理**：保存和恢复管线状态
-- **模板管理**：获取 agent 任务模板
-- **信源管理**：获取信源白名单
+- **状态管理**：保存和恢复管线状态（`save_state` / `restore_state`）
+- **模板管理**：获取 agent 任务模板（`get_template`）
+- **信源管理**：获取信源白名单（`get_sources`）
+- **健康检查**：MCP 服务器连接验证（`ping`）
 
 ## 安装
 
@@ -60,28 +61,16 @@ node dist/index.js
 
 ## 工具列表
 
-### ping
+### 状态管理域 (state)
 
-健康检查工具。
-
-**参数**：无
-
-**返回**：
-```json
-{
-  "status": "ok",
-  "version": "1.0.0",
-  "timestamp": "2026-05-10T09:30:00.000Z"
-}
-```
-
-### save_state
+#### save_state
 
 保存管线状态到 `.meta/pipeline-state.json`。
 
 **参数**：
 - `checkpoint` (string, 必需)：检查点标识，如 `"pre-process-done"`, `"ⓔ"`, `"ⓓ"`, `"ⓕ"`, `"ⓖ"`
 - `context` (object, 必需)：当前阶段的进度数据
+- `workDir` (string, 可选)：工作目录路径
 
 **示例**：
 ```json
@@ -98,11 +87,12 @@ node dist/index.js
 }
 ```
 
-### restore_state
+#### restore_state
 
 从 `.meta/pipeline-state.json` 恢复管线状态。
 
-**参数**：无
+**参数**：
+- `workDir` (string, 可选)：工作目录路径
 
 **返回**：
 ```json
@@ -118,7 +108,9 @@ node dist/index.js
 }
 ```
 
-### get_template
+### 模板管理域 (template)
+
+#### get_template
 
 获取 agent 任务模板。
 
@@ -144,13 +136,16 @@ node dist/index.js
 }
 ```
 
-### get_sources
+### 信源管理域 (source)
+
+#### get_sources
 
 获取信源白名单（数据已内嵌到 MCP 服务器）。
 
 **参数**：
 - `capability_name` (string, 可选)：按能力名称查询相关技术域和 T1/T2 域名
 - `tech_domain` (string, 可选)：按技术域查询该域的所有 T1/T2 域名
+- `include_blacklist` (boolean, 可选)：是否包含黑名单，默认 true
 
 **返回**：
 ```json
@@ -167,6 +162,23 @@ node dist/index.js
 }
 ```
 
+### 健康检查 (health)
+
+#### ping
+
+健康检查工具。
+
+**参数**：无
+
+**返回**：
+```json
+{
+  "status": "ok",
+  "version": "1.0.0",
+  "timestamp": "2026-05-10T09:30:00.000Z"
+}
+```
+
 ## 开发
 
 ### 项目结构
@@ -176,26 +188,35 @@ mcp-server/
 ├── package.json
 ├── tsconfig.json
 ├── src/
-│   ├── index.ts           # 入口文件
-│   ├── tools/
-│   │   ├── base.ts        # 工具基类
-│   │   ├── ping.ts        # 健康检查
-│   │   ├── save-state.ts  # 状态保存
-│   │   ├── restore-state.ts # 状态恢复
-│   │   ├── get-template.ts # 模板获取
-│   │   ├── get-sources.ts # 信源获取
-│   │   └── source-data.ts # 信源数据
-│   └── utils/
-│       └── file-io.ts     # 文件读写工具
-└── dist/                  # 构建产物
+│   ├── index.ts                    # 入口文件（注册所有工具）
+│   ├── domains/                    # 业务领域模块
+│   │   ├── state/                  # 状态管理域
+│   │   │   ├── index.ts
+│   │   │   ├── save-state.ts
+│   │   │   └── restore-state.ts
+│   │   ├── template/               # 模板管理域
+│   │   │   ├── index.ts
+│   │   │   └── get-template.ts
+│   │   └── source/                 # 信源管理域
+│   │       ├── index.ts
+│   │       ├── get-sources.ts
+│   │       ├── registry.ts
+│   │       └── types.ts
+│   ├── core/                       # 核心基础设施
+│   │   └── base-tool.ts            # 工具基类
+│   └── health/                     # 健康检查
+│       └── ping.ts
+└── dist/                           # 构建产物
 ```
 
 ### 添加新工具
 
-1. 在 `src/tools/` 目录下创建新文件
-2. 继承 `BaseTool` 基类
-3. 实现 `name`, `description`, `getInputSchema()`, `execute()` 方法
-4. 在 `src/index.ts` 中注册新工具
+1. 确定工具所属的业务域（state/template/source/health）
+2. 在对应域目录下创建新文件
+3. 继承 `BaseTool` 基类
+4. 实现 `name`, `description`, `getInputSchema()`, `execute()` 方法
+5. 在域的 `index.ts` 中导出
+6. 在 `src/index.ts` 中注册
 
 ### 调试
 

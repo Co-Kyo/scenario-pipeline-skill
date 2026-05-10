@@ -1,5 +1,48 @@
-import { BaseTool, ToolDefinition } from "./base.js";
-import { sourceRegistry, getTechDomainsForCapability, getT1Domains, getT2Domains } from "./source-data.js";
+import { BaseTool, ToolDefinition } from "../../core/base-tool.js";
+import { sourceRegistry } from "./registry.js";
+import { SourceDomain } from "./types.js";
+
+/**
+ * 根据能力名称或关键词获取相关技术域
+ */
+export function getTechDomainsForCapability(capabilityName: string): string[] {
+  const domains = new Set<string>();
+  
+  // 直接匹配
+  if (sourceRegistry.capability_to_tech_domain[capabilityName]) {
+    sourceRegistry.capability_to_tech_domain[capabilityName].forEach(d => domains.add(d));
+  }
+  
+  // 关键词匹配
+  for (const [keyword, techDomains] of Object.entries(sourceRegistry.capability_to_tech_domain)) {
+    if (capabilityName.includes(keyword)) {
+      techDomains.forEach(d => domains.add(d));
+    }
+  }
+  
+  return Array.from(domains);
+}
+
+/**
+ * 获取指定技术域的 T1 域名列表
+ */
+export function getT1Domains(techDomain: string): SourceDomain[] {
+  return sourceRegistry.source_domain_map[techDomain]?.t1 || [];
+}
+
+/**
+ * 获取指定技术域的 T2 域名列表
+ */
+export function getT2Domains(techDomain: string): SourceDomain[] {
+  return sourceRegistry.source_domain_map[techDomain]?.t2 || [];
+}
+
+/**
+ * 检查域名是否在黑名单中
+ */
+export function isBlacklisted(domain: string): boolean {
+  return sourceRegistry.blacklist.some(entry => entry.domain === domain);
+}
 
 export class GetSourcesTool extends BaseTool {
   readonly name = "get_sources";

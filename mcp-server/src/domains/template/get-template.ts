@@ -1,4 +1,4 @@
-import { BaseTool, ToolDefinition } from "./base.js";
+import { BaseTool, ToolDefinition } from "../../core/base-tool.js";
 
 export class GetTemplateTool extends BaseTool {
   readonly name = "get_template";

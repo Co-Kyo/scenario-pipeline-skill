@@ -1,31 +1,9 @@
 /**
- * 信源数据 - 从 source-registry.md 提取的结构化数据
+ * 信源注册表 - 从 source-registry.md 提取的结构化数据
  * 集成在 MCP 服务器内部，避免从外部文件读取
  */
 
-export interface SourceDomain {
-  domain: string;
-  name: string;
-  search_hint: string;
-}
-
-export interface TechDomain {
-  description: string;
-  t1: SourceDomain[];
-  t2: SourceDomain[];
-}
-
-export interface BlacklistEntry {
-  domain: string;
-  reason: string;
-  added: string;
-}
-
-export interface SourceRegistry {
-  source_domain_map: Record<string, TechDomain>;
-  blacklist: BlacklistEntry[];
-  capability_to_tech_domain: Record<string, string[]>;
-}
+import { SourceRegistry } from "./types.js";
 
 export const sourceRegistry: SourceRegistry = {
   source_domain_map: {
@@ -231,45 +209,3 @@ export const sourceRegistry: SourceRegistry = {
     "版本验证": ["toolchain_releases"]
   }
 };
-
-/**
- * 根据能力名称或关键词获取相关技术域
- */
-export function getTechDomainsForCapability(capabilityName: string): string[] {
-  const domains = new Set<string>();
-  
-  // 直接匹配
-  if (sourceRegistry.capability_to_tech_domain[capabilityName]) {
-    sourceRegistry.capability_to_tech_domain[capabilityName].forEach(d => domains.add(d));
-  }
-  
-  // 关键词匹配
-  for (const [keyword, techDomains] of Object.entries(sourceRegistry.capability_to_tech_domain)) {
-    if (capabilityName.includes(keyword)) {
-      techDomains.forEach(d => domains.add(d));
-    }
-  }
-  
-  return Array.from(domains);
-}
-
-/**
- * 获取指定技术域的 T1 域名列表
- */
-export function getT1Domains(techDomain: string): SourceDomain[] {
-  return sourceRegistry.source_domain_map[techDomain]?.t1 || [];
-}
-
-/**
- * 获取指定技术域的 T2 域名列表
- */
-export function getT2Domains(techDomain: string): SourceDomain[] {
-  return sourceRegistry.source_domain_map[techDomain]?.t2 || [];
-}
-
-/**
- * 检查域名是否在黑名单中
- */
-export function isBlacklisted(domain: string): boolean {
-  return sourceRegistry.blacklist.some(entry => entry.domain === domain);
-}

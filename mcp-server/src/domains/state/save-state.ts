@@ -1,4 +1,4 @@
-import { BaseTool, ToolDefinition } from "./base.js";
+import { BaseTool, ToolDefinition } from "../../core/base-tool.js";
 import * as fs from "fs/promises";
 import * as path from "path";
 

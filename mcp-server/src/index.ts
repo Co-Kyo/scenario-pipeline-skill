@@ -6,11 +6,12 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
-import { SaveStateTool } from "./tools/save-state.js";
-import { RestoreStateTool } from "./tools/restore-state.js";
-import { GetTemplateTool } from "./tools/get-template.js";
-import { GetSourcesTool } from "./tools/get-sources.js";
-import { PingTool } from "./tools/ping.js";
+
+// 按业务域导入工具
+import { SaveStateTool, RestoreStateTool } from "./domains/state/index.js";
+import { GetTemplateTool } from "./domains/template/index.js";
+import { GetSourcesTool } from "./domains/source/index.js";
+import { PingTool } from "./health/ping.js";
 
 const server = new Server(
   {
@@ -24,12 +25,19 @@ const server = new Server(
   }
 );
 
-// 注册工具
+// 注册所有工具（按业务域分组）
 const tools = [
+  // 状态管理域
   new SaveStateTool(),
   new RestoreStateTool(),
+  
+  // 模板管理域
   new GetTemplateTool(),
+  
+  // 信源管理域
   new GetSourcesTool(),
+  
+  // 健康检查
   new PingTool(),
 ];
 
