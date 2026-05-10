@@ -393,12 +393,58 @@ spawn 能力研究 agent 时，task 按以下模板构造：
 ### 文件 2：结构化摘要
 请同时保存一份 JSON 摘要到：`workflow/research/.meta/summaries/[id]-[name].json`
 
-摘要需从主文件中提取以下字段（JSON 格式）：
-- mechanism_summary：1-3 句核心机制摘要（≤200 字）
-- bottlenecks：每项保留 name + category + priority + trigger + symptom + 版本相关字段（version_sensitive/affected_tool/affected_versions/fixed_version/fixed_source）
-- tradeoffs：每项保留 dimension + option_a + option_b + suggestion
-- experiment_code：deep 模式提取核心代码，非 deep 填 null
-- references：提取 tier + url + title
+摘要 JSON 必须严格遵循以下 Schema（字段名、层级、类型均不可变）：
+
+```json
+{
+  "id": "A1",
+  "name": "浏览器渲染管线",
+  "tech_layer": "浏览器层",
+  "fanout": {
+    "count": 6,
+    "total": 7,
+    "ratio": "6/7",
+    "level": "核心"
+  },
+  "coupling": 1,
+  "strategic_value": 5.0,
+  "mechanism_summary": "...",
+  "bottlenecks": [
+    {
+      "name": "...",
+      "category": "...",
+      "priority": "P0",
+      "trigger": "...",
+      "symptom": "...",
+      "version_sensitive": "none | strong | weak",
+      "affected_tool": null,
+      "affected_versions": null,
+      "fixed_version": null,
+      "fixed_source": null
+    }
+  ],
+  "tradeoffs": [
+    {
+      "dimension": "...",
+      "option_a": "...",
+      "option_b": "...",
+      "suggestion": "..."
+    }
+  ],
+  "experiment_code": null,
+  "references": [
+    {"tier": "T1", "url": "...", "title": "..."}
+  ]
+}
+```
+
+字段说明：
+- `fanout`：必须与 capability-graph.json 中的格式一致，为对象 `{count, total, ratio, level}`，不可简化为字符串
+- `mechanism_summary`：1-3 句核心机制摘要（≤200 字）
+- `bottlenecks`：每项必须包含 name/category/priority/trigger/symptom/version_sensitive/affected_tool/affected_versions/fixed_version/fixed_source，无值时填 null 或空字符串，不可省略字段
+- `tradeoffs`：每项必须包含 dimension/option_a/option_b/suggestion
+- `experiment_code`：deep 模式提取核心代码，非 deep 填 null
+- `references`：每项必须包含 tier/url/title
 
 约束：
 - 中文撰写，技术术语保留英文
