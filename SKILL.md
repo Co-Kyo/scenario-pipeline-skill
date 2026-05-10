@@ -45,6 +45,9 @@ references/       ← 流程控制
       ├── briefing-assemble.md
       ├── assemble.md
       └── learning-ladder.md
+mcp-server/       ← MCP 服务器（git submodule）
+  ├── src/tools/        ← 工具实现
+  └── dist/             ← 构建产物
 ```
 
 ### Core — 元能力
@@ -164,3 +167,75 @@ workflow/research/
 | 命题研究 | `<序号>-<命题简称>/` | 面试场景的深度答案 | 面试前针对特定命题速查 |
 | 能力知识库 | `capabilities/` | 跨命题的原子能力参考 | 系统性学习某个技术点 |
 | 学习路径 | `capabilities/README.md` | 战略性修炼地图 | 规划学习优先级 |
+
+---
+
+## MCP 依赖
+
+本 skill 依赖 MCP 服务器提供状态管理和模板管理功能。
+
+### 安装
+
+**方式 1：使用安装脚本（推荐）**
+
+```bash
+# 克隆仓库（含 submodule）
+git clone --recurse-submodules https://github.com/Co-Kyo/scenario-pipeline-skill.git
+
+# 运行安装脚本
+cd scenario-pipeline-skill
+chmod +x install.sh  # Linux/Mac
+./install.sh          # Linux/Mac
+# 或
+install.bat           # Windows
+```
+
+**方式 2：手动安装**
+
+```bash
+# 克隆仓库（含 submodule）
+git clone --recurse-submodules https://github.com/Co-Kyo/scenario-pipeline-skill.git
+
+# 构建 MCP 服务器
+cd scenario-pipeline-skill/mcp-server
+npm install
+npm run build
+```
+
+### 配置 OpenClaw
+
+编辑 `~/.openclaw/openclaw.json`，添加：
+
+```json
+{
+  "tools": {
+    "mcp": [
+      {
+        "type": "stdio",
+        "command": "node",
+        "args": ["/path/to/scenario-pipeline-skill/mcp-server/dist/index.js"]
+      }
+    ]
+  }
+}
+```
+
+### 验证安装
+
+重启 OpenClaw Gateway 后，在对话中输入 `ping` 测试连接。
+
+### MCP 工具列表
+
+| 工具 | 说明 |
+|------|------|
+| `ping` | 健康检查 |
+| `save_state` | 保存管线状态 |
+| `restore_state` | 恢复管线状态 |
+| `get_template` | 获取 agent 任务模板 |
+| `get_sources` | 获取信源白名单 |
+
+### 启动检查
+
+skill 启动时会自动检查 MCP 服务器状态：
+- 如果未运行 → 提示用户安装
+- 如果已运行 → 直接使用
