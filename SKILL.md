@@ -45,7 +45,7 @@ references/       ← 流程控制
       ├── briefing-assemble.md
       ├── assemble.md
       └── learning-ladder.md
-mcp-server/       ← MCP 服务器（git submodule）
+mcp-server/       ← MCP 服务器（状态管理 + 模板管理 + 信源管理）
   ├── src/tools/        ← 工具实现
   └── dist/             ← 构建产物
 ```
@@ -187,7 +187,7 @@ cd scenario-pipeline-skill
 chmod +x install.sh  # Linux/Mac
 ./install.sh          # Linux/Mac
 # 或
-install.bat           # Windows
+.\install.bat         # Windows (PowerShell)
 ```
 
 **方式 2：手动安装**

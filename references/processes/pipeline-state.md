@@ -5,6 +5,23 @@
 
 ---
 
+## MCP 集成
+
+**状态管理已迁移到 MCP 服务器**。主 agent 通过调用 MCP 工具实现状态持久化，而不是自己实现文件读写逻辑。
+
+**MCP 工具**：
+- `save_state`：保存管线状态
+- `restore_state`：恢复管线状态
+
+**优势**：
+- 降低主线程上下文压力
+- 稳定控制管道特性
+- 可独立测试
+
+**配置**：在 `~/.openclaw/openclaw.json` 中添加 MCP 服务器配置（见 `mcp-server/README.md`）。
+
+---
+
 ## 存储路径
 
 ```
@@ -15,11 +32,11 @@
 
 ## 操作
 
-### save(checkpoint, context)
+### save_state(checkpoint, context)
 
 **调用时机**：每个检查点（ⓒⓔⓓⓕⓖ）前、阶段内 agent 完成后
 
-**行为**：读取现有状态文件（如有）→ 合并更新 → 写入
+**MCP 工具**：`save_state`
 
 **参数**：
 
@@ -28,52 +45,51 @@
 | `checkpoint` | string | 当前检查点标识，如 `pre-process-done`、`ⓔ`、`ⓓ`、`ⓕ`、`ⓖ` |
 | `context` | object | 当前阶段的进度数据，结构因阶段而异（见下方 schema） |
 
-**调用伪代码**：
+**调用示例**：
 
-```
-// 检查点调用示例
-save("ⓔ", {
-  "capability-research": {
-    "total": 20,
-    "completed": ["A1", "A6", "A8"],
-    "failed": ["A19"],
-    "retried": {"A19": 1}
+```json
+{
+  "checkpoint": "ⓔ",
+  "context": {
+    "capability-research": {
+      "total": 20,
+      "completed": ["A1", "A6", "A8"],
+      "failed": ["A19"],
+      "retried": {"A19": 1}
+    }
   }
-})
-
-// agent 完成后增量调用示例
-save("agent-done", {
-  "stage": "capability-research",
-  "agent_id": "A1",
-  "status": "completed"
-})
+}
 ```
 
 ---
 
-### restore()
+### restore_state()
 
 **调用时机**：用户触发"继续"/"恢复"指令时
 
-**行为**：读取 `.meta/pipeline-state.json` → 返回恢复指令
+**MCP 工具**：`restore_state`
+
+**参数**：无
 
 **返回值**：
 
 ```json
 {
+  "status": "running",
   "resume_from": "阶段一步骤1",
   "current_stage": "capability-research",
   "completed_items": ["A1", "A6", "A8"],
-  "pending_items": ["A2", "A3", "A7", "A9", "A10", "..."],
+  "pending_items": ["A2", "A3", "A7"],
   "failed_items": ["A19"],
-  "interrupt_type": "checkpoint"
+  "interrupt_type": "checkpoint",
+  "last_update": "2026-05-10T09:30:00.000Z"
 }
 ```
 
 **调用伪代码**：
 
 ```
-state = restore()
+state = restore_state()
 if state.status == "completed":
   告知用户"已完成，无需恢复"
 elif state.status == "interrupted":

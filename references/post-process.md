@@ -98,10 +98,9 @@ deep research：<场景描述>
    └── README.md / .meta/candidates.md → 获取待处理命题列表 + 分词结果
 
    ┌─ 状态初始化 ─────────────────────────────────────────────────┐
-   │ 调用 processes/pipeline-state.md save()，初始化管线状态：      │
-   │   - status: "running"                                         │
-   │   - 当前时间写入 started_at                                    │
-   │   - 各 stage 初始化为 "pending"                                │
+   │ 调用 MCP 工具 save_state，初始化管线状态：                      │
+   │   - checkpoint: "init"                                        │
+   │   - context: { status: "running", stages: {...} }             │
    └───────────────────────────────────────────────────────────────┘
 
 2. 【阶段一步骤1】能力研究
@@ -113,12 +112,14 @@ deep research：<场景描述>
    └── ⛔ 全部完成后才能进入 ⓔ 检查点
 
    ┌─ 状态持久化 ─────────────────────────────────────────────────┐
-   │ 调用 processes/pipeline-state.md save("ⓔ", {                  │
-   │   "capability-research": {                                    │
-   │     "total": N, "completed": [...], "failed": [...],          │
-   │     "retried": {...}                                          │
-   │   }                                                           │
-   │ })                                                            │
+   │ 调用 MCP 工具 save_state：                                    │
+   │   - checkpoint: "ⓔ"                                          │
+   │   - context: {                                                │
+   │       "capability-research": {                                │
+   │         "total": N, "completed": [...], "failed": [...],      │
+   │         "retried": {...}                                      │
+   │       }                                                       │
+   │     }                                                         │
    └───────────────────────────────────────────────────────────────┘
 
    ┌─ ⓔ 检查点 E：能力研究审查 ──────────────────────────────────┐
@@ -151,12 +152,14 @@ deep research：<场景描述>
    └── ⛔ 全部 briefing 生成后才能进入 ⓓ 检查点
 
    ┌─ 状态持久化 ─────────────────────────────────────────────────┐
-   │ 调用 processes/pipeline-state.md save("ⓓ", {                  │
-   │   "briefing-assemble": {                                      │
-   │     "status": "completed",                                    │
-   │     "completed": [...已生成的命题列表...]                      │
-   │   }                                                           │
-   │ })                                                            │
+   │ 调用 MCP 工具 save_state：                                    │
+   │   - checkpoint: "ⓓ"                                          │
+   │   - context: {                                                │
+   │       "briefing-assemble": {                                  │
+   │         "status": "completed",                                │
+   │         "completed": [...已生成的命题列表...]                  │
+   │       }                                                       │
+   │     }                                                         │
    └───────────────────────────────────────────────────────────────┘
 
    ┌─ ⓓ 检查点 D：Briefing 预审（阶段一完成）───────────────────┐
@@ -186,13 +189,15 @@ deep research：<场景描述>
    └── agent 只写文件，不读任何能力文件
 
    ┌─ 状态持久化 ─────────────────────────────────────────────────┐
-   │ 调用 processes/pipeline-state.md save("ⓕ", {                  │
-   │   "assembly": {                                               │
-   │     "status": "completed",                                    │
-   │     "completed": [...已完成的命题列表...],                     │
-   │     "failed": [...失败的命题列表...]                           │
-   │   }                                                           │
-   │ })                                                            │
+   │ 调用 MCP 工具 save_state：                                    │
+   │   - checkpoint: "ⓕ"                                          │
+   │   - context: {                                                │
+   │       "assembly": {                                           │
+   │         "status": "completed",                                │
+   │         "completed": [...已完成的命题列表...],                 │
+   │         "failed": [...失败的命题列表...]                       │
+   │       }                                                       │
+   │     }                                                         │
    └───────────────────────────────────────────────────────────────┘
 
    ┌─ ⓕ 检查点 F：命题组装审查 ──────────────────────────────────┐
@@ -228,14 +233,15 @@ deep research：<场景描述>
    └── ⛔ 全部学习阶梯生成后才能进入 ⓖ 检查点
 
    ┌─ 状态持久化 ─────────────────────────────────────────────────┐
-   │ 调用 processes/pipeline-state.md save("ⓖ", {                  │
-   │   "learning-ladder": {                                        │
-   │     "status": "completed",                                    │
-   │     "completed": [...已完成的命题列表...]                      │
-   │   }                                                           │
-   │ })                                                            │
-   │                                                               │
-   │ 同时更新 status: "completed"                                  │
+   │ 调用 MCP 工具 save_state：                                    │
+   │   - checkpoint: "ⓖ"                                          │
+   │   - context: {                                                │
+   │       "learning-ladder": {                                    │
+   │         "status": "completed",                                │
+   │         "completed": [...已完成的命题列表...]                  │
+   │       },                                                      │
+   │       "status": "completed"                                   │
+   │     }                                                         │
    └───────────────────────────────────────────────────────────────┘
 
    ┌─ ⓖ 检查点 G：全局收尾确认 ──────────────────────────────────┐
@@ -420,11 +426,21 @@ deep research：<场景描述>
 ```
 对每个需要研究的原子能力：
   spawn 一个独立 agent
-  task = Agent 执行指令模板（见 processes/capability-research.md）
+  task = 简化任务指令（见下方）
   输入：capability_id + capability_name + capability_desc + t1_urls + t2_urls + depth
   输出：
     - capabilities/<id>-<name>.md（主文件）
     - .meta/summaries/<id>-<name>.json（结构化摘要）
+```
+
+#### 简化任务指令（主 agent 发送给子 agent）
+
+```
+你是 [能力名称] 的深度研究员。研究原子能力 "[能力名称]"（ID: [id]），产出两个文件：能力知识库主文件和结构化摘要 JSON。
+
+信源：T1 官方文档 [URL 列表]；T2 技术博客 [URL 列表]。
+
+调用 get_template MCP 工具获取完整研究模板，参数：template_type="capability-research", capability_id="[id]", capability_name="[能力名称]", urls=[T1 + T2 URL 列表]。
 ```
 
 ### 加载条件
@@ -492,13 +508,23 @@ capabilities/                      ← 能力知识库（人类阅读）
 ```
 对每个待处理命题：
   spawn 一个独立 agent
-  task = Briefing组装模板（见 processes/briefing-assemble.md）
+  task = 简化任务指令（见下方）
   输入：
     - proposition（命题文本）
     - capability_ids（该命题涉及的能力ID列表）
     - summary_files（这些能力的summary.json内容）
   输出：
     - .meta/briefings/<命题简称>.md
+```
+
+#### 简化任务指令（主 agent 发送给子 agent）
+
+```
+你是 [命题名称] 的 Briefing 组装专家。为命题 "[命题名称]" 组装 Briefing 文档。
+
+输入：命题文本 [proposition]；能力ID列表 [capability_ids]；能力摘要 [summary_files 内容]。
+
+调用 get_template MCP 工具获取完整组装模板，参数：template_type="briefing-assemble", proposition="[命题文本]", capability_ids="[capability_ids]", summary_files="[summary_files 内容]"。
 ```
 
 ### 加载条件
@@ -522,24 +548,44 @@ capabilities/                      ← 能力知识库（人类阅读）
 对每个待处理命题：
   spawn 两个独立 agent：
     1. Markdown组装 agent
-       task = 命题组装模板（见 processes/assemble.md）
+       task = 简化任务指令（见下方）
        输入：
          - proposition（命题文本）
          - decomposition（分词结果）
-         - briefing（完整briefing，内联到task）
+         - briefing（完整briefing）
        输出：
          - workflow/research/<序号>-<命题简称>/overview.md
          - workflow/research/<序号>-<命题简称>/edge-cases.md
          - workflow/research/<序号>-<命题简称>/trade-offs.md
          - workflow/research/<序号>-<命题简称>/references.md
     2. 实验组装 agent
-       task = 实验组装模板（见 processes/assemble.md）
+       task = 简化任务指令（见下方）
        输入：
          - proposition（命题文本）
          - decomposition（分词结果）
-         - briefing（完整briefing，内联到task）
+         - briefing（完整briefing）
        输出：
          - workflow/research/<序号>-<命题简称>/experiment/
+```
+
+#### 简化任务指令 - Markdown组装 agent
+
+```
+你是 [命题名称] 的 Markdown 组装专家。为命题 "[命题名称]" 组装 Markdown 文件（overview、edge-cases、trade-offs、references）。
+
+输入：命题文本 [proposition]；分词结果 [decomposition]；Briefing 内容 [briefing 内容]。
+
+调用 get_template MCP 工具获取完整组装模板，参数：template_type="assemble", proposition="[命题文本]", decomposition="[分词结果]", briefing="[briefing 内容]", file_type="markdown"。
+```
+
+#### 简化任务指令 - 实验组装 agent
+
+```
+你是 [命题名称] 的实验组装专家。为命题 "[命题名称]" 组装实验目录（experiment）。
+
+输入：命题文本 [proposition]；分词结果 [decomposition]；Briefing 内容 [briefing 内容]。
+
+调用 get_template MCP 工具获取完整组装模板，参数：template_type="assemble", proposition="[命题文本]", decomposition="[分词结果]", briefing="[briefing 内容]", file_type="experiment"。
 ```
 
 ### 加载条件
@@ -626,7 +672,7 @@ workflow/research/<序号>-<命题简称>/
 ```
 对每个已组装的命题：
   spawn 一个独立 agent
-  task = 学习阶梯生成模板（见 processes/learning-ladder.md）
+  task = 简化任务指令（见下方）
   输入：
     - proposition（命题文本）
     - capability_graph（能力依赖图）
@@ -634,6 +680,16 @@ workflow/research/<序号>-<命题简称>/
     - proposition_files（该命题的产出文件）
   输出：
     - <序号>-<命题简称>/learning-ladder.md
+```
+
+#### 简化任务指令（主 agent 发送给子 agent）
+
+```
+你是 [命题名称] 的学习阶梯生成专家。为命题 "[命题名称]" 生成学习阶梯文档。
+
+输入：命题文本 [proposition]；能力依赖图 [capability_graph]；能力摘要 [summaries]；命题产出文件 [proposition_files]。
+
+调用 get_template MCP 工具获取完整生成模板，参数：template_type="learning-ladder", proposition="[命题文本]", capability_graph="[capability_graph]", summaries="[summaries]", proposition_files="[proposition_files]"。
 ```
 
 
@@ -782,9 +838,8 @@ workflow/research/<序号>-<命题简称>/
 用户说"继续"/"恢复"时：
 
 ```
-1. 调用 processes/pipeline-state.md 的 restore() 操作
-   - 读取 .meta/pipeline-state.json
-   - 返回恢复指令：resume_from, completed_items, pending_items, failed_items, interrupt_type
+1. 调用 MCP 工具 restore_state
+   - 返回恢复指令：resume_from, current_stage, completed_items, pending_items, failed_items, interrupt_type
 2. 确认当前阶段和进度
 3. 增量检查：
    - capabilities/ 中已有 → 跳过
