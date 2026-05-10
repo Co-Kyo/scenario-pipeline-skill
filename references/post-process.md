@@ -97,6 +97,13 @@ deep research：<场景描述>
    ├── .meta/capability-graph.json → 获取原子能力列表 + 依赖关系 + 战略高地
    └── README.md / .meta/candidates.md → 获取待处理命题列表 + 分词结果
 
+   ┌─ 状态初始化 ─────────────────────────────────────────────────┐
+   │ 调用 processes/pipeline-state.md save()，初始化管线状态：      │
+   │   - status: "running"                                         │
+   │   - 当前时间写入 started_at                                    │
+   │   - 各 stage 初始化为 "pending"                                │
+   └───────────────────────────────────────────────────────────────┘
+
 2. 【阶段一步骤1】能力研究
    ├── 筛选：覆盖待处理命题的能力（或扇出度 ≥ 30% 的能力）
    ├── 增量检查：capabilities/ 中已有 → 跳过，缺失 → 研究
@@ -104,6 +111,15 @@ deep research：<场景描述>
    ├── 按滑动窗口并行 spawn（每 agent 1 个能力文件）← 具体API见运行时适配层插件
    ├── 每个 agent 双写：主文件 + summary.json
    └── ⛔ 全部完成后才能进入 ⓔ 检查点
+
+   ┌─ 状态持久化 ─────────────────────────────────────────────────┐
+   │ 调用 processes/pipeline-state.md save("ⓔ", {                  │
+   │   "capability-research": {                                    │
+   │     "total": N, "completed": [...], "failed": [...],          │
+   │     "retried": {...}                                          │
+   │   }                                                           │
+   │ })                                                            │
+   └───────────────────────────────────────────────────────────────┘
 
    ┌─ ⓔ 检查点 E：能力研究审查 ──────────────────────────────────┐
    │ 展示内容：                                                   │
@@ -134,6 +150,15 @@ deep research：<场景描述>
    │   └── 生成完整 briefing，保存到 .meta/briefings/<命题简称>.md
    └── ⛔ 全部 briefing 生成后才能进入 ⓓ 检查点
 
+   ┌─ 状态持久化 ─────────────────────────────────────────────────┐
+   │ 调用 processes/pipeline-state.md save("ⓓ", {                  │
+   │   "briefing-assemble": {                                      │
+   │     "status": "completed",                                    │
+   │     "completed": [...已生成的命题列表...]                      │
+   │   }                                                           │
+   │ })                                                            │
+   └───────────────────────────────────────────────────────────────┘
+
    ┌─ ⓓ 检查点 D：Briefing 预审（阶段一完成）───────────────────┐
    │ 展示内容：                                                     │
    │   - 生成的 briefing 文件列表                                    │
@@ -159,6 +184,16 @@ deep research：<场景描述>
    │   ├── 实验组装 agent：负责 experiment 目录（独立处理，避免高上下文压力下写代码）
    │   └── 每个 agent 的 task 中内联完整 briefing
    └── agent 只写文件，不读任何能力文件
+
+   ┌─ 状态持久化 ─────────────────────────────────────────────────┐
+   │ 调用 processes/pipeline-state.md save("ⓕ", {                  │
+   │   "assembly": {                                               │
+   │     "status": "completed",                                    │
+   │     "completed": [...已完成的命题列表...],                     │
+   │     "failed": [...失败的命题列表...]                           │
+   │   }                                                           │
+   │ })                                                            │
+   └───────────────────────────────────────────────────────────────┘
 
    ┌─ ⓕ 检查点 F：命题组装审查 ──────────────────────────────────┐
    │ 展示内容：                                                     │
@@ -191,6 +226,17 @@ deep research：<场景描述>
    │   │   └── 生成 learning-ladder.md
    │   └── ⛔ 全部学习阶梯生成后才能进入 ⓖ 检查点
    └── ⛔ 全部学习阶梯生成后才能进入 ⓖ 检查点
+
+   ┌─ 状态持久化 ─────────────────────────────────────────────────┐
+   │ 调用 processes/pipeline-state.md save("ⓖ", {                  │
+   │   "learning-ladder": {                                        │
+   │     "status": "completed",                                    │
+   │     "completed": [...已完成的命题列表...]                      │
+   │   }                                                           │
+   │ })                                                            │
+   │                                                               │
+   │ 同时更新 status: "completed"                                  │
+   └───────────────────────────────────────────────────────────────┘
 
    ┌─ ⓖ 检查点 G：全局收尾确认 ──────────────────────────────────┐
    │ 展示内容：                                                     │
@@ -736,7 +782,9 @@ workflow/research/<序号>-<命题简称>/
 用户说"继续"/"恢复"时：
 
 ```
-1. 读取 .meta/pipeline-state.json
+1. 调用 processes/pipeline-state.md 的 restore() 操作
+   - 读取 .meta/pipeline-state.json
+   - 返回恢复指令：resume_from, completed_items, pending_items, failed_items, interrupt_type
 2. 确认当前阶段和进度
 3. 增量检查：
    - capabilities/ 中已有 → 跳过
