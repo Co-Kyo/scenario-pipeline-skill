@@ -5,6 +5,14 @@
 
 ---
 
+> **MCP 调用约定**：所有 `save_state`/`restore_state` 调用必须通过 `mcporter call` 执行，并传入 `workDir` 参数指向产出目录：
+> ```bash
+> mcporter call scenario-pipeline.save_state checkpoint="<checkpoint>" context='<context>' --args '{"workDir":"<产出目录>"}'
+> mcporter call scenario-pipeline.restore_state --args '{"workDir":"<产出目录>"}'
+> mcporter call scenario-pipeline.get_template template_type="<type>" params='<params>'
+> ```
+> `get_template` 无需 `workDir`（模板内嵌在 MCP server 中）。
+
 ## 触发方式
 
 ```
@@ -440,7 +448,7 @@ deep research：<场景描述>
 
 信源：T1 官方文档 [URL 列表]；T2 技术博客 [URL 列表]。
 
-调用 get_template MCP 工具获取完整研究模板，参数：template_type="capability-research", capability_id="[id]", capability_name="[能力名称]", urls=[T1 + T2 URL 列表]。
+调用 `mcporter call scenario-pipeline.get_template template_type="capability-research" params='{"capability_id":"[id]","capability_name":"[能力名称]","urls":[T1+T2 URL列表]}'` 获取完整研究模板。
 ```
 
 ### 加载条件
@@ -524,7 +532,7 @@ capabilities/                      ← 能力知识库（人类阅读）
 
 输入：命题文本 [proposition]；能力ID列表 [capability_ids]；能力摘要 [summary_files 内容]。
 
-调用 get_template MCP 工具获取完整组装模板，参数：template_type="briefing-assemble", proposition="[命题文本]", capability_ids="[capability_ids]", summary_files="[summary_files 内容]"。
+调用 `mcporter call scenario-pipeline.get_template template_type="briefing-assemble" params='{"proposition":"[命题文本]","capability_ids":"[capability_ids]","summary_files":"[summary_files 内容]"}'` 获取完整组装模板。
 ```
 
 ### 加载条件
@@ -575,7 +583,7 @@ capabilities/                      ← 能力知识库（人类阅读）
 
 输入：命题文本 [proposition]；分词结果 [decomposition]；Briefing 内容 [briefing 内容]。
 
-调用 get_template MCP 工具获取完整组装模板，参数：template_type="assemble", proposition="[命题文本]", decomposition="[分词结果]", briefing="[briefing 内容]", file_type="markdown"。
+调用 `mcporter call scenario-pipeline.get_template template_type="assemble" params='{"proposition":"[命题文本]","decomposition":"[分词结果]","briefing":"[briefing 内容]","file_type":"markdown"}'` 获取完整组装模板。
 ```
 
 #### 简化任务指令 - 实验组装 agent
@@ -585,7 +593,7 @@ capabilities/                      ← 能力知识库（人类阅读）
 
 输入：命题文本 [proposition]；分词结果 [decomposition]；Briefing 内容 [briefing 内容]。
 
-调用 get_template MCP 工具获取完整组装模板，参数：template_type="assemble", proposition="[命题文本]", decomposition="[分词结果]", briefing="[briefing 内容]", file_type="experiment"。
+调用 `mcporter call scenario-pipeline.get_template template_type="assemble" params='{"proposition":"[命题文本]","decomposition":"[分词结果]","briefing":"[briefing 内容]","file_type":"experiment"}'` 获取完整组装模板。
 ```
 
 ### 加载条件
@@ -689,7 +697,7 @@ workflow/research/<序号>-<命题简称>/
 
 输入：命题文本 [proposition]；能力依赖图 [capability_graph]；能力摘要 [summaries]；命题产出文件 [proposition_files]。
 
-调用 get_template MCP 工具获取完整生成模板，参数：template_type="learning-ladder", proposition="[命题文本]", capability_graph="[capability_graph]", summaries="[summaries]", proposition_files="[proposition_files]"。
+调用 `mcporter call scenario-pipeline.get_template template_type="learning-ladder" params='{"proposition":"[命题文本]","capability_graph":"[capability_graph]","summaries":"[summaries]","proposition_files":"[proposition_files]"}'` 获取完整生成模板。
 ```
 
 
@@ -838,7 +846,7 @@ workflow/research/<序号>-<命题简称>/
 用户说"继续"/"恢复"时：
 
 ```
-1. 调用 MCP 工具 restore_state
+1. 调用 `mcporter call scenario-pipeline.restore_state --args '{"workDir":"<产出目录>"}'`
    - 返回恢复指令：resume_from, current_stage, completed_items, pending_items, failed_items, interrupt_type
 2. 确认当前阶段和进度
 3. 增量检查：

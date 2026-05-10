@@ -18,21 +18,48 @@
 - 稳定控制管道特性
 - 可独立测试
 
-**配置**：在 `~/.openclaw/openclaw.json` 中添加 MCP 服务器配置（见 `mcp-server/README.md`）。
+**配置**：通过 mcporter 注册 MCP server（见 `mcp-server/README.md`）。
+
+---
+
+## 调用约定
+
+所有 MCP 工具通过 `mcporter call` 调用，支持动态 `workDir` 参数指定产出目录：
+
+```bash
+mcporter call scenario-pipeline.<tool> [params] --args '{"workDir":"<产出目录>"}'
+```
+
+**参数优先级**：`workDir` 参数 > `WORK_DIR` 环境变量 > `process.cwd()`
+
+**典型调用**：
+```bash
+# 写状态到产出目录
+mcporter call scenario-pipeline.save_state checkpoint="ⓔ" context='{}' --args '{"workDir":"<产出目录>"}'
+
+# 从产出目录恢复状态
+mcporter call scenario-pipeline.restore_state --args '{"workDir":"<产出目录>"}'
+
+# 从 skill 目录读信源配置
+mcporter call scenario-pipeline.get_sources --args '{"skillDir":"<skill目录>"}'
+```
+
+> ⚠️ `workDir` 必须指向管线产出目录（即 `workflow/research/`），而非 skill 目录。
+> `skillDir` 必须指向 skill 根目录（含 `plugins/` 子目录）。
 
 ---
 
 ## 存储路径
 
 ```
-.meta/pipeline-state.json
+<workDir>/.meta/pipeline-state.json
 ```
 
 ---
 
 ## 操作
 
-### save_state(checkpoint, context)
+### save_state(checkpoint, context, workDir?)
 
 **调用时机**：每个检查点（ⓒⓔⓓⓕⓖ）前、阶段内 agent 完成后
 
@@ -40,36 +67,31 @@
 
 **参数**：
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `checkpoint` | string | 当前检查点标识，如 `pre-process-done`、`ⓔ`、`ⓓ`、`ⓕ`、`ⓖ` |
-| `context` | object | 当前阶段的进度数据，结构因阶段而异（见下方 schema） |
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `checkpoint` | string | ✅ | 当前检查点标识，如 `pre-process-done`、`ⓔ`、`ⓓ`、`ⓕ`、`ⓖ` |
+| `context` | object | ✅ | 当前阶段的进度数据，结构因阶段而异（见下方 schema） |
+| `workDir` | string | ❌ | 产出目录，默认读 `WORK_DIR` 环境变量 |
 
 **调用示例**：
 
-```json
-{
-  "checkpoint": "ⓔ",
-  "context": {
-    "capability-research": {
-      "total": 20,
-      "completed": ["A1", "A6", "A8"],
-      "failed": ["A19"],
-      "retried": {"A19": 1}
-    }
-  }
-}
+```bash
+mcporter call scenario-pipeline.save_state checkpoint="ⓔ" context='{"capability-research":{"total":20,"completed":["A1","A6","A8"],"failed":["A19"],"retried":{"A19":1}}}' --args '{"workDir":"<产出目录>"}'
 ```
 
 ---
 
-### restore_state()
+### restore_state(workDir?)
 
 **调用时机**：用户触发"继续"/"恢复"指令时
 
 **MCP 工具**：`restore_state`
 
-**参数**：无
+**参数**：
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `workDir` | string | ❌ | 产出目录，默认读 `WORK_DIR` 环境变量 |
 
 **返回值**：
 
@@ -89,7 +111,7 @@
 **调用伪代码**：
 
 ```
-state = restore_state()
+state = restore_state(workDir=<产出目录>)
 if state.status == "completed":
   告知用户"已完成，无需恢复"
 elif state.status == "interrupted":

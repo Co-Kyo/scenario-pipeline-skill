@@ -9,7 +9,7 @@
 
 ## 加载条件
 
-- **必须加载**：plugins/source-registry.md（信源域名白名单 + 黑名单 + 搜索策略）
+- **必须调用**：MCP `get_sources` 工具（获取信源域名白名单 + 黑名单 + 搜索策略）
 
 ## 执行步骤
 
@@ -63,11 +63,11 @@
 
 #### 6.1 确定技术域
 
-根据 plugins/source-registry.md 的 §三「能力 → 技术域自动映射规则」，为每个能力匹配技术域。
+调用 MCP `get_sources` 工具（参数：capability_name="[能力名称]"）获取该能力匹配的技术域和 T1/T2 域名列表。
 
 #### 6.2 按白名单查找
 
-严格按 plugins/source-registry.md 的 §二「技术域 → T1 域名映射」和 §五「搜索策略模板」执行：
+使用 MCP `get_sources` 返回的 T1/T2 域名列表，按以下流程执行：
 
 ```
 1. 从 source_domain_map 获取该技术域的 T1 域名列表
@@ -88,7 +88,7 @@
 
 #### 6.3 黑名单检查
 
-搜索结果 URL 必须与 plugins/source-registry.md 的 §四「反爬黑名单」比对：
+调用 MCP `get_sources` 工具获取黑名单数据，搜索结果 URL 必须与黑名单比对：
 - 命中黑名单的 URL 直接跳过，不写入 JSON
 
 #### 6.4 写入格式
@@ -121,7 +121,7 @@
 ```
 
 **字段说明：**
-- `source_domain`：该能力匹配的技术域（来自 plugins/source-registry.md）
+- `source_domain`：该能力匹配的技术域（来自 MCP `get_sources` 工具）
 - `references.t1`：T1 官方来源列表
   - **每个条目都必须经过 web_fetch + 内容相关性验证**
   - verified: true 表示"已爬取、已验证内容相关"，而非"URL 能访问"
@@ -154,7 +154,7 @@
 | 2 | `meta` | 顶层 | `{scan_date, target_years, total_propositions, scan_scope}` | 从当前会话上下文（扫描时的指令参数和结果）提取日期、年限、命题数、范围后直接填入 |
 | 3 | `dependencies` | 每个 capability 内 | 数组，可为空 `[]` | 从当前上下文的分词结果和已提取能力集推导：基础能力（不依赖其他能力）填 `[]`，下游能力从同层分词结果中找到先决能力，引用对应 ID |
 | 4 | `tags` | 每个 capability 内 | 数组，≥1 个标签 | 根据该能力的名称和技术域，自动推断标签（如 "浏览器渲染管线" → `["渲染", "浏览器", "CRP"]`） |
-| 5 | `source_domain` | 每个 capability 内 | 字符串，来自 source-registry 技术域 | 从 plugins/source-registry.md 的 §三「能力→技术域映射」匹配该能力的技术域名称 |
+| 5 | `source_domain` | 每个 capability 内 | 字符串，来自 MCP get_sources 技术域 | 调用 MCP `get_sources` 工具（参数：capability_name="[能力名称]"）获取该能力的技术域名称 |
 | 6 | `covers` | 每个 capability 内 | 数组，引用命题 ID（如 `["P1", "P2"]`） | 从当前上下文中该能力所属的命题列表直接引用 |
 | 7 | `fanout` | 每个 capability 内 | **对象** `{count, total, ratio, level}` | 当前已有数字的统计覆盖命题数 → 构造对象；**禁止保留纯数字格式** |
 | 8 | `references` | 每个 capability 内 | **对象** `{t1: [], t2: [], t1_missing}` | 当前已有 URL → 按 T1/T2 归入对象；**禁止保留纯 URL 字符串** |
@@ -251,7 +251,7 @@
 | 异常场景 | 触发条件 | 处理动作 |
 |---------|---------|---------|
 | 信源预查找全部超时 | 单个能力的 T1+T2 域名 web_fetch 均超时 | 标记 `t1_missing: true` + `t2_missing: true`，后处理 agent 用 Fallback 搜索补充 |
-| source-registry.md 缺失 | 文件不存在或格式损坏 | 使用内置默认域名列表（MDN + Chrome DevTools + web.dev），标记 `registry_fallback: true` |
+| MCP get_sources 调用失败 | MCP 服务器未连接或返回错误 | 使用内置默认域名列表（MDN + Chrome DevTools + web.dev），标记 `registry_fallback: true` |
 | 分词结果为空 | decompositions 列表为空 | 输出空 capability-graph.json + 告知用户"无有效命题，请检查扫描结果" |
 | 能力数量过多 | 提取 > 30 个原子能力 | 提示用户"能力数量过多（{n}），建议用 --filter 缩小范围"，继续执行但标记 `overload: true` |
 | JSON 写入失败 | .meta/ 目录不可写 | 自动创建目录 → 仍失败则输出到 stdout，由用户手动保存 |
@@ -262,10 +262,9 @@
 
 - 需要先执行 processes/decompose.md（提供分词结果）
 - 需要先执行 processes/scan.md（提供 raw_materials 中的 URL）
-- **必须加载 plugins/source-registry.md**（信源白名单）
+- **必须调用 MCP `get_sources` 工具**（获取信源白名单）
 
 ## 参考
 
 - core/capability-graph.md（原子能力图谱方法论）
 - core/architecture-decomposition.md（分词方法论）
-- plugins/source-registry.md（信源域名配置）

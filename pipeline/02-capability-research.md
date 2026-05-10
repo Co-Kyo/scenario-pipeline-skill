@@ -32,7 +32,7 @@
 | `references/post-process.md` | 编排 |
 | `references/processes/capability-research.md` | agent 执行指令模板 |
 | `plugins/capability-research-mode.md` | 必须：材料块格式规范 |
-| `plugins/source-registry.md` | 必须：信源白名单（fallback 搜索） |
+| MCP `get_sources` 工具 | 必须：信源白名单（fallback 搜索） |
 | `core/capability-graph.md` | 能力定义参考 |
 
 ### 产物文件（读取）
@@ -72,7 +72,7 @@
 ```
 ① JSON 中 verified=true 的 T1 → 直接 web_fetch
 ② JSON 中 verified=true 的 T2 → 补充 web_fetch
-③ t1_missing=true → fallback 到 source-registry 白名单搜索
+③ t1_missing=true → fallback 到 MCP get_sources 白名单搜索
 ④ 搜索无结果 → 标记信源不足，不编造
 ```
 

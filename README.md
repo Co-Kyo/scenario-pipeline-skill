@@ -122,7 +122,7 @@ scenario-pipeline-skill/
 │   └── scenario-matrix.md             四维评估 + 四象限框架
 ├── plugins/                        ← 可热插拔的增强插件
 │   ├── capability-research-mode.md     材料块格式 + 深度分级
-│   ├── source-registry.md             信源白名单 + 黑名单
+│   ├── source-registry.md             信源白名单 + 黑名单（已集成到 MCP get_sources）
 │   └── year-granularity.md             年限→颗粒度映射
 ├── references/                     ← 流程编排 + 步骤实现
 │   ├── pre-process.md                  前处理编排

@@ -65,7 +65,7 @@ mcp-server/       ← MCP 服务器（状态管理 + 模板管理 + 信源管理
 
 - **Year-Granularity** — 经验年限与命题颗粒度匹配：[plugins/year-granularity.md](plugins/year-granularity.md)
 - **Capability Research Mode** — 材料块标准格式 + 研究深度分级：[plugins/capability-research-mode.md](plugins/capability-research-mode.md)
-- **Source Registry** — 信源质量白名单 + 域名映射：[plugins/source-registry.md](plugins/source-registry.md)
+- **Source Registry** — 信源质量白名单 + 域名映射（已集成到 MCP `get_sources` 工具）
 
 ### References — 流程控制
 
@@ -224,15 +224,45 @@ npm run build
 
 重启 OpenClaw Gateway 后，在对话中输入 `ping` 测试连接。
 
+### MCP 调用约定
+
+所有 MCP 工具通过 `mcporter call` 调用：
+
+```bash
+mcporter call scenario-pipeline.<tool> [params] --args '{"workDir":"<产出目录>"}'
+```
+
+**参数说明**：
+- `workDir`：管线产出目录（`save_state`/`restore_state` 必须传入，确保状态文件与产出同目录）
+- `get_template`/`get_sources`/`ping`：无需额外目录参数
+
+**典型用法**：
+```bash
+# 写状态
+mcporter call scenario-pipeline.save_state checkpoint="ⓔ" context='{"capability-research":{"total":10,"completed":["A1"]}}' --args '{"workDir":"workflow/research"}'
+
+# 恢复状态
+mcporter call scenario-pipeline.restore_state --args '{"workDir":"workflow/research"}'
+
+# 获取模板
+mcporter call scenario-pipeline.get_template template_type="capability-research" params='{"capability_name":"渲染管线","capability_id":"A1","urls":["https://developer.mozilla.org"]}'
+
+# 读信源配置（按能力名称查询）
+mcporter call scenario-pipeline.get_sources params='{"capability_name":"浏览器渲染管线"}'
+
+# 读信源配置（按技术域查询）
+mcporter call scenario-pipeline.get_sources params='{"tech_domain":"browser_api"}'
+```
+
 ### MCP 工具列表
 
 | 工具 | 说明 |
 |------|------|
-| `ping` | 健康检查 |
-| `save_state` | 保存管线状态 |
-| `restore_state` | 恢复管线状态 |
-| `get_template` | 获取 agent 任务模板 |
-| `get_sources` | 获取信源白名单 |
+| `ping` | 健康检查 | — |
+| `save_state` | 保存管线状态 | `workDir`（产出目录） |
+| `restore_state` | 恢复管线状态 | `workDir`（产出目录） |
+| `get_template` | 获取 agent 任务模板 | —（模板内嵌） |
+| `get_sources` | 获取信源白名单 | —（数据内嵌，支持按 capability_name 或 tech_domain 查询） |
 
 ### 启动检查
 

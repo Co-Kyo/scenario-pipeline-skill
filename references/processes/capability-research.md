@@ -16,7 +16,7 @@
 
 ## 加载条件
 
-- **必须加载**：plugins/source-registry.md（信源白名单，用于 fallback 搜索）
+- **必须调用**：MCP `get_sources` 工具（获取信源域名白名单，用于 fallback 搜索）
 
 ## 执行步骤
 
@@ -38,9 +38,9 @@
 
 优先级 ③：JSON 中 t1_missing=true，或 T1/T2 URL 全部 web_fetch 失败
   → 进入 Fallback 搜索流程（见下方）
-  → 加载 plugins/source-registry.md 获取域名白名单
+  → 调用 MCP `get_sources` 工具获取域名白名单（参数：capability_name="[能力名称]"）
   → 按白名单逐个域名搜索 + 验证
-  → 禁止 CSDN 等低质源（参见 source-registry 黑名单）
+  → 禁止 CSDN 等低质源（参见 MCP 黑名单数据）
 
 优先级 ④：Fallback 搜索也无结果
   → 标记该能力信源不足
@@ -63,10 +63,8 @@
    c. → 进入 Step 2
 
 3. 如果 references.t1 为空 或 所有 t1 URL 的 web_fetch 均失败：
-   a. 加载 plugins/source-registry.md
-   b. 从 §三「能力 → 技术域自动映射规则」确定该能力的技术域
-   c. 从 §二「技术域 → T1 域名映射」获取 T1 域名列表
-   d. 对每个 T1 域名：
+   a. 调用 MCP `get_sources` 工具（参数：capability_name="[能力名称]"）获取该能力的技术域和 T1 域名列表
+   b. 对每个 T1 域名：
       - web_search "<能力名称> site:<域名>"
       - web_fetch 第一个结果
       - 验证：HTTP 200？内容 > 200 字？与能力相关？
@@ -131,7 +129,7 @@
 
 ```
 1. 识别该瓶颈涉及的工具链/运行环境（如 Chrome、Vite、Node.js）
-2. 加载 plugins/source-registry.md，从 toolchain_releases 技术域获取版本更新文档的 T1 域名
+2. 调用 MCP `get_sources` 工具（参数：tech_domain="toolchain_releases"）获取版本更新文档的 T1 域名
 3. 查找官方版本更新文档：
    - Chrome: chromestatus.com（Chrome Platform Status）、developer.chrome.com/blog
    - Vite: vitejs.dev/blog、GitHub Releases
@@ -351,7 +349,7 @@
 
 ## 执行步骤
 
-1. 调用 `get_template` MCP 工具获取完整研究模板，参数：template_type="capability-research", capability_id="[id]", capability_name="[能力名称]", urls=[T1 + T2 URL 列表]
+1. 调用 `mcporter call scenario-pipeline.get_template template_type="capability-research" params='{"capability_id":"[id]","capability_name":"[能力名称]","urls":[T1+T2 URL列表]}'` 获取完整研究模板
 2. 按模板执行研究任务
 3. 将产出保存到指定位置
 

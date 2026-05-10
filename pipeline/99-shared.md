@@ -35,9 +35,9 @@ plugins/capability-research-mode.md
   ├── 被 capability-research.md 必须加载（材料块格式）
   └── 被 assemble.md 必须加载（组装格式+实验模板）
 
-plugins/source-registry.md
-  ├── 被 capability-extract.md 必须加载（信源URL预查找）
-  └── 被 capability-research.md 必须加载（fallback搜索）
+MCP `get_sources` 工具
+  ├── 被 capability-extract.md 必须调用（信源URL预查找）
+  └── 被 capability-research.md 必须调用（fallback搜索）
 ```
 
 ---

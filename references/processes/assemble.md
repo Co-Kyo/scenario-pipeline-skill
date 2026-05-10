@@ -162,7 +162,7 @@ briefing 结构如下（已内联到 agent 的 task 中）：
 
 ## 执行步骤
 
-1. 调用 `get_template` MCP 工具获取完整组装模板，参数：template_type="assemble", proposition="[命题文本]", decomposition="[分词结果]", briefing="[briefing 内容]", file_type="[target_file]"
+1. 调用 `mcporter call scenario-pipeline.get_template template_type="assemble" params='{"proposition":"[命题文本]","decomposition":"[分词结果]","briefing":"[briefing 内容]","file_type":"[target_file]"}'` 获取完整组装模板
 2. 按模板执行组装任务
 3. 将产出保存到指定位置
 
