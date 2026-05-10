@@ -122,12 +122,19 @@ scenario-pipeline-skill/
 │   └── scenario-matrix.md             四维评估 + 四象限框架
 ├── plugins/                        ← 可热插拔的增强插件
 │   ├── capability-research-mode.md     材料块格式 + 深度分级
-│   ├── source-registry.md             信源白名单 + 黑名单（已集成到 MCP get_sources）
 │   └── year-granularity.md             年限→颗粒度映射
 ├── references/                     ← 流程编排 + 步骤实现
 │   ├── pre-process.md                  前处理编排
 │   ├── post-process.md                 后处理编排
 │   └── processes/                      9 个可组合步骤
+├── mcp-server/                     ← MCP 服务器（状态 + 模板 + 信源管理）
+│   └── src/
+│       ├── domains/                  按业务域组织
+│       │   ├── state/                状态管理（save_state / restore_state）
+│       │   ├── template/             模板管理（get_template）
+│       │   └── source/               信源管理（get_sources）
+│       ├── core/                     基础设施（BaseTool 基类）
+│       └── health/                   健康检查（ping）
 └── pipeline/                       ← 架构观测文档（推荐阅读，非执行配置）
     ├── README.md                       目录定位说明
     ├── 00-overview.md                  全局数据流 + 阶段索引
@@ -186,6 +193,20 @@ scenario-pipeline-skill/
 - ✅ 从零散文章中提取可复用的技术知识库
 - ❌ 不适合直接作为生产环境的技术方案参考
 - ❌ 不适合对准确性要求极高的学术场景
+
+---
+
+## MCP 加速层
+
+MCP 服务器是对 skill 特定工作域的加速解决方案，不涉及管道定义（管道定义在 `references/` 中）。提供三类能力：
+
+| 域 | 工具 | 作用 |
+|----|------|------|
+| **状态持久化** | `save_state` / `restore_state` | 跨会话中断恢复，支持检查点机制 |
+| **子 agent 上下文** | `get_template` | 子 agent 直接获取任务模板，减少主 agent 上下文压力 |
+| **信源管理** | `get_sources` | 统一管理信源白名单/黑名单，避免硬编码 |
+
+> 详见 [`mcp-server/README.md`](mcp-server/README.md)。
 
 ---
 

@@ -6,6 +6,9 @@
 > 触发：`扫描：<信息源描述>` / `deep scan：<信息源描述>`
 > 执行者：单 agent 顺序执行（不 spawn）
 
+> ⛔ **禁止在 pipeline 观测文档中添加 MCP 相关内容。**
+> MCP 是实现层加速方案，不属于管道定义。MCP 相关内容请参见 [`mcp-server/`](../mcp-server/)。
+
 ---
 
 ## 输入
