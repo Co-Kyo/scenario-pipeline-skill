@@ -180,9 +180,9 @@ spawn 组装 agent 时，task 按以下模板构造：
 [briefing 完整内容，由 summary.json 预提取]
 
 ## 产出
-写入文件：workflow/research/[序号]-[命题简称]/[target_file].md
+请将组装结果保存为：`workflow/research/[序号]-[命题简称]/[target_file].md`
 
-格式要求：
+内容格式：
 [根据 target_file 类型给出对应格式]
 
 约束：
@@ -192,7 +192,7 @@ spawn 组装 agent 时，task 按以下模板构造：
 - 主体（70-80%）讲通用工程原理
 - 收尾（10-15%）回到 [限定词] 给落地方案
 - 禁止读取 capabilities/ 下的任何文件，所有素材已在上方提供
-- 直接写文件，不要输出到聊天
+- 完成后请将文件保存到上述指定位置
 ```
 
 ---

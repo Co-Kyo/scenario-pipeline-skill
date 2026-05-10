@@ -278,11 +278,9 @@
 | `experiment_code` | 主文件「最小验证实验」 | deep 模式提取核心代码片段，非 deep 填 `null` |
 | `references` | 主文件「参考资料」 | 提取 tier+url+title，按 Tier 排序 |
 
-#### 写入路径
+#### 输出位置
 
-```
-.meta/summaries/<id>-<name>.json
-```
+摘要 JSON 请保存到：`.meta/summaries/<id>-<name>.json`
 
 示例：`.meta/summaries/A1-浏览器渲染管线.json`
 
@@ -294,7 +292,7 @@
 
 ### 输出 1：能力知识库主文件
 
-写入 `workflow/research/capabilities/<id>-<name>.md`：
+保存到 `workflow/research/capabilities/<id>-<name>.md`：
 
 ```markdown
 # <能力名称>
@@ -334,7 +332,7 @@
 
 ### 输出 2：结构化摘要
 
-写入 `.meta/summaries/<id>-<name>.json`（格式见 Step 8）。
+保存到 `.meta/summaries/<id>-<name>.json`（格式见 Step 8）。
 
 ### 文件命名规范
 
@@ -380,9 +378,9 @@ spawn 能力研究 agent 时，task 按以下模板构造：
 ## 产出
 
 ### 文件 1：能力知识库主文件
-路径：workflow/research/capabilities/[id]-[name].md
+请将研究成果保存为：`workflow/research/capabilities/[id]-[name].md`
 
-格式要求：
+内容格式：
 - 核心机制（基于官方文档，引用具体 API）
 - 工程瓶颈（按 Step 3 的分类→分级→版本验证流程产出，P0/P1 必须覆盖，条目数以实际为准）
   - 对于版本强相关的瓶颈，必须查找官方版本更新文档进行验证
@@ -393,9 +391,9 @@ spawn 能力研究 agent 时，task 按以下模板构造：
 - 参考资料（只列实际读过的 URL）
 
 ### 文件 2：结构化摘要
-路径：workflow/research/.meta/summaries/[id]-[name].json
+请同时保存一份 JSON 摘要到：`workflow/research/.meta/summaries/[id]-[name].json`
 
-从主文件中提取以下字段（JSON 格式）：
+摘要需从主文件中提取以下字段（JSON 格式）：
 - mechanism_summary：1-3 句核心机制摘要（≤200 字）
 - bottlenecks：每项保留 name + category + priority + trigger + symptom + 版本相关字段（version_sensitive/affected_tool/affected_versions/fixed_version/fixed_source）
 - tradeoffs：每项保留 dimension + option_a + option_b + suggestion
@@ -406,7 +404,7 @@ spawn 能力研究 agent 时，task 按以下模板构造：
 - 中文撰写，技术术语保留英文
 - 通用内容 ≥ 70%（框架特化能力除外）
 - 摘要与主文件内容必须一致
-- 直接写文件，不要输出到聊天
+- 完成后请将两个文件保存到上述指定位置
 ```
 
 ---
