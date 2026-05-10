@@ -26,6 +26,60 @@ deep research：<场景描述>
 
 **Parameters:** `--depth=shallow|normal|deep` `--platform=web|miniapp|rn|all` `--no-experiment` `--append` `--batch=pending` `--filter="<条件>"` `--source=<url>` `--digest` `--year=<L1|L2|L3|L4>`
 
+## Setup（首次使用必须完成）
+
+MCP 服务器是管线的数据底座（信源白名单 `get_sources`、状态管理 `save_state`/`restore_state`）。**未初始化时管线以降级模式运行，能力图谱的信源引用和管线状态持久化将缺失。**
+
+### 1. 安装依赖
+
+```bash
+# MCP Server 运行时依赖
+cd ~/.openclaw/skills/scenario-pipeline/mcp-server && npm install
+
+# OpenClaw 平台：MCPorter CLI（全局安装，仅需一次）
+npm install -g mcporter
+```
+
+> Claude Code / CodeBuddy / Cursor 不需要 mcporter，跳过全局安装。
+
+### 2. 注册 MCP Server
+
+根据当前平台选择一种方式注册：
+
+| 平台 | 注册方式 |
+|------|---------|
+| **OpenClaw** | `mcporter add scenario-pipeline --transport stdio --command node --args '["~/.openclaw/skills/scenario-pipeline/mcp-server/dist/index.js"]'` |
+| **Claude Code** | 项目根目录 `.mcp.json` 中添加 `mcpServers.scenario-pipeline`（见下方模板） |
+| **CodeBuddy** | `.codebuddy/mcp.json` 或全局 `~/.codebuddy/mcp.json`，同上格式 |
+| **Cursor** | `.cursor/mcp.json`，同上格式 |
+
+**MCP 配置模板**（Claude Code / CodeBuddy / Cursor 通用）：
+```json
+{
+  "mcpServers": {
+    "scenario-pipeline": {
+      "command": "node",
+      "args": ["~/.openclaw/skills/scenario-pipeline/mcp-server/dist/index.js"]
+    }
+  }
+}
+```
+
+### 3. 验证
+
+```bash
+# OpenClaw
+mcporter call scenario-pipeline.ping   # → pong
+
+# Claude Code：直接调用 MCP 工具 ping
+
+# CodeBuddy/Cursor：IDE MCP 面板查看状态
+```
+
+> **如果依赖已安装且 MCP 已注册，以上步骤自动跳过。**
+
+---
+
 ## Architecture
 
 ```
