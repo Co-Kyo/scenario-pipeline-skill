@@ -1,4 +1,4 @@
 [submodule "mcp-server"]
-    path = mcp-server
-    url = https://github.com/Co-Kyo/scenario-pipeline-mcp.git
+	path = mcp-server
+	url = https://github.com/Co-Kyo/scenario-pipeline-mcp.git
     branch = main
