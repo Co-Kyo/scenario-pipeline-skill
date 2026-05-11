@@ -201,69 +201,30 @@
 （每个来源标注：Tier、URL、提取的关键内容摘要）
 ```
 
-### Step 8：结构化摘要双写（强制）
+### Step 8：结构化摘要双写（MCP 闭环，强制）
 
-**在写完主文件后，必须额外产出一个结构化摘要 JSON，供 Briefing 组装阶段消费。**
+**在写完主文件后，必须通过 MCP 工具完成摘要 JSON 的产出。禁止 agent 直接写 JSON 文件。**
 
 > 设计理由：能力研究 agent 刚完成主文件，对全文结构最熟悉，此时提取摘要的认知成本最低（≈ 从刚写的草稿中"复制粘贴"）。
 > 这一步将阶段二 agent 从"读 30-100KB 全文"降为"从 1-2KB 摘要组装 briefing"，压缩比约 5:1~7:1。
+>
+> **为什么必须走 MCP**：之前 agent 自行写 JSON 导致 32 个文件产出 7 种格式（合规率仅 6%）。改由 MCP 控制输出，schema 校验在提交时强制执行，保证 100% 格式对齐。
 
-#### 摘要 JSON Schema
+#### 执行流程（3 步闭环）
 
-```json
-{
-  "id": "A1",
-  "name": "浏览器渲染管线",
-  "tech_layer": "浏览器层",
-  "fanout": "6/7",
-  "coupling": 1,
-  "strategic_value": 5.0,
+```
+① 调用 MCP get_summary_schema
+   → 获取标准模板 + 字段约束（加深 schema 印象）
 
-  "mechanism_summary": "关键渲染路径（CRP）：DOM + CSSOM → Style → Layout → Paint → Composite。浏览器将 HTML/CSS 解析为树结构，经样式计算、布局、绘制、合成四个阶段生成像素。",
+② 按模板组织数据
+   → 从主文件提取 mechanism_summary / bottlenecks / tradeoffs / references
+   → 严格按模板字段名和结构组织，禁止自创字段
 
-  "bottlenecks": [
-    {
-      "name": "强制同步布局",
-      "category": "时序竞争",
-      "priority": "P0",
-      "trigger": "读 offsetHeight 后立即写 style",
-      "symptom": "帧率骤降到 15fps",
-      "version_sensitive": "none",
-      "affected_tool": null,
-      "affected_versions": null,
-      "fixed_version": null,
-      "fixed_source": null
-    },
-    {
-      "name": "布局抖动",
-      "category": "时序竞争",
-      "priority": "P0",
-      "trigger": "循环中交替读写布局属性",
-      "symptom": "单帧 Layout 次数暴增",
-      "version_sensitive": "strong",
-      "affected_tool": "Chrome",
-      "affected_versions": "< 85",
-      "fixed_version": "85",
-      "fixed_source": "https://chromestatus.com/roadmap"
-    }
-  ],
-
-  "tradeoffs": [
-    {
-      "dimension": "图层数 vs GPU 内存",
-      "option_a": "will-change 提升独立图层 → Paint 隔离，GPU 内存增加",
-      "option_b": "不提升 → Paint 整体重绘，GPU 内存节省",
-      "suggestion": "对频繁重绘的独立元素（动画、fixed 定位）提升图层"
-    }
-  ],
-
-  "experiment_code": "（仅 deep 模式：提取最小可运行的代码片段，非 deep 模式填 null）",
-
-  "references": [
-    {"tier": "T1", "url": "https://developer.chrome.com/...", "title": "Chrome DevTools Performance Analysis"},
-    {"tier": "T1", "url": "https://developer.mozilla.org/...", "title": "MDN: Critical Rendering Path"}
-  ]
-}
+③ 调用 MCP submit_summary
+   → 传入 capability_id + 内容字段
+   → MCP 校验 + 自动填充元数据(id/name/tech_layer/fanout/coupling/strategic_value)
+   → 校验通过 → MCP 写入文件
+   → 校验失败 → MCP 返回错误列表 → 修正后重新提交
 ```
 
 #### 字段提取规则
@@ -271,18 +232,31 @@
 | 字段 | 提取来源 | 约束 |
 |------|---------|------|
 | `mechanism_summary` | 主文件「核心机制」章节 | 1-3 句，≤200 字 |
-| `bottlenecks` | 主文件「工程瓶颈」表格 | 每项保留 name+category+priority+trigger+symptom+版本相关字段（version_sensitive/affected_tool/affected_versions/fixed_version/fixed_source） |
-| `tradeoffs` | 主文件「典型权衡」表格 | 每项保留完整四列（dimension + option_a + option_b + suggestion） |
+| `bottlenecks` | 主文件「工程瓶颈」表格 | 每项**必须为对象**（含 name/category/priority/trigger/symptom/version_sensitive 等字段），**禁止纯字符串** |
+| `tradeoffs` | 主文件「典型权衡」表格 | 每项**必须为对象**（含 dimension/option_a/option_b/suggestion），**禁止纯字符串** |
 | `experiment_code` | 主文件「最小验证实验」 | deep 模式提取核心代码片段，非 deep 填 `null` |
-| `references` | 主文件「参考资料」 | 提取 tier+url+title，按 Tier 排序 |
+| `references` | 主文件「参考资料」 | 每项**必须为对象**（含 tier/url/title），**禁止纯字符串或纯 URL** |
 
-#### 输出位置
+> ⚠️ id/name/tech_layer/fanout/coupling/strategic_value 由 MCP 从 capability-graph.json 自动填充，agent 无需提供。
 
-摘要 JSON 请保存到：`.meta/summaries/<id>-<name>.json`
+#### 常见提交错误（MCP 会拒绝的格式）
 
-示例：`.meta/summaries/A1-浏览器渲染管线.json`
+```json
+// ❌ bottlenecks 用纯字符串
+"bottlenecks": ["JSON序列化开销大", "通信延迟高"]
+// ✅ bottlenecks 用结构化对象
+"bottlenecks": [{"name": "JSON序列化开销", "category": "资源边界", "priority": "P0", "trigger": "...", "symptom": "...", "version_sensitive": "none", "affected_tool": null, "affected_versions": null, "fixed_version": null, "fixed_source": null}]
 
-> ⚠️ 摘要与主文件必须保持一致。如果后续修改了主文件，摘要也应同步更新。
+// ❌ tradeoffs 自创字段名（id/description/choice/benefits/costs）
+"tradeoffs": [{"id": "T1", "name": "权衡1", "choice": "...", "benefits": "...", "costs": "..."}]
+// ✅ tradeoffs 用 schema 定义的字段名
+"tradeoffs": [{"dimension": "...", "option_a": "...", "option_b": "...", "suggestion": "..."}]
+
+// ❌ references 用纯 URL 字符串
+"references": ["https://developer.mozilla.org/..."]
+// ✅ references 用结构化对象
+"references": [{"tier": "T1", "url": "https://developer.mozilla.org/...", "title": "MDN: Critical Rendering Path"}]
+```
 
 ---
 
@@ -330,7 +304,7 @@
 
 ### 输出 2：结构化摘要
 
-保存到 `.meta/summaries/<id>-<name>.json`（格式见 Step 8）。
+通过 MCP `submit_summary` 工具提交，由 MCP 写入 `.meta/summaries/<id>-<name>.json`。**禁止 agent 直接写此文件。**
 
 ### 文件命名规范
 
@@ -362,7 +336,7 @@
 | web_fetch 超时 | 单次 fetch > 15s | 重试 1 次 → 仍失败则跳过该 URL，尝试下一优先级来源 |
 | T1 全部失败 | 所有 verified=true 的 T1 URL 均不可达 | 降级到 T2 → 降级到 Fallback 搜索 → 标记信源不足 |
 | 搜索无结果 | Fallback 搜索返回 0 结果 | 标记 `source_insufficient: true`，基于通用知识撰写，文件末尾注明"⚠️ 缺乏 T1 来源" |
-| 摘要 JSON 写入失败 | .meta/summaries/ 目录不存在或权限不足 | 自动创建目录 → 仍失败则记录错误日志，主文件正常产出（摘要可后续补生成） |
+| 摘要 JSON 提交失败 | MCP submit_summary 返回校验错误 | 按错误列表修正后重新提交；MCP 连续 3 次失败 → 主 agent 记录错误，主文件正常产出（摘要可后续补提交） |
 | 内容过短 | 主文件 < 500 字 | 标记 `content_thin: true`，在文件顶部注明"⚠️ 信源不足，内容可能不完整" |
 | 子 agent 超时 | spawn 后 > 120s 无产出 | 主 agent 接管该能力，在主上下文中完成（降级为串行） |
 | 子 agent 产出质量差 | 主文件缺少核心章节 | 主 agent 补充缺失章节（不重跑整个 agent） |

@@ -11,6 +11,7 @@ import {
 import { SaveStateTool, RestoreStateTool } from "./domains/state/index.js";
 import { GetTemplateTool } from "./domains/template/index.js";
 import { GetSourcesTool } from "./domains/source/index.js";
+import { GetSummarySchemaTool, SubmitSummaryTool } from "./domains/summary/index.js";
 import { PingTool } from "./health/ping.js";
 
 const server = new Server(
@@ -36,7 +37,11 @@ const tools = [
   
   // 信源管理域
   new GetSourcesTool(),
-  
+
+  // 摘要管理域（schema 强制闭环）
+  new GetSummarySchemaTool(),
+  new SubmitSummaryTool(),
+
   // 健康检查
   new PingTool(),
 ];
