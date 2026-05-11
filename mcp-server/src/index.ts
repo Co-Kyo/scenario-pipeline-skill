@@ -9,7 +9,7 @@ import {
 
 // 按业务域导入工具
 import { SaveStateTool, RestoreStateTool } from "./domains/state/index.js";
-import { GetTemplateTool } from "./domains/template/index.js";
+import { GetTemplateTool, ResolvePathsTool } from "./domains/template/index.js";
 import { GetSourcesTool } from "./domains/source/index.js";
 import { GetSummarySchemaTool, SubmitSummaryTool } from "./domains/summary/index.js";
 import { PingTool } from "./health/ping.js";
@@ -34,6 +34,7 @@ const tools = [
   
   // 模板管理域
   new GetTemplateTool(),
+  new ResolvePathsTool(),
   
   // 信源管理域
   new GetSourcesTool(),

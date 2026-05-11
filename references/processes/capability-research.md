@@ -264,7 +264,7 @@
 
 ### 输出 1：能力知识库主文件
 
-保存到 `workflow/research/capabilities/<id>-<name>.md`：
+保存到 `{{paths.capability_file}}`（其中 `<id>-<name>` 由 resolve_paths 动态生成）：
 
 ```markdown
 # <能力名称>
@@ -304,17 +304,17 @@
 
 ### 输出 2：结构化摘要
 
-通过 MCP `submit_summary` 工具提交，由 MCP 写入 `.meta/summaries/<id>-<name>.json`。**禁止 agent 直接写此文件。**
+通过 MCP `submit_summary` 工具提交，由 MCP 写入 `{{paths.capability_summary}}`。**禁止 agent 直接写此文件。**
 
 ### 文件命名规范
 
 ```
-主文件：capabilities/<id>-<中文名称>.md
-摘要：  .meta/summaries/<id>-<中文名称>.json
+主文件：{{paths.capability_file}}
+摘要：  {{paths.capability_summary}}
 
 示例：
-  ✓ capabilities/A1-浏览器渲染管线.md
-  ✓ .meta/summaries/A1-浏览器渲染管线.json
+  ✓ {{paths.capability_file}}（示例：capabilities/A1-浏览器渲染管线.md）
+  ✓ {{paths.capability_summary}}（示例：.meta/summaries/A1-浏览器渲染管线.json）
   ✗ A1.md（纯 ID 无语义）
   ✗ browser-rendering-pipeline.md（英文不直观）
 ```

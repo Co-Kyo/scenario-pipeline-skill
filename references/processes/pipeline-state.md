@@ -44,7 +44,7 @@ mcporter call scenario-pipeline.restore_state --args '{"workDir":"<产出目录>
 mcporter call scenario-pipeline.get_sources --args '{"skillDir":"<skill目录>"}'
 ```
 
-> ⚠️ `workDir` 必须指向管线产出目录（即 `workflow/research/`），而非 skill 目录。
+> ⚠️ `workDir` 必须指向管线产出目录（即 `{{paths.workDir}}`），而非 skill 目录。
 > `skillDir` 必须指向 skill 根目录（含 `plugins/` 子目录）。
 
 ---
@@ -52,7 +52,7 @@ mcporter call scenario-pipeline.get_sources --args '{"skillDir":"<skill目录>"}
 ## 存储路径
 
 ```
-<workDir>/.meta/pipeline-state.json
+{{paths.meta_pipeline_state}}
 ```
 
 ---
@@ -136,7 +136,7 @@ elif state.status == "interrupted":
     "pre-process": {
       "status": "completed",
       "completed_at": "2026-05-09T22:45:00+08:00",
-      "artifacts": [".meta/capability-graph.json", ".meta/candidates.md"]
+      "artifacts": ["{{paths.meta_capability_graph}}", "{{paths.meta_candidates}}"]
     },
     "capability-research": {
       "status": "running | completed | pending",

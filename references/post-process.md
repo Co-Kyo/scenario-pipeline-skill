@@ -3,6 +3,26 @@
 > 纯编排文件：定义后处理的三阶段管线和调用关系。
 > 每个步骤的实现在 `processes/` 目录下。
 
+## 路径规范
+
+> 本文档中所有产出路径均通过 MCP `resolve_paths` 工具获取，是唯一的路径事实来源（SSoT）。
+> 以下列出本文档涉及的路径字段（参见 `path-config.ts` 的 `PathTemplates` 接口）：
+>
+> | 字段 | 说明 |
+> |------|------|
+> | `{{paths.workDir}}` | 管线产出根目录 |
+> | `{{paths.capability_file}}` | 能力知识库主文件 |
+> | `{{paths.capability_summary}}` | 能力结构化摘要 |
+> | `{{paths.capabilities_readme}}` | 能力知识库 README |
+> | `{{paths.proposition_dir}}` | 命题目录根 |
+> | `{{paths.briefing}}` | Briefing 中间产物 |
+> | `{{paths.meta_capability_graph}}` | 能力图谱 JSON |
+> | `{{paths.meta_summaries_dir}}` | 摘要目录 |
+> | `{{paths.meta_briefings_dir}}` | Briefing 目录 |
+> | `{{paths.meta_pipeline_state}}` | 管线状态文件 |
+>
+> 运行时请调用 `resolve_paths` 获取完整路径对象，禁止自行拼接路径。
+
 ---
 
 > **MCP 调用约定**：所有 `save_state`/`restore_state` 调用必须通过 `mcporter call` 执行，并传入 `workDir` 参数指向产出目录：
@@ -52,7 +72,7 @@ deep research：<场景描述>
   └─────────────────────────────────┘            └─────────────────────┘            └─────────────────┘
         ↑                                              ↑                                    ↑
         │                                              │                                    │
-  .meta/capability-graph.json                    从 briefings 内联                        读取阶段二产出
+  {{paths.meta_capability_graph}}                 从 briefings 内联                        读取阶段二产出
   (来自前处理)                                    到组装 agent task                      + capability-graph.json
 ```
 
@@ -65,8 +85,8 @@ deep research：<场景描述>
 2. **实验组装**（每 agent 1 命题）：负责 experiment 目录（代码逻辑，独立处理以保证稳定性）
 
 **双写**：每个能力研究 agent 产出两个文件：
-1. `capabilities/<id>-<name>.md` — 人类阅读的完整知识库
-2. `.meta/summaries/<id>-<name>.json` — 机器消费的结构化摘要
+1. `{{paths.capability_file}}` — 人类阅读的完整知识库
+2. `{{paths.capability_summary}}` — 机器消费的结构化摘要
 
 ---
 
@@ -85,7 +105,7 @@ deep research：<场景描述>
 ═══════════════════════════════════════════════════════════════════════════════
 
 0a. 展示后处理执行计划：
-    - 待处理命题列表（来自 README.md / .meta/candidates.md）
+    - 待处理命题列表（来自 {{paths.readme}} / {{paths.meta_candidates}}）
     - 涉及的原子能力数量
     - 预估 spawn agent 数量：能力数 × 1 + 命题数 × 2（阶段二：markdown + experiment）+ 命题数 × 1（阶段三）+ 命题数 × 1（Briefing组装）
     - 预估执行时间
@@ -102,8 +122,8 @@ deep research：<场景描述>
 ═══════════════════════════════════════════════════════════════════════════════
 
 1. 读取前处理产出
-   ├── .meta/capability-graph.json → 获取原子能力列表 + 依赖关系 + 战略高地
-   └── README.md / .meta/candidates.md → 获取待处理命题列表 + 分词结果
+   ├── {{paths.meta_capability_graph}} → 获取原子能力列表 + 依赖关系 + 战略高地
+   └── {{paths.readme}} / {{paths.meta_candidates}} → 获取待处理命题列表 + 分词结果
 
    ┌─ 状态初始化 ─────────────────────────────────────────────────┐
    │ 调用 MCP 工具 save_state，初始化管线状态：                      │
@@ -113,7 +133,7 @@ deep research：<场景描述>
 
 2. 【阶段一步骤1】能力研究
    ├── 筛选：覆盖待处理命题的能力（或扇出度 ≥ 30% 的能力）
-   ├── 增量检查：capabilities/ 中已有 → 跳过，缺失 → 研究
+   ├── 增量检查：{{paths.capability_file}} 所在目录中已有 → 跳过，缺失 → 研究
    ├── 为每个能力预查找 T1/T2 URL
    ├── 按滑动窗口并行 spawn（每 agent 1 个能力文件）← 具体API见运行时适配层插件
    ├── 每个 agent 双写：主文件 + summary.json
@@ -156,7 +176,7 @@ deep research：<场景描述>
    │   ├── 从 capability-graph.json 确定该命题涉及的能力 ID 列表
    │   ├── 读取这些能力的 summary.json
    │   ├── 按 5 种文件类型定向提取内容（见 §Briefing 组装规则）
-   │   └── 生成完整 briefing，保存到 .meta/briefings/<命题简称>.md
+   │   └── 生成完整 briefing，保存到 {{paths.briefing}}
    └── ⛔ 全部 briefing 生成后才能进入 ⓓ 检查点
 
    ┌─ 状态持久化 ─────────────────────────────────────────────────┐
@@ -292,7 +312,7 @@ deep research：<场景描述>
 ❌ 阶一步骤1的 agent 还没完成就开始组装 briefing
 ❌ 阶段一未完成就开始 spawn 阶段二的 agent
 ❌ 把阶段一和阶段二写在同一个 agent 的 task 里
-❌ 组装 agent 自己去读 capabilities/ 下的完整文件
+❌ 组装 agent 自己去读 {{paths.capability_file}} 所在目录的完整文件
 ❌ 阶段二未完成就开始生成学习阶梯
 ❌ 跳过检查点直接进入下一阶段（ⓔⓓⓕⓖ 是强制的，不可绕过）
 ```
@@ -328,10 +348,10 @@ deep research：<场景描述>
 | 检查点 | 位置 | 核心产物 | 介入价值 |
 |--------|------|---------|---------|
 | ⓒ C | 后处理启动前 | 执行计划 | 确认范围、调整参数、减少 agent 数量 |
-| ⓔ E | 阶段一步骤1完成后 | `capabilities/` + `.meta/summaries/` | 审查能力研究质量，决定重跑/跳过/补充 |
-| ⓓ D | 阶段一完成后（含 Briefing 组装） | `.meta/briefings/` | 审查素材提取完整性，决定是否跳过实验 |
-| ⓕ F | 阶段二完成后 | `<命题>/*.md` | 审查命题组装质量，决定阶梯侧重方向 |
-| ⓖ G | 阶段三完成后 | `learning-ladder.md` | 确认最终产出，追加研究或结束 |
+| ⓔ E | 阶段一步骤1完成后 | `{{paths.capability_file}}` + `{{paths.capability_summary}}` | 审查能力研究质量，决定重跑/跳过/补充 |
+| ⓓ D | 阶段一完成后（含 Briefing 组装） | `{{paths.meta_briefings_dir}}` | 审查素材提取完整性，决定是否跳过实验 |
+| ⓕ F | 阶段二完成后 | `{{paths.proposition_dir}}/*.md` | 审查命题组装质量，决定阶梯侧重方向 |
+| ⓖ G | 阶段三完成后 | `{{paths.learning_ladder}}` | 确认最终产出，追加研究或结束 |
 
 ### 检查点行为规范
 
@@ -409,8 +429,8 @@ deep research：<场景描述>
 
 ### 输入来源
 
-- 前处理产出的 `.meta/capability-graph.json`（原子能力图谱）
-- 前处理产出的 `README.md`（命题列表，用于筛选哪些能力需要研究）
+- 前处理产出的 `{{paths.meta_capability_graph}}`（原子能力图谱）
+- 前处理产出的 `{{paths.readme}}`（命题列表，用于筛选哪些能力需要研究）
 
 ### 信源预查找：为每个能力准备 T1/T2 URL
 
@@ -437,8 +457,8 @@ deep research：<场景描述>
   task = 简化任务指令（见下方）
   输入：capability_id + capability_name + capability_desc + t1_urls + t2_urls + depth
   输出：
-    - capabilities/<id>-<name>.md（主文件）
-    - .meta/summaries/<id>-<name>.json（结构化摘要）
+    - {{paths.capability_file}}（主文件）
+    - {{paths.capability_summary}}（结构化摘要）
 ```
 
 #### 简化任务指令（主 agent 发送给子 agent）
@@ -466,19 +486,19 @@ deep research：<场景描述>
 ### 输出
 
 ```
-capabilities/                      ← 能力知识库（人类阅读）
-├── README.md                      ← 能力索引 + 依赖图 + 学习路径（从 JSON 派生）
-├── A1-浏览器渲染管线.md
+{{paths.capabilities_readme}} 所在目录     ← 能力知识库（人类阅读）
+├── README.md                      ← {{paths.capabilities_readme}}：能力索引 + 依赖图 + 学习路径（从 JSON 派生）
+├── A1-浏览器渲染管线.md            ← {{paths.capability_file}} 示例
 ├── A2-DOM节点生命周期.md
 └── ...
 
-.meta/summaries/                   ← 结构化摘要（机器消费）
-├── A1-浏览器渲染管线.json
+{{paths.meta_summaries_dir}}               ← 结构化摘要（机器消费）
+├── A1-浏览器渲染管线.json           ← {{paths.capability_summary}} 示例
 ├── A2-DOM节点生命周期.json
 └── ...
 ```
 
-**capabilities/README.md 模板：**
+**{{paths.capabilities_readme}} 模板：**
 
 ```markdown
 # 原子能力知识库
@@ -522,7 +542,7 @@ capabilities/                      ← 能力知识库（人类阅读）
     - capability_ids（该命题涉及的能力ID列表）
     - summary_files（这些能力的summary.json内容）
   输出：
-    - .meta/briefings/<命题简称>.md
+    - {{paths.briefing}}
 ```
 
 #### 简化任务指令（主 agent 发送给子 agent）
@@ -545,8 +565,8 @@ capabilities/                      ← 能力知识库（人类阅读）
 
 ### 输入来源
 
-- 阶段一产出的 `.meta/briefings/<命题简称>.md`（已内联到 agent task）
-- 前处理产出的 `README.md`（命题列表 + 分词结果）
+- 阶段一产出的 `{{paths.briefing}}`（已内联到 agent task）
+- 前处理产出的 `{{paths.readme}}`（命题列表 + 分词结果）
 
 ### 执行逻辑
 
@@ -562,10 +582,10 @@ capabilities/                      ← 能力知识库（人类阅读）
          - decomposition（分词结果）
          - briefing（完整briefing）
        输出：
-         - workflow/research/<序号>-<命题简称>/overview.md
-         - workflow/research/<序号>-<命题简称>/edge-cases.md
-         - workflow/research/<序号>-<命题简称>/trade-offs.md
-         - workflow/research/<序号>-<命题简称>/references.md
+         - {{paths.proposition_overview}}
+         - {{paths.proposition_edge_cases}}
+         - {{paths.proposition_trade_offs}}
+         - {{paths.proposition_references}}
     2. 实验组装 agent
        task = 简化任务指令（见下方）
        输入：
@@ -573,7 +593,7 @@ capabilities/                      ← 能力知识库（人类阅读）
          - decomposition（分词结果）
          - briefing（完整briefing）
        输出：
-         - workflow/research/<序号>-<命题简称>/experiment/
+         - {{paths.proposition_dir}}experiment/
 ```
 
 #### 简化任务指令 - Markdown组装 agent
@@ -625,7 +645,7 @@ capabilities/                      ← 能力知识库（人类阅读）
 ### 输出
 
 ```
-workflow/research/<序号>-<命题简称>/
+{{paths.proposition_dir}}
 ├── overview.md      # Q1: 链路编排
 ├── edge-cases.md    # Q2: 坑点提取
 ├── trade-offs.md    # Q3: 方案对比
@@ -706,8 +726,8 @@ workflow/research/<序号>-<命题简称>/
 
 | 输入 | 来源 | 路径 |
 |------|------|------|
-| 能力依赖图 | 前处理 | `.meta/capability-graph.json` |
-| 能力摘要 | 阶段一 | `.meta/summaries/<id>.json` |
+| 能力依赖图 | 前处理 | `{{paths.meta_capability_graph}}` |
+| 能力摘要 | 阶段一 | `{{paths.meta_summaries_dir}}<id>.json` |
 | 命题产出 | 阶段二 | `<命题>/overview.md`、`edge-cases.md`、`trade-offs.md`、`experiment/`、`references.md` |
 
 ### 输出
@@ -727,9 +747,9 @@ workflow/research/<序号>-<命题简称>/
 当已有部分能力知识库时：
 
 ```
-检查 capabilities/ 目录中已有的能力条目
+检查 {{paths.capability_file}} 所在目录中已有的能力条目
   → 已有：直接复用，跳过该能力的研究
-  → 同时检查 .meta/summaries/ 中是否有对应摘要
+  → 同时检查 {{paths.meta_summaries_dir}} 中是否有对应摘要
     → 有摘要：复用，跳过
     → 无摘要：需要补生成（可从已有主文件中提取）
   → 缺失：调用 processes/capability-research.md 补充研究（双写）
@@ -738,7 +758,7 @@ workflow/research/<序号>-<命题简称>/
 ### 阶段一步骤2增量（Briefing 组装）
 
 ```
-检查 .meta/briefings/ 中已有的 briefing
+检查 {{paths.meta_briefings_dir}} 中已有的 briefing
   → 已有该命题的 briefing：复用，跳过
   → 缺失：从 summary.json 重新生成
   → 命题涉及的能力有变更：重新生成该命题的 briefing
@@ -751,8 +771,8 @@ workflow/research/<序号>-<命题简称>/
 当只处理单个命题（非批量）时，可简化为：
 
 ```
-1. 从 .meta/capability-graph.json 识别该命题依赖的原子能力
-2. 增量检查 capabilities/ + .meta/summaries/，缺失的用滑动窗口并行研究（双写）
+1. 从 {{paths.meta_capability_graph}} 识别该命题依赖的原子能力
+2. 增量检查 {{paths.capability_file}} 所在目录 + {{paths.meta_summaries_dir}}，缺失的用滑动窗口并行研究（双写）
 3. 阶段一步骤2：从 summary.json 组装该命题的 briefing（可并行化）
 4. 阶段二：组装该命题（1个agent负责Markdown文件，1个agent负责experiment）
 5. 阶段三：生成该命题的学习阶梯（并行化）
@@ -780,7 +800,7 @@ workflow/research/<序号>-<命题简称>/
 ```
 1. 主 agent 停止 spawn 新的子 agent
 2. 等待当前运行中的子 agent 完成（不强制终止，避免产出损坏）
-3. 收集已完成的产出，更新 .meta/pipeline-state.json
+3. 收集已完成的产出，更新 {{paths.meta_pipeline_state}}
 4. 向用户展示：
    - 已完成的能力/命题数量
    - 未完成的能力/命题列表
@@ -788,7 +808,7 @@ workflow/research/<序号>-<命题简称>/
 5. 暂停，等待用户指令
 ```
 
-### 状态持久化：.meta/pipeline-state.json
+### 状态持久化：{{paths.meta_pipeline_state}}
 
 管线运行过程中自动维护状态文件，支持断点恢复：
 
@@ -833,7 +853,7 @@ workflow/research/<序号>-<命题简称>/
 紧急中断后，`pipeline-state.json` 的 `interrupt_type` 字段为 `"emergency"`。恢复时需额外步骤：
 
 ```
-1. 读取 .meta/pipeline-state.json，检测 interrupt_type
+1. 读取 {{paths.meta_pipeline_state}}，检测 interrupt_type
 2. 如果 interrupt_type == "emergency"：
    a. 扫描产出目录，识别 status: incomplete 的半成品文件
    b. 展示半成品列表，询问用户：丢弃 / 保留但标记 / 重新生成
@@ -850,9 +870,9 @@ workflow/research/<序号>-<命题简称>/
    - 返回恢复指令：resume_from, current_stage, completed_items, pending_items, failed_items, interrupt_type
 2. 确认当前阶段和进度
 3. 增量检查：
-   - capabilities/ 中已有 → 跳过
-   - .meta/summaries/ 中已有 → 跳过
-   - .meta/briefings/ 中已有 → 跳过
+   - {{paths.capability_file}} 所在目录中已有 → 跳过
+   - {{paths.meta_summaries_dir}} 中已有 → 跳过
+   - {{paths.meta_briefings_dir}} 中已有 → 跳过
    - 命题目录中已有文件 → 跳过
 4. 从断点继续：
    - 阶段一步骤1中断 → 从未完成的能力继续 spawn

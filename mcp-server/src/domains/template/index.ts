@@ -4,3 +4,4 @@
  */
 
 export { GetTemplateTool } from "./get-template.js";
+export { ResolvePathsTool } from "./resolve-paths.js";

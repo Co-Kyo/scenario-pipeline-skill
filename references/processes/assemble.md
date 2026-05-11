@@ -125,7 +125,7 @@ briefing 结构如下（已内联到 agent 的 task 中）：
 
 ## 输出
 
-写入 `workflow/research/<序号>-<命题简称>/`：
+写入 `{{paths.proposition_dir}}`（即 `workflow/research/<序号>-<命题简称>/`）：
 
 ```
 <序号>-<命题简称>/
@@ -172,20 +172,20 @@ briefing 结构如下（已内联到 agent 的 task 中）：
 
 | 异常场景 | 触发条件 | 处理动作 |
 |---------|---------|---------|
-| Briefing 缺失能力条目 | .meta/briefings/ 中某能力的 summary 不完整 | 跳过该能力的素材，用其他能力的素材填充，文件顶部注明"⚠️ 部分能力素材缺失" |
+| Briefing 缺失能力条目 | {{paths.meta_briefings_dir}} 中某能力的 summary 不完整 | 跳过该能力的素材，用其他能力的素材填充，文件顶部注明"⚠️ 部分能力素材缺失" |
 | 子 agent 超时 | spawn 后 > 120s 无产出 | 主 agent 接管该文件，在主上下文中完成（降级为串行） |
 | 子 agent 产出质量差 | 文件缺少核心章节或内容 < 300 字 | 主 agent 补充缺失章节（不重跑整个 agent） |
 | 内容比例不达标 | 通用内容 < 70% | 主 agent 审查并调整：压缩特化内容、补充通用原理 |
 | 文件已存在（--append 模式） | 目标文件已存在 | 追加内容到已有文件末尾，标记 `appended: true` |
-| 目标目录不可写 | workflow/research/<序号>-<命题简称>/ 创建失败 | 自动创建目录链 → 仍失败则输出到 stdout |
+| 目标目录不可写 | {{paths.proposition_dir}} 创建失败 | 自动创建目录链 → 仍失败则输出到 stdout |
 | experiment 依赖安装失败 | npm install 超时或报错 | 跳过依赖安装，提供纯 HTML 版本的最小实验（无构建工具） |
 | 全部子 agent 失败 | 所有 spawn 的 agent 均失败 | 主 agent 串行完成所有文件，告知用户"并行不可用，已降级为串行模式" |
 
 ## 依赖
 
 - 需要先执行 processes/decompose.md
-- 需要先执行 processes/capability-research.md（阶段一，产出 capabilities/ + .meta/summaries/）
-- 需要先执行 processes/briefing-assemble.md（Briefing 组装，产出 .meta/briefings/）
+- 需要先执行 processes/capability-research.md（阶段一，产出 {{paths.capability_file}} 所在目录 + {{paths.meta_summaries_dir}}）
+- 需要先执行 processes/briefing-assemble.md（Briefing 组装，产出 {{paths.meta_briefings_dir}}）
 
 ## 参考
 

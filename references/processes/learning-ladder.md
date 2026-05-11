@@ -7,8 +7,8 @@
 
 | 输入 | 来源 | 路径 | 说明 |
 |------|------|------|------|
-| 能力依赖图 | 前处理 | `.meta/capability-graph.json` | 命题涉及的能力 + 依赖关系 → 阶段划分 |
-| 能力摘要 | 阶段一 | `.meta/summaries/<id>.json` | mechanism/bottlenecks/tradeoffs → 知识锚点 |
+| 能力依赖图 | 前处理 | `{{paths.meta_capability_graph}}` | 命题涉及的能力 + 依赖关系 → 阶段划分 |
+| 能力摘要 | 阶段一 | `{{paths.meta_summaries_dir}}<id>.json` | mechanism/bottlenecks/tradeoffs → 知识锚点 |
 | 命题概览 | 阶段二 | `<命题>/overview.md` | 链路解构 → 全局上下文 |
 | 坑点 | 阶段二 | `<命题>/edge-cases.md` | 坑点 → "你会踩的坑" |
 | 权衡 | 阶段二 | `<命题>/trade-offs.md` | 方案对比 → "怎么选" |
@@ -123,7 +123,7 @@
 
 ## 依赖
 
-- 需要先完成阶段一（能力研究，产出 capabilities/ + .meta/summaries/）
+- 需要先完成阶段一（能力研究，产出 {{paths.capability_file}} 所在目录 + {{paths.meta_summaries_dir}}）
 - 需要先完成阶段二（命题组装，产出 `<命题>/overview.md` 等文件）
 
 ## 参考

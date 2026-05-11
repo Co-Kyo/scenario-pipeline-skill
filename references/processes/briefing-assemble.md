@@ -5,9 +5,9 @@
 
 ## 输入
 
-- `.meta/summaries/*.json` — 阶段一双写的结构化摘要
-- `.meta/capability-graph.json` — 能力与命题的映射关系
-- `README.md` — 待处理命题列表 + 分词结果
+- `{{paths.meta_summaries_dir}}*.json` — 阶段一双写的结构化摘要
+- `{{paths.meta_capability_graph}}` — 能力与命题的映射关系
+- `{{paths.readme}}` — 待处理命题列表 + 分词结果
 
 ## 执行步骤
 
@@ -74,7 +74,7 @@
 ### Step 5：保存
 
 ```
-.meta/briefings/
+{{paths.meta_briefings_dir}}
 ├── 01-长列表渲染.md
 ├── 02-首屏白屏.md
 └── ...
@@ -109,7 +109,7 @@
 
 ## 依赖
 
-- 需要先执行 processes/capability-research.md（阶段一，产出 `.meta/summaries/`）
+- 需要先执行 processes/capability-research.md（阶段一，产出 `{{paths.meta_summaries_dir}}`）
 
 ## 参考
 
