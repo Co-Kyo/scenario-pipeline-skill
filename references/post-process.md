@@ -73,7 +73,7 @@ deep research：<场景描述>
         ↑                                              ↑                                    ↑
         │                                              │                                    │
   {{paths.meta_capability_graph}}                 从 briefings 内联                        读取阶段二产出
-  (来自前处理)                                    到组装 agent task                      + capability-graph.json
+  (来自前处理)                                    到组装 agent task                      + {{paths.meta_capability_graph}}
 ```
 
 **阶段一包含两个步骤**：
@@ -103,6 +103,9 @@ deep research：<场景描述>
 ═══════════════════════════════════════════════════════════════════════════════
 【检查点 C：后处理启动确认】— 用户确认后才进入研究流程
 ═══════════════════════════════════════════════════════════════════════════════
+
+> **路径解析**：在执行任何步骤之前，必须先调用 MCP `resolve_paths` 工具获取完整路径对象。
+> 所有后续步骤中的 `{{paths.xxx}}` 变量均来自此调用的返回值。
 
 0a. 展示后处理执行计划：
     - 待处理命题列表（来自 {{paths.readme}} / {{paths.meta_candidates}}）
@@ -173,7 +176,7 @@ deep research：<场景描述>
 3. 【阶段一步骤2】Briefing 组装（并行）
    ├── 对每个待处理命题：
    │   ├── spawn 一个独立 agent
-   │   ├── 从 capability-graph.json 确定该命题涉及的能力 ID 列表
+   │   ├── 从 {{paths.meta_capability_graph}} 确定该命题涉及的能力 ID 列表
    │   ├── 读取这些能力的 summary.json
    │   ├── 按 5 种文件类型定向提取内容（见 §Briefing 组装规则）
    │   └── 生成完整 briefing，保存到 {{paths.briefing}}
@@ -255,8 +258,8 @@ deep research：<场景描述>
    ├── 并行化（每 agent 1 个命题的学习阶梯）
    │   ├── 对每个已组装的命题：
    │   │   ├── spawn 一个独立 agent
-   │   │   ├── 读取阶段二产出的命题文件 + capability-graph.json
-   │   │   └── 生成 learning-ladder.md
+   │   │   ├── 读取阶段二产出的命题文件 + {{paths.meta_capability_graph}}
+   │   │   └── 生成 {{paths.proposition_learning_ladder}}
    │   └── ⛔ 全部学习阶梯生成后才能进入 ⓖ 检查点
    └── ⛔ 全部学习阶梯生成后才能进入 ⓖ 检查点
 
@@ -351,7 +354,7 @@ deep research：<场景描述>
 | ⓔ E | 阶段一步骤1完成后 | `{{paths.capability_file}}` + `{{paths.capability_summary}}` | 审查能力研究质量，决定重跑/跳过/补充 |
 | ⓓ D | 阶段一完成后（含 Briefing 组装） | `{{paths.meta_briefings_dir}}` | 审查素材提取完整性，决定是否跳过实验 |
 | ⓕ F | 阶段二完成后 | `{{paths.proposition_dir}}/*.md` | 审查命题组装质量，决定阶梯侧重方向 |
-| ⓖ G | 阶段三完成后 | `{{paths.learning_ladder}}` | 确认最终产出，追加研究或结束 |
+| ⓖ G | 阶段三完成后 | `{{paths.proposition_learning_ladder}}` | 确认最终产出，追加研究或结束 |
 
 ### 检查点行为规范
 
@@ -520,7 +523,7 @@ deep research：<场景描述>
 
 ## 学习路径
 
-（从 capability-graph.json 的 learning_path 派生，带链接）
+（从 {{paths.meta_capability_graph}} 的 learning_path 派生，带链接）
 ```
 
 ---
@@ -593,7 +596,7 @@ deep research：<场景描述>
          - decomposition（分词结果）
          - briefing（完整briefing）
        输出：
-         - {{paths.proposition_dir}}experiment/
+         - {{paths.proposition_experiment}}
 ```
 
 #### 简化任务指令 - Markdown组装 agent
@@ -646,13 +649,13 @@ deep research：<场景描述>
 
 ```
 {{paths.proposition_dir}}
-├── overview.md      # Q1: 链路编排
-├── edge-cases.md    # Q2: 坑点提取
-├── trade-offs.md    # Q3: 方案对比
-├── experiment/      # Q4: 实验组装
+├── {{paths.proposition_overview}}      # Q1: 链路编排
+├── {{paths.proposition_edge_cases}}    # Q2: 坑点提取
+├── {{paths.proposition_trade_offs}}    # Q3: 方案对比
+├── {{paths.proposition_experiment}}    # Q4: 实验组装
 │   ├── README.md
 │   └── src/
-└── references.md    # 参考资料
+└── {{paths.proposition_references}}    # 参考资料
 ```
 
 ### 命题目录命名规范
@@ -707,7 +710,7 @@ deep research：<场景描述>
     - summaries（该命题涉及的能力摘要）
     - proposition_files（该命题的产出文件）
   输出：
-    - <序号>-<命题简称>/learning-ladder.md
+    - {{paths.proposition_learning_ladder}}
 ```
 
 #### 简化任务指令（主 agent 发送给子 agent）
@@ -728,12 +731,12 @@ deep research：<场景描述>
 |------|------|------|
 | 能力依赖图 | 前处理 | `{{paths.meta_capability_graph}}` |
 | 能力摘要 | 阶段一 | `{{paths.meta_summaries_dir}}<id>.json` |
-| 命题产出 | 阶段二 | `<命题>/overview.md`、`edge-cases.md`、`trade-offs.md`、`experiment/`、`references.md` |
+| 命题产出 | 阶段二 | `{{paths.proposition_overview}}`、`{{paths.proposition_edge_cases}}`、`{{paths.proposition_trade_offs}}`、`{{paths.proposition_experiment}}`、`{{paths.proposition_references}}` |
 
 ### 输出
 
 ```
-<命题>/learning-ladder.md    ← 每个命题一个，唯一新增文件
+{{paths.proposition_learning_ladder}}    ← 每个命题一个，唯一新增文件
 ```
 
 ### 详细执行逻辑
@@ -850,7 +853,7 @@ deep research：<场景描述>
 
 ### 紧急中断后的特殊处理
 
-紧急中断后，`pipeline-state.json` 的 `interrupt_type` 字段为 `"emergency"`。恢复时需额外步骤：
+紧急中断后，`{{paths.meta_pipeline_state}}` 的 `interrupt_type` 字段为 `"emergency"`。恢复时需额外步骤：
 
 ```
 1. 读取 {{paths.meta_pipeline_state}}，检测 interrupt_type

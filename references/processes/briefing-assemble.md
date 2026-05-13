@@ -11,9 +11,14 @@
 
 ## 执行步骤
 
+**路径获取**：在执行任何步骤前，必须先调用 MCP `resolve_paths` 获取当前任务的所有路径：
+```bash
+mcporter call scenario-pipeline.resolve_paths params='{"task_type":"briefing-assemble","workDir":"<产出目录>"}'
+```
+
 ### Step 1：确定每个命题涉及的能力
 
-从 `capability-graph.json` 获取每个待处理命题涉及的能力 ID 列表。
+从 `{{paths.meta_capability_graph}}` 获取每个待处理命题涉及的能力 ID 列表。
 
 ### Step 2：读取摘要
 
@@ -102,7 +107,7 @@
 |---------|---------|---------|
 | summary.json 缺失 | 某能力的 summary 文件不存在 | 跳过该能力，在 briefing 中注明"⚠️ 该能力摘要缺失"，不编造内容 |
 | summary.json 格式错误 | JSON 解析失败 | 标记 `parse_error: true`，跳过该能力，告知用户 |
-| 命题无关联能力 | capability-graph.json 中该命题无能力映射 | 生成空 briefing + 建议："该命题无关联能力，请检查分词结果" |
+| 命题无关联能力 | {{paths.meta_capability_graph}} 中该命题无能力映射 | 生成空 briefing + 建议："该命题无关联能力，请检查分词结果" |
 | 部分字段为空 | summary 中 mechanism_summary 为空 | 对应 section 写"（该能力未提供机制摘要）"，不编造 |
 | briefing 文件已存在 | 增量模式下文件已存在 | 跳过生成（默认），或询问用户"覆盖 / 跳过 / 追加" |
 | 上下文超限 | summaries 总量 > 50KB | 分批读取：每次读 5 个 summary，组装对应命题的 briefing，分批写入 |

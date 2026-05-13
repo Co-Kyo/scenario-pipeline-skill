@@ -9,7 +9,7 @@
 - `capability_name`：能力名称（如 "浏览器渲染管线"）
 - `capability_desc`：能力描述（依赖的技术层、关键概念）
 - `depth`：研究深度（shallow / normal / deep）
-- `references`：该能力的预查找信源（来自 capability-graph.json 的 `references` 字段）
+- `references`：该能力的预查找信源（来自 {{paths.meta_capability_graph}} 的 `references` 字段）
   - `t1`：T1 官方来源列表 [{url, title, verified}]
   - `t2`：T2 高质量来源列表 [{url, title, verified}]
   - `t1_missing`：T1 是否全部无结果
@@ -19,6 +19,11 @@
 - **必须调用**：MCP `get_sources` 工具（获取信源域名白名单，用于 fallback 搜索）
 
 ## 执行步骤
+
+**路径获取**：在执行任何步骤前，必须先调用 MCP `resolve_paths` 获取当前任务的所有路径：
+```bash
+mcporter call scenario-pipeline.resolve_paths params='{"task_type":"capability-research","workDir":"<产出目录>"}'
+```
 
 ### Step 1：信源获取（强制）
 
@@ -237,7 +242,7 @@
 | `experiment_code` | 主文件「最小验证实验」 | deep 模式提取核心代码片段，非 deep 填 `null` |
 | `references` | 主文件「参考资料」 | 每项**必须为对象**（含 tier/url/title），**禁止纯字符串或纯 URL** |
 
-> ⚠️ id/name/tech_layer/fanout/coupling/strategic_value 由 MCP 从 capability-graph.json 自动填充，agent 无需提供。
+> ⚠️ id/name/tech_layer/fanout/coupling/strategic_value 由 MCP 从 {{paths.meta_capability_graph}} 自动填充，agent 无需提供。
 
 #### 常见提交错误（MCP 会拒绝的格式）
 

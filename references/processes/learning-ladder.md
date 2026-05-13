@@ -9,17 +9,17 @@
 |------|------|------|------|
 | 能力依赖图 | 前处理 | `{{paths.meta_capability_graph}}` | 命题涉及的能力 + 依赖关系 → 阶段划分 |
 | 能力摘要 | 阶段一 | `{{paths.meta_summaries_dir}}<id>.json` | mechanism/bottlenecks/tradeoffs → 知识锚点 |
-| 命题概览 | 阶段二 | `<命题>/overview.md` | 链路解构 → 全局上下文 |
-| 坑点 | 阶段二 | `<命题>/edge-cases.md` | 坑点 → "你会踩的坑" |
-| 权衡 | 阶段二 | `<命题>/trade-offs.md` | 方案对比 → "怎么选" |
-| 实验 | 阶段二 | `<命题>/experiment/` | 可运行代码 → 动手任务 |
-| 参考资料 | 阶段二 | `<命题>/references.md` | 补充阅读 |
+| 命题概览 | 阶段二 | `{{paths.proposition_overview}}` | 链路解构 → 全局上下文 |
+| 坑点 | 阶段二 | `{{paths.proposition_edge_cases}}` | 坑点 → "你会踩的坑" |
+| 权衡 | 阶段二 | `{{paths.proposition_trade_offs}}` | 方案对比 → "怎么选" |
+| 实验 | 阶段二 | `{{paths.proposition_experiment}}` | 可运行代码 → 动手任务 |
+| 参考资料 | 阶段二 | `{{paths.proposition_references}}` | 补充阅读 |
 
 ## 输出
 
 | 输出 | 路径 | 说明 |
 |------|------|------|
-| 学习阶梯 | `<序号>-<命题简称>/learning-ladder.md` | 每个命题一个，渐进式引导 |
+| 学习阶梯 | `{{paths.proposition_learning_ladder}}` | 每个命题一个，渐进式引导 |
 
 ## 定位
 
@@ -27,17 +27,23 @@
 同一命题的不同技术视角，适合已掌握基础的人做参考，但对正在学习的人不够友好。
 
 学习阶梯的作用是把这些切片**编排成一条渐进路径**：
-- 基于 capability-graph.json 的能力依赖关系确定学习顺序
+- 基于 {{paths.meta_capability_graph}} 的能力依赖关系确定学习顺序
 - 每一步给出具体的"做什么 → 你会看到什么 → 这说明了什么 → 接下来去哪"
 - 读者"捡到 handler 就能执行"，带着问题去读现有产出
 
 ## 执行步骤
 
+> **路径获取**：在执行任何步骤前，必须先调用 MCP `resolve_paths` 获取当前任务的所有路径：
+> ```bash
+> mcporter call scenario-pipeline.resolve_paths params='{"task_type":"learning-ladder","workDir":"<产出目录>","seq":"<序号>","short_name":"<命题简称>"}'
+> ```
+> 后续所有路径均使用返回的 `{{paths.xxx}}` 变量，禁止自行拼接。
+
 ```
 对每个已组装的命题：
 
   1. 提取能力子图
-     从 capability-graph.json 获取该命题涉及的能力 ID + 依赖边
+     从 {{paths.meta_capability_graph}} 获取该命题涉及的能力 ID + 依赖边
 
   2. 拓扑排序
      Layer 0：无依赖的叶子节点（基础能力）
@@ -63,7 +69,7 @@
        - 接下来去哪（指向 pipeline 产出的精确路径）
        - 做到才算过（二值验证标准）
 
-  5. 写入 <命题>/learning-ladder.md
+  5. 写入 {{paths.proposition_learning_ladder}}
 ```
 
 ## 阶梯结构模板
@@ -119,12 +125,12 @@
 
 ## 上下文消耗
 
-读 capability-graph.json + summaries + 命题产出 ≈ 50-80KB（主 agent 可承受）
+读 {{paths.meta_capability_graph}} + summaries + 命题产出 ≈ 50-80KB（主 agent 可承受）
 
 ## 依赖
 
 - 需要先完成阶段一（能力研究，产出 {{paths.capability_file}} 所在目录 + {{paths.meta_summaries_dir}}）
-- 需要先完成阶段二（命题组装，产出 `<命题>/overview.md` 等文件）
+- 需要先完成阶段二（命题组装，产出 `{{paths.proposition_overview}}` 等文件）
 
 ## 参考
 

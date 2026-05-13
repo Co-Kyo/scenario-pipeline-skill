@@ -18,7 +18,7 @@
 ❌ 旧模式：agent 读 7-11 个能力文件（30-100KB）→ 筛选 → 写
 ✅ 新模式：从 summary.json 提取 briefing → 内联到 task → agent 只写
 
-agent 不读取 capabilities/ 下的任何文件。
+agent 不读取 {{paths.capabilities_readme}} 所在目录下的任何文件。
 所有需要的素材已经在 briefing 中提供。
 ```
 
@@ -61,7 +61,13 @@ briefing 结构如下（已内联到 agent 的 task 中）：
 
 ## 执行步骤
 
-### Step 1：链路编排（→ Q1 overview.md）
+> **路径获取**：在执行任何步骤前，必须先调用 MCP `resolve_paths` 获取当前任务的所有路径：
+> ```bash
+> mcporter call scenario-pipeline.resolve_paths params='{"task_type":"assemble","workDir":"<产出目录>","seq":"<序号>","short_name":"<命题简称>"}'
+> ```
+> 后续所有路径均使用返回的 `{{paths.xxx}}` 变量，禁止自行拼接。
+
+### Step 1：链路编排（→ Q1 {{paths.proposition_overview}}）
 
 **仅当 target_file = overview 时执行。**
 
@@ -76,7 +82,7 @@ briefing 结构如下（已内联到 agent 的 task 中）：
 - 补充命题特有的上下文（限定词注入的特化内容）
 - 标注原子能力 ID
 
-### Step 2：坑点提取（→ Q2 edge-cases.md）
+### Step 2：坑点提取（→ Q2 {{paths.proposition_edge_cases}}）
 
 **仅当 target_file = edge-cases 时执行。**
 
@@ -88,7 +94,7 @@ briefing 结构如下（已内联到 agent 的 task 中）：
 - 补充：命题特有的极端场景（如 AI 聊天的流式追加）
 - 组合：多个能力的瓶颈可能组合形成新的极端场景
 
-### Step 3：方案对比（→ Q3 trade-offs.md）
+### Step 3：方案对比（→ Q3 {{paths.proposition_trade_offs}}）
 
 **仅当 target_file = trade-offs 时执行。**
 
@@ -97,7 +103,7 @@ briefing 结构如下（已内联到 agent 的 task 中）：
 - 每种路线标注涉及的能力及其 tradeoff 选择
 - 表格形式，标注牺牲点
 
-### Step 4：实验组装（→ Q4 experiment/）
+### Step 4：实验组装（→ Q4 {{paths.proposition_experiment}}）
 
 **仅当 target_file = experiment 时执行。**
 
@@ -117,7 +123,7 @@ briefing 结构如下（已内联到 agent 的 task 中）：
 - 主体（70-80%）讲通用原理
 - 收尾（10-15%）回到限定词
 
-### Step 6：参考资料汇总（→ references.md）
+### Step 6：参考资料汇总（→ {{paths.proposition_references}}）
 
 **仅当 target_file = references 时执行。**
 
@@ -128,14 +134,14 @@ briefing 结构如下（已内联到 agent 的 task 中）：
 写入 `{{paths.proposition_dir}}`（即 `workflow/research/<序号>-<命题简称>/`）：
 
 ```
-<序号>-<命题简称>/
-├── overview.md      # Q1: 链路编排
-├── edge-cases.md    # Q2: 坑点提取
-├── trade-offs.md    # Q3: 方案对比
-├── experiment/      # Q4: 实验组装
+{{paths.proposition_dir}}/
+├── {{paths.proposition_overview}}      # Q1: 链路编排
+├── {{paths.proposition_edge_cases}}    # Q2: 坑点提取
+├── {{paths.proposition_trade_offs}}    # Q3: 方案对比
+├── {{paths.proposition_experiment}}    # Q4: 实验组装
 │   ├── README.md
 │   └── src/
-└── references.md    # 参考资料
+└── {{paths.proposition_references}}    # 参考资料
 ```
 
 ### 命题目录命名规范

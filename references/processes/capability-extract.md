@@ -1,6 +1,6 @@
 # Process: 原子能力提取 (capability-extract)
 
-> 从多个命题的分词结果中提取原子能力，计算扇出度，预查找每个能力的 T1/T2 信源 URL，输出结构化 capability-graph.json。
+> 从多个命题的分词结果中提取原子能力，计算扇出度，预查找每个能力的 T1/T2 信源 URL，输出结构化 {{paths.meta_capability_graph}}。
 
 ## 输入
 
@@ -12,6 +12,11 @@
 - **必须调用**：MCP `get_sources` 工具（获取信源域名白名单 + 黑名单 + 搜索策略）
 
 ## 执行步骤
+
+> **路径获取**：在执行任何步骤前，必须先调用 MCP `resolve_paths` 获取当前任务的所有路径：
+> ```bash
+> mcporter call scenario-pipeline.resolve_paths params='{"task_type":"capability-extract","workDir":"<产出目录>"}'
+> ```
 
 ### Step 1：逐命题提取原子能力
 
@@ -93,7 +98,7 @@
 
 #### 6.4 写入格式
 
-在 capability-graph.json 的每个能力对象中增加 `references` 字段：
+在 {{paths.meta_capability_graph}} 的每个能力对象中增加 `references` 字段：
 
 ```json
 {
@@ -146,7 +151,7 @@
 
 ### Step 6.5：⛔ 结构完整性强制校验（写入前必须通过）
 
-在写入 capability-graph.json 之前，逐项检查以下字段是否存在且格式正确。**每项缺失处理都是字段级定点回填，不需要重做整个步骤。**
+在写入 {{paths.meta_capability_graph}} 之前，逐项检查以下字段是否存在且格式正确。**每项缺失处理都是字段级定点回填，不需要重做整个步骤。**
 
 | # | 字段 | 位置 | 格式要求 | 缺失处理（不重做步骤，直接回填） |
 |---|------|------|---------|-------------------------------|
@@ -164,13 +169,13 @@
 **校验结束条件**：逐项检查全部通过后，才能进入 Step 7 写入 JSON。
 **不循环**：每项修复都是单向操作（读已有上下文 → 填缺失字段），不依赖步骤回退，不会形成重试循环。
 
-### Step 7：生成 capability-graph.json
+### Step 7：生成 {{paths.meta_capability_graph}}
 
 将全部结果写入 `{{paths.meta_capability_graph}}`。
 
 ---
 
-## 输出：capability-graph.json
+## 输出：{{paths.meta_capability_graph}}
 
 > ⚠️ **反精简规则**：本文件是下游所有步骤（highground-identify、briefing-assemble、assemble、learning-ladder）的唯一数据源。禁止任何形式的字段省略或结构简化。
 >
@@ -252,7 +257,7 @@
 |---------|---------|---------|
 | 信源预查找全部超时 | 单个能力的 T1+T2 域名 web_fetch 均超时 | 标记 `t1_missing: true` + `t2_missing: true`，后处理 agent 用 Fallback 搜索补充 |
 | MCP get_sources 调用失败 | MCP 服务器未连接或返回错误 | 使用内置默认域名列表（MDN + Chrome DevTools + web.dev），标记 `registry_fallback: true` |
-| 分词结果为空 | decompositions 列表为空 | 输出空 capability-graph.json + 告知用户"无有效命题，请检查扫描结果" |
+| 分词结果为空 | decompositions 列表为空 | 输出空 {{paths.meta_capability_graph}} + 告知用户"无有效命题，请检查扫描结果" |
 | 能力数量过多 | 提取 > 30 个原子能力 | 提示用户"能力数量过多（{n}），建议用 --filter 缩小范围"，继续执行但标记 `overload: true` |
 | JSON 写入失败 | .meta/ 目录不可写（路径：`{{paths.meta_capability_graph}}` 所在目录） | 自动创建目录 → 仍失败则输出到 stdout，由用户手动保存 |
 | 搜索结果全部命中黑名单 | T1+T2 域名搜索结果均在 blacklist 中 | 标记 `all_blocked: true`，该能力不写入 references，后处理 agent 自行搜索 |
