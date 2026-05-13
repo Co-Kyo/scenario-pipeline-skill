@@ -467,11 +467,11 @@ deep research：<场景描述>
 #### 简化任务指令（主 agent 发送给子 agent）
 
 ```
-你是 [能力名称] 的深度研究员。研究原子能力 "[能力名称]"（ID: [id]），产出两个文件：能力知识库主文件和结构化摘要 JSON。
+你是 [能力名称] 的深度研究员。
 
-信源：T1 官方文档 [URL 列表]；T2 技术博客 [URL 列表]。
+调用 `mcporter call scenario-pipeline.get_template template_type="capability-research" params='{"capability_id":"[id]","workDir":"<产出目录>"}'` 获取完整研究模板。
 
-调用 `mcporter call scenario-pipeline.get_template template_type="capability-research" params='{"capability_id":"[id]","capability_name":"[能力名称]","urls":[T1+T2 URL列表]}'` 获取完整研究模板。
+按返回的指令执行，无需读取其他文档。
 ```
 
 ### 加载条件
@@ -551,11 +551,11 @@ deep research：<场景描述>
 #### 简化任务指令（主 agent 发送给子 agent）
 
 ```
-你是 [命题名称] 的 Briefing 组装专家。为命题 "[命题名称]" 组装 Briefing 文档。
+你是 [命题名称] 的 Briefing 组装专家。
 
-输入：命题文本 [proposition]；能力ID列表 [capability_ids]；能力摘要 [summary_files 内容]。
+调用 `mcporter call scenario-pipeline.get_template template_type="briefing-assemble" params='{"seq":"[序号]","workDir":"<产出目录>"}'` 获取完整组装模板。
 
-调用 `mcporter call scenario-pipeline.get_template template_type="briefing-assemble" params='{"proposition":"[命题文本]","capability_ids":"[capability_ids]","summary_files":"[summary_files 内容]"}'` 获取完整组装模板。
+按返回的指令执行，无需读取其他文档。
 ```
 
 ### 加载条件
@@ -602,21 +602,21 @@ deep research：<场景描述>
 #### 简化任务指令 - Markdown组装 agent
 
 ```
-你是 [命题名称] 的 Markdown 组装专家。为命题 "[命题名称]" 组装 Markdown 文件（overview、edge-cases、trade-offs、references）。
+你是 [命题名称] 的 Markdown 组装专家。
 
-输入：命题文本 [proposition]；分词结果 [decomposition]；Briefing 内容 [briefing 内容]。
+调用 `mcporter call scenario-pipeline.get_template template_type="assemble" params='{"seq":"[序号]","workDir":"<产出目录>"}'` 获取完整组装模板。
 
-调用 `mcporter call scenario-pipeline.get_template template_type="assemble" params='{"proposition":"[命题文本]","decomposition":"[分词结果]","briefing":"[briefing 内容]","file_type":"markdown"}'` 获取完整组装模板。
+按返回的指令执行，无需读取其他文档。
 ```
 
 #### 简化任务指令 - 实验组装 agent
 
 ```
-你是 [命题名称] 的实验组装专家。为命题 "[命题名称]" 组装实验目录（experiment）。
+你是 [命题名称] 的实验组装专家。
 
-输入：命题文本 [proposition]；分词结果 [decomposition]；Briefing 内容 [briefing 内容]。
+调用 `mcporter call scenario-pipeline.get_template template_type="assemble" params='{"seq":"[序号]","workDir":"<产出目录>"}'` 获取完整组装模板。
 
-调用 `mcporter call scenario-pipeline.get_template template_type="assemble" params='{"proposition":"[命题文本]","decomposition":"[分词结果]","briefing":"[briefing 内容]","file_type":"experiment"}'` 获取完整组装模板。
+按返回的指令执行，无需读取其他文档。
 ```
 
 ### 加载条件
@@ -716,11 +716,11 @@ deep research：<场景描述>
 #### 简化任务指令（主 agent 发送给子 agent）
 
 ```
-你是 [命题名称] 的学习阶梯生成专家。为命题 "[命题名称]" 生成学习阶梯文档。
+你是 [命题名称] 的学习阶梯生成专家。
 
-输入：命题文本 [proposition]；能力依赖图 [capability_graph]；能力摘要 [summaries]；命题产出文件 [proposition_files]。
+调用 `mcporter call scenario-pipeline.get_template template_type="learning-ladder" params='{"seq":"[序号]","workDir":"<产出目录>"}'` 获取完整生成模板。
 
-调用 `mcporter call scenario-pipeline.get_template template_type="learning-ladder" params='{"proposition":"[命题文本]","capability_graph":"[capability_graph]","summaries":"[summaries]","proposition_files":"[proposition_files]"}'` 获取完整生成模板。
+按返回的指令执行，无需读取其他文档。
 ```
 
 

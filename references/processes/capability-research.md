@@ -3,7 +3,29 @@
 > 对单个原子能力进行深度研究，产出能力知识库条目。
 > **一个 agent 只负责一个能力文件，禁止合并。**
 
-## 输入
+## ⚠️ L2 改造说明
+
+**本文档已降级为参考文档，不再是执行手册。**
+
+实际执行指令请调用 MCP `get_template` 工具获取：
+```bash
+mcporter call scenario-pipeline.get_template template_type="capability-research" params='{"capability_id":"A1","workDir":"<产出目录>"}'
+```
+
+`get_template` 会返回完整的自包含执行指令，包含：
+- 能力元数据（从 capability-graph.json 自动加载）
+- 信源 URL（从 capability-graph.json 自动加载）
+- 执行步骤（从 templates/capability-research.md 加载）
+- 输出路径（自动解析）
+- 验证清单
+
+**子 agent 只需执行 `get_template` 返回的指令，无需读取本文档。**
+
+---
+
+## 参考信息（仅供理解，非执行指令）
+
+### 输入
 
 - `capability_id`：能力 ID（如 "A1"）
 - `capability_name`：能力名称（如 "浏览器渲染管线"）

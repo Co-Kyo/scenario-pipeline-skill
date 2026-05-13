@@ -3,6 +3,29 @@
 > 从阶段一产出的 summary.json 中定向提取内容，按命题组装为 briefing，供阶段二组装 agent 消费。
 > **单线程执行，不需要 spawn。**
 
+## ⚠️ L2 改造说明
+
+**本文档已降级为参考文档，不再是执行手册。**
+
+实际执行指令请调用 MCP `get_template` 工具获取：
+```bash
+mcporter call scenario-pipeline.get_template template_type="briefing-assemble" params='{"seq":"<序号>","workDir":"<产出目录>"}'
+```
+
+`get_template` 会返回完整的自包含执行指令，包含：
+- 命题信息（从 decompositions.json 自动加载）
+- 涉及能力列表（从 capability-graph.json 自动加载）
+- Briefing 内容（从 .meta/briefings/ 自动加载）- 仅 assemble 模板
+- 执行步骤（从 templates/briefing-assemble.md 加载）
+- 输出路径（自动解析）
+- 验证清单
+
+**子 agent 只需执行 `get_template` 返回的指令，无需读取本文档。**
+
+---
+
+## 参考信息（仅供理解，非执行指令）
+
 ## 输入
 
 - `{{paths.meta_summaries_dir}}*.json` — 阶段一双写的结构化摘要

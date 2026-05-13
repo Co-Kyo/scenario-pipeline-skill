@@ -139,7 +139,7 @@ export function getRequiredParams(taskType: string): string[] {
     case "assemble":
     case "briefing-assemble":
     case "learning-ladder":
-      return [...base, "seq", "short_name"];
+      return [...base, "seq"];  // short_name 可从 decompositions.json 自动推导
     default:
       return base;
   }
