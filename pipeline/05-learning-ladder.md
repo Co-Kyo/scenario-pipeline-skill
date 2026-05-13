@@ -1,7 +1,12 @@
 # 后处理·阶段三：学习阶梯生成
 
 > ⚠️ **架构观测文档** — 不是 skill 执行配置
-> 执行真相：`references/post-process.md §阶段三`、`references/processes/learning-ladder.md`
+> 执行真相：`references/post-process.md §阶段三`、`mcp-server/src/domains/template/templates/learning-ladder.md`
+>
+> **L2 架构说明**：MCP templates (`mcp-server/src/domains/template/templates/*.md`) 是执行指令的 SSoT。
+> `references/processes/*.md` 已降级为参考文档，不再是执行手册。
+> 执行流程：主 agent 调用 `get_template` → MCP 返回完整指令 → 子 agent 执行。
+> 子 agent 只写不读，无需读取 process 文档。
 
 > 触发：阶段二（命题组装）全部完成后自动执行
 > 执行者：主 agent 单线程，不 spawn

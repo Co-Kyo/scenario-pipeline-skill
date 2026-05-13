@@ -1,7 +1,8 @@
 # 后处理编排
 
 > 纯编排文件：定义后处理的三阶段管线和调用关系。
-> 每个步骤的实现在 `processes/` 目录下。
+> 执行指令的 SSoT 在 MCP templates（`mcp-server/src/domains/template/templates/*.md`）。
+> `processes/` 目录下的文件为参考文档（L2 改造后降级），仅供人类阅读。
 
 ## 路径规范
 
@@ -476,8 +477,8 @@ deep research：<场景描述>
 
 ### 加载条件
 
-- 始终加载：plugins/capability-research-mode.md（材料块格式规范）
-- 始终加载：core/capability-graph.md（能力定义参考）
+- 执行指令由 MCP `get_template("capability-research")` 提供，子 agent 无需读取任何文档。
+- 格式规范已内嵌到 MCP 模板中（源自 plugins/capability-research-mode.md）。
 
 ### 并行管理
 
@@ -560,7 +561,7 @@ deep research：<场景描述>
 
 ### 加载条件
 
-- 始终加载：processes/briefing-assemble.md
+- 执行指令由 MCP `get_template("briefing-assemble")` 提供，子 agent 无需读取任何文档。
 
 ---
 
@@ -621,8 +622,8 @@ deep research：<场景描述>
 
 ### 加载条件
 
-- 始终加载：plugins/capability-research-mode.md（组装格式参考）
-- 始终加载：core/scenario-matrix.md（四象限框架）
+- 执行指令由 MCP `get_template("assemble")` 提供，子 agent 无需读取任何文档。
+- 组装格式和四象限框架已内嵌到 MCP 模板中。
 
 ### 内容比例约束
 
@@ -741,7 +742,7 @@ deep research：<场景描述>
 
 ### 详细执行逻辑
 
-详见 [processes/learning-ladder.md](processes/learning-ladder.md)
+执行指令由 MCP `get_template("learning-ladder")` 提供。详见 MCP templates 中的 `learning-ladder.md`。
 
 ---
 
@@ -755,7 +756,7 @@ deep research：<场景描述>
   → 同时检查 {{paths.meta_summaries_dir}} 中是否有对应摘要
     → 有摘要：复用，跳过
     → 无摘要：需要补生成（可从已有主文件中提取）
-  → 缺失：调用 processes/capability-research.md 补充研究（双写）
+  → 缺失：调用 MCP template `get_template("capability-research")` 补充研究（双写）
 ```
 
 ### 阶段一步骤2增量（Briefing 组装）

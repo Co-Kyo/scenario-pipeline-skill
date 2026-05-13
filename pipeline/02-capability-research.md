@@ -1,13 +1,13 @@
 # 后处理·阶段一步骤1：能力研究
 
 > ⚠️ **架构观测文档** — 不是 skill 执行配置
-> 执行真相：`references/post-process.md §阶段一步骤1`、`references/processes/capability-research.md`
+> 执行真相（L2 架构）：MCP template `capability-research.md`（`mcp-server/src/domains/template/templates/`）
+> 参考文档：`references/post-process.md §阶段一步骤1`、`references/archive/capability-research.md`（已降级）
 
 > 触发：`研究：<场景描述>` / `deep research：<场景描述>`（后处理启动后自动进入）
 > 执行者：滑动窗口并行 spawn（每 agent 1 个能力文件，窗口大小默认4）
 
-> ⛔ **禁止在 pipeline 观测文档中添加 MCP 相关内容。**
-> MCP 是实现层加速方案，不属于管道定义。MCP 相关内容请参见 [`mcp-server/`](../mcp-server/)。
+> **L2 架构说明**：主 agent 调用 MCP `get_template("capability-research")` 获取完整执行指令 → 子 agent 执行。子 agent 只写不读，无需访问 `references/processes/`。
 
 ---
 
@@ -32,8 +32,9 @@
 
 | 文件 | 角色 |
 |------|------|
-| `references/post-process.md` | 编排 |
-| `references/processes/capability-research.md` | agent 执行指令模板 |
+| `references/post-process.md` | 编排（参考） |
+| MCP template `capability-research.md` | **执行指令 SSoT**（主 agent 通过 `get_template` 获取） |
+| `references/archive/capability-research.md` | 参考文档（已降级，不再用于执行） |
 | `plugins/capability-research-mode.md` | 必须：材料块格式规范 |
 | MCP `get_sources` 工具 | 必须：信源白名单（fallback 搜索） |
 | `core/capability-graph.md` | 能力定义参考 |
@@ -63,7 +64,7 @@
 3. 增量检查：capabilities/ 中已有 → 跳过，缺失 → 研究
 4. 为每个能力预查找 T1/T2 URL
 5. 按滑动窗口并行 spawn（窗口=4，每 agent 1 个能力）
-   task = capability-research.md 模板 + 能力 ID + T1/T2 URL
+   task = MCP get_template("capability-research") 返回的完整指令 + 能力 ID + T1/T2 URL
    每个 agent 双写：
      → capabilities/<id>-<name>.md（主文件）
      → .meta/summaries/<id>-<name>.json（摘要）
@@ -98,5 +99,5 @@
 
 | 触发条件 | 必须加载 |
 |---------|---------|
-| 能力研究阶段 | plugins/capability-research-mode.md + processes/capability-research.md |
+| 能力研究阶段 | plugins/capability-research-mode.md + MCP get_template("capability-research") |
 

@@ -1,13 +1,13 @@
 # 后处理·阶段一步骤2：Briefing 组装
 
 > ⚠️ **架构观测文档** — 不是 skill 执行配置
-> 执行真相：`references/post-process.md §阶段一步骤2`、`references/processes/briefing-assemble.md`
+> 执行真相（L2 架构）：MCP template `briefing-assemble.md`（`mcp-server/src/domains/template/templates/`）
+> 参考文档：`references/post-process.md §阶段一步骤2`、`references/archive/briefing-assemble.md`（已降级）
 
 > 触发：阶段一步骤1（能力研究）全部完成后自动执行
 > 执行者：主 agent 单线程，不 spawn
 
-> ⛔ **禁止在 pipeline 观测文档中添加 MCP 相关内容。**
-> MCP 是实现层加速方案，不属于管道定义。MCP 相关内容请参见 [`mcp-server/`](../mcp-server/)。
+> **L2 架构说明**：主 agent 调用 MCP `get_template("briefing-assemble")` 获取完整执行指令 → 子 agent 执行。子 agent 只写不读，无需访问 `references/processes/`。
 
 ---
 
@@ -31,8 +31,9 @@
 
 | 文件 | 角色 |
 |------|------|
-| `references/post-process.md` | 编排 |
-| `references/processes/briefing-assemble.md` | 组装逻辑细节 |
+| `references/post-process.md` | 编排（参考） |
+| MCP template `briefing-assemble.md` | **组装逻辑 SSoT**（主 agent 通过 `get_template` 获取） |
+| `references/archive/briefing-assemble.md` | 参考文档（已降级，不再用于执行） |
 
 ### 产物文件（读取）
 

@@ -34,9 +34,14 @@
 plugins/year-granularity.md
   └── 被 decompose.md 按需加载（--year 参数）
 
-plugins/capability-research-mode.md
-  ├── 被 capability-research.md 必须加载（材料块格式）
-  └── 被 assemble.md 必须加载（组装格式+实验模板）
+ plugins/capability-research-mode.md
+   ├── 被 capability-research.md 必须加载（材料块格式）
+   └── 被 assemble 模板必须加载（组装格式+实验模板）
+
+> **L2 架构说明**：执行指令的 SSoT 是 MCP templates (`mcp-server/src/domains/template/templates/*.md`)。
+> `references/processes/*.md` 已降级为参考文档，不再是执行手册。
+> 主 agent 通过 MCP `get_template` 获取模板后，将指令内联到子 agent task；
+> 子 agent 只写不读，无需访问 process 文档。
 
 MCP `get_sources` 工具
   ├── 被 capability-extract.md 必须调用（信源URL预查找）

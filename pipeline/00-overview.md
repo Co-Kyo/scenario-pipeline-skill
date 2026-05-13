@@ -1,13 +1,12 @@
 # 管道总览
 
 > ⚠️ **架构观测文档** — 不是 skill 执行配置
-> 执行真相：`references/pre-process.md`、`references/post-process.md`
+> 执行真相（L2 架构）：MCP `templates/*.md`（`mcp-server/src/domains/template/templates/`）
 
 > 本文档是 Scenario Pipeline 的全局视图，定义数据流和阶段边界。
 > 各阶段的详细输入/输出/涉及文件见对应的阶段文件。
 
-> ⛔ **禁止在 pipeline 观测文档中添加 MCP 相关内容。**
-> MCP 是实现层加速方案，不属于管道定义。MCP 相关内容请参见 [`mcp-server/`](../mcp-server/)。
+> **L2 架构说明**：MCP templates 现在是执行指令的 SSoT。主 agent 调用 `get_template` → MCP 返回完整指令 → 子 agent 执行。`references/processes/*.md` 已降级为参考文档。
 
 ---
 

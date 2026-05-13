@@ -1,7 +1,12 @@
 # 后处理·阶段二：命题组装
 
 > ⚠️ **架构观测文档** — 不是 skill 执行配置
-> 执行真相：`references/post-process.md §阶段二`、`references/processes/assemble.md`
+> 执行真相：`references/post-process.md §阶段二`、`mcp-server/src/domains/template/templates/assemble.md`
+>
+> **L2 架构说明**：MCP templates (`mcp-server/src/domains/template/templates/*.md`) 是执行指令的 SSoT。
+> `references/processes/*.md` 已降级为参考文档，不再是执行手册。
+> 执行流程：主 agent 调用 `get_template` → MCP 返回完整指令 → 子 agent 执行。
+> 子 agent 只写不读，无需读取 process 文档。
 
 > 触发：Briefing 组装全部完成后自动执行
 > 执行者：滑动窗口并行 spawn（每 agent 1 个命题的 1 个象限文件，窗口大小默认4）
@@ -35,7 +40,7 @@
 | 文件 | 角色 |
 |------|------|
 | `references/post-process.md` | 编排 |
-| `references/processes/assemble.md` | agent 执行指令模板 |
+| `mcp-server/src/domains/template/templates/assemble.md` | agent 执行指令模板（通过 MCP get_template 获取） |
 | `plugins/capability-research-mode.md` | 必须：组装格式参考 |
 | `core/scenario-matrix.md` | 必须：四象限框架 |
 
@@ -117,7 +122,9 @@
 
 | 触发条件 | 必须加载 |
 |---------|---------|
-| 命题组装阶段 | plugins/capability-research-mode.md + processes/assemble.md |
+| 命题组装阶段 | plugins/capability-research-mode.md + references/archive/assemble.md |
+
+> **L2 注**：`references/archive/assemble.md` 仅供参考；实际执行指令通过 MCP `get_template` 获取。
 
 ---
 

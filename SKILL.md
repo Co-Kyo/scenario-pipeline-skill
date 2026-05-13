@@ -86,23 +86,29 @@ mcporter call scenario-pipeline.ping   # → pong
 SKILL.md          ← 入口（触发方式 + 流程概览 + 导航）
 core/             ← 元能力（定义方法论）
 plugins/          ← 增强插件（能力扩展）
-references/       ← 流程控制
-  ├── pre-process.md    ← 前处理编排
-  ├── post-process.md   ← 后处理编排
-  └── processes/        ← 步骤实现
-      ├── scan.md
-      ├── decompose.md
-      ├── capability-extract.md
-      ├── highground-identify.md
-      ├── evaluate.md
-      ├── capability-research.md
-      ├── briefing-assemble.md
-      ├── assemble.md
-      └── learning-ladder.md
+references/       ← 流程编排（参考文档，非执行手册）
+  ├── pre-process.md    ← 前处理编排（参考）
+  ├── post-process.md   ← 后处理编排（参考）
+  └── processes/        ← 步骤说明（参考文档，L2 改造后降级）
 mcp-server/       ← MCP 服务器（状态管理 + 模板管理 + 信源管理）
-  ├── src/tools/        ← 工具实现
-  └── dist/             ← 构建产物
+  ├── src/tools/                  ← 工具实现
+  ├── src/domains/template/templates/  ← 执行指令模板（SSoT，*.md）
+  │   ├── capability-research.md
+  │   ├── briefing-assemble.md
+  │   ├── assemble.md
+  │   ├── learning-ladder.md
+  │   └── ...
+  └── dist/                       ← 构建产物
 ```
+
+### L2 架构改造说明
+
+> **执行指令的 SSoT 已从 `references/processes/*.md` 迁移到 `mcp-server/src/domains/template/templates/*.md`。**
+>
+> - **MCP templates**（`*.md` in `mcp-server/src/domains/template/templates/`）：执行指令的唯一事实来源
+> - **references/processes/*.md**：降级为参考文档，仅供人类阅读理解流程
+> - **执行流程**：主 agent 调用 `get_template` → MCP 返回完整指令 → 子 agent 执行
+> - **子 agent 只写不读**：无需读取任何 process 文档，所有指令由 MCP 模板提供
 
 ### Core — 元能力
 
@@ -123,29 +129,29 @@ mcp-server/       ← MCP 服务器（状态管理 + 模板管理 + 信源管理
 
 ### References — 流程控制
 
-编排文件定义步骤顺序，processes/ 定义步骤实现。
+编排文件定义步骤顺序（参考文档），实际执行指令由 MCP templates 提供。
 
 - **Pre-process** — 前处理编排：[references/pre-process.md](references/pre-process.md)
 - **Post-process** — 后处理编排：[references/post-process.md](references/post-process.md)
-- **Processes/** — 步骤实现：
+- **Processes/** — 步骤说明（参考文档，L2 后降级）：
   - [scan.md](references/processes/scan.md) — 广域扫描
   - [decompose.md](references/processes/decompose.md) — 架构分词
   - [capability-extract.md](references/processes/capability-extract.md) — 原子能力提取
   - [highground-identify.md](references/processes/highground-identify.md) — 战略高地识别
   - [evaluate.md](references/processes/evaluate.md) — 四维评估
-  - [capability-research.md](references/processes/capability-research.md) — 能力研究
-  - [briefing-assemble.md](references/processes/briefing-assemble.md) — Briefing 组装
-  - [assemble.md](references/processes/assemble.md) — 材料块组装
-  - [learning-ladder.md](references/processes/learning-ladder.md) — 学习阶梯生成
+  - [capability-research.md](references/archive/capability-research.md) — 能力研究
+  - [briefing-assemble.md](references/archive/briefing-assemble.md) — Briefing 组装
+  - [assemble.md](references/archive/assemble.md) — 材料块组装
+  - [learning-ladder.md](references/archive/learning-ladder.md) — 学习阶梯生成
 
 ## Pre-processing Flow
 
-1. **Scan** — 调用 [processes/scan.md](references/processes/scan.md)
+1. **Scan** — 调用 MCP template `get_template("scan")`
 2. **ⓒ 检查点 A** — 扫描摘要确认
-3. **Decompose** — 调用 [processes/decompose.md](references/processes/decompose.md)
-4. **Capability Extract** — 调用 [processes/capability-extract.md](references/processes/capability-extract.md)
-5. **Highground Identify** — 调用 [processes/highground-identify.md](references/processes/highground-identify.md)
-6. **Evaluate** — 调用 [processes/evaluate.md](references/processes/evaluate.md)
+3. **Decompose** — 调用 MCP template `get_template("decompose")`
+4. **Capability Extract** — 调用 MCP template `get_template("capability-extract")`
+5. **Highground Identify** — 调用 MCP template `get_template("highground-identify")`
+6. **Evaluate** — 调用 MCP template `get_template("evaluate")`
 7. **ⓒ 检查点 B** — 评估结果确认
 8. **Pool** — 写入候选池
 
@@ -155,17 +161,17 @@ mcp-server/       ← MCP 服务器（状态管理 + 模板管理 + 信源管理
 > 每个阶段产物节点有检查点（ⓔⓓⓕⓖ）主动暂停，等待用户审查确认后才放行。
 
 **阶段一：能力研究 + Briefing 组装（两步骤）**
-- 步骤1：并行调用 [processes/capability-research.md](references/processes/capability-research.md)
+- 步骤1：并行调用 MCP template `get_template("capability-research")`
 - **⛔ ⓔ 检查点 E（能力研究审查）**
-- 步骤2：并行调用 [processes/briefing-assemble.md](references/processes/briefing-assemble.md)
+- 步骤2：并行调用 MCP template `get_template("briefing-assemble")`
 - **⛔ ⓓ 检查点 D（Briefing 预审 - 阶段一完成）**
 
 **阶段二：命题组装（并行）**
-- 并行调用 [processes/assemble.md](references/processes/assemble.md)（每agent 1个命题：Markdown组装 + 实验组装）
+- 并行调用 MCP template `get_template("assemble")`（每agent 1个命题：Markdown组装 + 实验组装）
 - **⛔ ⓕ 检查点 F（命题组装审查）**
 
 **阶段三：学习阶梯生成**
-- 并行生成 `learning-ladder.md`
+- 并行调用 MCP template `get_template("learning-ladder")`
 - **⛔ ⓖ 检查点 G（全局收尾确认）**
 
 ## Output Structure

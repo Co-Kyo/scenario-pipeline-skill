@@ -123,15 +123,16 @@ scenario-pipeline-skill/
 ├── plugins/                        ← 可热插拔的增强插件
 │   ├── capability-research-mode.md     材料块格式 + 深度分级
 │   └── year-granularity.md             年限→颗粒度映射
-├── references/                     ← 流程编排 + 步骤实现
+├── references/                     ← 流程编排 + 参考文档
 │   ├── pre-process.md                  前处理编排
 │   ├── post-process.md                 后处理编排
-│   └── processes/                      9 个可组合步骤
+│   └── archive/                        已降级的参考文档（L2 改造后）
 ├── mcp-server/                     ← MCP 服务器（状态 + 模板 + 信源管理）
 │   └── src/
-│       ├── domains/                  按业务域组织
+│       ├── domains/
 │       │   ├── state/                状态管理（save_state / restore_state）
 │       │   ├── template/             模板管理（get_template）
+│       │   │   └── templates/        ← L2 执行指令模板（SSoT）
 │       │   └── source/               信源管理（get_sources）
 │       ├── core/                     基础设施（BaseTool 基类）
 │       └── health/                   健康检查（ping）
@@ -198,13 +199,36 @@ scenario-pipeline-skill/
 
 ## MCP 加速层
 
-MCP 服务器是对 skill 特定工作域的加速解决方案，不涉及管道定义（管道定义在 `references/` 中）。提供三类能力：
+MCP 服务器是 skill 的执行引擎，提供两类核心能力：
 
 | 域 | 工具 | 作用 |
 |----|------|------|
 | **状态持久化** | `save_state` / `restore_state` | 跨会话中断恢复，支持检查点机制 |
-| **子 agent 上下文** | `get_template` | 子 agent 直接获取任务模板，减少主 agent 上下文压力 |
+| **L2 模板执行** | `get_template` | 返回自包含执行指令，子 agent 只写不读 |
 | **信源管理** | `get_sources` | 统一管理信源白名单/黑名单，避免硬编码 |
+
+### L2 架构改造
+
+**核心目标**：降低主线程上下文消耗，最大化利用子 agent 独立上下文。
+
+```
+改造前（L1）：
+├── 主 agent 准备：capability_id + capability_name + URLs + ...
+├── 子 agent 需要：读取 process 文档 + 执行
+└── 问题：主 agent 上下文浪费，子 agent 执行不一致
+
+改造后（L2）：
+├── 主 agent 准备：capability_id + workDir（或 seq + workDir）
+├── MCP get_template：从 .meta/ 自动加载数据 + 模板
+├── 子 agent 收到：完整自包含执行指令
+└── 子 agent 执行：只写不读，无需读取任何文档
+```
+
+**关键设计**：
+- **模板即 SSoT**：执行指令在 `mcp-server/src/domains/template/templates/*.md`
+- **数据自动加载**：MCP 从 `.meta/` 读取 capability-graph.json、decompositions.json、summaries/
+- **参数最小化**：主 agent 只需传 seq + workDir 或 capability_id + workDir
+- **子 agent 只写不读**：收到完整指令后，只负责产出文件
 
 > 详见 [`mcp-server/README.md`](mcp-server/README.md)。
 
