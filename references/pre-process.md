@@ -49,7 +49,8 @@ Step 1 ──→ Step 1.5 ──→ ⓐ ──→ Step 2 ──→ Step 3 ──
 ```
 调用：processes/scan.md
 输入：用户指令中的 source_desc + topic
-输出：raw-materials.json（写入 {workDir}/.meta/）
+执行前：调用 MCP `get_output_schema(step="scan")` 获取输出 schema 标准
+输出：raw-materials.json（通过 MCP `submit_output(step="scan", data=..., workDir=...)` 校验 + 写入）
 caller：pre/scan
 ```
 
@@ -95,8 +96,9 @@ caller：pre/scan
 ```
 调用：processes/decompose.md
 输入：Step 1 的 raw_materials
+执行前：调用 MCP `get_output_schema(step="decompose")` 获取输出 schema 标准
 加载条件：如果 --year → 额外加载 plugins/year-granularity.md
-输出：decompositions[]（分词结果列表）
+输出：decompositions.json（通过 MCP `submit_output(step="decompose", data=..., workDir=...)` 校验 + 写入）
 ```
 
 ### Step 3：原子能力提取 + 信源 URL 预查找（子 agent 隔离）
@@ -122,9 +124,10 @@ caller：pre/scan
 
 子 agent 执行：
   - 读取 task description 中的方法论和执行指令
-  - 读取 decompositions.json 和 raw-materials.json
+  - 调用 MCP `get_output_schema(step="capability-extract")` 获取输出 schema 标准
   - 执行原子能力提取 + 信源 URL 预查找
-  - 将结果写入 {workDir}/.meta/capability-graph.json
+  - 按 schema 标准构造 capability-graph.json
+  - 调用 MCP `submit_output(step="capability-extract", data=..., workDir=...)` 校验 + 写入
   - 输出 ≤200 字摘要到 stdout
 
 输出：capability-graph.json
@@ -155,7 +158,8 @@ caller：subagent/cap-extract
 ```
 调用：processes/evaluate.md
 输入：Step 2 的 decompositions.json + Step 3 的 capability-graph.json（无 highgrounds）+ Step 1 的 raw-materials.json
-输出：evaluations.json（评分 + 入池判定）
+执行前：调用 MCP `get_output_schema(step="evaluate")` 获取输出 schema 标准
+输出：evaluations.json（通过 MCP `submit_output(step="evaluate", data=..., workDir=...)` 校验 + 写入）
 ```
 
 > **注意**：Step 5 使用 Step 3 的 capability-graph.json（不含 highgrounds 字段）。

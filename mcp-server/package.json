@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp -r src/domains/template/templates dist/domains/template/templates",
     "dev": "tsc --watch",
     "start": "node dist/index.js"
   },

@@ -361,7 +361,20 @@ export class GetTemplateTool extends BaseTool {
   async execute(args: Record<string, any>): Promise<any> {
     const { template_type, params = {} } = args;
 
-    // Layer 1: 参数解析
+    // Layer 1: 参数解析（基础校验：workDir 等）
+    // Layer 2: 数据加载（先加载数据，再自动推导缺失参数）
+    const capabilities = await loadCapabilityGraph(params.workDir);
+    const decompositions = await loadDecompositions(params.workDir);
+
+    // 自动推导 capability_name（capability-research 模板需要）
+    if (template_type === "capability-research" && params.capability_id && !params.capability_name) {
+      const cap = capabilities.find((c) => c.id === params.capability_id);
+      if (cap) {
+        params.capability_name = cap.name;
+      }
+    }
+
+    // 自动推导完成后，执行完整参数校验
     const validation = validateParams(template_type, params);
     if (!validation.valid) {
       return {
@@ -372,10 +385,6 @@ export class GetTemplateTool extends BaseTool {
         missing: validation.missing,
       };
     }
-
-    // Layer 2: 数据加载
-    const capabilities = await loadCapabilityGraph(params.workDir);
-    const decompositions = await loadDecompositions(params.workDir);
 
     // 对于 assemble/briefing-assemble/learning-ladder，自动推导 short_name
     if (["assemble", "briefing-assemble", "learning-ladder"].includes(template_type)) {

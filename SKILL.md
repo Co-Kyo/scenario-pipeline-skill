@@ -5,6 +5,28 @@ description: "前端复合工程场景知识管线。两阶段工作流：前处
 
 # Scenario Pipeline
 
+## ⛔ 启动自检（每次执行前必须完成）
+
+> 未通过自检就执行管线，会导致工具调用失败和幻觉（误判工具不存在）。
+
+```
+自检步骤：
+  1. 调用 mcporter call scenario-pipeline.ping 验证 MCP server 可用
+  2. 调用 mcporter call scenario-pipeline.get_output_schema params='{"step":"scan"}' 验证 schema 工具可用
+  3. 如果任一步骤失败：
+     a. 检查 MCP server 是否已构建：cd mcp-server && npm run build
+     b. 检查 MCP server 是否已重启（新构建后必须重启进程）
+     c. 重启后重新执行自检
+  4. 自检全部通过后，开始执行管线
+```
+
+**常见故障**：
+- `get_template` 返回空 → `tsc` 不复制 `.md` 文件，需手动 `cp -r src/domains/template/templates dist/domains/template/`
+- `get_output_schema` 不存在 → MCP server 未用最新代码构建，需 `npm run build` + 重启
+- `ping` 超时 → MCP server 进程未启动
+
+---
+
 Two-phase knowledge production pipeline for composite engineering scenarios.
 
 **Pre-processing** = scan → decompose → capability extract → highground identify → evaluate → pool
