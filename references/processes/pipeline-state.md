@@ -27,10 +27,44 @@
 所有 MCP 工具通过 `mcporter call` 调用，支持动态 `workDir` 参数指定产出目录：
 
 ```bash
-mcporter call scenario-pipeline.<tool> [params] --args '{"workDir":"<产出目录>"}'
+mcporter call scenario-pipeline.<tool> [params] --args '{"workDir":"<产出目录>","caller":"<调用者标识>"}'
 ```
 
 **参数优先级**：`workDir` 参数 > `WORK_DIR` 环境变量 > `process.cwd()`
+
+### caller 调用者标识规范
+
+> caller 字段用于 MCP 调用日志（`.meta/mcp-calls.jsonl`）的埋点追踪，标识调用来源的管线阶段。
+
+**命名格式**：`{phase}/{step}[-{detail}]`
+
+**前处理阶段**：
+
+| 阶段 | caller 值 |
+|------|----------|
+| 编排层（pre-process.md） | `pre/resolve`、`pre/save-state` |
+| 广域扫描 | `pre/scan` |
+| 架构分词 | `pre/decompose` |
+| 原子能力提取 | `pre/cap-extract` |
+| 战略高地识别 | `pre/highground` |
+| 四维评估 | `pre/evaluate` |
+| 入池归档 | `pre/pool` |
+
+**后处理阶段**：
+
+| 阶段 | caller 值 |
+|------|----------|
+| 能力研究（按能力 ID） | `post/cap-research-{id}`（如 `post/cap-research-A1`） |
+| Briefing 组装 | `post/briefing-{seq}` |
+| 命题组装 | `post/assemble-{seq}` |
+| 学习阶梯 | `post/ladder-{seq}` |
+
+**子 agent 模式**（Phase 1+）：
+
+| 子 agent | caller 值 |
+|----------|----------|
+| scan 子 agent | `subagent/scan` |
+| capability-extract 子 agent | `subagent/cap-extract` |
 
 **典型调用**：
 ```bash

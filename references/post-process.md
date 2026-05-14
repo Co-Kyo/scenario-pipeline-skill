@@ -26,10 +26,10 @@
 
 ---
 
-> **MCP 调用约定**：所有 `save_state`/`restore_state` 调用必须通过 `mcporter call` 执行，并传入 `workDir` 参数指向产出目录：
-> ```bash
-> mcporter call scenario-pipeline.save_state checkpoint="<checkpoint>" context='<context>' --args '{"workDir":"<产出目录>"}'
-> mcporter call scenario-pipeline.restore_state --args '{"workDir":"<产出目录>"}'
+> **MCP 调用约定**：所有 `save_state`/`restore_state` 调用必须通过 `mcporter call` 执行，并传入 `workDir` 参数指向产出目录，`caller` 参数标识管线阶段（格式：`{phase}/{step}`，详见 pipeline-state.md §caller 规范）：
+>
+> mcporter call scenario-pipeline.save_state checkpoint="<checkpoint>" context='<context>' --args '{"workDir":"<产出目录>","caller":"<phase/step>"}'
+> mcporter call scenario-pipeline.restore_state --args '{"workDir":"<产出目录>","caller":"<phase/step>"}'
 > mcporter call scenario-pipeline.get_template template_type="<type>" params='<params>'
 > ```
 > `get_template` 无需 `workDir`（模板内嵌在 MCP server 中）。

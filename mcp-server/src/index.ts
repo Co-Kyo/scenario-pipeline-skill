@@ -13,6 +13,7 @@ import { GetTemplateTool, ResolvePathsTool } from "./domains/template/index.js";
 import { GetSourcesTool } from "./domains/source/index.js";
 import { GetSummarySchemaTool, SubmitSummaryTool } from "./domains/summary/index.js";
 import { PingTool } from "./health/ping.js";
+import { callLogger } from "./core/call-logger.js";
 
 const server = new Server(
   {
@@ -63,8 +64,15 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     throw new Error(`Unknown tool: ${name}`);
   }
 
+  const startMs = Date.now();
+
   try {
     const result = await tool.execute(args || {});
+    const latencyMs = Date.now() - startMs;
+
+    // 埋点：记录调用日志
+    await callLogger.log(name, args || {}, "ok", latencyMs);
+
     return {
       content: [
         {
@@ -76,6 +84,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : String(error);
+    const latencyMs = Date.now() - startMs;
+
+    // 埋点：记录失败日志
+    await callLogger.log(name, args || {}, "error", latencyMs, errorMessage);
+
     return {
       content: [
         {
