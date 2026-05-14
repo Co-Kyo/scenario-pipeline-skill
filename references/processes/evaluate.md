@@ -74,22 +74,8 @@
 
 ## 输出
 
-```yaml
-evaluation:
-  proposition: "长列表：AI 聊天窗口的虚拟列表渲染"
-  scores:
-    cross_stack: 3
-    doc_vacuum: 2
-    experience_barrier: 3
-    trending_heat: 3
-    total: 11
-  verdict: "high"
-  highground_hits: ["A1", "A2", "A5", "A6"]
-  evidence:
-    t1_sources: ["MDN IntersectionObserver"]
-    t2_sources: ["@tanstack/virtual"]
-    t3_sources: ["掘金-2025前端面试场景题"]
-```
+输出格式由 MCP `get_output_schema(step="evaluate")` 定义，包含 template + field_rules + strict_notes。
+写入前调用 MCP `submit_output(step="evaluate", data=..., workDir=...)` 自动校验。
 
 ## 异常与 Fallback
 

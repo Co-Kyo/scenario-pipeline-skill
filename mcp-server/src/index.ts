@@ -12,6 +12,7 @@ import { SaveStateTool, RestoreStateTool } from "./domains/state/index.js";
 import { GetTemplateTool, ResolvePathsTool } from "./domains/template/index.js";
 import { GetSourcesTool } from "./domains/source/index.js";
 import { GetSummarySchemaTool, SubmitSummaryTool } from "./domains/summary/index.js";
+import { GetOutputSchemaTool, SubmitOutputTool } from "./domains/output/index.js";
 import { PingTool } from "./health/ping.js";
 import { callLogger } from "./core/call-logger.js";
 
@@ -43,6 +44,10 @@ const tools = [
   // 摘要管理域（schema 强制闭环）
   new GetSummarySchemaTool(),
   new SubmitSummaryTool(),
+
+  // 输出管理域（泛化 schema 驱动）
+  new GetOutputSchemaTool(),
+  new SubmitOutputTool(),
 
   // 健康检查
   new PingTool(),

@@ -160,25 +160,11 @@
 | 黑名单过滤 | 命中 blacklist 的 URL | 直接丢弃，不写入 JSON |
 | 验证完整性 | **每个写入 JSON 的 URL 都必须经过上述全部校验** | 未验证 → 禁止写入，verified 字段不得为 true |
 
-### Step 6.5：⛔ 结构完整性强制校验（写入前必须通过）
+### Step 6.5：结构完整性校验
 
-在写入 {{paths.meta_capability_graph}} 之前，逐项检查以下字段是否存在且格式正确。**每项缺失处理都是字段级定点回填，不需要重做整个步骤。**
-
-| # | 字段 | 位置 | 格式要求 | 缺失处理（不重做步骤，直接回填） |
-|---|------|------|---------|-------------------------------|
-| 1 | `$schema` | 顶层 | `"capability-graph-v1"` | 固定值，直接填入 `"capability-graph-v1"` |
-| 2 | `meta` | 顶层 | `{scan_date, target_years, total_propositions, scan_scope}` | 从当前会话上下文（扫描时的指令参数和结果）提取日期、年限、命题数、范围后直接填入 |
-| 3 | `dependencies` | 每个 capability 内 | 数组，可为空 `[]` | 从当前上下文的分词结果和已提取能力集推导：基础能力（不依赖其他能力）填 `[]`，下游能力从同层分词结果中找到先决能力，引用对应 ID |
-| 4 | `tags` | 每个 capability 内 | 数组，≥1 个标签 | 根据该能力的名称和技术域，自动推断标签（如 "浏览器渲染管线" → `["渲染", "浏览器", "CRP"]`） |
-| 5 | `source_domain` | 每个 capability 内 | 字符串，来自 MCP get_sources 技术域 | 调用 MCP `get_sources` 工具（参数：capability_name="[能力名称]"）获取该能力的技术域名称 |
-| 6 | `covers` | 每个 capability 内 | 数组，引用命题 ID（如 `["P1", "P2"]`） | 从当前上下文中该能力所属的命题列表直接引用 |
-| 7 | `fanout` | 每个 capability 内 | **对象** `{count, total, ratio, level}` | 当前已有数字的统计覆盖命题数 → 构造对象；**禁止保留纯数字格式** |
-| 8 | `references` | 每个 capability 内 | **对象** `{t1: [], t2: [], t1_missing}` | 当前已有 URL → 按 T1/T2 归入对象；**禁止保留纯 URL 字符串** |
-| 9 | `dependency_graph` | 顶层 | 对象，key=能力ID, value=依赖ID数组 | 从所有 capability 的 dependencies 字段汇总生成 key-value 映射 |
-| 10 | `qualifier_injection` | 顶层 | 对象，key=限定词, value={injects, replaces} | 从 Section 4 的 decompositions 中提取所有命题的限定词及注入能力，汇总生成 |
-
-**校验结束条件**：逐项检查全部通过后，才能进入 Step 7 写入 JSON。
-**不循环**：每项修复都是单向操作（读已有上下文 → 填缺失字段），不依赖步骤回退，不会形成重试循环。
+> 校验已由 MCP `submit_output` 工具统一管理。
+> 调用 `submit_output(step="capability-extract", data=..., workDir=...)` 时自动执行校验。
+> 校验规则定义在 `schemas/capability-graph.schema.ts` 中。
 
 ### Step 7：生成 {{paths.meta_capability_graph}}
 
@@ -196,59 +182,8 @@
 > - 每个 capability 必须包含 `dependencies`、`tags`、`source_domain`、`covers` 字段，**禁止省略**
 > - 每个 capability 的 `references` 必须是对象 `{t1: [], t2: [], t1_missing}`，**禁止简化为 URL 字符串**
 
-```jsonc
-{
-  "$schema": "capability-graph-v1",
-  "meta": {
-    "scan_date": "2026-05-02",
-    "target_years": "L2",
-    "total_propositions": 7,
-    "scan_scope": "前端性能优化面试场景分析题"
-  },
-
-  "capabilities": [
-    {
-      "id": "A1",
-      "name": "浏览器渲染管线",
-      "layer": "浏览器层",
-      "description": "CRP→Layout→Paint→Composite",
-      "source_domain": "browser_api",
-      "fanout": {
-        "count": 5,
-        "total": 7,
-        "ratio": "5/7",
-        "level": "核心"
-      },
-      "coupling": 1,
-      "covers": ["P1", "P2", "P3", "P5", "P6"],
-      "dependencies": [],
-      "tags": ["渲染", "浏览器", "CRP"],
-      "references": {
-        "t1": [
-          {
-            "url": "https://developer.mozilla.org/en-US/docs/Web/Performance/Critical_rendering_path",
-            "title": "MDN: Critical Rendering Path",
-            "verified": true
-          }
-        ],
-        "t2": [
-          {
-            "url": "https://web.dev/articles/rendering-performance",
-            "title": "web.dev: Rendering Performance",
-            "verified": true
-          }
-        ],
-        "t1_missing": false
-      }
-    }
-  ],
-
-  "dependency_graph": {},
-  "qualifier_injection": {},
-  "highgrounds": [],
-  "learning_path": []
-}
-```
+输出格式由 MCP `get_output_schema(step="capability-extract")` 定义，包含 template + field_rules + strict_notes。
+写入前调用 MCP `submit_output(step="capability-extract", data=..., workDir=...)` 自动校验。
 
 ### 能力 ID 命名规范
 

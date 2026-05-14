@@ -50,22 +50,8 @@
 
 ## 输出
 
-```yaml
-decomposition:
-  proposition: "Vue3 虚拟列表：万级数据渲染"
-  qualifier: "Vue3"
-  tech_keyword: "虚拟列表"
-  generic_core:
-    - layer: "算法"
-      capabilities: ["前缀和", "二分查找"]
-    - layer: "浏览器"
-      capabilities: ["渲染管线", "DOM 节点管理"]
-  specialization:
-    - layer: "框架"
-      capabilities: ["Composition API", "响应式联动"]
-  content_weight: "≥ 80%"
-  weight_reasoning: "通用层跨算法+浏览器+内存+交互 4 层"
-```
+输出格式由 MCP `get_output_schema(step="decompose")` 定义，包含 template + field_rules + strict_notes。
+写入前调用 MCP `submit_output(step="decompose", data=..., workDir=...)` 自动校验。
 
 ## 异常与 Fallback
 

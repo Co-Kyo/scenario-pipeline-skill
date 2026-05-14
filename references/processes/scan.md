@@ -46,18 +46,21 @@
 
 ## 输出
 
-```yaml
-raw_materials:
-  - title: "文章标题"
-    url: "https://..."
-    source_tier: T3
-    summary: "摘要"
-    date: "2026-05-01"
-    relevance_tags: ["性能", "长列表"]
-    fetch_status: "ok"          # ok | failed
-    source_blocked: false       # 是否被反爬
-    content_thin: false         # 内容是否过短
-    date_inferred: false        # 日期是否为推断
+### 文件输出
+
+写入 `{workDir}/.meta/raw-materials.json`。
+
+> 输出格式由 MCP `get_output_schema(step="scan")` 定义，包含 template + field_rules + strict_notes。
+> 写入前调用 MCP `submit_output(step="scan", data=..., workDir=...)` 自动校验。
+
+### 摘要输出（stdout，≤200 字）
+
+子 agent 完成后，输出结构化摘要供主线程展示：
+
+```
+扫描完成：识别 {N} 个信源，成功抓取 {M} 个
+筛选出 {K} 条素材（T1={x}, T2={y}, T3={z}）
+Top 3：{标题1}、{标题2}、{标题3}
 ```
 
 ## 依赖

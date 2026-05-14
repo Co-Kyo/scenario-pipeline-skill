@@ -13,6 +13,8 @@
 | **L3** | 方法引导 | **Skill 过程文档** | 方法论固定，具体执行路径需推理 |
 | **L4** | 自由推理 | **LLM 自身** | 仅有目标描述，路径与内容都需推理 |
 
+> **Schema 驱动范式**（§8）是四级模型的统一落地方法论：所有级别共享 `get → execute → submit` 链路，区别仅在 schema 粒度。
+
 ---
 
 ## 2. 判定规则
@@ -136,3 +138,151 @@ Q3: 是否存在可复用的方法论 / 评估框架？
 1. 提取其执行模式到 Skill 过程文档 → 降级为 L3
 2. 当 L3 的方法论进一步固化，执行步骤完全可枚举 → 升级为 L2，收入 MCP 模板
 3. 当 L2 的所有参数都可自动生成（无需 LLM 推理） → 降级为 L1，改写为 MCP 工具函数
+
+---
+
+## 8. 统一 Schema 驱动范式
+
+> 本节定义四级模型的**统一落地方法论**。四级模型定义了"谁决策"，本节定义"怎么保证产出质量"。
+
+### 8.1 核心链路
+
+所有步骤（L1-L4）共享同一条产出链路：
+
+```
+获取标准 → 执行任务 → 产出合规文件
+```
+
+区别仅在于**标准的粒度**：
+
+| 级别 | 标准来源 | 标准内容 | 执行自由度 |
+|------|---------|---------|-----------|
+| **L1** | MCP 工具的 inputSchema | 输入/输出契约 | 无（纯函数） |
+| **L2** | `get_template` | 执行指令 + 输出 schema + 校验规则 | 无（按模板填充） |
+| **L3** | `get_template` | 输出 schema + 校验规则（不含执行指令） | 高（推理路径自由） |
+| **L4** | `get_template` | 仅输出 schema | 完全自由 |
+
+### 8.2 三件套模型
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     MCP Server                              │
+│                                                             │
+│  get_template(step)        → 执行指令 + 数据上下文          │
+│  get_output_schema(step)   → 输出 schema + field_rules     │
+│  submit_output(step, data) → 校验 + 写入                    │
+│                                                             │
+│  三者关系：                                                  │
+│  - get_template 告诉 agent "怎么做"                         │
+│  - get_output_schema 告诉 agent "产出什么格式"              │
+│  - submit_output 保证"产出符合标准"                         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**各层使用组合**：
+
+| 级别 | get_template | get_output_schema | submit_output |
+|------|-------------|-------------------|---------------|
+| L1 | — | — | —（纯函数，无需 schema） |
+| L2 | ✅ 完整模板 | ✅（模板内嵌或独立引用） | ✅ 校验 + 写入 |
+| L3 | ✅ 仅 schema + 校验 | ✅ 独立调用 | ✅ 校验 + 写入 |
+| L4 | — | ✅ 仅输出 schema | ✅（可选，仅格式校验） |
+
+### 8.3 现有实现与泛化路径
+
+**已有实现**（summary 域）：
+
+```
+get_summary_schema  → 返回 template + field_rules + strict_note
+submit_summary      → 校验 + 写入 summary.json
+schema.ts           → 模板定义 + 字段规则 + 校验函数
+```
+
+**泛化方向**：
+
+```
+get_summary_schema  →  get_output_schema(step)     参数化，复用到所有步骤
+submit_summary      →  submit_output(step, data)   参数化，复用到所有步骤
+schema.ts           →  schemas/<step>.ts           每个步骤独立 schema 文件
+```
+
+**命名演进**：
+
+| 当前名称 | 问题 | 目标名称 | 理由 |
+|---------|------|---------|------|
+| `get_summary_schema` | "summary" 硬编码，无法泛化 | `get_output_schema` | 统一所有步骤的 schema 获取 |
+| `submit_summary` | "summary" 硬编码，无法泛化 | `submit_output` | 统一所有步骤的输出提交 |
+| `get_template` | 职责过重（模板+schema+校验耦合） | 保持，但内部职责拆分 | 名称准确，不改名 |
+
+### 8.4 各步骤 Schema 管理现状
+
+| 步骤 | 级别 | 格式定义 | 校验机制 | 完整度 |
+|------|------|---------|---------|--------|
+| scan | L4 | MCP schema (raw-materials.schema.ts) | submit_output 自动校验 | 10/10 |
+| decompose | L3 | MCP schema (decompositions.schema.ts) | submit_output 自动校验 | 10/10 |
+| capability-extract | L3 | MCP schema (capability-graph.schema.ts) | submit_output 自动校验 | 10/10 |
+| highground-identify | L3 | MCP schema (highgrounds.schema.ts) | submit_output 自动校验 | 10/10 |
+| evaluate | L3 | MCP schema (evaluations.schema.ts) | submit_output 自动校验 | 10/10 |
+| capability-research | L2 | MCP schema (summary/schema.ts) | submit_output 自动校验 | 10/10 |
+| assemble | L2 | MCP 模板内结构定义 | 验证清单 | 7/10 |
+| briefing-assemble | L2 | MCP 模板内 | 验证清单 | ?/10 |
+| learning-ladder | L2 | MCP 模板内 | 验证清单 | ?/10 |
+
+**关键问题**：
+- decompose 和 evaluate 的输出示例是 YAML，但编排层期望 JSON — 格式断裂
+- capability-extract 有完善校验，decompose/evaluate 完全无校验 — 覆盖不均
+- 前处理 process 文档和后处理 MCP 模板各自独立描述同一数据结构 — 无共享 schema
+
+### 8.5 信息流 Schema 完整性
+
+```
+scan ──→ decompose ──→ capability-extract ──→ highground-identify ──→ evaluate ──→ pool
+  │          │                │                      │                   │          │
+  ↓          ↓                ↓                      ↓                   ↓          ↓
+raw-     decompositions   capability-graph      highgrounds         evaluations  README
+materials .json          .json                 .json               .json        .md
+.json
+
+Schema 断裂点：
+  ✗ decompose 输出(YAML) ≠ capability-extract 输入(JSON)
+  ✗ evaluate 输出(YAML) ≠ 编排层期望(JSON)
+  ✗ 前处理 capability-graph.json 和后处理 MCP 模板各自独立描述，无共享 schema
+```
+
+### 8.6 Schema Registry 设计
+
+```
+mcp-server/src/
+  schemas/                          ← 集中管理所有步骤的输出 schema
+    raw-materials.schema.ts         ← scan 输出
+    decompositions.schema.ts        ← decompose 输出
+    capability-graph.schema.ts      ← capability-extract 输出（前处理+后处理共享）
+    highgrounds.schema.ts           ← highground-identify 输出
+    evaluations.schema.ts           ← evaluate 输出
+
+  validators/                       ← 通用校验框架
+    index.ts                        ← 校验器注册 + 通用校验逻辑
+
+  domains/
+    summary/                        ← 现有，后续泛化为 output/
+      schema.ts                     ← 迁移到 schemas/capability-research.schema.ts
+      get-summary-schema.ts         ← 泛化为 get-output-schema.ts
+      submit-summary.ts             ← 泛化为 submit-output.ts
+```
+
+### 8.7 与四级模型的关系
+
+本范式是四级模型的**落地方法论**，不是替代：
+
+```
+四级模型（§1-§7）：定义"谁决策"
+  L1 = 代码决策，L2 = 模板决策，L3 = 方法论+推理，L4 = 纯推理
+
+Schema 驱动范式（§8）：定义"怎么保证质量"
+  所有级别共享 get → execute → submit 链路
+  区别仅在 schema 粒度
+```
+
+两者共同构成完整的执行框架：
+- 四级模型决定**执行主体**（MCP/模板/方法论/LLM）
+- Schema 范式决定**产出标准**（格式/校验/写入）

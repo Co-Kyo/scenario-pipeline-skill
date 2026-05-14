@@ -43,11 +43,19 @@ Step 1 ──→ Step 1.5 ──→ ⓐ ──→ Step 2 ──→ Step 3 ──
 
 ### Step 1：广域扫描
 
+> **当前模式**：主线程执行（依赖 web_search，子 agent 暂无此工具）
+> **架构预留**：当子 agent 工具链支持 web_search 后，可升级为子 agent 隔离（见 §升级路径）
+
 ```
 调用：processes/scan.md
 输入：用户指令中的 source_desc + topic
-输出：raw_materials[]（原始素材列表）
+输出：raw-materials.json（写入 {workDir}/.meta/）
+caller：pre/scan
 ```
+
+> **工具增强预留**：scan 步骤的质量与信源覆盖度直接相关。
+> 未来引入更深度的搜索工具（如多引擎聚合、学术搜索、实时爬虫）时，
+> 子 agent 隔离将成为必要——这些重型工具不应占用主线程上下文。
 
 ### Step 1.5：加载方法论文档（L3 前置条件）
 
@@ -91,12 +99,36 @@ Step 1 ──→ Step 1.5 ──→ ⓐ ──→ Step 2 ──→ Step 3 ──
 输出：decompositions[]（分词结果列表）
 ```
 
-### Step 3：原子能力提取 + 信源 URL 预查找
+### Step 3：原子能力提取 + 信源 URL 预查找（子 agent 隔离）
+
+> **隔离收益**：IO + 推理混合，上下文最重（~20K tokens）。是唯一同时高 token + 高时间的双重热区。
+> 隔离后主线程释放 ~20K tokens。
+
+**执行模式**：通过 `delegate_task` 调度子 agent 执行，主线程等待结果。
 
 ```
-调用：processes/capability-extract.md
-输入：Step 2 的 decompositions + Step 1 的 raw_materials
-输出：{{paths.meta_capability_graph}}（原子能力图谱，含每个能力的 T1/T2 参考 URL）
+主线程编排：
+  1. 读取 core/capability-graph.md 和 core/architecture-decomposition.md 完整内容
+  2. 准备子 agent task description：
+     - 注入 core/ 方法论内容（强制注入，保证 L3 加载契约）
+     - 注入 processes/capability-extract.md 的完整内容（作为执行指令）
+     - 注入 decompositions.json 和 raw-materials.json 的绝对路径
+     - 注入 workDir 绝对路径
+     - 注入 MCP 调用语法（mcporter call get_sources 等）
+  3. delegate_task 调度子 agent（toolsets: ["terminal", "file", "web"]）
+  4. 等待子 agent 完成，接收 stdout 摘要
+  5. 读取子 agent 产出的 capability-graph.json
+  6. 校验 JSON 结构完整性（方法论特有字段是否存在）
+
+子 agent 执行：
+  - 读取 task description 中的方法论和执行指令
+  - 读取 decompositions.json 和 raw-materials.json
+  - 执行原子能力提取 + 信源 URL 预查找
+  - 将结果写入 {workDir}/.meta/capability-graph.json
+  - 输出 ≤200 字摘要到 stdout
+
+输出：capability-graph.json
+caller：subagent/cap-extract
 ```
 
 **关键变更：** Step 3 现在不仅提取原子能力，还为每个能力预查找官方文档 URL（T1）和技术博客 URL（T2）。
@@ -104,23 +136,30 @@ Step 1 ──→ Step 1.5 ──→ ⓐ ──→ Step 2 ──→ Step 3 ──
 - T1 必须来自官方域名（MDN/Chrome DevTools/框架官网等），禁止 CSDN 等低质源
 - URL 必须 web_fetch 验证过内容相关性
 - T1 为空时才降级到 T2
-- 查找结果写入 {{paths.meta_capability_graph}} 每个能力的 `references` 字段
+- 查找结果写入 capability-graph.json 每个能力的 `references` 字段
 
 ### Step 4：战略高地识别
 
 ```
 调用：processes/highground-identify.md
-输入：Step 3 的 {{paths.meta_capability_graph}}
-输出：{{paths.meta_capability_graph}}（追加 highgrounds + learning_path 字段）
+输入：Step 3 的 capability-graph.json
+输出：{workDir}/.meta/highgrounds.json（独立文件，不追加写入 capability-graph.json）
 ```
+
+> **变更说明**：Step 4 输出独立文件而非追加写入 capability-graph.json。
+> 原因：接口规范要求「不得修改输入文件」，追加写入存在半写入风险。
+> 合并操作移至 Step 6（pool），由主线程在确定性环境中执行。
 
 ### Step 5：四维评估
 
 ```
 调用：processes/evaluate.md
-输入：Step 2 的 decompositions + Step 4 的 {{paths.meta_capability_graph}} + Step 1 的 raw_materials
-输出：evaluations[]（评分 + 入池判定）
+输入：Step 2 的 decompositions.json + Step 3 的 capability-graph.json（无 highgrounds）+ Step 1 的 raw-materials.json
+输出：evaluations.json（评分 + 入池判定）
 ```
+
+> **注意**：Step 5 使用 Step 3 的 capability-graph.json（不含 highgrounds 字段）。
+> highground_info 在 evaluate 中已是可选参数，不影响核心评分。
 
 ### ⓑ 检查点 B：评估结果确认
 
@@ -143,6 +182,8 @@ Step 1 ──→ Step 1.5 ──→ ⓐ ──→ Step 2 ──→ Step 3 ──
 
 ### Step 6：入池归档
 
+**合并操作**：将 Step 4 的 `highgrounds.json` 合并入 `capability-graph.json`（追加 `highgrounds` + `learning_path` 字段）。
+
 写入两个文件：
 - `{{paths.readme}}` — 总览导航（人类可读，替代旧 candidates.md 的展示角色）
 - `{{paths.meta_candidates}}` — 原始候选池记录（pipeline 内部存档）
@@ -164,7 +205,9 @@ mcporter call scenario-pipeline.save_state checkpoint="pre-process-done" context
 ```
 {{paths.workDir}}
 ├── {{paths.readme}}             ← 总览导航（用户第一眼看到的）
-├── {{paths.meta_capability_graph}}  ← 结构化数据
+├── {{paths.meta_capability_graph}}  ← 结构化数据（Step 3 产出 + Step 6 合并 highgrounds）
+├── highgrounds.json             ← 战略高地（Step 4 产出，独立文件）
+├── evaluations.json             ← 四维评估（Step 5 产出）
 └── {{paths.meta_candidates}}        ← 内部存档
 ```
 
