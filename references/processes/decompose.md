@@ -10,6 +10,15 @@
 
 > 注：编排层（pre-process.md）负责从 raw_materials 中提取命题文本传入本步骤。如果直接调用本步骤，需自行提供 proposition。
 
+## 加载清单
+
+> ⛔ **L3 执行前置条件**（architecture-model.md §3 加载契约）
+
+```
+必须加载：core/architecture-decomposition.md（分词方法论）
+理由：分词的核心原则（标注不是拆分、通用内核vs特化层、内容权重判定）定义在此文件中
+```
+
 ## 执行步骤
 
 ### Step 1：识别限定词与技术栈关键词
@@ -74,5 +83,5 @@ decomposition:
 
 ## 参考
 
-- core/architecture-decomposition.md（分词方法论）
-- plugins/year-granularity.md（年限过滤，按需加载）
+- [必须加载] core/architecture-decomposition.md（分词方法论）— 已在加载清单中标注
+- [条件加载] plugins/year-granularity.md（年限过滤，按需加载）

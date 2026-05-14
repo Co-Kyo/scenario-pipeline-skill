@@ -9,6 +9,15 @@
 - `highground_info`：战略高地信息（来自 processes/highground-identify.md 的输出，可选）
 - `search_evidence`：搜索佐证（来自 processes/scan.md 的输出，可选）
 
+## 加载清单
+
+> ⛔ **L3 执行前置条件**（architecture-model.md §3 加载契约）
+
+```
+必须加载：core/scenario-matrix.md（评估矩阵方法论）
+理由：四维评分的校准标准、防虚高校验规则、入池判定逻辑、一票入池条件定义在此文件中
+```
+
 ## 执行步骤
 
 ### Step 1：跨栈耦合评分
@@ -100,5 +109,5 @@ evaluation:
 
 ## 参考
 
-- core/scenario-matrix.md §四维评估矩阵
-- plugins/year-granularity.md（年限阶梯的入池阈值调整）
+- [必须加载] core/scenario-matrix.md §四维评估矩阵 — 已在加载清单中标注
+- [条件加载] plugins/year-granularity.md（年限阶梯的入池阈值调整）

@@ -7,6 +7,17 @@
 - `decompositions`：所有命题的分词结果列表（来自 processes/decompose.md 的输出）
 - `raw_materials`：扫描阶段的原始素材（来自 processes/scan.md 的输出，含 URL）
 
+## 加载清单
+
+> ⛔ **L3 执行前置条件**（architecture-model.md §3 加载契约）
+
+```
+必须加载：core/capability-graph.md（能力图谱方法论）
+理由：原子能力的提取规则、依赖拓扑、扇出度计算、JSON schema 定义在此文件中
+必须加载：core/architecture-decomposition.md（分词方法论）
+理由：能力提取依赖分词结果的结构（通用内核/特化层），需理解分词输出格式
+```
+
 ## 加载条件
 
 - **必须调用**：MCP `get_sources` 工具（获取信源域名白名单 + 黑名单 + 搜索策略）
@@ -271,5 +282,5 @@
 
 ## 参考
 
-- core/capability-graph.md（原子能力图谱方法论）
-- core/architecture-decomposition.md（分词方法论）
+- [必须加载] core/capability-graph.md（原子能力图谱方法论）— 已在加载清单中标注
+- [必须加载] core/architecture-decomposition.md（分词方法论）— 已在加载清单中标注
