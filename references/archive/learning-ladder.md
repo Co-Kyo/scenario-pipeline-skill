@@ -9,7 +9,7 @@
 
 实际执行指令请调用 MCP `get_template` 工具获取：
 ```bash
-mcporter call scenario-pipeline.get_template template_type="learning-ladder" params='{"seq":"<序号>","workDir":"<产出目录>"}'
+mcporter call scenario-pipeline.get_template --args '{"template_type":"learning-ladder","seq":"<序号>","workDir":"<产出目录>"}'
 ```
 
 `get_template` 会返回完整的自包含执行指令，包含：
@@ -58,7 +58,7 @@ mcporter call scenario-pipeline.get_template template_type="learning-ladder" par
 
 > **路径获取**：在执行任何步骤前，必须先调用 MCP `resolve_paths` 获取当前任务的所有路径：
 > ```bash
-> mcporter call scenario-pipeline.resolve_paths params='{"task_type":"learning-ladder","workDir":"<产出目录>","seq":"<序号>","short_name":"<命题简称>"}'
+> mcporter call scenario-pipeline.resolve_paths --args '{"task_type":"learning-ladder","workDir":"<产出目录>","seq":"<序号>","short_name":"<命题简称>"}'
 > ```
 > 后续所有路径均使用返回的 `{{paths.xxx}}` 变量，禁止自行拼接。
 

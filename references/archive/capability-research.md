@@ -9,7 +9,7 @@
 
 实际执行指令请调用 MCP `get_template` 工具获取：
 ```bash
-mcporter call scenario-pipeline.get_template template_type="capability-research" params='{"capability_id":"A1","workDir":"<产出目录>"}'
+mcporter call scenario-pipeline.get_template --args '{"template_type":"capability-research","capability_id":"A1","workDir":"<产出目录>"}'
 ```
 
 `get_template` 会返回完整的自包含执行指令，包含：
@@ -44,7 +44,7 @@ mcporter call scenario-pipeline.get_template template_type="capability-research"
 
 **路径获取**：在执行任何步骤前，必须先调用 MCP `resolve_paths` 获取当前任务的所有路径：
 ```bash
-mcporter call scenario-pipeline.resolve_paths params='{"task_type":"capability-research","workDir":"<产出目录>"}'
+mcporter call scenario-pipeline.resolve_paths --args '{"task_type":"capability-research","workDir":"<产出目录>"}'
 ```
 
 ### Step 1：信源获取（强制）
@@ -350,7 +350,7 @@ mcporter call scenario-pipeline.resolve_paths params='{"task_type":"capability-r
 
 ## 执行步骤
 
-1. 调用 `mcporter call scenario-pipeline.get_template template_type="capability-research" params='{"capability_id":"[id]","capability_name":"[能力名称]","urls":[T1+T2 URL列表]}'` 获取完整研究模板
+1. 调用 `mcporter call scenario-pipeline.get_template --args '{"template_type":"capability-research","capability_id":"[id]","capability_name":"[能力名称]","urls":[T1+T2 URL列表]}'` 获取完整研究模板
 2. 按模板执行研究任务
 3. 将产出保存到指定位置
 

@@ -349,40 +349,38 @@ export class GetTemplateTool extends BaseTool {
             "learning-ladder",
           ],
         },
-        params: {
-          type: "object",
-          description: "Template parameters (minimal required)",
-          properties: {
-            workDir: {
-              type: "string",
-              description:
-                "Pipeline output root directory (absolute path, required)",
-            },
-            capability_id: {
-              type: "string",
-              description:
-                'Capability ID for capability-research (e.g., "A1")',
-            },
-            seq: {
-              type: "string",
-              description:
-                'Proposition sequence number for assemble/briefing-assemble/learning-ladder (e.g., "01")',
-            },
-            short_name: {
-              type: "string",
-              description:
-                'Proposition short name for assemble/briefing-assemble/learning-ladder (e.g., "长列表渲染")',
-            },
-          },
-          required: ["workDir"],
+        workDir: {
+          type: "string",
+          description:
+            "Pipeline output root directory (absolute path, required)",
+        },
+        capability_id: {
+          type: "string",
+          description:
+            'Capability ID for capability-research (e.g., "A1")',
+        },
+        capability_name: {
+          type: "string",
+          description:
+            "Capability name for capability-research (optional, auto-derived from .meta/capability-graph.json if omitted)",
+        },
+        seq: {
+          type: "string",
+          description:
+            'Proposition sequence number for assemble/briefing-assemble/learning-ladder (e.g., "01")',
+        },
+        short_name: {
+          type: "string",
+          description:
+            'Proposition short name for assemble/briefing-assemble/learning-ladder (e.g., "长列表渲染", auto-derived if omitted)',
         },
       },
-      required: ["template_type"],
+      required: ["template_type", "workDir"],
     };
   }
 
   async execute(args: Record<string, any>): Promise<any> {
-    const { template_type, params = {} } = args;
+    const { template_type, ...params } = args as any;
 
     // Layer 1: 参数解析（基础校验：workDir 等）
     // Layer 2: 数据加载（先加载数据，再自动推导缺失参数）

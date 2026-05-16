@@ -9,7 +9,7 @@
 
 实际执行指令请调用 MCP `get_template` 工具获取：
 ```bash
-mcporter call scenario-pipeline.get_template template_type="briefing-assemble" params='{"seq":"<序号>","workDir":"<产出目录>"}'
+mcporter call scenario-pipeline.get_template --args '{"template_type":"briefing-assemble","seq":"<序号>","workDir":"<产出目录>"}'
 ```
 
 `get_template` 会返回完整的自包含执行指令，包含：
@@ -36,7 +36,7 @@ mcporter call scenario-pipeline.get_template template_type="briefing-assemble" p
 
 **路径获取**：在执行任何步骤前，必须先调用 MCP `resolve_paths` 获取当前任务的所有路径：
 ```bash
-mcporter call scenario-pipeline.resolve_paths params='{"task_type":"briefing-assemble","workDir":"<产出目录>"}'
+mcporter call scenario-pipeline.resolve_paths --args '{"task_type":"briefing-assemble","workDir":"<产出目录>"}'
 ```
 
 ### Step 1：确定每个命题涉及的能力

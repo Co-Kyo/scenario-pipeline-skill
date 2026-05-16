@@ -30,7 +30,7 @@
 >
 > mcporter call scenario-pipeline.save_state checkpoint="<checkpoint>" context='<context>' --args '{"workDir":"<产出目录>","caller":"<phase/step>"}'
 > mcporter call scenario-pipeline.restore_state --args '{"workDir":"<产出目录>","caller":"<phase/step>"}'
-> mcporter call scenario-pipeline.get_template template_type="<type>" params='<params>'
+> mcporter call scenario-pipeline.get_template --args '{"template_type":"<type>","workDir":"<产出目录>"}'
 > ```
 > `get_template` 无需 `workDir`（模板内嵌在 MCP server 中）。
 
@@ -470,7 +470,7 @@ deep research：<场景描述>
 ```
 你是 [能力名称] 的深度研究员。
 
-调用 `mcporter call scenario-pipeline.get_template template_type="capability-research" params='{"capability_id":"[id]","workDir":"<产出目录>"}'` 获取完整研究模板。
+调用 `mcporter call scenario-pipeline.get_template --args '{"template_type":"capability-research","capability_id":"[id]","workDir":"<产出目录>"}'` 获取完整研究模板。
 
 按返回的指令执行，无需读取其他文档。
 ```
@@ -554,7 +554,7 @@ deep research：<场景描述>
 ```
 你是 [命题名称] 的 Briefing 组装专家。
 
-调用 `mcporter call scenario-pipeline.get_template template_type="briefing-assemble" params='{"seq":"[序号]","workDir":"<产出目录>"}'` 获取完整组装模板。
+调用 `mcporter call scenario-pipeline.get_template --args '{"template_type":"briefing-assemble","seq":"[序号]","workDir":"<产出目录>"}'` 获取完整组装模板。
 
 按返回的指令执行，无需读取其他文档。
 ```
@@ -605,7 +605,7 @@ deep research：<场景描述>
 ```
 你是 [命题名称] 的 Markdown 组装专家。
 
-调用 `mcporter call scenario-pipeline.get_template template_type="assemble" params='{"seq":"[序号]","workDir":"<产出目录>"}'` 获取完整组装模板。
+调用 `mcporter call scenario-pipeline.get_template --args '{"template_type":"assemble","seq":"[序号]","workDir":"<产出目录>"}'` 获取完整组装模板。
 
 按返回的指令执行，无需读取其他文档。
 ```
@@ -615,7 +615,7 @@ deep research：<场景描述>
 ```
 你是 [命题名称] 的实验组装专家。
 
-调用 `mcporter call scenario-pipeline.get_template template_type="assemble" params='{"seq":"[序号]","workDir":"<产出目录>"}'` 获取完整组装模板。
+调用 `mcporter call scenario-pipeline.get_template --args '{"template_type":"assemble","seq":"[序号]","workDir":"<产出目录>"}'` 获取完整组装模板。
 
 按返回的指令执行，无需读取其他文档。
 ```
@@ -719,7 +719,7 @@ deep research：<场景描述>
 ```
 你是 [命题名称] 的学习阶梯生成专家。
 
-调用 `mcporter call scenario-pipeline.get_template template_type="learning-ladder" params='{"seq":"[序号]","workDir":"<产出目录>"}'` 获取完整生成模板。
+调用 `mcporter call scenario-pipeline.get_template --args '{"template_type":"learning-ladder","seq":"[序号]","workDir":"<产出目录>"}'` 获取完整生成模板。
 
 按返回的指令执行，无需读取其他文档。
 ```

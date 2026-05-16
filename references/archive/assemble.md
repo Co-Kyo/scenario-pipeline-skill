@@ -9,7 +9,7 @@
 
 实际执行指令请调用 MCP `get_template` 工具获取：
 ```bash
-mcporter call scenario-pipeline.get_template template_type="assemble" params='{"seq":"<序号>","workDir":"<产出目录>"}'
+mcporter call scenario-pipeline.get_template --args '{"template_type":"assemble","seq":"<序号>","workDir":"<产出目录>"}'
 ```
 
 `get_template` 会返回完整的自包含执行指令，包含：
@@ -86,7 +86,7 @@ briefing 结构如下（已内联到 agent 的 task 中）：
 
 > **路径获取**：在执行任何步骤前，必须先调用 MCP `resolve_paths` 获取当前任务的所有路径：
 > ```bash
-> mcporter call scenario-pipeline.resolve_paths params='{"task_type":"assemble","workDir":"<产出目录>","seq":"<序号>","short_name":"<命题简称>"}'
+> mcporter call scenario-pipeline.resolve_paths --args '{"task_type":"assemble","workDir":"<产出目录>","seq":"<序号>","short_name":"<命题简称>"}'
 > ```
 > 后续所有路径均使用返回的 `{{paths.xxx}}` 变量，禁止自行拼接。
 
@@ -191,7 +191,7 @@ briefing 结构如下（已内联到 agent 的 task 中）：
 
 ## 执行步骤
 
-1. 调用 `mcporter call scenario-pipeline.get_template template_type="assemble" params='{"proposition":"[命题文本]","decomposition":"[分词结果]","briefing":"[briefing 内容]","file_type":"[target_file]"}'` 获取完整组装模板
+1. 调用 `mcporter call scenario-pipeline.get_template --args '{"template_type":"assemble","proposition":"[命题文本]","decomposition":"[分词结果]","briefing":"[briefing 内容]","file_type":"[target_file]"}'` 获取完整组装模板
 2. 按模板执行组装任务
 3. 将产出保存到指定位置
 

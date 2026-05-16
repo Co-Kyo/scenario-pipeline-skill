@@ -26,7 +26,7 @@
 
 > **路径获取**：在执行任何步骤前，必须先调用 MCP `resolve_paths` 获取当前任务的所有路径：
 > ```bash
-> mcporter call scenario-pipeline.resolve_paths params='{"task_type":"capability-extract","workDir":"<产出目录>","caller":"pre/cap-extract"}'
+> mcporter call scenario-pipeline.resolve_paths --args '{"task_type":"capability-extract","workDir":"<产出目录>","caller":"pre/cap-extract"}'
 > ```
 
 ### Step 1：逐命题提取原子能力
