@@ -35,6 +35,20 @@ deep scan：<信息源描述>
 > mcporter call scenario-pipeline.resolve_paths --args '{"task_type":"pre-process","workDir":"<产出目录>","caller":"pre/resolve"}'
 > ```
 
+## 🚨 执行协议（每步强制）
+
+前处理每步遵循 **schema 驱动三件套**：
+
+```
+Step 0: get_output_schema(step)   → 拿到输出 schema + field_rules + strict_notes
+Step N: 按 schema 标准执行        → 生成内容
+Final:  submit_output(step, data) → 校验 + 写入
+```
+
+**禁止跳过 Step 0**。直接执行而不先读 schema，产出格式必然不匹配、校验失败、返工。
+schema 是事前标准，不是事后检查工具。每步的具体 schema 名已在步骤框中标明，
+但即使未显式标注，执行前也必须先调 `get_output_schema(step)`。
+
 ```
 Step 1 ──→ Step 1.5 ──→ ⓐ ──→ Step 2 ──→ Step 3 ──→ Step 4 ──→ Step 5 ──→ ⓑ ──→ Step 6
  scan     加载core/  checkpoint  decompose  capability  highground  evaluate  checkpoint   pool
@@ -146,7 +160,8 @@ caller：subagent/cap-extract
 ```
 调用：processes/highground-identify.md
 输入：Step 3 的 capability-graph.json
-输出：{workDir}/.meta/highgrounds.json（独立文件，不追加写入 capability-graph.json）
+执行前：调用 MCP `get_output_schema(step="highground-identify")` 获取输出 schema 标准
+输出：highgrounds.json（通过 MCP `submit_output(step="highground-identify", data=..., workDir=...)` 校验 + 写入）
 ```
 
 > **变更说明**：Step 4 输出独立文件而非追加写入 capability-graph.json。

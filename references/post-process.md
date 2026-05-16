@@ -34,6 +34,24 @@
 > ```
 > `get_template` 无需 `workDir`（模板内嵌在 MCP server 中）。
 
+---
+
+## 🚨 执行协议（每步强制）
+
+后处理每步遵循 **template 驱动三件套**：
+
+```
+Step 0: get_template(template_type) → 拿到完整执行指令 + 路径变量
+Step N: 按模板执行                  → 生成内容
+Final:  写入 {{paths.xxx}} 路径      → 输出到磁盘
+```
+
+**禁止跳过 Step 0**。直接执行而不先调 `get_template`，会遗漏模板中的约束条件、字段规范、
+路径引用和校验规则。模板是执行的 SSoT，内含所有执行所需信息。
+
+> 每个子 agent 的 task description 末尾都标注了具体的 `get_template` 调用示例。
+> 以下文中 `调用 get_template(...)` 处即为显式调用点。
+
 ## 触发方式
 
 ```

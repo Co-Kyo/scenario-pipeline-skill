@@ -24,6 +24,11 @@
 
 ## 执行步骤
 
+> ⛔ **Schema 强制**：在执行以下任何步骤前，必须先调用 MCP `get_output_schema(step="capability-extract")`，
+> 拿到 template + field_rules + strict_notes。按 schema 标准构造输出数据，
+> 完成后调用 `submit_output(step="capability-extract", data=..., workDir=...)` 校验并写入。
+> 不调 get_output_schema 直接执行 = 格式不匹配必然返工。
+
 > **路径获取**：在执行任何步骤前，必须先调用 MCP `resolve_paths` 获取当前任务的所有路径：
 > ```bash
 > mcporter call scenario-pipeline.resolve_paths --args '{"task_type":"capability-extract","workDir":"<产出目录>","caller":"pre/cap-extract"}'
