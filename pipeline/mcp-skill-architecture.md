@@ -302,7 +302,7 @@ MCP Schema 管住了格式，Skill 文档的价值就集中在：
 
 ## 附：技术实现参考
 
-本架构在 [scenario-pipeline-skill](https://github.com/...) 项目中完整实现。
+本架构在 [scenario-pipeline-skill](https://github.com/Co-Kyo/scenario-pipeline-skill)项目中完整实现。
 
 核心组件：
 - `mcp-server/src/schemas/` — Schema 注册表（6 个步骤的输出 schema）
