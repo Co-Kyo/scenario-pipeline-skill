@@ -71,11 +71,34 @@ async function loadCapabilityGraph(workDir: string): Promise<CapabilityData[]> {
   }
 }
 
+/**
+ * 加载命题元数据 — 优先从 capability-graph.json.propositions 读取（§5.1 解耦），
+ * 降级到 decompositions.json（旧格式兼容）。
+ * 后处理模板只需 capability-graph.json + briefings/，不再必需 decompositions.json。
+ */
+async function loadPropositions(workDir: string): Promise<PropositionData[]> {
+  // 优先从能力图谱获取（submit_output 在 capability-extract 步骤自动注入）
+  const graphPath = path.join(workDir, ".meta", "capability-graph.json");
+  try {
+    const content = await fs.readFile(graphPath, "utf-8");
+    const data = JSON.parse(content);
+    if (Array.isArray(data.propositions) && data.propositions.length > 0) {
+      return data.propositions;
+    }
+  } catch {
+    // capability-graph.json 不存在 — 降级
+  }
+  // 降级：从 decompositions.json 读取
+  return loadDecompositions(workDir);
+}
+
 async function loadDecompositions(workDir: string): Promise<PropositionData[]> {
   const decompPath = path.join(workDir, ".meta", "decompositions.json");
   try {
     const content = await fs.readFile(decompPath, "utf-8");
-    return JSON.parse(content);
+    const data = JSON.parse(content);
+    // decompositions.json 格式: {$schema, decompositions: [...]}
+    return data.decompositions || [];
   } catch (error) {
     return [];
   }
@@ -364,7 +387,7 @@ export class GetTemplateTool extends BaseTool {
     // Layer 1: 参数解析（基础校验：workDir 等）
     // Layer 2: 数据加载（先加载数据，再自动推导缺失参数）
     const capabilities = await loadCapabilityGraph(params.workDir);
-    const decompositions = await loadDecompositions(params.workDir);
+    const decompositions = await loadPropositions(params.workDir);
 
     // 自动推导 capability_name（capability-research 模板需要）
     if (template_type === "capability-research" && params.capability_id && !params.capability_name) {
@@ -516,7 +539,7 @@ export class GetTemplateTool extends BaseTool {
       paths,
       data_loaded: {
         capabilities_count: capabilities.length,
-        decompositions_count: decompositions.length,
+        propositions_count: decompositions.length,
       },
     };
   }

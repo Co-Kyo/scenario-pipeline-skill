@@ -78,7 +78,7 @@ export class SubmitOutputTool extends BaseTool {
       };
     }
 
-    // 2. 写入
+    // 2. 写入文件（atomic write）
     const filePath = path.join(workDir, ".meta", fileName);
     try {
       await fs.mkdir(path.dirname(filePath), { recursive: true });
@@ -87,6 +87,31 @@ export class SubmitOutputTool extends BaseTool {
       const tmpPath = filePath + ".tmp";
       await fs.writeFile(tmpPath, JSON.stringify(data, null, 2), "utf-8");
       await fs.rename(tmpPath, filePath);
+
+      // 3. 后处理：能力图谱注入命题元数据（减少后处理对 decompositions.json 的耦合）
+      if (step === "capability-extract") {
+        const decompPath = path.join(workDir, ".meta", "decompositions.json");
+        try {
+          const decompContent = await fs.readFile(decompPath, "utf-8");
+          const decompData = JSON.parse(decompContent);
+          const propositions = decompData.decompositions || [];
+          if (propositions.length > 0) {
+            // 读取刚写的能力图谱，注入 propositions 字段
+            const graphContent = await fs.readFile(filePath, "utf-8");
+            const graph = JSON.parse(graphContent);
+            if (!graph.propositions) {
+              graph.propositions = propositions;
+              await fs.writeFile(
+                filePath,
+                JSON.stringify(graph, null, 2),
+                "utf-8"
+              );
+            }
+          }
+        } catch {
+          // decompositions.json 不存在或格式错误 — 不影响主流程
+        }
+      }
 
       return {
         valid: true,

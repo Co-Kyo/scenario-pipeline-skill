@@ -27,7 +27,7 @@ export class SubmitSummaryTool extends BaseTool {
           type: "string",
           description: "能力 ID，如 A1、W2",
         },
-        work_dir: {
+        workDir: {
           type: "string",
           description: "工作目录，覆盖 WORK_DIR 环境变量",
         },
@@ -64,7 +64,7 @@ export class SubmitSummaryTool extends BaseTool {
   async execute(args: Record<string, any>): Promise<SubmitSummaryResult> {
     const {
       capability_id,
-      work_dir: workDirArg,
+      workDir: workDirArg,
       mechanism_summary,
       bottlenecks,
       tradeoffs,

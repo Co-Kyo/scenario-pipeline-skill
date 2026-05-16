@@ -1,5 +1,7 @@
 你是 {{capability_name}} 的深度研究员。
 
+⚠️ 你必须用 write 工具将文件写入磁盘，不要只输出到对话中。
+
 ## 任务
 研究原子能力 "{{capability_name}}"（ID: {{capability_id}}），产出两个文件：
 1. 能力知识库主文件（{{paths.capability_file}}）

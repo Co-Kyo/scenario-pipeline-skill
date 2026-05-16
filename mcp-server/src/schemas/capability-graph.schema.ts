@@ -41,6 +41,13 @@ export const CAPABILITY_GRAPH_TEMPLATE = {
   qualifier_injection: {},
   highgrounds: [],
   learning_path: [],
+  /**
+   * propositions — 命题元数据（可选，由 submit_output 在 capability-extract 时自动注入）
+   * 用于后处理模板（assemble/briefing-assemble/learning-ladder），
+   * 使后处理只需读取 capability-graph.json，不再依赖 decompositions.json。
+   * 格式同 decompositions.json 的 decompositions 数组。
+   */
+  propositions: [],
 };
 
 export const CAPABILITY_GRAPH_FIELD_RULES: Record<string, { required: boolean; type: string; constraints?: string }> = {

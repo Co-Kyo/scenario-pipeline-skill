@@ -70,7 +70,7 @@ npm install -g mcporter
 
 | 平台 | 注册方式 |
 |------|---------|
-| **OpenClaw** | `mcporter add scenario-pipeline --transport stdio --command node --args '["~/.openclaw/skills/scenario-pipeline/mcp-server/dist/index.js"]'` |
+| **OpenClaw** | `mcporter config add scenario-pipeline --command node --arg "~/.openclaw/skills/scenario-pipeline/mcp-server/dist/index.js" --transport stdio --scope home` |
 | **Claude Code** | 项目根目录 `.mcp.json` 中添加 `mcpServers.scenario-pipeline`（见下方模板） |
 | **CodeBuddy** | `.codebuddy/mcp.json` 或全局 `~/.codebuddy/mcp.json`，同上格式 |
 | **Cursor** | `.cursor/mcp.json`，同上格式 |
@@ -168,12 +168,15 @@ mcp-server/       ← MCP 服务器（状态管理 + 模板管理 + 信源管理
 
 ## Pre-processing Flow
 
-1. **Scan** — 调用 MCP template `get_template("scan")`
+> 前处理步骤采用 **get_output_schema + submit_output** 模式（L3/L4 级），不走 get_template。
+> 每个步骤：调用 `get_output_schema(step)` 获取输出标准 → 执行 → 调用 `submit_output(step, data)` 校验并写入。
+
+1. **Scan** — 广域扫描（L4），产出 raw-materials.json
 2. **ⓒ 检查点 A** — 扫描摘要确认
-3. **Decompose** — 调用 MCP template `get_template("decompose")`
-4. **Capability Extract** — 调用 MCP template `get_template("capability-extract")`
-5. **Highground Identify** — 调用 MCP template `get_template("highground-identify")`
-6. **Evaluate** — 调用 MCP template `get_template("evaluate")`
+3. **Decompose** — 架构分词（L3），产出 decompositions.json
+4. **Capability Extract** — 原子能力提取（L3），产出 capability-graph.json（含命题元数据）
+5. **Highground Identify** — 战略高地识别（L3），产出 highgrounds.json
+6. **Evaluate** — 四维评估（L3），产出 evaluations.json
 7. **ⓒ 检查点 B** — 评估结果确认
 8. **Pool** — 写入候选池
 
@@ -258,21 +261,7 @@ mcp-server/       ← MCP 服务器（状态管理 + 模板管理 + 信源管理
 
 ### 安装
 
-**方式 1：使用安装脚本（推荐）**
-
-```bash
-# 克隆仓库（含 submodule）
-git clone --recurse-submodules https://github.com/Co-Kyo/scenario-pipeline-skill.git
-
-# 运行安装脚本
-cd scenario-pipeline-skill
-chmod +x install.sh  # Linux/Mac
-./install.sh          # Linux/Mac
-# 或
-.\install.bat         # Windows (PowerShell)
-```
-
-**方式 2：手动安装**
+**方式 1：手动安装**
 
 ```bash
 # 克隆仓库（含 submodule）
