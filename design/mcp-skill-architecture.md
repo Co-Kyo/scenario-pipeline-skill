@@ -1,3 +1,12 @@
+---
+title: MCP × Skill 双侧架构
+version: 1.0.0
+status: current
+last_updated: 2026-05-16
+supersedes: ~
+superseded_by: ~
+---
+
 # MCP × Skill 双侧架构：AI Agent 管道化执行的四层边界模型
 
 > 一种将确定性保证与推理灵活性统一在同一执行框架中的系统工程方法。
@@ -308,4 +317,4 @@ MCP Schema 管住了格式，Skill 文档的价值就集中在：
 - `mcp-server/src/schemas/` — Schema 注册表（6 个步骤的输出 schema）
 - `mcp-server/src/validators/` — 通用校验框架
 - `mcp-server/src/domains/output/` — get_output_schema + submit_output 工具
-- `pipeline/architecture-model.md` — 项目级四级模型定义
+- `design/architecture-model.md` — 项目级四级模型定义

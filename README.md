@@ -112,36 +112,62 @@ deep research：P1、P2、P4 --no-experiment
 
 ## 项目结构
 
+本项目按层组织，每层有明确的角色、使用者和引用边界：
+
 ```
 scenario-pipeline-skill/
-├── SKILL.md                        ← 入口：触发方式 + 流程概览
-├── core/                           ← 元能力定义（稳定不常变）
+├── SKILL.md                        ← Agent 执行入口（触发方式 + 流程概览）
+│
+├── core/                           ← 方法论层（领域知识框架）
+│   │                                → 供 agent 在执行 L3 任务时加载
 │   ├── architecture-decomposition.md   架构分词方法论
 │   ├── capability-graph.md             原子能力图谱定义
 │   ├── strategic-highground.md         战略高地识别规则
 │   └── scenario-matrix.md             四维评估 + 四象限框架
-├── plugins/                        ← 可热插拔的增强插件
+│
+├── plugins/                        ← 可选插件
+│   │                                → agent 按需加载
 │   ├── capability-research-mode.md     材料块格式 + 深度分级
 │   └── year-granularity.md             年限→颗粒度映射
-├── references/                     ← 流程编排 + 参考文档
+│
+├── references/                     ← 执行层（agent 怎么做）
+│   │                                → 供 agent 在执行时读取
 │   ├── pre-process.md                  前处理编排
 │   ├── post-process.md                 后处理编排
-│   └── archive/                        已降级的参考文档（L2 改造后）
-├── mcp-server/                     ← MCP 服务器（状态 + 模板 + 信源管理）
-│   └── src/
-│       ├── domains/
-│       │   ├── state/                状态管理（save_state / restore_state）
-│       │   ├── template/             模板管理（get_template）
-│       │   │   └── templates/        ← L2 执行指令模板（SSoT）
-│       │   └── source/               信源管理（get_sources）
-│       ├── core/                     基础设施（BaseTool 基类）
-│       └── health/                   健康检查（ping）
-└── pipeline/                       ← 架构观测文档（推荐阅读，非执行配置）
-    ├── README.md                       目录定位说明
-    ├── 00-overview.md                  全局数据流 + 阶段索引
-    ├── 01 ~ 05                         各阶段：输入/输出/涉及文件
-    └── 99-shared.md                    跨阶段参考（数据实体/插件关系/故障模式）
+│   ├── processes/                      各步骤执行文档（decompose / capability-extract / ...）
+│   └── archive/                        已降级的参考文档
+│
+├── mcp-server/                     ← 实现层（代码）
+│   │                                → 供 agent 通过 MCP 协议调用
+│   ├── src/
+│   │   ├── domains/
+│   │   │   ├── state/                状态管理（save_state / restore_state）
+│   │   │   ├── template/             模板管理（get_template）
+│   │   │   │   └── templates/        ← L2 执行指令模板（SSoT）
+│   │   │   └── source/               信源管理（get_sources）
+│   │   ├── schemas/                  输出 schema 定义（raw-materials / decompositions / ...）
+│   │   └── validators/               通用校验框架
+│
+├── design/                         ← 架构层（系统设计决策）
+│   │                                → 供人类 + 贡献者阅读，agent 不读
+│   ├── README.md                       目录说明 + 版本管理规范
+│   ├── CHANGELOG.md                    设计变更日志（以需求面为单位）
+│   ├── architecture-model.md           四级模型定义 + 加载契约 + 约束规则
+│   ├── mcp-skill-architecture.md       对外：MCP × Skill 双侧架构介绍
+│   └── plans/                          策略计划书
+│
+├── pipeline/                       ← 观测层（管线描述）
+│   │                                → 供人类理解设计，agent 不读
+│   ├── README.md                       目录定位说明
+│   ├── 00-overview.md                  全局数据流 + 阶段索引
+│   ├── 01 ~ 05                         各阶段：输入/输出/涉及文件
+│   └── 99-shared.md                    跨阶段参考（数据实体/插件关系/故障模式）
+│
+├── demo/                            ← 示例数据
+└── docs/                            ← 对外文档（待定）
 ```
+
+> 💡 **贡献者必读**：各层之间引用有严格约定，参见文末[附录：分层引用约束](#附录分层引用约束)。
 
 ---
 
@@ -231,6 +257,33 @@ MCP 服务器是 skill 的执行引擎，提供两类核心能力：
 - **子 agent 只写不读**：收到完整指令后，只负责产出文件
 
 > 详见 [`mcp-server/README.md`](mcp-server/README.md)。
+
+---
+
+## 附录：分层引用约束
+
+> 以下规则面向项目维护者和贡献者，定义各目录层之间的引用边界。
+> 首次阅读项目可先跳过，理解核心功能后再回看。
+
+| 源层 ↓ → 目标层 | `SKILL.md` | `core/` | `references/` | `mcp-server/` | `design/` | `pipeline/` | `plugins/` |
+|---|---|---|---|---|---|---|---|
+| **`SKILL.md`**（agent 入口） | — | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ |
+| **`core/`**（方法论） | ❌ | — | ❌ | ❌ | ❌ | ❌ | ❌ |
+| **`references/`**（执行） | ❌ | ✅ 核心依赖 | — | ✅ 工具调用 | ❌ | ❌ | ❌ |
+| **`mcp-server/`**（实现层） | ❌ | ✅ | ❌ | — | ❌ | ❌ | ❌ |
+| **`design/`**（架构） | ❌ | ✅ | ✅ | ✅ | — | ✅ | ❌ |
+| **`pipeline/`**（观测） | ❌ | ❌ | ❌ | ❌ | ❌ | — | ❌ |
+| **`plugins/`**（可选插件） | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ | — |
+
+注：✅ 允许引用；❌ 不允许引用；— 自引用或不适用。"核心依赖"指主要读取关系；"工具调用"指通过 MCP 协议调用而非直接文件引用。
+
+**核心原则：**
+
+1. **`design/` 和 `pipeline/` 不是执行文件**——所有面向 agent 执行的层（`SKILL.md`、`references/`、`core/`、`mcp-server/`、`plugins/`）均不可引用它们。agent 执行时不读取这两层。
+2. **`core/` 方法论文档是自包含的**——它是 agent 在执行 L3 任务时加载的知识框架，不依赖其他任何层。
+3. **`references/` 下的执行文档仅依赖 `core/`（方法论）和 `mcp-server/`（工具调用）**，不依赖 `SKILL.md`、架构层或观测层。
+4. **`design/` 可以引用除 `SKILL.md` 外的所有层**——架构视角需要俯视全局，但 design/ 的引用是给人看的，不是给 agent 执行用的。
+5. **`pipeline/` 是观察视角**——描述管线长什么样，不定义执行逻辑，不引用其他层的内容。
 
 ---
 

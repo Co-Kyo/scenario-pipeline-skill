@@ -1,3 +1,12 @@
+---
+title: Pipeline 需求执行模式四级模型
+version: 1.2.0
+status: current
+last_updated: 2026-05-14
+supersedes: ~
+superseded_by: ~
+---
+
 # Pipeline 需求执行模式四级模型（Architecture Model）
 
 本文档定义 scenario-pipeline 中所有需求任务的执行模式分类标准，并作为后续 MCP 模板化改造、Skill 过程文档演进的顶层约束。

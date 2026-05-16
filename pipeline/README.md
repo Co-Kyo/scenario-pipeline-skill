@@ -41,3 +41,14 @@ pipeline/ (观测)              MCP templates/ (执行真相 SSoT)         refer
 - `pipeline/` 描述"是什么"和"为什么"
 - `MCP templates/*.md` 定义"怎么做"（SSoT）
 - `references/processes/*.md` 降级为参考文档，不再用于执行
+
+---
+
+> **关于架构定义文件**
+>
+> 本项目早期的架构定义（architecture-model.md）、对外架构介绍（mcp-skill-architecture.md）和策略计划书（subagent-strategy.md）原存于本目录。
+> 2026-05-16 已迁至 `design/` 目录统一管理，以保持 `pipeline/` 的纯观测层定位。
+> 相关文件现位于：
+> - 架构层 → `design/architecture-model.md`
+> - 对外技术介绍 → `design/mcp-skill-architecture.md`
+> - 策略计划 → `design/plans/pre-process-subagent-strategy.md`

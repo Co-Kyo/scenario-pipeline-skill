@@ -201,7 +201,7 @@ mcp-server/       ← MCP 服务器（状态管理 + 模板管理 + 信源管理
 
 ## Output Structure
 
-> **路径规范**：以下为参考目录结构。实际产出路径以 MCP `resolve_paths` 工具返回为准，运行时请调用 `resolve_paths` 获取标准路径（参见 `pipeline/architecture-model.md` §5 MCP ↔ Skill 双侧改造原则）。文档中 `{{paths.xxx}}` 表示路径字段引用。
+> **路径规范**：以下为参考目录结构。实际产出路径以 MCP `resolve_paths` 工具返回为准，运行时请调用 `resolve_paths` 获取标准路径。文档中 `{{paths.xxx}}` 表示路径字段引用。
 
 ```
 {{paths.workDir}}/                     ← 根目录，由调用方传入

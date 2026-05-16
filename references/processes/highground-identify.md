@@ -8,7 +8,7 @@
 
 ## 加载清单
 
-> ⛔ **L3 执行前置条件**（architecture-model.md §3 加载契约）
+> ⛔ **L3 执行前置条件**
 
 ```
 必须加载：core/strategic-highground.md（战略高地方法论）
