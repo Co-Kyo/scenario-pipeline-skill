@@ -31,9 +31,11 @@ export const CAPABILITY_GRAPH_TEMPLATE = {
       dependencies: [],
       tags: ["（标签）"],
       references: {
-        t1: [{ url: "https://...", title: "（标题）", verified: true }],
+        t0: [{ url: "https://...", title: "（标题）", verified: true }],
+        t1: [],
         t2: [],
-        t1_missing: false,
+        t3: [],
+        t0_missing: false,
       },
     },
   ],
@@ -64,7 +66,7 @@ export const CAPABILITY_GRAPH_FIELD_RULES: Record<string, { required: boolean; t
   "capabilities[].covers": { required: true, type: "string[]" },
   "capabilities[].dependencies": { required: true, type: "string[]", constraints: "空数组表示无前置依赖" },
   "capabilities[].tags": { required: true, type: "string[]", constraints: "≥1 个标签" },
-  "capabilities[].references": { required: true, type: "object", constraints: "必须是 {t1, t2, t1_missing}，禁止简化为 URL 字符串" },
+  "capabilities[].references": { required: true, type: "object", constraints: "必须是 {t0, t1, t2, t3, t0_missing}，禁止简化为 URL 字符串" },
   "dependency_graph": { required: true, type: "object" },
   "qualifier_injection": { required: true, type: "object" },
 };
@@ -96,7 +98,7 @@ export function validateCapabilityGraph(data: Record<string, unknown>): Validati
         errors.push({ path: `${p}.tags`, message: "必须是非空数组" });
       }
       if (typeof obj.references !== "object" || obj.references === null) {
-        errors.push({ path: `${p}.references`, message: "必须是对象 {t1, t2, t1_missing}" });
+        errors.push({ path: `${p}.references`, message: "必须是对象 {t0, t1, t2, t3, t0_missing}" });
       }
     });
   }

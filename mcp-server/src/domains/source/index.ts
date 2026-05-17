@@ -1,9 +1,10 @@
 /**
- * 信源管理域 - 模块入口
- * 导出信源相关工具和类型
+ * 信源管理域 — 动态 filter 架构
  */
 
-export { GetSourcesTool } from "./get-sources.js";
-export { getTechDomainsForCapability, getT1Domains, getT2Domains, isBlacklisted } from "./get-sources.js";
-export type { SourceDomain, TechDomain, BlacklistEntry, SourceRegistry } from "./types.js";
-export { sourceRegistry } from "./registry.js";
+export { ClassifySourcesTool } from "./classify-sources.js";
+export { RegisterSourceTool } from "./register-source.js";
+export { GetSourceStandardTool } from "./get-source-standard.js";
+export { GetT0SourcesTool } from "./get-t0-sources.js";
+export { classifyDomain, classifyDomains, registerSource, getRegistry } from "./registry.js";
+export type { T0Source, DynamicSource, ClassifyResult, RegisterSourceInput, SourceRegistry } from "./types.js";

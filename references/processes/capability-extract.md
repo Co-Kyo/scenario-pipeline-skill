@@ -1,6 +1,6 @@
 # Process: 原子能力提取 (capability-extract)
 
-> 从多个命题的分词结果中提取原子能力，计算扇出度，预查找每个能力的 T1/T2 信源 URL，输出结构化 {{paths.meta_capability_graph}}。
+> 从多个命题的分词结果中提取原子能力，计算扇出度，按双轨模式预查找每个能力的参考 URL（T0 官方 + 自由搜索分级），输出结构化 {{paths.meta_capability_graph}}。
 
 ## 输入
 
@@ -20,7 +20,9 @@
 
 ## 加载条件
 
-- **必须调用**：MCP `get_sources` 工具（获取信源域名白名单 + 黑名单 + 搜索策略）
+- **必须调用**：MCP `get_t0_sources` 工具（获取 T0 内置信源域名列表）
+- **必须调用**：MCP `classify_sources` 工具（对搜索结果域名进行分级）
+- **按需调用**：MCP `register_source` 工具（注册新发现的优质信源）
 
 ## 执行步骤
 
@@ -78,39 +80,54 @@
 > - `replaces` 缺失：从当前上下文的 decompositions 中找到该限定词替代的通用能力列表，直接填入
 > - 缺整个限定词条目：从当前上下文的 decompositions 中提取所有命题的限定词，补齐该条目的 injects + replaces
 
-### Step 6：信源 URL 预查找（强制）
+### Step 6：信源 URL 预查找（双轨）
 
-**对每个原子能力，必须预查找其 T1/T2 参考 URL，写入 JSON。**
+**对每个原子能力，必须预查找参考 URL，写入 JSON。** 采用双轨模式：
 
-#### 6.1 确定技术域
+1. **轨道 A — T0 定向**：在 T0 内置信源域名内搜索与能力相关的官方/权威文档
+2. **轨道 B — 自由搜索**：不限域名，搜索社区博客、技术分析等补充材料，按 MCP 分级入库
 
-调用 MCP `get_sources` 工具（参数：capability_name="[能力名称]"）获取该能力匹配的技术域和 T1/T2 域名列表。
+#### 6.1 T0 定向搜索
 
-#### 6.2 按白名单查找
+调用 MCP `get_t0_sources` 获取 T0 域名列表，逐个搜索：
 
-使用 MCP `get_sources` 返回的 T1/T2 域名列表，按以下流程执行：
-
+```bash
+MCP get_t0_sources() → [{domain, name}, ...]
 ```
-1. 从 source_domain_map 获取该技术域的 T1 域名列表
-2. 对每个 T1 域名：
+
+```text
+1. 对每个 T0 域名：
    a. web_search "<能力名称> site:<域名>"
    b. 取第一个结果
    c. web_fetch 验证：HTTP 200？内容 > 200 字？与能力相关？
-   d. 通过 → 记录 URL + title，标记 verified: true
-   e. 不通过 → 尝试下一个 T1 域名
-3. 所有 T1 无结果：
-   a. 获取 T2 域名列表
-   b. 重复上述流程
-4. T2 也无结果：
-   a. web_search "<能力名称> official documentation"
-   b. 从结果中选取最权威来源
-   c. 标记 t1_missing: true
+   d. 通过 → 记录 URL + title，标记 tier: "T0"，verified: true
+   e. 不通过 → 尝试下一个 T0 域名
+2. 所有 T0 域名均无结果：
+   a. 标记 t0_missing: true
+   b. → 进入轨道 B 自由搜索补充
 ```
 
-#### 6.3 黑名单检查
+#### 6.2 自由搜索 + 分级
 
-调用 MCP `get_sources` 工具获取黑名单数据，搜索结果 URL 必须与黑名单比对：
-- 命中黑名单的 URL 直接跳过，不写入 JSON
+轨道 A 未覆盖或需要补充社区资料时，进行自由搜索：
+
+```text
+1. web_search "<能力名称>"（不限域名，多关键词）
+2. 提取搜索结果域名列表
+3. 调 MCP classify_sources(domains) → 获取每个域名的 tier
+4. 对返回 tier 非 unknown 的域名：
+   a. web_fetch 验证内容相关性
+   b. 通过 → 按 classify_sources 返回的 tier 记录
+5. 对 unknown 域名：
+   a. web_fetch 评估内容质量（参考 get_source_standard 的评估维度）
+   b. 达标 → 调 MCP register_source(domain, tier, reason) 入库
+   c. 按评估结果记录对应 tier
+```
+
+#### 6.3 黑名单过滤
+
+`classify_sources` 已内置黑名单处理（命中 blacklist 的域名返回 tier: "T3"）。
+搜索结果中 Tier 为 T3 且来源标记为 "builtin" 的域名视为黑名单命中，直接跳过。
 
 #### 6.4 写入格式
 
@@ -122,7 +139,7 @@
   "name": "浏览器渲染管线",
   "source_domain": "browser_api",
   "references": {
-    "t1": [
+    "t0": [
       {
         "url": "https://developer.mozilla.org/en-US/docs/Web/Performance/Critical_rendering_path",
         "title": "MDN: Critical Rendering Path",
@@ -136,33 +153,35 @@
         "verified": true
       }
     ],
-    "t1_missing": false
+    "t0_missing": false
   }
 }
 ```
 
 **字段说明：**
-- `source_domain`：该能力匹配的技术域（来自 MCP `get_sources` 工具）
-- `references.t1`：T1 官方来源列表
+- `source_domain`：该能力匹配的技术域（保留字段，后续可能由 sources/ 体系替代）
+- `references.t0`：T0 来源列表（官方文档/规范，来自轨道 A）
   - **每个条目都必须经过 web_fetch + 内容相关性验证**
   - verified: true 表示"已爬取、已验证内容相关"，而非"URL 能访问"
-- `references.t2`：T2 高质量来源列表（同上，必须验证）
+- `references.t1`：T1 来源列表（大厂技术博客，来自轨道 B 分级）
+- `references.t2`：T2 来源列表（优质社区，来自轨道 B 分级）
+- `references.t3`：T3 来源列表（一般社区，来自轨道 B 分级）
 - `verified`：**是否经过完整的验证流程（web_fetch + 状态检查 + 内容相关性判断）**
   - true = 已爬取、内容与该能力直接相关
   - false = URL 存在但未验证或内容不相关
 - `title`：页面标题（从 web_fetch 结果中获取）
-- `t1_missing`：该能力的所有 T1 域名均未找到相关内容（true 时后处理 agent 需 fallback）
+- `t0_missing`：该能力的所有 T0 域名均未找到相关内容（true 时后处理 agent 需 fallback）
 
 #### 6.5 质量校验规则
 
 | 规则 | 说明 | 违反处理 |
 |------|------|---------|
-| T1 不为空 | 每个能力至少 1 个 T1 来源 | 无 T1 → `t1_missing: true`，后处理 agent 需自行补充 |
+| T0 不为空优先 | 每个能力至少尝试搜索所有 T0 域名 | 全部无结果 → `t0_missing: true`，后处理 agent 需自行补充 |
 | URL 可访问 | web_fetch 返回 200 | 403/404/429 → 跳过该 URL，尝试下一个 |
 | 内容充足 | 正文 > 200 字 | 空页面/登录墙 → 跳过该 URL |
 | 内容相关 | 页面标题或正文包含该能力的关键术语 | 不相关 → 跳过该 URL |
-| 域名合规 | T1 URL 必须来自 source_domain_map 中对应域的 T1 列表 | 域名不在白名单 → 降级为 T2 或丢弃 |
-| 黑名单过滤 | 命中 blacklist 的 URL | 直接丢弃，不写入 JSON |
+| tier 匹配 | 写入的 tier 必须与 classify_sources 返回一致 | 不一致 → 以 classify_sources 为准重评 |
+| 黑名单过滤 | classify_sources 返回 blacklist-tagged T3 | 直接丢弃，不写入 JSON |
 | 验证完整性 | **每个写入 JSON 的 URL 都必须经过上述全部校验** | 未验证 → 禁止写入，verified 字段不得为 true |
 
 ### Step 6.5：结构完整性校验
@@ -185,7 +204,7 @@
 > - `dependency_graph` 和 `qualifier_injection` 是**必填顶层字段**，不可省略
 > - 每个 capability 的 `fanout` 必须是对象 `{count, total, ratio, level}`，**禁止简化为数字**
 > - 每个 capability 必须包含 `dependencies`、`tags`、`source_domain`、`covers` 字段，**禁止省略**
-> - 每个 capability 的 `references` 必须是对象 `{t1: [], t2: [], t1_missing}`，**禁止简化为 URL 字符串**
+> - 每个 capability 的 `references` 必须是对象 `{t0: [], t1: [], t2: [], t3: [], t0_missing: boolean}`，**禁止简化为 URL 字符串**
 
 输出格式由 MCP `get_output_schema(step="capability-extract")` 定义，包含 template + field_rules + strict_notes。
 写入前调用 MCP `submit_output(step="capability-extract", data=..., workDir=...)` 自动校验。
@@ -206,19 +225,19 @@
 
 | 异常场景 | 触发条件 | 处理动作 |
 |---------|---------|---------|
-| 信源预查找全部超时 | 单个能力的 T1+T2 域名 web_fetch 均超时 | 标记 `t1_missing: true` + `t2_missing: true`，后处理 agent 用 Fallback 搜索补充 |
-| MCP get_sources 调用失败 | MCP 服务器未连接或返回错误 | 使用内置默认域名列表（MDN + Chrome DevTools + web.dev），标记 `registry_fallback: true` |
+| 信源预查找全部超时 | 单个能力的 T0 域名 web_fetch 均超时 | 标记 `t0_missing: true`，后处理 agent 用 Fallback 搜索补充 |
+| MCP get_t0_sources 调用失败 | MCP 服务器未连接或返回错误 | 跳过轨道 A，直接进入轨道 B 自由搜索，标记 `registry_fallback: true` |
 | 分词结果为空 | decompositions 列表为空 | 输出空 {{paths.meta_capability_graph}} + 告知用户"无有效命题，请检查扫描结果" |
 | 能力数量过多 | 提取 > 30 个原子能力 | 提示用户"能力数量过多（{n}），建议用 --filter 缩小范围"，继续执行但标记 `overload: true` |
 | JSON 写入失败 | .meta/ 目录不可写（路径：`{{paths.meta_capability_graph}}` 所在目录） | 自动创建目录 → 仍失败则输出到 stdout，由用户手动保存 |
-| 搜索结果全部命中黑名单 | T1+T2 域名搜索结果均在 blacklist 中 | 标记 `all_blocked: true`，该能力不写入 references，后处理 agent 自行搜索 |
+| 搜索结果全部命中黑名单 | classify_sources 将所有域名标记为 blacklist-tagged T3 | `all_blocked: true`，该能力不写入 references，后处理 agent 自行搜索 |
 | 同一能力多个命题定义冲突 | 不同命题对同一能力的描述差异大 | 保留最详细的描述，其他命题的定义合并到 `covers` 字段 |
 
 ## 依赖
 
 - 需要先执行 processes/decompose.md（提供分词结果）
 - 需要先执行 processes/scan.md（提供 raw_materials 中的 URL）
-- **必须调用 MCP `get_sources` 工具**（获取信源白名单）
+- **必须调用 MCP `get_t0_sources` + `classify_sources` 工具**（信源预查找 + 分级）
 
 ## 参考
 

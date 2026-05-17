@@ -10,7 +10,7 @@ export interface RawMaterial {
   id: string;
   title: string;
   url: string;
-  source_tier: "T1" | "T2" | "T3";
+  source_tier: "T0" | "T1" | "T2" | "T3";
   summary: string;
   date: string;
   relevance_tags: string[];
@@ -28,7 +28,7 @@ export interface RawMaterialsData {
     topic: string;
     total_sources: number;
     successful_fetches: number;
-    tier_distribution: { T1: number; T2: number; T3: number };
+    tier_distribution: { T0: number; T1: number; T2: number; T3: number };
   };
   materials: RawMaterial[];
 }
@@ -41,7 +41,7 @@ export interface ValidationError {
 
 // ── 常量 ──
 
-const TIER_VALUES = ["T1", "T2", "T3"] as const;
+const TIER_VALUES = ["T0", "T1", "T2", "T3"] as const;
 const FETCH_STATUS_VALUES = ["ok", "failed"] as const;
 
 // ── Template（供 get_output_schema 返回）──
@@ -54,7 +54,7 @@ export const RAW_MATERIALS_TEMPLATE: RawMaterialsData = {
     topic: "（目标主题）",
     total_sources: 0,
     successful_fetches: 0,
-    tier_distribution: { T1: 0, T2: 0, T3: 0 },
+    tier_distribution: { T0: 0, T1: 0, T2: 0, T3: 0 },
   },
   materials: [
     {

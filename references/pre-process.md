@@ -55,22 +55,28 @@ Step 1 ──→ Step 1.5 ──→ ⓐ ──→ Step 2 ──→ Step 3 ──
                                                extract     identify
 ```
 
-### Step 1：广域扫描
+### Step 1：广域扫描（自由搜索 + 信源 filter）
 
-> **当前模式**：主线程执行（依赖 web_search，子 agent 暂无此工具）
-> **架构预留**：当子 agent 工具链支持 web_search 后，可升级为子 agent 隔离（见 §升级路径）
+> **执行模式**：主线程执行（依赖 web_search + MCP 信源 filter）
+> **核心变化**：agent 自由搜索，不限域名；所有结果经 MCP `classify_sources` 统一分级
 
 ```
 调用：processes/scan.md
 输入：用户指令中的 source_desc + topic
 执行前：调用 MCP `get_output_schema(step="scan")` 获取输出 schema 标准
-输出：raw-materials.json（通过 MCP `submit_output(step="scan", data=..., workDir=...)` 校验 + 写入）
+流程：
+  1. agent 自由 web_search（多路关键词，不限域名）
+  2. 提取搜索结果域名列表
+  3. 调 MCP classify_sources(domains) → 获得分级
+  4. unknown 域名 → web_fetch 评估内容质量
+  5. 达标的 unknown → 调 MCP register_source 动态注册
+  6. 按 Tier 排序 + 去重
+  7. submit_output 写入 raw-materials.json
+输出：raw-materials.json
 caller：pre/scan
 ```
 
-> **工具增强预留**：scan 步骤的质量与信源覆盖度直接相关。
-> 未来引入更深度的搜索工具（如多引擎聚合、学术搜索、实时爬虫）时，
-> 子 agent 隔离将成为必要——这些重型工具不应占用主线程上下文。
+> **信源 filter 机制**：MCP 内置 T0 高可信信源（官方文档/规范），搜索过程中发现的优质域名通过 `register_source` 动态加入。每次 scan 都可能扩展信源池。
 
 ### Step 1.5：加载方法论文档（L3 前置条件）
 
@@ -93,7 +99,7 @@ caller：pre/scan
 ```
 展示内容：
   - 识别到 N 个信源，成功抓取 M 个
-  - 筛选出 K 条相关素材（按 Tier 分布：T1=x, T2=y, T3=z）
+  - 筛选出 K 条相关素材（按 Tier 分布：T0=x, T1=y, T2=z, T3=w）
   - Top 5 素材标题列表
 
 用户操作：
@@ -130,7 +136,7 @@ caller：pre/scan
      - 注入 processes/capability-extract.md 的完整内容（作为执行指令）
      - 注入 decompositions.json 和 raw-materials.json 的绝对路径
      - 注入 workDir 绝对路径
-     - 注入 MCP 调用语法（mcporter call get_sources 等）
+     - 注入 MCP 调用语法（mcporter call get_t0_sources / classify_sources / register_source 等）
   3. delegate_task 调度子 agent（toolsets: ["terminal", "file", "web"]）
   4. 等待子 agent 完成，接收 stdout 摘要
   5. 读取子 agent 产出的 capability-graph.json
@@ -148,11 +154,10 @@ caller：pre/scan
 caller：subagent/cap-extract
 ```
 
-**关键变更：** Step 3 现在不仅提取原子能力，还为每个能力预查找官方文档 URL（T1）和技术博客 URL（T2）。
-- 按信源域名地图（source_domain_map）的优先级查找
-- T1 必须来自官方域名（MDN/Chrome DevTools/框架官网等），禁止 CSDN 等低质源
+**关键变更：** Step 3 现在不仅提取原子能力，还为每个能力按双轨模式预查找参考 URL（T0 官方 + 自由搜索分级）。
+- 轨道 A：调用 MCP `get_t0_sources` 获取 T0 域名列表，在每个域内搜索官方文档
+- 轨道 B：自由搜索 → MCP `classify_sources` 分级 → 按 tier 归类
 - URL 必须 web_fetch 验证过内容相关性
-- T1 为空时才降级到 T2
 - 查找结果写入 capability-graph.json 每个能力的 `references` 字段
 
 ### Step 4：战略高地识别

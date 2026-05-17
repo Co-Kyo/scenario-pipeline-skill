@@ -43,8 +43,8 @@ plugins/year-granularity.md
 > 主 agent 通过 MCP `get_template` 获取模板后，将指令内联到子 agent task；
 > 子 agent 只写不读，无需访问 process 文档。
 
-MCP `get_sources` 工具
-  ├── 被 capability-extract.md 必须调用（信源URL预查找）
+MCP `get_t0_sources` + `classify_sources` 工具
+  ├── 被 capability-extract.md 必须调用（信源预查找 + 分级）
   └── 被 capability-research.md 必须调用（fallback搜索）
 ```
 

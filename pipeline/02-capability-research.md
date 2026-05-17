@@ -36,7 +36,7 @@
 | MCP template `capability-research.md` | **执行指令 SSoT**（主 agent 通过 `get_template` 获取） |
 | `references/archive/capability-research.md` | 参考文档（已降级，不再用于执行） |
 | `plugins/capability-research-mode.md` | 必须：材料块格式规范 |
-| MCP `get_sources` 工具 | 必须：信源白名单（fallback 搜索） |
+| MCP `get_t0_sources` + `classify_sources` 工具 | 必须：T0 域名 + 分级（fallback 搜索） |
 | `core/capability-graph.md` | 能力定义参考 |
 
 ### 产物文件（读取）
@@ -76,7 +76,7 @@
 ```
 ① JSON 中 verified=true 的 T1 → 直接 web_fetch
 ② JSON 中 verified=true 的 T2 → 补充 web_fetch
-③ t1_missing=true → fallback 到 MCP get_sources 白名单搜索
+③ t0_missing=true → fallback 到 MCP get_t0_sources + classify_sources 搜索
 ④ 搜索无结果 → 标记信源不足，不编造
 ```
 

@@ -43,7 +43,7 @@ const SCHEMA_REGISTRY: Record<
     strict_notes: [
       "1. $schema 字段必须是 \"raw-materials-v1\"",
       "2. materials 数组中每个条目必须包含所有必填字段",
-      "3. source_tier 只能是 T1/T2/T3",
+      "3. source_tier 只能是 T0/T1/T2/T3",
       "4. fetch_status 只能是 ok/failed",
       "5. boolean 字段禁止用字符串 \"true\"/\"false\"",
       "6. url 必须是有效 HTTP(S) URL",
@@ -66,7 +66,7 @@ const SCHEMA_REGISTRY: Record<
     strict_notes: [
       "1. $schema 字段必须是 \"capability-graph-v1\"",
       "2. fanout 必须是对象 {count, total, ratio, level}，禁止简化为数字",
-      "3. references 必须是对象 {t1, t2, t1_missing}，禁止简化为 URL 字符串",
+      "3. references 必须是对象 {t0, t1, t2, t3, t0_missing}，禁止简化为 URL 字符串",
       "4. 每个 capability 必须包含 dependencies、tags、covers 字段",
       "5. dependency_graph 和 qualifier_injection 是必填顶层字段",
     ],

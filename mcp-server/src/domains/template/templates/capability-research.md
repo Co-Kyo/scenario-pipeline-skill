@@ -20,13 +20,17 @@
 ## 信源
 {{urls}}
 
-T1 缺失: {{t1_missing}}
+T0 缺失: {{t0_missing}}
 
 ## 执行步骤
 
 ### Step 1: 信源获取（强制）
-1. 优先使用上述 T1/T2 信源
-2. 如果 T1 缺失或全部失效，调用 MCP `get_sources` 获取域名白名单
+1. 优先使用上述预查找信源，按 Tier 优先级：T0（官方）→ T1（大厂博客）→ T2（优质社区）→ T3（一般社区）
+2. 如果 T0 全部缺失或 pre-fetch URL 均不可达，调用 MCP 工具进行 Fallback 搜索：
+   - MCP `get_t0_sources()` → 获取 T0 内置信源域名列表
+   - 对每个 T0 域名：web_search "{{capability_name}} site:<domain>"
+   - 同时进行自由搜索，多路 web_search "{{capability_name}}"
+   - 对搜索结果的域名调 MCP `classify_sources(domains)` 获取分级
 3. 禁止凭记忆生成，必须 web_fetch 验证内容
 
 ### Step 2: 内容研究
@@ -82,7 +86,7 @@ T1 缺失: {{t1_missing}}
   ],
   "experiment_code": "最小验证实验代码（deep模式）或 null",
   "references": [
-    { "tier": "T1|T2", "url": "...", "title": "..." }
+    { "tier": "T0|T1|T2|T3", "url": "...", "title": "..." }
   ]
 }
 ```
@@ -104,7 +108,7 @@ T1 缺失: {{t1_missing}}
 ## 异常处理
 | 场景 | 处理 |
 |------|------|
-| T1 信源全部失效 | 标记 t1_missing，用 T2 补充 |
-| T2 信源也失效 | 调用 get_sources 获取白名单，按域名搜索 |
+| T0 信源全部失效 | 标记 t0_missing，用 T1/T2 补充 |
+| 预查找信源全部不可达 | 调用 get_t0_sources + classify_sources 执行 Fallback 搜索 |
 | 内容不足 2000 字 | 补充调试工具、权衡对比、实验代码 |
 | 摘要 JSON 格式错误 | 检查字段名和类型，重新生成 |

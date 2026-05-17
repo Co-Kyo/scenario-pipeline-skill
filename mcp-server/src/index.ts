@@ -10,7 +10,7 @@ import {
 // 按业务域导入工具
 import { SaveStateTool, RestoreStateTool } from "./domains/state/index.js";
 import { GetTemplateTool, ResolvePathsTool } from "./domains/template/index.js";
-import { GetSourcesTool } from "./domains/source/index.js";
+import { ClassifySourcesTool, RegisterSourceTool, GetSourceStandardTool, GetT0SourcesTool } from "./domains/source/index.js";
 import { GetSummarySchemaTool, SubmitSummaryTool } from "./domains/summary/index.js";
 import { GetOutputSchemaTool, SubmitOutputTool } from "./domains/output/index.js";
 import { PingTool } from "./health/ping.js";
@@ -19,7 +19,7 @@ import { callLogger } from "./core/call-logger.js";
 const server = new Server(
   {
     name: "scenario-pipeline",
-    version: "1.0.0",
+    version: "1.1.0",
   },
   {
     capabilities: {
@@ -38,8 +38,11 @@ const tools = [
   new GetTemplateTool(),
   new ResolvePathsTool(),
   
-  // 信源管理域
-  new GetSourcesTool(),
+  // 信源管理域（动态 filter）
+  new GetSourceStandardTool(),
+  new GetT0SourcesTool(),
+  new ClassifySourcesTool(),
+  new RegisterSourceTool(),
 
   // 摘要管理域（schema 强制闭环）
   new GetSummarySchemaTool(),

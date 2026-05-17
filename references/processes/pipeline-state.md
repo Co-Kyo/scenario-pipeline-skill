@@ -74,8 +74,11 @@ mcporter call scenario-pipeline.save_state checkpoint="ⓔ" context='{}' --args 
 # 从产出目录恢复状态
 mcporter call scenario-pipeline.restore_state --args '{"workDir":"<产出目录>"}'
 
-# 从 skill 目录读信源配置
-mcporter call scenario-pipeline.get_sources --args '{"skillDir":"<skill目录>"}'
+# 从 skill 目录读信源配置（已弃用）
+# 新信源管理使用以下方式：
+# mcporter call scenario-pipeline.get_t0_sources
+# mcporter call scenario-pipeline.classify_sources --args '{"domains":["..."]}'
+# mcporter call scenario-pipeline.get_source_standard
 ```
 
 > ⚠️ `workDir` 必须指向管线产出目录（即 `{{paths.workDir}}`），而非 skill 目录。

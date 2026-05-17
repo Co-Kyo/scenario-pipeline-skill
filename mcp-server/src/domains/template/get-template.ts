@@ -41,9 +41,11 @@ interface CapabilityData {
   dependencies: string[];
   tags: string[];
   references: {
+    t0: { url: string; title: string; verified: boolean }[];
     t1: { url: string; title: string; verified: boolean }[];
     t2: { url: string; title: string; verified: boolean }[];
-    t1_missing: boolean;
+    t3: { url: string; title: string; verified: boolean }[];
+    t0_missing: boolean;
   };
 }
 
@@ -189,13 +191,23 @@ function buildCapabilityVariables(
   capability: CapabilityData,
   paths: PathTemplates
 ): Record<string, any> {
-  const t1Urls = capability.references.t1
-    .map((r) => `- [T1] ${r.title}: ${r.url}`)
+  // 按 tier 优先级排序，只输出非空列表
+  const tierLabels: Array<{ key: keyof CapabilityData["references"]; label: string }> = [
+    { key: "t0", label: "[T0] 官方/规范" },
+    { key: "t1", label: "[T1] 大厂技术博客" },
+    { key: "t2", label: "[T2] 优质社区" },
+    { key: "t3", label: "[T3] 一般社区" },
+  ];
+  const allUrls = tierLabels
+    .filter(({ key }) => {
+      const refs = capability.references[key];
+      return Array.isArray(refs) && refs.length > 0;
+    })
+    .map(({ key, label }) => {
+      const refs = capability.references[key] as { url: string; title: string; verified: boolean }[];
+      return refs.map((r) => `- ${label} ${r.title}: ${r.url}`).join("\n");
+    })
     .join("\n");
-  const t2Urls = capability.references.t2
-    .map((r) => `- [T2] ${r.title}: ${r.url}`)
-    .join("\n");
-  const allUrls = [t1Urls, t2Urls].filter(Boolean).join("\n");
 
   return {
     paths,
@@ -211,7 +223,7 @@ function buildCapabilityVariables(
     capability_fanout_level: capability.fanout.level,
     capability_coupling: String(capability.coupling),
     urls: allUrls || "⚠️ 无预查找信源，请使用 Fallback 搜索流程",
-    t1_missing: capability.references.t1_missing ? "是" : "否",
+    t0_missing: capability.references.t0_missing ? "是" : "否",
   };
 }
 

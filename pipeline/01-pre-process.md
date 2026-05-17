@@ -43,7 +43,7 @@
 | `core/capability-graph.md` | 能力图谱定义（capability-extract 使用） |
 | `core/strategic-highground.md` | 战略高地定义（highground-identify 使用） |
 | `plugins/year-granularity.md` | 按需：`--year` 参数时加载 |
-| MCP `get_sources` 工具 | Step 3 必须：信源白名单 |
+| MCP `get_t0_sources` + `classify_sources` 工具 | Step 3 必须：信源预查找 + 分级 |
 
 ### 产出文件
 
