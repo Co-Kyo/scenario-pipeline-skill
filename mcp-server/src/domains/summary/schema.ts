@@ -16,7 +16,7 @@ import {
 const CATEGORY_VALUES = ["输入变异", "状态跃迁", "资源边界", "规模拐点", "时序竞争"] as const;
 const PRIORITY_VALUES = ["P0", "P1", "P2", "P3"] as const;
 const VERSION_SENSITIVE_VALUES = ["none", "weak", "strong"] as const;
-const TIER_VALUES = ["T1", "T2"] as const;
+const TIER_VALUES = ["T0", "T1", "T2"] as const;
 
 // ── Template (for get_summary_schema response) ──
 
@@ -46,7 +46,7 @@ export const SUMMARY_TEMPLATE: Omit<SummaryData, "id" | "name" | "tech_layer" | 
   ],
   experiment_code: null,
   references: [
-    { tier: "T1", url: "https://...", title: "（来源标题）" },
+    { tier: "T0", url: "https://...", title: "（来源标题）" },
   ],
 };
 

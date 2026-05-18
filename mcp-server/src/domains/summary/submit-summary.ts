@@ -130,7 +130,12 @@ export class SubmitSummaryTool extends BaseTool {
     const summariesDir = path.join(workDir, ".meta", "summaries");
     await fs.mkdir(summariesDir, { recursive: true });
 
-    const fileName = `${summary.id}-${summary.name}.json`;
+    // sanitize: 替换文件名中的危险字符（/ \0 .. 等防止路径遍历）
+    const safeName = String(summary.name)
+      .replace(/[/\\?%*:|"<>]/g, "_")
+      .replace(/\.\./g, "_")
+      .replace(/\0/g, "");
+    const fileName = `${summary.id}-${safeName}.json`;
     const filePath = path.join(summariesDir, fileName);
 
     await fs.writeFile(filePath, JSON.stringify(summary, null, 2), "utf-8");

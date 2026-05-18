@@ -41,6 +41,7 @@ const SCHEMA_REGISTRY: Record<
     template: RAW_MATERIALS_TEMPLATE,
     field_rules: RAW_MATERIALS_FIELD_RULES,
     strict_notes: [
+      "⚠️ 重要：template 仅为格式示意，所有必填字段的完整定义以 field_rules 为准。提交前必须逐字段核对 field_rules。",
       "1. $schema 字段必须是 \"raw-materials-v1\"",
       "2. materials 数组中每个条目必须包含所有必填字段",
       "3. source_tier 只能是 T0/T1/T2/T3",
@@ -53,6 +54,7 @@ const SCHEMA_REGISTRY: Record<
     template: DECOMPOSITIONS_TEMPLATE,
     field_rules: DECOMPOSITIONS_FIELD_RULES,
     strict_notes: [
+      "⚠️ 重要：template 仅为格式示意，所有必填字段的完整定义以 field_rules 为准。提交前必须逐字段核对 field_rules。",
       "1. $schema 字段必须是 \"decompositions-v1\"",
       "2. 每个命题必须有 proposition_id、proposition、qualifier、tech_keyword",
       "3. generic_core 和 specialization 必须是数组，每个元素包含 layer + capabilities",
@@ -64,6 +66,7 @@ const SCHEMA_REGISTRY: Record<
     template: CAPABILITY_GRAPH_TEMPLATE,
     field_rules: CAPABILITY_GRAPH_FIELD_RULES,
     strict_notes: [
+      "⚠️ 重要：template 仅为格式示意，所有必填字段的完整定义以 field_rules 为准。提交前必须逐字段核对 field_rules。",
       "1. $schema 字段必须是 \"capability-graph-v1\"",
       "2. fanout 必须是对象 {count, total, ratio, level}，禁止简化为数字",
       "3. references 必须是对象 {t0, t1, t2, t3, t0_missing}，禁止简化为 URL 字符串",
@@ -75,6 +78,7 @@ const SCHEMA_REGISTRY: Record<
     template: EVALUATIONS_TEMPLATE,
     field_rules: EVALUATIONS_FIELD_RULES,
     strict_notes: [
+      "⚠️ 重要：template 仅为格式示意，所有必填字段的完整定义以 field_rules 为准。提交前必须逐字段核对 field_rules。",
       "1. $schema 字段必须是 \"evaluations-v1\"",
       "2. scores 中每个维度必须是 0-3 的数字",
       "3. verdict 必须是 high/medium/rejected",
@@ -86,6 +90,7 @@ const SCHEMA_REGISTRY: Record<
     template: HIGHGROUNDS_TEMPLATE,
     field_rules: HIGHGROUNDS_FIELD_RULES,
     strict_notes: [
+      "⚠️ 重要：template 仅为格式示意，所有必填字段的完整定义以 field_rules 为准。提交前必须逐字段核对 field_rules。",
       "1. $schema 字段必须是 \"highgrounds-v1\"",
       "2. cumulative_value 必须 ≥ strategic_value（含传递覆盖）",
       "3. level 必须是一级/二级/三级",

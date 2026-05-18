@@ -26,6 +26,7 @@ export class GetSummarySchemaTool extends BaseTool {
       template: SUMMARY_TEMPLATE,
       field_rules: FIELD_RULES,
       strict_note: [
+        "⚠️ 重要：template 仅为格式示意，所有必填字段的完整定义以 field_rules 为准。提交前必须逐字段核对 field_rules。",
         "1. bottlenecks/tradeoffs/references 的每个条目必须是对象，禁止使用纯字符串",
         "2. 字段名必须与模板完全一致，禁止自创字段（如 id/description/choice 等）",
         "3. 所有 enum 字段（category/priority/version_sensitive/tier）只能使用规定值",
