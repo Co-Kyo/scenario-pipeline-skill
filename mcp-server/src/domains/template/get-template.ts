@@ -394,6 +394,14 @@ export class GetTemplateTool extends BaseTool {
   async execute(args: Record<string, any>): Promise<any> {
     const { template_type, ...params } = args as any;
 
+    // ── Layer 0: 前置校验（必须在数据加载前执行，避免 path.join(undefined) 抛底层错误） ──
+    if (!template_type) {
+      return { error: "缺少必填参数: template_type" };
+    }
+    if (!params.workDir) {
+      return { error: "缺少必填参数: workDir" };
+    }
+
     // Layer 1: 参数解析（基础校验：workDir 等）
     // Layer 2: 数据加载（先加载数据，再自动推导缺失参数）
     const capabilities = await loadCapabilityGraph(params.workDir);

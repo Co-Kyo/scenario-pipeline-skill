@@ -48,6 +48,9 @@ export const CAPABILITY_GRAPH_TEMPLATE = {
    * 用于后处理模板（assemble/briefing-assemble/learning-ladder），
    * 使后处理只需读取 capability-graph.json，不再依赖 decompositions.json。
    * 格式同 decompositions.json 的 decompositions 数组。
+   *
+   * ⚠️ 无需手动填写 — 提交 capability-extract 数据时，MCP submit_output 会自动
+   *    从 decompositions.json 注入此字段。手动填写会被覆盖。
    */
   propositions: [],
 };

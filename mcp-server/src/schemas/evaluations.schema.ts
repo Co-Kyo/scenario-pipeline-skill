@@ -53,7 +53,7 @@ export const EVALUATIONS_FIELD_RULES: Record<string, { required: boolean; type: 
   "evaluations[].scores.trending_heat": { required: true, type: "number", constraints: "0-3" },
   "evaluations[].scores.total": { required: true, type: "number" },
   "evaluations[].verdict": { required: true, type: "enum", constraints: VERDICT_VALUES.join(" | ") },
-  "evaluations[].highground_hits": { required: true, type: "string[]" },
+  "evaluations[].highground_hits": { required: false, type: "string[]", constraints: "可选，由战略高地识别步骤产出后填充" },
 };
 
 function validateEvaluation(item: unknown, index: number): ValidationError[] {
@@ -78,8 +78,8 @@ function validateEvaluation(item: unknown, index: number): ValidationError[] {
   if (!VERDICT_VALUES.includes(obj.verdict as typeof VERDICT_VALUES[number])) {
     errors.push({ path: `${p}.verdict`, message: `必须是: ${VERDICT_VALUES.join(" | ")}` });
   }
-  if (!Array.isArray(obj.highground_hits)) {
-    errors.push({ path: `${p}.highground_hits`, message: "必须是数组" });
+  if (!Array.isArray(obj.highground_hits) && obj.highground_hits !== undefined) {
+    errors.push({ path: `${p}.highground_hits`, message: "必须是数组或省略" });
   }
   return errors;
 }

@@ -17,9 +17,9 @@ const STEP_FILE_MAP: Record<string, string> = {
   "scan": "raw-materials.json",
   "decompose": "decompositions.json",
   "capability-extract": "capability-graph.json",
+  "highground-identify": "highgrounds.json",
   "evaluate": "evaluations.json",
   "capability-research": "summary.json",
-  // highground-identify 输出独立文件，由 pool 阶段合并
   // assemble/briefing/ladder 通过 get_template 的路径变量管理
 };
 

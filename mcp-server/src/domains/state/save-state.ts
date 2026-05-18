@@ -2,9 +2,17 @@ import { BaseTool, ToolDefinition } from "../../core/base-tool.js";
 import * as fs from "fs/promises";
 import * as path from "path";
 
+// ── 校验辅助 ──
+
+function isValidAbsolutePath(p: string): boolean {
+  return path.isAbsolute(p);
+}
+
 export class SaveStateTool extends BaseTool {
   readonly name = "save_state";
-  readonly description = "Save pipeline state to .meta/pipeline-state.json";
+  readonly description =
+    "Save pipeline state to .meta/pipeline-state.json. " +
+    "workDir 必须是绝对路径，否则文件会写入不可预期的位置。";
 
   getInputSchema(): ToolDefinition["inputSchema"] {
     return {
@@ -32,8 +40,26 @@ export class SaveStateTool extends BaseTool {
   async execute(args: Record<string, any>): Promise<any> {
     const { checkpoint, context, workDir: workDirArg } = args;
 
+    // ── 路径校验 ──
     const workDir = workDirArg || process.env.WORK_DIR || process.cwd();
-    const stateFilePath = path.join(workDir, ".meta", "pipeline-state.json");
+    if (!isValidAbsolutePath(workDir)) {
+      // 尝试解析为绝对路径
+      const resolved = path.resolve(workDir);
+      if (!isValidAbsolutePath(resolved)) {
+        return {
+          success: false,
+          error: `workDir 必须是绝对路径，收到: ${workDir}`,
+          resolved_to: resolved,
+        };
+      }
+      // 允许 resolve 后的路径，但给出警告
+      console.warn(
+        `[save_state] workDir 不是绝对路径，已解析为: ${resolved}。` +
+          `调用方原始值: ${workDir}。建议始终使用绝对路径。`
+      );
+    }
+    const finalWorkDir = path.resolve(workDir);
+    const stateFilePath = path.join(finalWorkDir, ".meta", "pipeline-state.json");
 
     // 确保 .meta 目录存在
     const metaDir = path.dirname(stateFilePath);
@@ -107,8 +133,23 @@ export class SaveStateTool extends BaseTool {
       state.checkpoints_passed.push(checkpoint);
     }
 
-    // 写入文件
-    await fs.writeFile(stateFilePath, JSON.stringify(state, null, 2), "utf-8");
+    // 写入文件（atomic write）
+    const tmpPath = stateFilePath + ".tmp";
+    await fs.writeFile(tmpPath, JSON.stringify(state, null, 2), "utf-8");
+    await fs.rename(tmpPath, stateFilePath);
+
+    // ── 回读验证（read-after-write） ──
+    try {
+      const verifyContent = await fs.readFile(stateFilePath, "utf-8");
+      JSON.parse(verifyContent); // 确保可解析
+    } catch (verifyError) {
+      return {
+        success: false,
+        error: `写入后回读验证失败: ${verifyError}`,
+        checkpoint,
+        state_file: stateFilePath,
+      };
+    }
 
     return {
       success: true,

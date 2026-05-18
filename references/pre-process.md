@@ -65,7 +65,7 @@ Step 1 ──→ Step 1.5 ──→ ⓐ ──→ Step 2 ──→ Step 3 ──
 输入：用户指令中的 source_desc + topic
 执行前：调用 MCP `get_output_schema(step="scan")` 获取输出 schema 标准
 流程：
-  1. agent 自由 web_search（多路关键词，不限域名）
+  1. agent 自由搜索（多路关键词，不限域名）。使用当前平台可用的搜索工具（`web_search` / `mimo_web_search` / 等价工具）
   2. 提取搜索结果域名列表
   3. 调 MCP classify_sources(domains) → 获得分级
   4. unknown 域名 → web_fetch 评估内容质量
@@ -126,7 +126,11 @@ caller：pre/scan
 > **隔离收益**：IO + 推理混合，上下文最重（~20K tokens）。是唯一同时高 token + 高时间的双重热区。
 > 隔离后主线程释放 ~20K tokens。
 
-**执行模式**：通过 `delegate_task` 调度子 agent 执行，主线程等待结果。
+**执行模式**：通过子 agent 调度器隔离执行（`delegate_task` / `sessions_spawn` / 等价工具），主线程等待结果。
+
+> **平台兼容**：`delegate_task` 是 Hermes 原生工具。OpenClaw 平台使用 `sessions_spawn(runtime="subagent")` 实现相同功能。
+> 其他平台请使用等价的子 agent 调度原语。如无可用的子 agent 调度能力，则主线程直接执行，
+> 但需注意上下文预算（~20K tokens）。
 
 ```
 主线程编排：
@@ -137,7 +141,7 @@ caller：pre/scan
      - 注入 decompositions.json 和 raw-materials.json 的绝对路径
      - 注入 workDir 绝对路径
      - 注入 MCP 调用语法（mcporter call get_t0_sources / classify_sources / register_source 等）
-  3. delegate_task 调度子 agent（toolsets: ["terminal", "file", "web"]）
+  3. 通过子 agent 调度器调度（toolsets: ["terminal", "file", "web"]）
   4. 等待子 agent 完成，接收 stdout 摘要
   5. 读取子 agent 产出的 capability-graph.json
   6. 校验 JSON 结构完整性（方法论特有字段是否存在）
