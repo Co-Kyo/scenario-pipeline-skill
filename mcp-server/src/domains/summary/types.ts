@@ -24,7 +24,7 @@ export interface TradeoffItem {
 }
 
 export interface ReferenceItem {
-  tier: "T1" | "T2";
+  tier: "T0" | "T1" | "T2";
   url: string;
   title: string;
 }
