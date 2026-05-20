@@ -2,9 +2,9 @@
 
 > 前端复合工程场景知识管线 —— 从技术文章到面试答案的自动化生产线。
 
-一个为 OpenClaw 设计的 Skill，用于将零散的技术文章、面试题、博客内容系统性地转化为结构化的深度研究产物：命题研究、原子能力知识库、以及面向学习者的渐进式阶梯引导。
+将零散的技术文章、面试题、博客内容系统性地转化为结构化的深度研究产物：命题研究、原子能力知识库、以及面向学习者的渐进式阶梯引导。
 
-> **第一次接触这个项目？** 从 [`pipeline/00-overview.md`](pipeline/00-overview.md) 开始，5 分钟了解完整管道设计。
+> **第一次接触？** 从 [`design/pipeline/00-overview.md`](design/pipeline/00-overview.md) 开始，5 分钟了解完整管道设计。
 
 ---
 
@@ -41,27 +41,18 @@
 ## 核心设计
 
 ```
-前处理（串行）           后处理（并行 + 单线程）
-scan → decompose →       阶段一：能力研究（并行）
-extract → highground →   ⛔ barrier
-evaluate → pool          Briefing 组装（单线程）
-                         ⛔ barrier
-                         阶段二：命题组装（并行）
-                         ⛔ barrier
-                         阶段三：学习阶梯（单线程）
+前处理（串行）           后处理（并行 + 检查点）
+① scan → ② decompose →  阶段一：⑦ 能力研究（并行）
+③ extract →              ⓔ barrier
+④ highground →           ⑧ Briefing 组装（并行）
+⑤ evaluate → ⑥ pool     ⓓ barrier
+                         阶段二：⑨ 命题组装（并行）
+                         ⓕ barrier
+                         阶段三：⑩ 学习阶梯（并行）
+                         ⓖ 完成
 ```
 
-每个阶段之间有显式 barrier，确保上游产物完整后才进入下游。
-
-> **想深入了解管道设计？**
-> 查看 [`pipeline/`](pipeline/) 目录，每个阶段有独立的文档，详细列出输入、输出、涉及文件和执行逻辑：
-> - [`pipeline/00-overview.md`](pipeline/00-overview.md) — 全局数据流图 + 阶段索引
-> - [`pipeline/01-pre-process.md`](pipeline/01-pre-process.md) — 前处理：6 步串行管线
-> - [`pipeline/02-capability-research.md`](pipeline/02-capability-research.md) — 后处理·阶段一：能力研究
-> - [`pipeline/03-briefing-assemble.md`](pipeline/03-briefing-assemble.md) — 后处理·Briefing 组装
-> - [`pipeline/04-proposition-assembly.md`](pipeline/04-proposition-assembly.md) — 后处理·阶段二：命题组装
-> - [`pipeline/05-learning-ladder.md`](pipeline/05-learning-ladder.md) — 后处理·阶段三：学习阶梯
-> - [`pipeline/99-shared.md`](pipeline/99-shared.md) — 跨阶段共享参考（数据实体、插件关系、故障模式）
+每个阶段之间有显式 barrier + 检查点，确保上游产物完整后才进入下游。
 
 ### 三层产物
 
@@ -105,34 +96,41 @@ deep research：P1、P2、P4 --no-experiment
 | `--depth=shallow\|normal\|deep` | 研究深度 |
 | `--platform=web\|miniapp\|rn\|all` | 目标平台 |
 | `--no-experiment` | 跳过实验生成 |
-| `--batch=pending` | 批量处理候选池 |
+| `--batch=pending` | 批量处理候选池（跳过检查点） |
 | `--year=L1\|L2\|L3\|L4` | 经验年限适配 |
+| `--append` | 在已有目录补充研究 |
 
 ---
 
 ## 项目结构
 
 ```
-scenario-pipeline-skill/
-├── SKILL.md                        ← 入口：触发方式 + 流程概览
-├── core/                           ← 元能力定义（稳定不常变）
-│   ├── architecture-decomposition.md   架构分词方法论
-│   ├── capability-graph.md             原子能力图谱定义
-│   ├── strategic-highground.md         战略高地识别规则
-│   └── scenario-matrix.md             四维评估 + 四象限框架
-├── plugins/                        ← 可热插拔的增强插件
-│   ├── capability-research-mode.md     材料块格式 + 深度分级
-│   ├── source-registry.md             信源白名单 + 黑名单
-│   └── year-granularity.md             年限→颗粒度映射
-├── references/                     ← 流程编排 + 步骤实现
-│   ├── pre-process.md                  前处理编排
-│   ├── post-process.md                 后处理编排
-│   └── processes/                      9 个可组合步骤
-└── pipeline/                       ← 架构观测文档（推荐阅读，非执行配置）
-    ├── README.md                       目录定位说明
-    ├── 00-overview.md                  全局数据流 + 阶段索引
-    ├── 01 ~ 05                         各阶段：输入/输出/涉及文件
-    └── 99-shared.md                    跨阶段参考（数据实体/插件关系/故障模式）
+scenario-pipeline-v2/
+├── SKILL.md                    ← Agent 执行入口（触发方式 + 管道全景）
+│
+├── meta/                       ← 数据定义
+│   ├── sources.md                 T0 域名表 + 信源分级规则
+│   ├── output-contracts.md        每步输出结构 + 完整 JSON 示例
+│   └── paths.md                   路径约定表
+│
+├── core/                       ← 方法论（agent 按需加载）
+│   ├── architecture-decomposition.md
+│   ├── capability-graph.md
+│   ├── strategic-highground.md
+│   └── scenario-matrix.md
+│
+├── plugins/                    ← 可选插件
+│   ├── capability-research-mode.md
+│   └── year-granularity.md
+│
+├── processes/                  ← 执行文档（自包含，含示例）
+│   ├── 00-shared.md               子 agent 调度 + 检查点 + 状态管理
+│   ├── 01-scan.md ~ 06-pool.md    前处理步骤
+│   └── 07 ~ 10                    后处理步骤
+│
+└── design/                     ← 架构观测（人类阅读）
+    ├── CHANGELOG.md
+    └── pipeline/                 管道数据流 + 故障模式
 ```
 
 ---
@@ -148,6 +146,8 @@ scenario-pipeline-skill/
 **学习阶梯不是教程** — 不重写内容，而是给读者一个"入口"和"抓手"。带着问题去读现有产出，比从头到尾读一遍更高效。
 
 **增量复用** — 已研究过的能力会跳过，已生成的 briefing 会复用，支持断点续跑。
+
+**零依赖** — 纯 Markdown，无需构建、无需服务器进程、无需安装任何东西。
 
 ---
 
@@ -169,13 +169,9 @@ scenario-pipeline-skill/
 
 单 agent 的上下文消耗在 50-80KB 量级。对于特别复杂的命题（涉及 10+ 原子能力），可能需要分批处理或降低研究深度。
 
-### 面试场景局限
-
-当前产物主要面向前端工程面试场景。其他领域（后端、算法、系统设计）需要调整 `core/` 中的方法论定义。
-
 ### 平台依赖
 
-依赖 OpenClaw 的多 agent spawn 能力。在不支持 spawn 的平台上，后处理将降级为单线程执行，失去并行优势。
+依赖平台的多 agent spawn 能力。在不支持 spawn 的平台上，后处理将降级为单线程执行，失去并行优势。
 
 ---
 
