@@ -1,5 +1,84 @@
 # Design Changelog
 
+## [2026-05-20] 多线程架构统一
+
+> 本轮改动的统一目标：**后处理四个并行步骤（⑦⑧⑨⑩）的调度模型、prompt 编写规范、术语体系统一收敛。**
+
+### 架构决策
+
+**1. 并发池（Concurrency Pool）取代"滑动窗口"**
+
+原术语"滑动窗口"在 CS 语境下指数据流上的窗口移动（网络协议、数组算法），实际机制是固定槽位的并发调度——任务完成释放槽位，新任务补位。统一为"并发池"。
+
+定义：固定 W=4 个并发槽位，计数单位是 Task Group（不是 agent 数）。
+
+**2. 删除 Heartbeat 跟踪方案，统一为 yield + Cron**
+
+原设计有三种跟踪方案：sessions_yield / Heartbeat / Cron。Heartbeat 存在根本性问题：
+- 本质错配：Heartbeat 设计初衷是轻量级周期检查，不适合重量级编排逻辑
+- 信噪比差：每 2-3 分钟消耗主 session token，大部分时候检查完发现"没完成"
+- 完成延迟：最坏情况等 2-3 分钟才发现 agent 完成
+- 上下文污染：tracker 检查逻辑在主 session 执行，污染对话上下文
+
+统一为两方案：
+- `sessions_yield`（< 5min）：即时响应，零额外开销，主 session 锁死
+- `Cron`（≥ 5min）：isolated session 执行，主 session 释放，≤2min 完成延迟
+
+**3. 域分组上限 4（Step ⑦）**
+
+原域分组按技术域亲缘性聚合，每组 3-8 个能力。实测发现某些域（通信与数据、构建与工程）单组可达 11-13 个能力，导致：
+- agent 上下文膨胀，后期文件质量下降
+- 单 agent 耗时过长，失去并行意义
+
+改为：先按域聚合，再按上限拆分。每组 ≤ 4 个能力，>4 时按依赖链切子组（{域}_1, {域}_2）。拆分后从 5 组（最大 13 能力）变为 8 子组（最大 4 能力），总耗时从 ~15min 降至 ~10min。
+
+**4. 子 agent 按需读取取代"只写不读"**
+
+原规则"子 agent 只写不读，所有信息内联到 task"在 Step ⑦（能力研究）成立——一个 agent 研究一组能力，全部信息已内联。但 Step ⑧⑨⑩ 的 agent 需要读取前置步骤的产出文件（summaries、briefings、overview），全部内联会导致 task 过长。
+
+改为分层策略：
+- Step ⑦：全部内联（不读外部文件），因为能力信息在分组时已确定
+- Step ⑧⑨⑩：task 中指定具体文件路径 + 用 `read` 工具读取 + 文件不存在时有明确降级动作
+
+**5. Prompt 编写规范：动作 > 程度，示例 > 描述**
+
+agent 执行长流程时，抽象描述会导致失真。每个步骤的调度逻辑必须自包含：
+- 完整的分批流程代码块（不是"参考 00-shared"）
+- 具体的工具调用指令（"用 read 工具读取"，不是"读取文件"）
+- 明确的降级动作（文件不存在时做什么，不是"标注缺失"）
+- 统一的完成输出格式（agent 产出可被 tracker 解析的声明）
+
+### 改动清单
+
+| 文件 | 改动 |
+|------|------|
+| `processes/00-shared.md` | 删除 Heartbeat 整节；并发池从实现级文档压缩为动作级指令（-229 行）；示例补完成输出；数据流规则更新 |
+| `processes/07-capability-research.md` | 分组上限 4 + 拆分算法 + 性能对比更新 + 策略移除 Heartbeat + 校验清单新增上限检查 |
+| `processes/08-briefing-assemble.md` | 文件读取具体化（read 工具 + 分支动作）+ 校验清单补充 + 完成输出格式 |
+| `processes/09-assemble.md` | 补并发池分批流程 + Markdown/Experiment 独立声明 + Briefing 读取具体化 + Experiment 信源降级 + 完成输出 |
+| `processes/10-learning-ladder.md` | 补并发池分批流程 + 异常处理 + 文件读取具体化 + 完成输出 |
+| `meta/output-contracts.md` | cleanup_log 示例移除 heartbeat_clear |
+| `design/pipeline/00-overview.md` | 术语同步 + 补并发池架构说明 |
+| `design/pipeline/01-data-flow.md` | 数据流规则更新（按需读取）+ 交接方式细化 |
+| `design/pipeline/02-failure-modes.md` | 术语同步 + 故障模式补全 |
+
+### 架构状态快照
+
+```
+后处理并发模型（当前）：
+
+  Step ⑦  能力研究    并发池 W=4（计子组）   DAG 调度（有跨组依赖）   task 全内联
+  Step ⑧  Briefing   并发池 W=4（计命题）   简单窗口（无依赖）       task 指定 read 路径
+  Step ⑨  命题组装    并发池 W=4（计命题）   简单窗口（无依赖）       task 指定 read 路径
+  Step ⑩  学习阶梯    并发池 W=4（计命题）   简单窗口（无依赖）       task 指定 read 路径
+
+  跟踪方式：< 5min → sessions_yield / ≥ 5min → Cron（isolated session）
+  完成判断：expected_files 全部存在 = completed
+  Step ⑨ 特殊：1 命题 = 2 agent（Markdown + Experiment），W=4 命题 = 最多 8 agent
+```
+
+---
+
 ## [2026-05-20] v2 架构重构：MCP → 纯 Markdown
 
 **变更内容：**

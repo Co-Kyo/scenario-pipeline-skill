@@ -21,7 +21,7 @@
 3. 变量替换（workDir, capability_id, seq 等具体值）
 ```
 
-**示例（能力研究子 agent）：**
+**示例（能力研究子 agent — 单能力场景）：**
 
 ```
 你是「浏览器渲染管线」的深度研究员。
@@ -64,24 +64,33 @@
 
 ### Step 4: 保存文件
 用 write 工具写入上述两个路径。
+
+## 完成后
+输出：`Agent-A1 完成：已研究「浏览器渲染管线」（2 个文件已写入磁盘）`
 ```
 
-**注意**：task 中不引用任何外部文件路径（不出现"读取 xxx.md"），所有必要信息已内联。
+> **注意**：以上为最小粒度示例。实际 task 按各步骤的 task 模板组装，一个 agent 可能研究多个能力（见 Step ⑦ 域分组方案）。task 中不引用任何外部文件路径（不出现"读取 xxx.md"），所有必要信息已内联——除非该步骤明确要求 agent 读取前置步骤的产出文件（此时 task 中必须给出具体路径 + 文件不存在时的降级动作）。
 
-### 滑动窗口并行
+### 并发池调度
 
-- 窗口大小 W = 4（保留 1 个槽位给主 agent）
-- 维护状态表：
+**动作定义**：固定 W=4 个并发槽位，任务完成释放槽位，新任务补位。计数单位是 Task Group（不是 agent 数）。
 
-```
-| 能力ID | 状态 | agent session | 备注 |
-|--------|------|--------------|------|
-| A1     | ✅ done | xxx | 主文件+摘要均已写入 |
-| A2     | ⏳ running | xxx | |
-| A3     | ❌ failed | xxx | 超时，已重入队列 |
-```
+**两种模式**：
 
-- 失败的 agent 可选择重入队列（最多重试 1 次）
+| 模式 | 适用步骤 | 入队条件 | 说明 |
+|------|---------|---------|------|
+| DAG 调度 | Step ⑦ | 前置子组全部 completed | 子组间有跨依赖，必须按拓扑批次执行 |
+| 简单窗口 | Step ⑧⑨⑩ | 有空位就进 | 任务之间完全独立，先完成先补位 |
+
+**完成判断**：agent 的 expected_files 全部存在 = completed。
+
+**跟踪方式**：
+- 预计耗时 < 5min → `sessions_yield` 直接等待（即时响应）
+- 预计耗时 ≥ 5min → Cron 异步跟踪（主线程释放，isolated session 执行检查，每 2min 一轮）
+
+**Cron 跟踪核心指令**：spawn 第一批 agent 后，写入 tracker 状态文件，创建 cron job 定期检查：文件存在 → 标记完成 → 补位 spawn → 全部完成后自删除。
+
+**Step ⑨ 特殊处理**：1 个 Task Group = 1 个命题 = 2 个 agent（Markdown + Experiment），窗口 W=4 命题 = 最多 8 个 agent 并行。
 
 ---
 
@@ -109,6 +118,94 @@
 
 - `--batch=pending` 模式：自动跳过所有检查点
 - 用户输入"全部确认"：跳过后续所有检查点
+
+---
+
+## 副作用清理协议
+
+每个检查点通过时，**必须**清理前一阶段留下的任务副作用。未清理的副作用会导致：
+- Zombie cron job 持续消耗 token
+- Tracker 文件残留造成误判
+
+### 清理清单（按检查点）
+
+| 检查点 | 前一阶段 | 需清理的副作用 | 清理动作 |
+|--------|---------|--------------|---------|
+| ⓐ 扫描完成 | — | 无 | — |
+| ⓑ 评估完成 | — | 无 | — |
+| ⓒ 后处理启动前 | — | 无 | — |
+| ⓔ 能力研究完成 | Step ⑦ | cron job / tracker / zombie agents | 见下方 §并发池清理 |
+| ⓓ Briefing 完成 | Step ⑧ | cron job / zombie agents | 见下方 §并发池清理 |
+| ⓕ 命题组装完成 | Step ⑨ | cron job | 见下方 §通用清理 |
+| ⓖ 学习阶梯完成 | Step ⑩ | 所有残留 | 见下方 §终态清理 |
+
+### 并发池清理（检查点 ⓔ / ⓓ）
+
+Step ⑦ / Step ⑧ 使用的并发池调度（cron 跟踪），通过检查点时必须清理：
+
+```
+1. 清理 Cron Job
+   - cron(action="list") → 找到 name 包含 "window-tracker" 的 job
+   - cron(action="remove", jobId=xxx) → 逐个删除
+   - 验证：cron(action="list") 确认无残留
+
+2. 归档 Tracker 文件
+   - 读取 {workDir}/.meta/agent-tracker.json
+   - 重命名为 {workDir}/.meta/agent-tracker-archive-{timestamp}.json
+   - 或直接删除（归档优先，便于调试）
+
+3. 清理 Zombie Agents
+   - subagents(action="list") → 检查是否有仍 running 的 agent
+   - subagents(action="kill", target=xxx) → 杀死超时未退出的 agent
+   - 验证：subagents(action="list") 确认无残留
+
+4. 验证产出完整性
+   - 检查所有 expected_files 是否存在
+   - 缺失文件 → 标记为 failed，记录到 pipeline-state.json
+```
+
+### 通用清理（检查点 ⓕ）
+
+```
+1. cron(action="list") → 删除所有 name 包含当前 workDir 的 job
+2. subagents(action="list") → 杀死所有残留 agent
+```
+
+### 终态清理（检查点 ⓖ）
+
+管线完成时，彻底清理所有运行时痕迹：
+
+```
+1. Cron 全量清理
+   - cron(action="list") → 删除所有与当前管线相关的 job
+   - 匹配规则：name 包含 workDir 路径或管线主题关键词
+
+2. Agent 全量清理
+   - subagents(action="list") → 确认无残留
+   - 有则 kill
+
+3. Tracker 归档
+   - agent-tracker.json → archive 或删除
+
+4. 管线状态终态
+   - pipeline-state.json → status: "completed"
+   - 所有 stage → status: "completed"
+```
+
+### 清理失败处理
+
+| 场景 | 处理 |
+|------|------|
+| cron job 删除失败 | 记录 jobId，提示用户手动删除 |
+| agent kill 失败 | 记录 session_key，提示用户手动终止 |
+| 清理整体失败 | **不阻塞管线继续**，记录 warning 到 pipeline-state.json |
+
+### 清理原则
+
+1. **幂等**：清理动作可重复执行，不产生新副作用
+2. **非阻塞**：清理失败不阻塞管线推进，记录 warning 即可
+3. **可审计**：所有清理动作记录到 pipeline-state.json 的 `cleanup_log` 字段
+4. **先清理再推进**：检查点通过前必须完成清理，顺序不可颠倒
 
 ---
 

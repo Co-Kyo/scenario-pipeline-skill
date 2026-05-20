@@ -26,14 +26,15 @@
 ```
 前处理 ──────────────────────────────────────────── 后处理
                                                       
-  ③ capability-graph.json  ──────────────────────→  ⑦ 能力筛选
-  ③ capability-graph.json  ──────────────────────→  ⑧ 能力摘要引用
-  ③ capability-graph.json  ──────────────────────→  ⑨ 命题元数据
-  ③ capability-graph.json  ──────────────────────→  ⑩ 依赖关系
+  ③ capability-graph.json  ──────────────────────→  ⑦ 能力筛选（task 内联）
+  ③ capability-graph.json  ──────────────────────→  ⑧ 命题列表（task 内联）
+  ③ capability-graph.json  ──────────────────────→  ⑨ 命题元数据（task 内联）
+  ③ capability-graph.json  ──────────────────────→  ⑩ 依赖关系（task 内联）
                                                       
-  ⑦ summaries/*.json       ──────────────────────→  ⑧ Briefing 提取
-  ⑧ briefings/*.md         ──────────────────────→  ⑨ 内联到 task
-  ⑨ {seq}/*.md             ──────────────────────→  ⑩ 内容引用
+  ⑦ summaries/*.json       ─── read 工具 ────────→  ⑧ Briefing 提取
+  ⑧ briefings/*.md         ─── read 工具 ────────→  ⑨ 命题组装
+  ⑨ {seq}/overview.md      ─── read 工具 ────────→  ⑩ 学习阶梯
+  ⑦ summaries/*.json       ─── read 工具 ────────→  ⑩ 能力详情
 ```
 
 **capability-graph.json 是前后处理的唯一交接文件。** 它承载了：
@@ -42,13 +43,18 @@
 - propositions（⑧⑨⑩ 命题元数据用）
 - highgrounds + learning_path（⑩ 排序用）
 
+**Step ⑦ → ⑧⑨⑩ 的产出交接**通过文件系统 + `read` 工具完成：
+- Step ⑦ 双写：能力主文件（人类消费）+ summary JSON（机器消费）
+- Step ⑧⑨⑩ 的 task 中指定具体文件路径，agent 用 `read` 工具读取
+- 文件不存在时：⑧ 标注"缺失"继续；⑨⑩ 停止并报错
+
 ## 数据流向规则
 
 | 规则 | 说明 |
 |------|------|
 | 前处理不读后处理 | 前处理步骤不读取后处理产出的任何文件 |
 | 后处理只读交接文件 | 后处理只读 capability-graph.json 和 .meta/ 下的中间产物 |
-| 子 agent 只写不读 | 子 agent 的 task 内联了所有必要信息，不读外部文件 |
+| 子 agent 按需读取 | Step ⑦ 的 task 全部内联（不读外部文件）；Step ⑧⑨⑩ 的 task 指定具体文件路径，agent 用 read 工具读取前置步骤产出，文件不存在时有降级动作 |
 | 检查点读状态文件 | 检查点读 pipeline-state.json 确定恢复位置 |
 
 ## 插件引用关系

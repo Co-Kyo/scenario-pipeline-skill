@@ -16,9 +16,29 @@
 
 已有 `learning-ladder.md` 的命题跳过。
 
-### 2. 并行 spawn
+### 2. 并行 spawn（并发池分批）
 
-按 `processes/00-shared.md` §子 agent 调度规则，为每个命题 spawn 独立 agent。
+学习阶梯之间**无依赖关系**，采用**并发池分批机制**管理并行度。
+
+**分批流程**：
+```
+1. 筛选待生成的命题集合 P = {p₁, p₂, ..., pₘ}
+2. 窗口大小 W = 4（单位：命题数）
+3. 第一批：spawn p₁~p₄，并行执行
+4. 监听完成事件：任何学习阶梯 agent 完成 → 触发下一条入队
+5. 持续推进直到 pₘ 完成
+```
+
+**并发上限**：同时最多 W = 4 个学习阶梯 agent 并行。
+
+**性能提示**：
+- 10 个命题（W=4）：约 2-3 分钟完成（3 个窗口批次）
+- 5 个命题（W=4）：约 1-2 分钟完成（2 个窗口批次）
+
+**异常处理**：
+- 某个 agent 失败 → 标记该命题为 failed，窗口继续推进
+- 能力依赖图有环 → 打断循环依赖，标记 warning
+- 所有命题均完成或失败 → 进入 ⓖ 检查点
 
 **task 模板**：
 
@@ -41,7 +61,12 @@
 {dependency_edges}
 
 ## 能力详情
-{capability_details}
+用 read 工具读取以下文件：
+- {workDir}/.meta/summaries/{id}-{name}.json（每个涉及能力各一份）
+- {workDir}/{seq}-{short_name}/overview.md（Step ⑨ 产出）
+
+如果某个摘要文件不存在，跳过该能力并在学习阶梯中标注"⚠️ 该能力详情缺失"。
+如果 overview.md 不存在，停止执行并输出：`❌ 命题「{proposition_name}」的 overview.md 不存在，无法生成学习阶梯。请先完成 Step ⑨。`
 
 ## 输出路径
 {workDir}/{seq}-{short_name}/learning-ladder.md
@@ -83,6 +108,9 @@
 - [ ] 每步有"做到才算过"的验证标准
 - [ ] 引用路径指向实际产出文件
 - [ ] 失败时有明确的回退指引
+
+## 完成后
+输出：`学习阶梯「{proposition_name}」完成：已写入 {workDir}/{seq}-{short_name}/learning-ladder.md（N 个阶段）`
 ```
 
 ### 3. 等待全部完成

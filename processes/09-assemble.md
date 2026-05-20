@@ -15,7 +15,31 @@
 
 从 capability-graph.json 的 propositions 获取列表。已有完整产出的命题跳过。
 
-### 2. 并行 spawn（每命题 2 个 agent）
+### 2. 并行 spawn（并发池分批）
+
+命题组装之间**无依赖关系**，采用**并发池分批机制**管理并行度。
+
+**Markdown agent 与 Experiment agent 无相互依赖，可并行。两者均只依赖 Step ⑧ 的 Briefing 产出文件。**
+
+**分批流程**：
+```
+1. 筛选待组装的命题集合 P = {p₁, p₂, ..., pₘ}
+2. 窗口大小 W = 4（单位：命题数）
+3. 第一批：取出 p₁~p₄，每个命题 spawn 2 个 agent（Markdown + Experiment），共 8 个 agent 并行
+4. 监听完成事件：某命题的 2 个 agent 均完成 → 该命题标记 done → 窗口空出 1 个槽位 → 入队下一条命题
+5. 持续推进直到 pₘ 完成
+```
+
+**并发上限**：同时最多 W 个命题 = 2W 个 agent。当 W=4 时，最多 8 个 agent 并行。
+
+**性能提示**：
+- 10 个命题（W=4）：约 3-4 分钟完成（3 个窗口批次，每批 6 个文件）
+- 5 个命题（W=4）：约 2 分钟完成（2 个窗口批次）
+
+**异常处理**：
+- 某命题的 Markdown agent 失败 → Experiment agent 仍可继续（不依赖其产出）
+- 某命题的 2 个 agent 均失败 → 标记该命题为 failed，窗口继续推进
+- 所有命题均完成或失败 → 进入 ⓕ 检查点
 
 **Markdown 组装 agent** — 负责 overview / edge-cases / trade-offs / references
 
@@ -44,7 +68,9 @@
 {specialization}
 
 ## Briefing 内容
-{briefing_content}
+用 read 工具读取：{workDir}/.meta/briefings/{seq}-{short_name}.md
+
+如果文件不存在（read 返回错误），停止执行并输出：`❌ 命题「{proposition_name}」的 Briefing 文件不存在，无法组装。请先完成 Step ⑧。`
 
 ## 输出目录
 {workDir}/{seq}-{short_name}/
@@ -87,6 +113,9 @@
 - [ ] references.md 按 Tier 排序
 - [ ] 内容比例符合要求
 - [ ] 所有文件使用 {qualifier} 作为限定词
+
+## 完成后
+输出：`Markdown「{proposition_name}」完成：已写入 overview / edge-cases / trade-offs / references（共 4 个文件）`
 ```
 
 **实验组装 agent** — 负责 experiment 目录
@@ -104,7 +133,11 @@
 - 限定词: {qualifier}
 
 ## Briefing 内容
-{briefing_content}
+用 read 工具读取：{workDir}/.meta/briefings/{seq}-{short_name}.md
+
+如果文件不存在（read 返回错误），停止执行并输出：`❌ 命题「{proposition_name}」的 Briefing 文件不存在，无法组装实验。请先完成 Step ⑧。`
+
+如 Briefing 中无 experiment_code 字段或字段为空，按 meta/sources.md 的 T0 域名列表搜索补充，禁止凭记忆生成代码。
 
 ## 输出目录
 {workDir}/{seq}-{short_name}/experiment/
@@ -128,6 +161,10 @@
 - [ ] experiment/ 包含可运行代码
 - [ ] README.md 说明了运行方式
 - [ ] 验证检查点标注了对应的原子能力 ID
+- [ ] 如 Briefing 无 experiment_code，已通过搜索补充并注明来源
+
+## 完成后
+输出：`Experiment「{proposition_name}」完成：已写入 experiment/README.md + experiment/src/index.html`
 ```
 
 ### 3. 等待全部完成

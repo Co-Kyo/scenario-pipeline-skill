@@ -289,7 +289,19 @@
   },
   "checkpoints_passed": ["ⓐ", "ⓑ", "ⓒ"],
   "last_checkpoint": "ⓒ",
-  "interrupt_type": "checkpoint"
+  "interrupt_type": "checkpoint",
+  "cleanup_log": [
+    {
+      "checkpoint": "ⓔ",
+      "timestamp": "2026-05-20T10:30:00Z",
+      "actions": [
+        { "type": "cron_remove", "target": "agent-tracker-mini-program", "status": "ok" },
+        { "type": "tracker_archive", "target": "agent-tracker.json", "status": "ok" },
+        { "type": "agent_kill", "target": "agent-a-render", "status": "skip", "reason": "already exited" }
+      ],
+      "warnings": []
+    }
+  ]
 }
 ```
 
