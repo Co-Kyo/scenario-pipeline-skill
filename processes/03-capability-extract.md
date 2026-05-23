@@ -28,11 +28,20 @@
 
 跨命题去重：相同能力合并为一条，保留最高 Tier 来源。用 `covers` 字段记录该能力覆盖哪些命题。
 
+**合并/拆分决策记录**：
+- 合并：当多个命题中的相似能力被合并为一个时，记录 `merge_trace`："{能力A}（来自命题X）与 {能力B}（来自命题Y）合并为 {合并后ID}，原因：{为什么是同一个能力}"
+- 拆分：当一个粗粒度能力被拆分为多个细粒度能力时，记录在被拆分出的能力上：`split_trace`："从 {原能力} 中拆分，原因：{为什么需要拆分}"
+
 ### 3. 标注依赖关系
 
 每个能力的前置依赖（A 依赖 B = 理解 A 之前必须先理解 B）。
 - 基础能力：`dependencies: []`
 - 下游能力：引用上游能力 ID
+
+**依赖决策记录**：每个非空 `dependencies` 必须附带 `dependencies_trace`，说明为什么 A 依赖 B：
+```
+"{能力A} 依赖 {能力B}，因为：{具体的技术原因，如'A 的触发时机取决于 B 的调度机制'}"
+```
 
 ### 4. 计算扇出度
 
@@ -97,6 +106,9 @@ web_search "<能力名称> site:<域名>"
 - [ ] 每个能力包含：id, name, layer, description, fanout(对象), coupling, covers, dependencies, tags, references
 - [ ] fanout 是对象 `{count, total, ratio, level}`，不是数字
 - [ ] dependencies 存在（空数组表示无前置依赖）
+- [ ] 非空 dependencies 附带 `dependencies_trace`
+- [ ] 合并过的能力附带 `merge_trace`
+- [ ] 拆分过的能力附带 `split_trace`
 - [ ] references.t0 中每个 URL 都 verified: true
 - [ ] t0_missing 字段存在
 - [ ] propositions 字段已注入

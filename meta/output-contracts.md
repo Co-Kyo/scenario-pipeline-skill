@@ -33,9 +33,17 @@
       "url": "https://cloud.tencent.com/developer/article/123456",
       "domain": "cloud.tencent.com",
       "source_tier": "T2",
+      "source_tier_trace": "cloud.tencent.com 不在 T0 表中。web_fetch 验证内容：setData 性能优化文章含通信机制和批量更新策略详解，有代码示例。Tier 评估：内容来源=腾讯云官方技术社区(T1达标)、内容深度=原理+实践(达标)、引用规范=有外部链接(达标)，5维度中3个达标 → T2。",
       "summary": "小程序 setData 的通信机制、批量更新策略、差量更新实现",
       "relevance": "小程序场景的渲染性能优化",
       "fetch_status": "ok"
+    }
+  ],
+  "discarded": [
+    {
+      "url": "https://example.com/spam-article",
+      "domain": "example.com",
+      "discard_reason": "内容不达标：正文仅150字，为目录页无实质内容"
     }
   ],
   "dynamic_registrations": [
@@ -60,6 +68,7 @@
     {
       "proposition_id": "P1",
       "proposition": "长列表渲染：如何在万级数据量下保持流畅滚动",
+      "identification_trace": "从素材 M1（Rendering Performance）、M3（Canvas最佳实践）中提取。判定为独立命题：能用一句话描述（万级数据量下保持流畅滚动）、有明确技术关键词（虚拟滚动、DOM回收）、可独立研究（涉及浏览器层+工程层完整链路）。",
       "qualifier": "",
       "tech_keyword": "长列表渲染、虚拟滚动、DOM 回收",
       "generic_core": [
@@ -162,6 +171,7 @@
       "coupling": 1,
       "covers": ["P1"],
       "dependencies": ["A1"],
+      "dependencies_trace": "A2 依赖 A1，因为：DOM 节点的布局和绘制发生在浏览器渲染管线的 Layout/Paint 阶段，不理解 A1 就无法理解 DOM 节点为何在特定时机被创建/销毁",
       "tags": ["DOM", "GC", "内存泄漏", "节点回收"],
       "references": {
         "t0": [
@@ -241,12 +251,23 @@
       },
       "total_score": 10,
       "priority": "high",
-      "reasoning": "跨栈耦合高（涉及浏览器+工程层），文档真空中等（MDN 有但不够深入），经验壁垒高（需要实战积累），热度中等"
+      "priority_trace": "总分10（跨栈耦合3+文档真空2+经验壁垒3+时事热度2），阈值判定：10≥6 → high",
+      "reasoning": "跨栈耦合高（涉及浏览器+工程层），文档真空中等（MDN 有但不够深入），经验壁垒高（需要实战积累），热度中等",
+      "difficulty": "medium",
+      "difficulty_reason": "涉及能力依赖链深度2层（A5→A3→A1），需理解渲染管线和DOM生命周期两个技术层",
+      "recommended_order": 2,
+      "prerequisite_of": []
     }
   ],
   "summary": { "high": 1, "medium": 0, "rejected": 0 }
 }
 ```
+
+说明：
+- `difficulty`（low/medium/high）：基于能力依赖链深度、知识跨度、概念抽象度的综合评估
+- `difficulty_reason`：一句话说明主要难度来源
+- `recommended_order`：推荐学习序号（low→medium→high，同级内按依赖关系排序）
+- `prerequisite_of`：该命题是哪些其他命题的前置（可选，由 Agent 基于能力 covers 关系推断）
 
 ---
 
