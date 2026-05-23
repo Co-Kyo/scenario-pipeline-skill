@@ -73,7 +73,7 @@
 
 ### 并发池调度
 
-**动作定义**：固定 W=4 个并发槽位，任务完成释放槽位，新任务补位。计数单位是 Task Group（不是 agent 数）。
+**动作定义**：固定 W=5 个并发槽位，任务完成释放槽位，新任务补位。计数单位是 Task Group（不是 agent 数）。
 
 **两种模式**：
 
@@ -90,7 +90,7 @@
 
 **Cron 跟踪核心指令**：spawn 第一批 agent 后，写入 tracker 状态文件，创建 cron job 定期检查：文件存在 → 标记完成 → 补位 spawn → 全部完成后自删除。
 
-**Step ⑨ 特殊处理**：1 个 Task Group = 1 个命题 = 2 个 agent（Markdown + Experiment），窗口 W=4 命题 = 最多 8 个 agent 并行。
+**Step ⑨ 特殊处理**：1 个 Task Group = 1 个命题 = 2 个 agent（Markdown + Experiment），窗口 W=5 命题 = 最多 10 个 agent 并行。
 
 ---
 

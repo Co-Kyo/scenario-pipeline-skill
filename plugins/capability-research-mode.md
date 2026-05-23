@@ -1,10 +1,7 @@
 # Plugin: 能力研究模式 (capability-research-mode)
 
 > 定义能力研究的执行策略：材料块标准格式、研究深度分级、实验模板。
-> 本文件是 MCP templates（`mcp-server/src/domains/template/templates/`）中 capability-research.md 和 assemble.md 的格式规范。
->
-> **L2 架构说明**：本文件的规范内容已内嵌到 MCP templates 中。子 agent 通过 `get_template` 获取完整指令，无需读取本文件。
-> 本文件降级为参考文档，供人类阅读理解格式规范。
+> Step ⑦ 的域 Agent task 中引用本文件的格式规范。
 
 ---
 
@@ -147,4 +144,4 @@ capability_block:
 | **教学模式** | 技术培训 | 增加"常见误区"和"渐进式示例"字段 |
 | **审计模式** | 技术选型 | 增加"性能基准数据"和"兼容性矩阵"字段 |
 
-替换方式：在 MCP templates（`mcp-server/src/domains/template/templates/`）中修改对本 plugin 格式规范的引用。
+替换方式：在 Step ⑦ 的 task 模板中调整对本 plugin 格式规范的引用，或替换为自定义 plugin。
