@@ -13,7 +13,7 @@
 
 ### 1. 筛选待组装命题
 
-从 capability-graph.json 的 propositions 获取列表。已有完整产出的命题跳过。
+从 capability-graph.json 的 propositions 获取列表。已有以下全部文件的命题跳过：`{workDir}/{seq}-{short_name}/overview.md`、`edge-cases.md`、`trade-offs.md`、`references.md`、`experiment/README.md`。
 
 ### 2. 并行 spawn（并发池分批）
 
@@ -25,7 +25,7 @@
 ```
 1. 筛选待组装的命题集合 P = {p₁, p₂, ..., pₘ}
 2. 窗口大小 W = 5（单位：命题数）
-3. 第一批：取出 p₁~p₄，每个命题 spawn 2 个 agent（Markdown + Experiment），共 8 个 agent 并行
+3. 第一批：取出 p₁~p₅，每个命题 spawn 2 个 agent（Markdown + Experiment），共 10 个 agent 并行
 4. 监听完成事件：某命题的 2 个 agent 均完成 → 该命题标记 done → 窗口空出 1 个槽位 → 入队下一条命题
 5. 持续推进直到 pₘ 完成
 ```
@@ -186,3 +186,8 @@
 - `{workDir}/{seq}-{short_name}/references.md`
 - `{workDir}/{seq}-{short_name}/experiment/README.md`
 - `{workDir}/{seq}-{short_name}/experiment/src/`
+
+## 校验清单
+
+- [ ] 每个命题的 edge-cases.md 包含「筛选决策」节（记录坑点取舍依据，对应 _trace 要求）
+- [ ] 内容比例符合要求（通用 ≥ 70%，特化 ≤ 30%）

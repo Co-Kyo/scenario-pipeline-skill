@@ -7,7 +7,7 @@
 | 用途 | 路径模板 | 示例 |
 |------|---------|------|
 | 总览导航 | `{workDir}/README.md` | `workflow/research/README.md` |
-| 全局学习阶梯 | `{workDir}/learning-ladder.md` | `workflow/research/learning-ladder.md` |
+| 全局学习阶梯 | `{workDir}/learning-ladder.md`（可选） | `workflow/research/learning-ladder.md` |
 | 能力知识库目录 | `{workDir}/capabilities/` | `workflow/research/capabilities/` |
 | 能力主文件 | `{workDir}/capabilities/{id}-{name}.md` | `.../capabilities/A1-浏览器渲染管线.md` |
 | 能力知识库索引 | `{workDir}/capabilities/README.md` | `.../capabilities/README.md` |
@@ -31,7 +31,6 @@
 | 高地结果 | `{workDir}/.meta/highgrounds.json` | `...` |
 | 扫描结果 | `{workDir}/.meta/raw-materials.json` | `...` |
 | 候选池 | `{workDir}/.meta/candidates.md` | `...` |
-| 管线状态 | `{workDir}/.meta/pipeline-state.json` | `...` |
 | 动态信源池 | `{workDir}/.meta/sources/dynamic-sources.json` | `...` |
 
 ## 命名规则

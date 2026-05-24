@@ -198,6 +198,7 @@
         { "layer": "浏览器层", "capabilities": ["A1", "A2"] }
       ],
       "specialization": [],
+      "capability_ids": ["A1", "A2"],
       "content_weight": "100%",
       "weight_reasoning": "纯通用场景"
     }
@@ -205,7 +206,7 @@
 }
 ```
 
-**注意**：`propositions` 字段在 capability-extract 步骤自动从 decompositions.json 注入，后处理阶段直接读取此文件即可获取命题元数据，无需再读 decompositions.json。
+**注意**：`propositions` 字段在 capability-extract 步骤自动从 decompositions.json 注入，后处理阶段直接读取此文件即可获取命题元数据，无需再读 decompositions.json。`capability_ids` 从 `generic_core` + `specialization` 中扁平提取，供后处理 task 模板直接引用。
 
 ---
 
@@ -271,64 +272,7 @@
 
 ---
 
-## §6 pipeline-state.json（管线状态）
-
-路径：`{workDir}/.meta/pipeline-state.json`
-
-```json
-{
-  "pipeline_version": "1.0",
-  "started_at": "2026-05-20T10:00:00Z",
-  "last_update": "2026-05-20T11:30:00Z",
-  "status": "paused",
-  "current_phase": "phase1",
-  "current_step": "capability-research",
-  "stages": {
-    "pre-process": {
-      "status": "completed",
-      "completed_at": "2026-05-20T10:30:00Z"
-    },
-    "capability-research": {
-      "total": 3,
-      "completed": ["A1"],
-      "running": ["A2"],
-      "pending": ["A8"],
-      "failed": []
-    },
-    "briefing-assemble": {
-      "completed": [],
-      "pending": ["P1", "P2"]
-    },
-    "assembly": {
-      "completed": [],
-      "pending": ["P1", "P2"]
-    },
-    "learning-ladder": {
-      "completed": [],
-      "pending": ["P1", "P2"]
-    }
-  },
-  "checkpoints_passed": ["ⓐ", "ⓑ", "ⓒ"],
-  "last_checkpoint": "ⓒ",
-  "interrupt_type": "checkpoint",
-  "cleanup_log": [
-    {
-      "checkpoint": "ⓔ",
-      "timestamp": "2026-05-20T10:30:00Z",
-      "actions": [
-        { "type": "cron_remove", "target": "agent-tracker-mini-program", "status": "ok" },
-        { "type": "tracker_archive", "target": "agent-tracker.json", "status": "ok" },
-        { "type": "agent_kill", "target": "agent-a-render", "status": "skip", "reason": "already exited" }
-      ],
-      "warnings": []
-    }
-  ]
-}
-```
-
----
-
-## §7 capability-research 产出
+## §6 capability-research 产出
 
 ### 主文件：`{workDir}/capabilities/{id}-{name}.md`
 
@@ -401,7 +345,7 @@
 
 ---
 
-## §8 briefing 产出
+## §7 briefing 产出
 
 路径：`{workDir}/.meta/briefings/{seq}-{short_name}.md`
 
@@ -435,7 +379,7 @@
 
 ---
 
-## §9 assemble 产出
+## §8 assemble 产出
 
 ### overview.md
 
@@ -493,7 +437,7 @@ Q4: 如何验证方案有效性？
 
 ---
 
-## §10 learning-ladder 产出
+## §9 learning-ladder 产出
 
 路径：`{workDir}/{seq}-{short_name}/learning-ladder.md`
 

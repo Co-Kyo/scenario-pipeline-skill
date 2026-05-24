@@ -20,6 +20,7 @@ description: "前端复合工程场景知识管线。两阶段工作流：前处
  ⑥ pool          入池归档              ⓖ 检查点 G
  ⓐ 检查点 A
  ⓑ 检查点 B
+ ⓒ 检查点 C
 
   每步详情 → processes/01~06            每步详情 → processes/07~10
   共享约定 → processes/00-shared.md
@@ -54,7 +55,6 @@ deep research：<场景描述>
 1. **首次使用**：读 `meta/paths.md` 了解路径约定，读 `meta/sources.md` 了解信源分级
 2. **前处理**：按顺序读 `processes/01-scan.md` → `processes/06-pool.md`，每步按文件中的指令执行
 3. **后处理**：读 `processes/00-shared.md` 了解子 agent 调度和检查点协议，然后按 `processes/07` → `processes/10` 执行
-4. **中断恢复**：读 `{workDir}/.meta/pipeline-state.json`，从 `last_checkpoint` 继续
 
 ## 数据参考
 

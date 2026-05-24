@@ -4,7 +4,7 @@
 
 将零散的技术文章、面试题、博客内容系统性地转化为结构化的深度研究产物：命题研究、原子能力知识库、以及面向学习者的渐进式阶梯引导。
 
-> **第一次接触？** 从 [`design/pipeline/00-overview.md`](design/pipeline/00-overview.md) 开始，5 分钟了解完整管道设计。
+> **第一次接触？** 从 [`dev/pipeline-view/00-overview.md`](dev/pipeline-view/00-overview.md) 开始，5 分钟了解完整管道设计。
 
 ---
 
@@ -64,7 +64,7 @@
 
 ### 学习阶梯（Learning Ladder）
 
-不是"读完就懂"，而是"做到才算"。
+基于能力依赖图的拓扑排序确定学习顺序。
 
 - 基于能力依赖图的拓扑排序确定学习顺序
 - 每步给出具体任务：**做什么 → 你会看到什么 → 这说明了什么 → 接下来去哪**
@@ -128,9 +128,10 @@ scenario-pipeline-v2/
 │   ├── 01-scan.md ~ 06-pool.md    前处理步骤
 │   └── 07 ~ 10                    后处理步骤
 │
-└── design/                     ← 架构观测（人类阅读）
-    ├── CHANGELOG.md
-    └── pipeline/                 管道数据流 + 故障模式
+└── dev/                        ← 开发与观测（人类阅读 + 审查工具）
+    ├── design/                     设计原理（why）
+    ├── pipeline-view/              管道观测视角
+    └── tools/                      开发工具
 ```
 
 ---

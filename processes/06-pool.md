@@ -18,7 +18,7 @@
 
 ### 2. 写入总览导航
 
-按 `meta/output-contracts.md` §1（raw-materials.json 示例）中定义的结构，写入 `{workDir}/README.md`：
+按下方模板，写入 `{workDir}/README.md`：
 
 ```markdown
 # <研究主题> — 命题研究
@@ -57,18 +57,18 @@
 
 将原始候选数据写入 `{workDir}/.meta/candidates.md`（pipeline 内部存档）。
 
-### 4. 状态持久化
-
-更新 `{workDir}/.meta/pipeline-state.json`：
-- `last_checkpoint: "ⓑ"`
-- `stages.pre-process.status: "completed"`
-
 ## 输出
 
 - `{workDir}/README.md`
 - `{workDir}/.meta/candidates.md`
 - 更新后的 `capability-graph.json`（合并了 highgrounds）
-- 更新后的 `pipeline-state.json`
+
+## 检查点
+
+入池完成后，依次进入：
+1. **ⓐ 检查点**：展示信源质量统计（Tier 分布、丢弃数），等待用户确认
+2. **ⓑ 检查点**：展示命题评估表（优先级分布、难度分级），等待用户确认
+3. **ⓒ 检查点**：展示后处理执行计划（待研究能力数、待组装命题数、预计 agent 数），等待用户确认后进入 Step ⑦
 
 ## 校验清单
 

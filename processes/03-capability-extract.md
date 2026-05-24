@@ -92,7 +92,7 @@ web_search "<能力名称> site:<域名>"
 
 按 `meta/output-contracts.md` §3 的示例格式，构造 `capability-graph.json`。
 
-写入前自动将 `decompositions.json` 的命题数据注入 `propositions` 字段（减少后处理对 decompositions.json 的依赖）。
+写入前自动将 `decompositions.json` 的命题数据注入 `propositions` 字段（减少后处理对 decompositions.json 的依赖）。同时为每个命题注入 `capability_ids`（从 `generic_core` + `specialization` 中扁平提取），供后处理 task 模板直接引用。
 
 写入 `{workDir}/.meta/capability-graph.json`。
 
@@ -112,6 +112,7 @@ web_search "<能力名称> site:<域名>"
 - [ ] references.t0 中每个 URL 都 verified: true
 - [ ] t0_missing 字段存在
 - [ ] propositions 字段已注入
+- [ ] 每个 proposition 包含 capability_ids（从 generic_core + specialization 扁平提取）
 - [ ] dependency_graph 和 qualifier_injection 为顶层字段
 - [ ] JSON 格式符合 output-contracts.md §3 示例
 

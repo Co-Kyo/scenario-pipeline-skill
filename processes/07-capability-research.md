@@ -144,17 +144,7 @@ T=8min   A_2, D_2, E_2 完成 → 全部 25 个能力就绪
 
 ### 7. 并行 spawn 域 Agent
 
-按依赖拓扑的批次顺序 spawn。根据预计耗时选择跟踪策略：
-
-**策略选择**：
-```
-总能力数 ≤ 10  → sessions_yield 直接等待（预计 < 5min）
-总能力数 > 10  → Cron 异步跟踪（主线程释放，详见 00-shared.md §Cron 异步跟踪）
-```
-
-> **注意**：经上限拆分后，子组数通常 ≥ 原域数。例如 25 个能力 → 5-6 个子组 → 多数场景走 sessions_yield 直接等待。
-
-#### 策略 A：sessions_yield（小规模，≤ 8 个能力）
+按依赖拓扑的批次顺序 spawn。`sessions_yield` 直接等待所有子 agent 完成。
 
 **第一批**：所有无跨组依赖的子组 Agent 并行启动
 ```python
@@ -166,16 +156,6 @@ for group in batch_1:
 **后续批次**：收到完成事件后启动依赖子组
 ```
 sessions_yield → 收到 Agent-A_1 完成事件 → spawn Agent-A_2 → 继续 yield
-```
-
-#### 策略 B：Cron 异步跟踪（大规模，> 8 个能力）
-
-```
-1. spawn 第一批子组 Agent（无跨组依赖的全部并行）
-2. 写入 {workDir}/.meta/agent-tracker.json
-3. 创建 cron job（every 2min），payload 为 tracker 检查指令
-4. 向用户汇报已启动状态，主线程释放
-5. Cron job 定期检查产出文件 → 自动 spawn 依赖子组 → 全部完成后通知用户并自删除
 ```
 
 ### 8. 跨 Agent 依赖的文件协调

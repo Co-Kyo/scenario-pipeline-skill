@@ -127,6 +127,7 @@
 - [ ] 总分 = 四维之和
 - [ ] 优先级判定与总分对应
 - [ ] reasoning 字段解释了打分理由
+- [ ] 每个命题包含 priority_trace（记录总分与阈值的对比判定过程）
 - [ ] 入池命题包含 difficulty（low/medium/high）
 - [ ] 入池命题包含 recommended_order
 - [ ] recommended_order 按难度分级排序
