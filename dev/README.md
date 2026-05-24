@@ -18,7 +18,8 @@ dev/
 │   └── 02-failure-modes.md         故障模式与恢复策略
 │
 └── tools/                      ← 开发工具（怎么审）
-    └── skill-audit-rules.md        Skill 文件审查规则（what&how / _trace）
+    ├── skill-audit-rules.md        Skill 文件审查规则（what&how / _trace）
+    └── decision-replay.md          决策回放 prompt（_trace 埋点 → 决策链路报告）
 ```
 
 ## 各目录职责
@@ -27,7 +28,7 @@ dev/
 |------|------|------|---------|
 | `design/` | 设计决策的背景、理由、替代方案比较 | 人类开发者 | 理解"为什么这样设计"、修改设计时参考 |
 | `pipeline-view/` | 管道数据流、实体关系、故障模式的观测视角 | 人类开发者 | 理解管道全貌、排查数据流问题时参考 |
-| `tools/` | 可复用的 agent 审查 prompt | Agent | 对 skill 进行自动化审查时加载 |
+| `tools/` | 可复用的 agent prompt（审查规则 + 决策回放） | Agent | 对 skill 进行审查或质量回放时加载 |
 
 ## 与执行层的关系
 

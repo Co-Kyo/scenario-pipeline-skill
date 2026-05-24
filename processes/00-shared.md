@@ -50,7 +50,7 @@ Step ⑨ 特殊：1 个命题 = 2 个 agent（Markdown + Experiment），W=5 命
 
 每个子 agent 的 task 由三部分拼接：角色声明（一句话）+ 执行指令（从 processes 文件提取）+ 变量替换（workDir, capability_id 等）。
 
-task 中不引用外部文件路径，所有必要信息已内联——除非该步骤要求 agent 读取前置步骤的产出文件（此时 task 中给出具体路径 + 文件不存在时的降级动作）。
+task 中不引用外部文件路径，所有必要信息已内联。步骤要求读取前置产出时，task 中给出具体路径 + 文件不存在时的降级动作。
 
 ---
 
@@ -119,7 +119,7 @@ task 中不引用外部文件路径，所有必要信息已内联——除非该
 | ③ capability-extract | `dependencies` | 为什么 A 依赖 B |
 | ③ capability-extract | 能力合并/拆分 | 为什么合并为一个或拆分为多个 |
 | ⑤ evaluate | `priority` | 总分与阈值的对比判定过程 |
-| ⑨ assemble | 坑点筛选 | 为什么选这个坑点、排除那个 |
+| ⑨ assemble | `筛选_trace` | 候选来源、排除原因、保留理由 |
 
 ---
 
