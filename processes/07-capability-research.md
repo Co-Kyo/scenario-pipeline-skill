@@ -144,7 +144,7 @@ T=8min   A_2, D_2, E_2 完成 → 全部 25 个能力就绪
 
 ### 7. 并行 spawn 域 Agent
 
-按依赖拓扑的批次顺序 spawn。`sessions_yield` 直接等待所有子 agent 完成。
+按依赖拓扑的批次顺序 spawn。使用 `00-shared.md` §**并行调度规则**执行（禁止使用 `sessions_yield`）。
 
 **第一批**：所有无跨组依赖的子组 Agent 并行启动
 ```python
@@ -153,10 +153,7 @@ for group in batch_1:
 # group.id 格式：A_1, B_1, C_1, D_1, E_1 ...
 ```
 
-**后续批次**：收到完成事件后启动依赖子组
-```
-sessions_yield → 收到 Agent-A_1 完成事件 → spawn Agent-A_2 → 继续 yield
-```
+**后续批次**：轮询 `subagents list` 发现 Agent-A_1 完成 → spawn Agent-A_2 → 继续轮询
 
 ### 8. 跨 Agent 依赖的文件协调
 

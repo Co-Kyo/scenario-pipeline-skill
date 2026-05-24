@@ -7,86 +7,50 @@
 
 ## 子 agent 调度
 
-### 调度方式
+> ⚠️ **关键词**：spawn 子 agent 后必须进入「**轮询跟踪**」。**严禁 `sessions_yield`。**
 
-使用当前平台的子 agent 调度原语（`sessions_spawn` / `delegate_task` / 等价工具）。
+### 并发池定义
 
-### task 组装规则
-
-每个子 agent 的 task 由三部分拼接：
-
-```
-1. 角色声明（一句话）
-2. 执行指令（从对应 processes 文件提取"执行步骤"+"输出示例"部分）
-3. 变量替换（workDir, capability_id, seq 等具体值）
-```
-
-**示例（能力研究子 agent — 单能力场景）：**
-
-```
-你是「浏览器渲染管线」的深度研究员。
-
-⚠️ 你必须用 write 工具将文件写入磁盘，不要只输出到对话中。
-
-## 任务
-研究原子能力「浏览器渲染管线」（ID: A1），产出两个文件：
-1. 能力知识库主文件 → workflow/research/capabilities/A1-浏览器渲染管线.md
-2. 结构化摘要 JSON → workflow/research/.meta/summaries/A1-浏览器渲染管线.json
-
-## 能力信息
-- 技术层: 浏览器层
-- 描述: 从 HTML/CSS/JS 到像素上屏的完整渲染流程
-- 依赖能力: 无
-- 扇出度: 2/2（100%）
-
-## 信源
-- [T0] web.dev: Rendering Performance — https://web.dev/articles/rendering-performance
-- [T0] MDN: Critical Rendering Path — https://developer.mozilla.org/en-US/docs/Web/Performance/Critical_rendering_path
-
-## 执行步骤
-
-### Step 1: 信源获取
-1. 优先使用上述预查找信源
-2. 如全部不可达，按 meta/sources.md 的 T0 域名列表逐个搜索补充
-3. 禁止凭记忆生成，必须 web_fetch 验证内容
-
-### Step 2: 内容研究
-按以下结构产出能力主文件：
-- 核心机制（≥500 字）
-- 工程瓶颈（每个包含：触发条件、表现症状、解决方案）
-- 调试工具
-- 典型权衡（2-3 种技术路线对比）
-- 最小验证实验（可运行代码）
-- 参考资料（按 Tier 排序）
-
-### Step 3: 结构化摘要
-产出 JSON，结构参见 meta/output-contracts.md §6。
-
-### Step 4: 保存文件
-用 write 工具写入上述两个路径。
-
-## 完成后
-输出：`Agent-A1 完成：已研究「浏览器渲染管线」（2 个文件已写入磁盘）`
-```
-
-> **注意**：以上为最小粒度示例。实际 task 按各步骤的 task 模板组装，一个 agent 可能研究多个能力（见 Step ⑦ 域分组方案）。task 中不引用任何外部文件路径（不出现"读取 xxx.md"），所有必要信息已内联——除非该步骤明确要求 agent 读取前置步骤的产出文件（此时 task 中必须给出具体路径 + 文件不存在时的降级动作）。
-
-### 并发池调度
-
-**动作定义**：固定 W=5 个并发槽位，任务完成释放槽位，新任务补位。计数单位是 Task Group（不是 agent 数）。
-
-**两种模式**：
+固定 W=5 个并发槽位，计数单位是 Task Group（不是 agent 数）。任务完成释放槽位，新任务补位。
 
 | 模式 | 适用步骤 | 入队条件 | 说明 |
 |------|---------|---------|------|
-| DAG 调度 | Step ⑦ | 前置子组全部 completed | 子组间有跨依赖，必须按拓扑批次执行 |
-| 简单窗口 | Step ⑧⑨⑩ | 有空位就进 | 任务之间完全独立，先完成先补位 |
+| 简单窗口 | Step ⑧⑨⑩ | 有空位就进 | 任务互相独立，先完成先补位 |
+| DAG 调度 | Step ⑦ | 前置子组全部 completed | 子组间有跨依赖，按拓扑批次执行 |
 
-**完成判断**：agent 的 expected_files 全部存在 = completed。
+Step ⑨ 特殊：1 个命题 = 2 个 agent（Markdown + Experiment），W=5 命题 = 最多 10 agent 并行。
 
-**跟踪方式**：`sessions_yield` 直接等待。子 agent 完成后自动触发下一步。
+### 并行调度规则
 
-**Step ⑨ 特殊处理**：1 个 Task Group = 1 个命题 = 2 个 agent（Markdown + Experiment），窗口 W=5 命题 = 最多 10 个 agent 并行。
+1. **初始化**：按调度模式筛选可 spawn 的任务，逐个 spawn 直到槽位满，记录 label 和预期产出文件
+2. **双通道跟踪**（二选一或并用）：
+   - **轮询**：每 15s 调用 `subagents list` 检查状态
+   - **回调**：子 agent 完成后主动 `sessions_send` 回传结果
+3. **完成判定**：`status=completed` + `expected_files` 存在 → completed；否则 failed（expected_files 由各步骤自行定义）
+4. **槽位替换**：
+   - **简单窗口**：有 agent 完成 → 从待办队列取下一个 → 立即 spawn
+   - **DAG 调度**：有 agent 完成 → 检查哪些任务的前置依赖全部 completed → spawn
+5. **超时兜底**：单 agent 超过 15min → kill → 重试一次 → 仍失败则降级跳过
+6. **绝不挂起**：主动权始终在主线程，不进入被动等待状态
+7. **退出**：所有任务 completed/failed/degraded → 统计结果，进入下一步
+
+### 简单窗口执行流程
+
+适用 Step ⑧⑨⑩。任务互相独立，无依赖约束。
+
+```
+1. 筛选待办任务集合，标记已存在的产出文件对应的任务为 completed
+2. 从待办队列取前 W=5 个，逐个 spawn
+3. 进入并行调度规则的轮询循环
+4. 任何 agent 完成 → 槽位释放 → 从待办队列取下一个 spawn
+5. 全部完成 → 统计结果，进入下一步
+```
+
+### task 组装规则
+
+每个子 agent 的 task 由三部分拼接：角色声明（一句话）+ 执行指令（从 processes 文件提取）+ 变量替换（workDir, capability_id 等）。
+
+task 中不引用外部文件路径，所有必要信息已内联——除非该步骤要求 agent 读取前置步骤的产出文件（此时 task 中给出具体路径 + 文件不存在时的降级动作）。
 
 ---
 
