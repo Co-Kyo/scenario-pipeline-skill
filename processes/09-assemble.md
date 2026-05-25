@@ -6,12 +6,15 @@
 
 ## 前置条件
 
-无需加载额外方法论文件。本步骤的 task 已内联全部指令。
+无需加载额外方法论文件。本步骤的 task 已内联全部指令。读取：
+- `meta/output-contracts.md`§9（本步输出格式）
+- `{workDir}/.meta/capability-graph.json`（含 propositions）
+- `{workDir}/.meta/briefings/{seq}-{short_name}.md`（Step 08 产出）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`meta/output-contracts.md`§8、`{workDir}/.meta/capability-graph.json`（含 propositions）、`{workDir}/.meta/briefings/{seq}-{name}.md`（Step 08 产出）
+> - ✅ 允许读取：`processes/00-shared.md`、`meta/output-contracts.md`§9、`{workDir}/.meta/capability-graph.json`（含 propositions）、`{workDir}/.meta/briefings/{seq}-{short_name}.md`（Step 08 产出）
 > - ❌ 禁止读取：`processes/01~08.md`、`processes/10.md`、`core/*.md`、`plugins/*.md`、`.meta/summaries/*.json`（已内联到 Briefing 中，无需重复读取）
-> - 📌 `output-contracts.md` 只读 §8 节
+> - 📌 `output-contracts.md` 只读 §9 节
 
 ## 输入
 
@@ -35,10 +38,6 @@
 - 命题完成 = 2 个 agent 均完成
 - W=5 命题 = 最多 10 个 agent 并行
 - 某命题的 Markdown agent 失败 → Experiment agent 仍可继续
-
-**性能提示**：
-- 10 个命题（W=5）：约 2-3 分钟完成（2 个窗口批次，每批 10 个文件）
-- 5 个命题（W=5）：约 2 分钟完成（1 个窗口批次）
 
 **异常处理**：
 - 某命题的 Markdown agent 失败 → Experiment agent 仍可继续（不依赖其产出）
@@ -179,7 +178,9 @@
 
 ### 3. 等待全部完成
 
-所有命题 agent 完成后，进入 ⓕ 检查点。
+所有命题 agent 完成后：
+
+🚨 **🛑 必须停顿，进入 ⓕ 检查点**。展示命题组装摘要（完成数/跳过数/失败数，各命题文件行数统计），使用 `clarify` 等待用户确认后才进入 Step ⑩。
 
 ## 输出
 

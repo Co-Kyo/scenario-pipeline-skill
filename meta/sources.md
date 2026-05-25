@@ -1,6 +1,6 @@
 # 信源分级表
 
-> 本文件是信源 filter 的唯一事实来源。扫描阶段（01-scan）和能力提取阶段（03-capability-extract）均依赖此表。
+> 扫描阶段（01-scan）和能力提取阶段（03-capability-extract）均依赖此表。
 
 ## T0 内置信源
 

@@ -5,11 +5,13 @@
 将复合场景拆解为命题，每个命题分解为「通用内核 + 特化层」的分词结构。
 
 ## 前置条件
-
-⛔ 加载 `core/architecture-decomposition.md`（分词方法论）。未加载而执行 = 降级为裸跑。
+⛔ 加载：
+- `core/architecture-decomposition.md`（分词方法论）
+- `meta/output-contracts.md`§2（本步输出格式）
+- `{workDir}/.meta/raw-materials.json`（Step 01 产出）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`core/architecture-decomposition.md`、`meta/output-contracts.md`§2、`{workDir}/.meta/raw-materials.json`（Step 01 产出）
+> - ✅ 允许读取：`processes/00-shared.md`、`core/architecture-decomposition.md`、`meta/output-contracts.md`§2、`{workDir}/.meta/raw-materials.json`（Step 01 产出）
 > - ❌ 禁止读取：`processes/01.md`、`processes/03~06.md`、`processes/07~10.md`、`core/capability-graph.md`、`core/strategic-highground.md`、`core/scenario-matrix.md`、`plugins/*.md`
 > - 📌 `output-contracts.md` 只读 §2 节
 
@@ -63,6 +65,7 @@
 - [ ] generic_core 按技术层分组
 - [ ] specialization 仅在有限定词时存在
 - [ ] content_weight 与 specialization 对应（有 specialization → content_weight < 100%）
+- [ ] 每个命题包含 identification_trace（含素材来源、判定理由、合并/排除说明）
 
 ## 异常处理
 

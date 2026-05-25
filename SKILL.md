@@ -57,7 +57,7 @@ deep research：<场景描述>
 **核心规则：每一步只读该步的文件，严禁提前加载后续步骤。**
 
 执行流程：
-1. **初始化**：只读 `meta/paths.md` + `meta/sources.md`（路径约定和信源分级）
+1. **初始化**：读 `processes/00-shared.md`（共享约定）+ `meta/paths.md`（路径约定）
 2. **前处理**（串行 6 步）：严格按以下循环执行：
    ```
    for step in [01, 02, 03, 04, 05, 06]:
@@ -66,7 +66,7 @@ deep research：<场景描述>
        ③ 执行该步骤的全部操作，产出文件
        ④ 进入下一步前，不再引用上一步的 processes 文件内容
    ```
-3. **后处理**：读 `processes/00-shared.md` 了解调度协议，然后按 `processes/07` → `processes/10` 同样分步执行
+3. **后处理**：按 `processes/07` → `processes/10` 分步执行（共享约定已在初始化时加载）
 
 **违规判定**：如果在执行 Step N 时引用了 Step N+1 或更后续步骤文件的内容，即视为违规。
 
@@ -76,6 +76,7 @@ deep research：<场景描述>
 
 | 文件 | 内容 | 何时读取 |
 |------|------|---------|
+| `processes/00-shared.md` | 共享约定（调度/检查点/隔离/增量复用/凭据/比例） | 初始化时读取，全程持有 |
 | `meta/paths.md` | 路径约定表 | 初始化时读取一次即可 |
 | `meta/sources.md` | T0 域名表 + 信源分级规则 | 由 Step 01 和 Step 03 的前置条件指示读取 |
 | `meta/output-contracts.md` | 每步的输出结构 + 完整示例 | 由每步的前置条件指示读取对应 §N 节 |

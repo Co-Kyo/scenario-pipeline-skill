@@ -6,12 +6,15 @@
 
 ## 前置条件
 
-无需加载额外方法论文件或 plugin。本步骤的 task 已内联全部指令。
+无需加载额外方法论文件或 plugin。本步骤的 task 已内联全部指令。读取：
+- `meta/output-contracts.md`§8（本步输出格式）
+- `{workDir}/.meta/capability-graph.json`（含 propositions）
+- `{workDir}/.meta/summaries/*.json`（Step 07 产出）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`meta/output-contracts.md`§7、`{workDir}/.meta/capability-graph.json`（含 propositions）、`{workDir}/.meta/summaries/*.json`（Step 07 产出）
+> - ✅ 允许读取：`processes/00-shared.md`、`meta/output-contracts.md`§8、`{workDir}/.meta/capability-graph.json`（含 propositions）、`{workDir}/.meta/summaries/*.json`（Step 07 产出）
 > - ❌ 禁止读取：`processes/01~07.md`、`processes/09~10.md`、`core/*.md`、`plugins/*.md`
-> - 📌 `output-contracts.md` 只读 §7 节
+> - 📌 `output-contracts.md` 只读 §8 节
 
 ## 输入
 
@@ -33,10 +36,6 @@
 > ⚠️ 按 `00-shared.md §简单窗口执行流程` + `§并行调度规则` 执行。禁止 `sessions_yield`。
 
 Briefing 组装之间无依赖，W=5，先完成先补位。
-
-**性能提示**：
-- 10 个命题（W=5）：约 2 分钟完成（2 个 window 批次）
-- 5 个命题（W=5）：约 1-2 分钟完成（1 个 window 批次）
 
 **task 模板**：
 
@@ -112,7 +111,9 @@ Briefing 组装之间无依赖，W=5，先完成先补位。
 
 ### 4. 等待全部完成
 
-所有 Briefing agent 完成后，进入 ⓓ 检查点。
+所有 Briefing agent 完成后：
+
+🚨 **🛑 必须停顿，进入 ⓓ 检查点**。展示 Briefing 组装摘要（完成数/跳过数/失败数），使用 `clarify` 等待用户确认后才进入 Step ⑨。
 
 ## 输出
 

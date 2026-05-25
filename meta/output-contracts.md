@@ -1,7 +1,6 @@
 # 输出契约
 
-> 每个步骤的输出结构定义 + 完整示例。所有步骤产出的 JSON 必须符合此处定义。
-> 示例即标准——模型应模仿示例的结构、字段名和嵌套关系。
+> 每个步骤的输出结构定义 + 完整示例。所有步骤产出的 JSON 必须按以下示例格式。
 
 ---
 
@@ -272,7 +271,57 @@
 
 ---
 
-## §6 capability-research 产出
+## §6 pool 产出（入池归档）
+
+### README.md：`{workDir}/README.md`
+
+命题总览导航，供人类阅读。模板：
+
+```markdown
+# <研究主题> — 命题研究
+
+> 目标人群：<年限>
+> 扫描时间：<日期>
+
+## 命题索引
+
+| # | 命题 | 四维评分 | 优先级 | 难度 | 研究目录 |
+|---|------|---------|--------|------|---------|
+| P1 | 长列表渲染：... | 10 | high | 🟢 low | [01-长列表渲染](01-长列表渲染/) |
+| P2 | 首屏白屏：... | 8 | high | 🟡 medium | [02-首屏白屏](02-首屏白屏/) |
+
+## 推荐学习顺序
+
+按掌握难度从低到高排列（基于原子能力依赖链深度评估）：
+
+1. 🟢 P1 — ...（无前置依赖，建立基础认知）
+2. 🟡 P2 — ...（前置：P1，需理解渲染管线）
+3. 🔴 P3 — ...（前置：P1+P2，需全新知识体系）
+
+## 学习路径（战略高地）
+
+1. 🏔️ **A8-DevTools 性能分析**（覆盖 7/7 命题）
+2. 🏔️ **A1-浏览器渲染管线**（覆盖 5/7 命题）
+
+完整能力图谱：[capabilities/README.md](capabilities/README.md)
+
+## 能力知识库
+
+按原子能力组织的跨命题参考手册：[capabilities/](capabilities/)
+```
+
+填充数据来源：
+- 命题索引 ← `evaluations.json`（命题名、评分、优先级、难度）
+- 推荐学习顺序 ← `highgrounds.json` 的 `learning_path` + `capability-graph.json` 的能力依赖链
+- 学习路径 ← `highgrounds.json` 的 `highgrounds`（战略高地列表）
+
+### candidates.md：`{workDir}/.meta/candidates.md`
+
+Pipeline 内部存档（非结构化），记录前处理阶段筛选出的候选命题原始数据。仅供调试追溯，不进入后处理消费链。
+
+---
+
+## §7 capability-research 产出
 
 ### 主文件：`{workDir}/capabilities/{id}-{name}.md`
 
@@ -345,7 +394,7 @@
 
 ---
 
-## §7 briefing 产出
+## §8 briefing 产出
 
 路径：`{workDir}/.meta/briefings/{seq}-{short_name}.md`
 
@@ -379,7 +428,7 @@
 
 ---
 
-## §8 assemble 产出
+## §9 assemble 产出
 
 ### overview.md
 
@@ -439,7 +488,7 @@ Q4: 如何验证方案有效性？
 
 ---
 
-## §9 learning-ladder 产出
+## §10 learning-ladder 产出
 
 路径：`{workDir}/{seq}-{short_name}/learning-ladder.md`
 

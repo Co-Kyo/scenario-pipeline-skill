@@ -1,6 +1,5 @@
 # Plugin: 能力研究模式 (capability-research-mode)
 
-> 定义能力研究的执行策略：材料块标准格式、研究深度分级、实验模板。
 > Step ⑦ 的域 Agent task 中引用本文件的格式规范。
 
 ---

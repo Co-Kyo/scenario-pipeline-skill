@@ -6,11 +6,11 @@
 
 ## 前置条件
 
-读取 `meta/sources.md`（T0 域名表 + 信源分级规则）。本步骤不需要读取任何 core/*.md。
+读取 `meta/sources.md`（T0 域名表 + 信源分级规则）+ `meta/output-contracts.md`§1（本步输出格式）。本步骤不需要读取任何 core/*.md。
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`meta/sources.md`、`meta/output-contracts.md`§1
-> - ❌ 禁止读取：`processes/02~06.md`、`processes/07~10.md`、`core/*.md`、`plugins/*.md`
+> - ✅ 允许读取：`processes/00-shared.md`、`meta/sources.md`、`meta/output-contracts.md`§1
+> - ❌ 禁止读取：`processes/02~06.md`、`processes/07~10.md`、`core/*.md`、`plugins/*.md`（`--year` 参数存在时，`plugins/year-granularity.md` 除外）
 > - 📌 `output-contracts.md` 只读 §1 节，不要读其他章节
 
 ## 输入
@@ -116,3 +116,7 @@ Step 4 中达标的 unknown 域名，直接写入 `{workDir}/.meta/sources/dynam
 | web_search 全部无结果 | 换关键词重试，或提示用户补充 `--source=<url>` |
 | web_fetch 超时/403 | 标记 `fetch_status: "failed"` + `fetch_status_trace: "超时/403/429/内容不相关"`，跳过该条 |
 | 所有域名都是 unknown | 全部 web_fetch 评估，不依赖 T0 表 |
+
+## 检查点
+
+🚨 **🛑 必须停顿，进入 ⓐ 检查点**。展示信源质量摘要（Tier 分布、素材数、丢弃数），使用 `clarify` 等待用户确认后才进入 Step ②。

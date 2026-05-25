@@ -6,12 +6,16 @@
 
 ## 前置条件
 
-无需加载额外方法论文件。本步骤的 task 已内联全部指令。
+无需加载额外方法论文件。本步骤的 task 已内联全部指令。读取：
+- `meta/output-contracts.md`§10（本步输出格式）
+- `{workDir}/.meta/capability-graph.json`（含能力依赖关系）
+- `{workDir}/.meta/summaries/*.json`（Step 07 产出）
+- `{workDir}/{seq}-{short_name}/overview.md`（Step 09 产出）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`meta/output-contracts.md`§9、`{workDir}/.meta/capability-graph.json`（含能力依赖关系）、`{workDir}/.meta/summaries/*.json`（Step 07 产出）、`{workDir}/{seq}-{name}/overview.md`（Step 09 产出）
+> - ✅ 允许读取：`processes/00-shared.md`、`meta/output-contracts.md`§10、`{workDir}/.meta/capability-graph.json`（含能力依赖关系）、`{workDir}/.meta/summaries/*.json`（Step 07 产出）、`{workDir}/{seq}-{short_name}/overview.md`（Step 09 产出）
 > - ❌ 禁止读取：`processes/01~09.md`、`core/*.md`、`plugins/*.md`、`.meta/briefings/*.md`（已由 Step 09 消费，无需重复读取）
-> - 📌 `output-contracts.md` 只读 §9 节
+> - 📌 `output-contracts.md` 只读 §10 节
 
 ## 输入
 
@@ -30,10 +34,6 @@
 > ⚠️ 按 `00-shared.md §简单窗口执行流程` + `§并行调度规则` 执行。禁止 `sessions_yield`。
 
 学习阶梯之间无依赖，W=5，先完成先补位。
-
-**性能提示**：
-- 10 个命题（W=5）：约 2 分钟完成（2 个窗口批次）
-- 5 个命题（W=5）：约 1 分钟完成（1 个窗口批次）
 
 **异常处理**：
 - 某个 agent 失败 → 标记该命题为 failed，窗口继续推进
@@ -115,7 +115,9 @@
 
 ### 3. 等待全部完成
 
-所有学习阶梯 agent 完成后，进入 ⓖ 检查点。
+所有学习阶梯 agent 完成后：
+
+🚨 **🛑 必须停顿，进入 ⓖ 检查点**。展示学习阶梯摘要（完成数/跳过数/失败数），使用 `clarify` 等待用户确认。
 
 ## 输出
 

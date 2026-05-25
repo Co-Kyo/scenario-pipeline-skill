@@ -6,17 +6,22 @@
 
 ## 前置条件
 
-⛔ 加载 `plugins/capability-research-mode.md`（材料块格式 + 深度分级）。
+⛔ 加载：
+- `plugins/capability-research-mode.md`（材料块格式 + 深度分级）
+- `meta/output-contracts.md`§7（能力研究产出格式）
+- `meta/sources.md`（信源分级，T0 域名表）
+- `{workDir}/.meta/capability-graph.json`（前处理产出）
+- `{workDir}/README.md`（命题列表）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`plugins/capability-research-mode.md`、`meta/output-contracts.md`§6（能力研究产出格式）、`meta/sources.md`（信源分级）、`{workDir}/.meta/capability-graph.json`、`{workDir}/README.md`、`{workDir}/.meta/candidates.md`
-> - ❌ 禁止读取：`processes/01~06.md`、`processes/08~10.md`、`core/*.md`（已由 task 内联，无需主 agent 再读）
-> - 📌 `output-contracts.md` 只读 §6 节；`sources.md` 只读 T0 域名表
+> - ✅ 允许读取：`processes/00-shared.md`、`plugins/capability-research-mode.md`、`meta/output-contracts.md`§7（能力研究产出格式）、`meta/sources.md`（信源分级）、`{workDir}/.meta/capability-graph.json`、`{workDir}/README.md`
+> - ❌ 禁止读取：`processes/01~06.md`、`processes/08~10.md`、`core/*.md`（已由 task 内联，无需主 agent 再读）、`plugins/*.md`（除 `capability-research-mode.md` 外）
+> - 📌 `output-contracts.md` 只读 §7 节；`sources.md` 只读 T0 域名表
 
 ## 输入
 
 - `capability-graph.json`（前处理产出）
-- `README.md` / `candidates.md`（命题列表，用于筛选哪些能力需要研究）
+- `README.md`（命题列表，用于筛选哪些能力需要研究）
 
 ## 执行步骤
 
@@ -39,8 +44,8 @@
 
 **分组原则**：
 - 同一技术层的能力归为一组（如所有"浏览器层"能力归入渲染域）
-- 有直接依赖关系的能力尽量归入同组（减少跨 Agent 依赖）
-- **每组上限 5 个能力**（保证上下文质量和单 agent 专注度；不足 2 个时可与相邻子组合并）
+- 有直接依赖关系的能力尽量归入同组
+- **每组上限 5 个能力**（不足 2 个时可与相邻子组合并）
 - 特化能力（M 系列）归入其依赖的通用能力所在组
 
 **分组算法**：
@@ -176,7 +181,9 @@ for group in batch_1:
 
 ### 9. 等待全部完成
 
-所有域 Agent 完成后，进入 ⓔ 检查点。
+所有域 Agent 完成后：
+
+🚨 **🛑 必须停顿，进入 ⓔ 检查点**。展示能力研究质量摘要（完成数/跳过数/失败数，各能力主文件行数统计），使用 `clarify` 等待用户确认后才进入 Step ⑧。
 
 ---
 

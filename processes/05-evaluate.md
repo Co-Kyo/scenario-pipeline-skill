@@ -6,11 +6,16 @@
 
 ## 前置条件
 
-⛔ 加载 `core/scenario-matrix.md`（四维评估矩阵方法论）。
+⛔ 加载：
+- `core/scenario-matrix.md`（四维评估矩阵方法论）
+- `meta/output-contracts.md`§5（本步输出格式）
+- `{workDir}/.meta/decompositions.json`（Step 02 产出）
+- `{workDir}/.meta/capability-graph.json`（Step 03 产出）
+- `{workDir}/.meta/raw-materials.json`（Step 01 产出）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`core/scenario-matrix.md`、`meta/output-contracts.md`§5、`{workDir}/.meta/decompositions.json`、`{workDir}/.meta/capability-graph.json`、`{workDir}/.meta/raw-materials.json`（前序产出）
-> - ❌ 禁止读取：`processes/01~04.md`、`processes/06.md`、`processes/07~10.md`、`core/architecture-decomposition.md`、`core/capability-graph.md`、`core/strategic-highground.md`、`plugins/*.md`
+> - ✅ 允许读取：`processes/00-shared.md`、`core/scenario-matrix.md`、`meta/output-contracts.md`§5、`{workDir}/.meta/decompositions.json`、`{workDir}/.meta/capability-graph.json`、`{workDir}/.meta/raw-materials.json`（前序产出）
+> - ❌ 禁止读取：`processes/01~04.md`、`processes/06.md`、`processes/07~10.md`、`core/architecture-decomposition.md`、`core/capability-graph.md`、`core/strategic-highground.md`、`plugins/*.md`（`--year` 参数存在时，`plugins/year-granularity.md` 除外）
 > - 📌 `output-contracts.md` 只读 §5 节
 
 ## 输入
@@ -144,3 +149,7 @@
 | 信息不足以打分 | 标记为 medium，reasoning 说明信息不足 |
 | 所有命题 rejected | 提示用户调整搜索范围 |
 | 难度评估信息不足 | 依赖链深度为主要依据，标记 difficulty_reason 说明信息不足 |
+
+## 检查点
+
+🚨 **🛑 必须停顿，进入 ⓑ 检查点**。展示命题评估摘要（优先级分布、难度分级、推荐学习顺序），使用 `clarify` 等待用户确认后才进入 Step ⑥。

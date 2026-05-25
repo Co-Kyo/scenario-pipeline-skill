@@ -1,6 +1,5 @@
 # 共享约定
 
-> 本文档定义跨阶段的共享规则：上下文隔离、子 agent 调度、检查点协议、增量复用、决策凭据、内容比例约束。
 > 上下文隔离规范从 Step 01 起适用；子 agent 调度从 Step ⑦ 起适用；其余规则按需查阅。
 
 ---
@@ -64,18 +63,18 @@
 - `{workDir}/.meta/raw-materials.json`（Step 01 产出）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：上述列出的文件
-> - ❌ 禁止读取：`processes/01.md`、`processes/03~06.md`、其他 `core/*.md`
+> - ✅ 允许读取：`processes/00-shared.md`、`core/architecture-decomposition.md`、`meta/output-contracts.md`§2、`{workDir}/.meta/raw-materials.json`（Step 01 产出）
+> - ❌ 禁止读取：`processes/01.md`、`processes/03~06.md`、`processes/07~10.md`、其他 `core/*.md`、`plugins/*.md`
+> - 📌 `output-contracts.md` 只读 §2 节
 ```
 
 **维护原则**：
 - 如果修改了 Step N 的输入/输出或依赖，**仅更新** `processes/{step}-xxx.md` 的前置条件
 - **不需要**同时修改本文档
-- 本文档作为规则总纲保持相对稳定
 
 ### output-contracts.md 分节查阅
 
-`meta/output-contracts.md` 包含全部步骤的输出示例（§1-§9），**不要一次性全文加载**。
+`meta/output-contracts.md` 包含全部步骤的输出示例（§1-§10），**不要一次性全文加载**。
 每步执行时只查阅对应的 §N 节。如果文件较长，用 offset/limit 精确读取对应段落。
 
 ---
@@ -131,22 +130,23 @@ task 中不引用外部文件路径，所有必要信息已内联。步骤要求
 
 ## 检查点协议
 
-每个检查点**必须**依次执行两步：
+🚨 每个检查点**强制停顿**，依次执行三步，**严禁跳过或自动推进**：
 
 1. **展示摘要**：当前阶段的关键产物统计和质量指标
-2. **等待输入**：暂停执行，等用户指令（可附带推荐的下一步操作及理由）
+2. **🛑 停住等待**：使用 `clarify` 工具向用户提问，**必须等待用户回复后才能继续**。不得在用户未回复时自动进入下一步
+3. **收到确认后**：按用户指令进入下一步或回溯修改
 
 ### 检查点总览
 
 | 检查点 | 位置 | 核心产物 | 介入价值 |
 |--------|------|---------|---------|
-| ⓐ | 扫描完成后 | raw-materials.json | 确认信源质量 |
-| ⓑ | 评估完成后 | evaluations.json | 确认命题优先级 |
-| ⓒ | 后处理启动前 | 执行计划 | 确认范围、调整参数 |
-| ⓔ | 能力研究完成后 | capability 文件 + summary | 审查研究质量 |
-| ⓓ | Briefing 组装完成后 | briefing 文件 | 审查素材提取完整性 |
-| ⓕ | 命题组装完成后 | 命题目录文件 | 审查组装质量 |
-| ⓖ | 学习阶梯完成后 | learning-ladder.md | 确认最终产出 |
+| ⓐ | Step ① 完成后 | raw-materials.json | 确认信源质量 |
+| ⓑ | Step ⑤ 完成后 | evaluations.json | 确认命题优先级 |
+| ⓒ | Step ⑥ 完成后（后处理启动前） | 执行计划 | 确认范围、调整参数 |
+| ⓔ | Step ⑦ 完成后 | capability 文件 + summary | 审查研究质量 |
+| ⓓ | Step ⑧ 完成后 | briefing 文件 | 审查素材提取完整性 |
+| ⓕ | Step ⑨ 完成后 | 命题目录文件 | 审查组装质量 |
+| ⓖ | Step ⑩ 完成后 | learning-ladder.md | 确认最终产出 |
 
 ### 跳过条件
 
@@ -163,9 +163,9 @@ task 中不引用外部文件路径，所有必要信息已内联。步骤要求
 |--------|------|------|
 | 能力主文件已存在 | `capabilities/{id}-{name}.md` 存在 | 跳过该能力研究 |
 | 能力摘要已存在 | `.meta/summaries/{id}-{name}.json` 存在 | 跳过该能力摘要生成 |
-| Briefing 已存在 | `.meta/briefings/{seq}-{name}.md` 存在 | 跳过该 Briefing |
-| 命题文件已存在 | `{seq}-{name}/overview.md` 存在 | 跳过该命题组装 |
-| 学习阶梯已存在 | `{seq}-{name}/learning-ladder.md` 存在 | 跳过该阶梯生成 |
+| Briefing 已存在 | `.meta/briefings/{seq}-{short_name}.md` 存在 | 跳过该 Briefing |
+| 命题文件已存在 | `{seq}-{short_name}/overview.md` 存在 | 跳过该命题组装 |
+| 学习阶梯已存在 | `{seq}-{short_name}/learning-ladder.md` 存在 | 跳过该阶梯生成 |
 
 ---
 
