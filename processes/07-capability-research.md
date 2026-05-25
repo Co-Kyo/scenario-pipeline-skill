@@ -8,6 +8,11 @@
 
 ⛔ 加载 `plugins/capability-research-mode.md`（材料块格式 + 深度分级）。
 
+> **🔒 上下文隔离**
+> - ✅ 允许读取：`plugins/capability-research-mode.md`、`meta/output-contracts.md`§6（能力研究产出格式）、`meta/sources.md`（信源分级）、`{workDir}/.meta/capability-graph.json`、`{workDir}/README.md`、`{workDir}/.meta/candidates.md`
+> - ❌ 禁止读取：`processes/01~06.md`、`processes/08~10.md`、`core/*.md`（已由 task 内联，无需主 agent 再读）
+> - 📌 `output-contracts.md` 只读 §6 节；`sources.md` 只读 T0 域名表
+
 ## 输入
 
 - `capability-graph.json`（前处理产出）

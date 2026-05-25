@@ -4,6 +4,15 @@
 
 为每个命题组装四象限研究输出（overview / edge-cases / trade-offs / experiment / references）。后处理阶段二。
 
+## 前置条件
+
+无需加载额外方法论文件。本步骤的 task 已内联全部指令。
+
+> **🔒 上下文隔离**
+> - ✅ 允许读取：`meta/output-contracts.md`§8、`{workDir}/.meta/capability-graph.json`（含 propositions）、`{workDir}/.meta/briefings/{seq}-{name}.md`（Step 08 产出）
+> - ❌ 禁止读取：`processes/01~08.md`、`processes/10.md`、`core/*.md`、`plugins/*.md`、`.meta/summaries/*.json`（已内联到 Briefing 中，无需重复读取）
+> - 📌 `output-contracts.md` 只读 §8 节
+
 ## 输入
 
 - `.meta/briefings/{seq}-{short_name}.md`（Step ⑧ 产出）

@@ -4,6 +4,15 @@
 
 为每个待处理命题组装 Briefing——从能力摘要中提取关键信息，供后续命题组装 agent 使用。后处理阶段一的第二步。
 
+## 前置条件
+
+无需加载额外方法论文件或 plugin。本步骤的 task 已内联全部指令。
+
+> **🔒 上下文隔离**
+> - ✅ 允许读取：`meta/output-contracts.md`§7、`{workDir}/.meta/capability-graph.json`（含 propositions）、`{workDir}/.meta/summaries/*.json`（Step 07 产出）
+> - ❌ 禁止读取：`processes/01~07.md`、`processes/09~10.md`、`core/*.md`、`plugins/*.md`
+> - 📌 `output-contracts.md` 只读 §7 节
+
 ## 输入
 
 - `capability-graph.json`（前处理产出，含 propositions 和 capabilities）

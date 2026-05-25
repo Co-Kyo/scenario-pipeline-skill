@@ -8,6 +8,11 @@
 
 ⛔ 加载 `core/architecture-decomposition.md`（分词方法论）。未加载而执行 = 降级为裸跑。
 
+> **🔒 上下文隔离**
+> - ✅ 允许读取：`core/architecture-decomposition.md`、`meta/output-contracts.md`§2、`{workDir}/.meta/raw-materials.json`（Step 01 产出）
+> - ❌ 禁止读取：`processes/01.md`、`processes/03~06.md`、`processes/07~10.md`、`core/capability-graph.md`、`core/strategic-highground.md`、`core/scenario-matrix.md`、`plugins/*.md`
+> - 📌 `output-contracts.md` 只读 §2 节
+
 ## 输入
 
 - `raw-materials.json`（Step ① 产出）

@@ -4,6 +4,15 @@
 
 为每个已组装的命题生成学习阶梯——从"不会"到"能讲"的渐进式引导路径。后处理阶段三。
 
+## 前置条件
+
+无需加载额外方法论文件。本步骤的 task 已内联全部指令。
+
+> **🔒 上下文隔离**
+> - ✅ 允许读取：`meta/output-contracts.md`§9、`{workDir}/.meta/capability-graph.json`（含能力依赖关系）、`{workDir}/.meta/summaries/*.json`（Step 07 产出）、`{workDir}/{seq}-{name}/overview.md`（Step 09 产出）
+> - ❌ 禁止读取：`processes/01~09.md`、`core/*.md`、`plugins/*.md`、`.meta/briefings/*.md`（已由 Step 09 消费，无需重复读取）
+> - 📌 `output-contracts.md` 只读 §9 节
+
 ## 输入
 
 - `capability-graph.json`（前处理产出，含能力依赖关系）

@@ -1,7 +1,82 @@
 # 共享约定
 
-> 本文档定义跨阶段的共享规则：子 agent 调度、检查点协议、增量复用。
-> 执行具体步骤前不需要读本文档，在进入后处理（阶段⑦起）前读取即可。
+> 本文档定义跨阶段的共享规则：上下文隔离、子 agent 调度、检查点协议、增量复用、决策凭据、内容比例约束。
+> 上下文隔离规范从 Step 01 起适用；子 agent 调度从 Step ⑦ 起适用；其余规则按需查阅。
+
+---
+
+## 上下文隔离规范（Context Isolation）
+
+> **每一步只加载当前步骤所需的文件，严禁预加载后续步骤。**
+
+### 分步执行协议
+
+```
+前处理循环（Step 01 → 06）：
+  1. 读 processes/{step}.md           ← 仅当前步骤定义
+  2. 读该步骤"前置条件"中列出的文件   ← 仅该步需要的方法论/契约
+  3. 执行 → 产出文件
+  4. 进入下一步
+
+后处理循环（Step 07 → 10）：
+  同样遵循：读一步 → 执行一步 → 读下一步
+```
+
+### 读取规则引擎
+
+**核心原则**：每步的具体读取需求由该步的 `processes/{step}-xxx.md` 中的"前置条件"部分声明，不在本文档中硬编码。
+
+**执行逻辑**：
+1. 读取 `processes/{step}-xxx.md` 的"前置条件"部分
+2. 按照该部分列出的文件清单，逐个加载
+3. 仅加载"前置条件"中明确指示的文件，不加载其他
+4. 如果前置条件未指示某个文件，则禁止加载
+
+**文件类型分类**：
+- **🔵 meta 数据文件**（路径约定、信源分级、输出契约）：根据前置条件指示，按需加载对应 §N 节
+- **🟢 core 方法论文件**（分词、能力图谱、高地、评估矩阵）：仅在对应步骤的前置条件中加载
+- **🟠 plugins 可选增强**：仅在对应步骤的前置条件中加载
+- **🔴 processes 执行文件**：严格禁止跨步加载（Step N 不能加载 Step N+1 的文件）
+
+**违规检查清单**：
+- ❌ Step N 加载 Step N+1 或更后续的 processes 文件
+- ❌ 初始化阶段加载 core/*.md（应在对应步骤的前置条件中加载）
+- ❌ 一次性加载 `meta/output-contracts.md` 全文（应按 §N 节分段查阅）
+- ❌ 子 agent 在 spawn 前预加载后续步骤的 processes 文件
+
+**规则验证**：
+每个 processes 文件的"前置条件"部分应遵循以下模板验证：
+```
+✅ 前置条件包含 meta/ 数据文件引用（如 sources.md、output-contracts.md§N）
+✅ 前置条件包含必要的 core/*.md 方法论（如 architecture-decomposition.md）
+✅ 前置条件包含前序步骤的产出文件
+✅ 不包含同层或后续步骤的 processes 文件引用
+✅ 不包含未被该步骤使用的 core 或 plugins 文件
+```
+
+**示例**（如何在 processes 文件中声明）：
+```markdown
+## 前置条件
+
+⛔ 加载：
+- `core/architecture-decomposition.md`（分词方法论）
+- `meta/output-contracts.md`§2（本步输出格式）
+- `{workDir}/.meta/raw-materials.json`（Step 01 产出）
+
+> **🔒 上下文隔离**
+> - ✅ 允许读取：上述列出的文件
+> - ❌ 禁止读取：`processes/01.md`、`processes/03~06.md`、其他 `core/*.md`
+```
+
+**维护原则**：
+- 如果修改了 Step N 的输入/输出或依赖，**仅更新** `processes/{step}-xxx.md` 的前置条件
+- **不需要**同时修改本文档
+- 本文档作为规则总纲保持相对稳定
+
+### output-contracts.md 分节查阅
+
+`meta/output-contracts.md` 包含全部步骤的输出示例（§1-§9），**不要一次性全文加载**。
+每步执行时只查阅对应的 §N 节。如果文件较长，用 offset/limit 精确读取对应段落。
 
 ---
 
@@ -115,10 +190,11 @@ task 中不引用外部文件路径，所有必要信息已内联。步骤要求
 | ① scan | `source_tier` | unknown 域名的评估依据（哪几个维度达标/不达标） |
 | ① scan | `fetch_status: "failed"` | 失败原因（超时/403/内容不相关） |
 | ① scan | 被丢弃的素材 | 丢弃原因（不达标/重复/无关），记录在 `discarded` 字段 |
-| ② decompose | 命题识别 | 为什么这个场景算命题、那个不算 |
-| ③ capability-extract | `dependencies` | 为什么 A 依赖 B |
-| ③ capability-extract | 能力合并/拆分 | 为什么合并为一个或拆分为多个 |
-| ⑤ evaluate | `priority` | 总分与阈值的对比判定过程 |
+| ② decompose | `identification_trace` | 为什么这个场景算命题、那个不算 |
+| ③ capability-extract | `dependencies_trace` | 为什么 A 依赖 B |
+| ③ capability-extract | `merge_trace` | 为什么合并为一个（多个命题的相似能力合并） |
+| ③ capability-extract | `split_trace` | 为什么拆分为多个（一个粗粒度能力拆分为细粒度能力） |
+| ⑤ evaluate | `priority_trace` | 总分与阈值的对比判定过程 |
 | ⑨ assemble | `筛选_trace` | 候选来源、排除原因、保留理由 |
 
 ---

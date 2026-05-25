@@ -8,6 +8,11 @@
 
 ⛔ 加载 `core/strategic-highground.md`（战略高地方法论）。
 
+> **🔒 上下文隔离**
+> - ✅ 允许读取：`core/strategic-highground.md`、`meta/output-contracts.md`§4、`{workDir}/.meta/capability-graph.json`（Step 03 产出）
+> - ❌ 禁止读取：`processes/01~03.md`、`processes/05~06.md`、`processes/07~10.md`、`core/architecture-decomposition.md`、`core/capability-graph.md`、`core/scenario-matrix.md`、`plugins/*.md`
+> - 📌 `output-contracts.md` 只读 §4 节
+
 ## 输入
 
 - `capability-graph.json`（Step ③ 产出）

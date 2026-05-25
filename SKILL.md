@@ -52,16 +52,32 @@ deep research：<场景描述>
 
 ## 执行入口
 
-1. **首次使用**：读 `meta/paths.md` 了解路径约定，读 `meta/sources.md` 了解信源分级
-2. **前处理**：按顺序读 `processes/01-scan.md` → `processes/06-pool.md`，每步按文件中的指令执行
-3. **后处理**：读 `processes/00-shared.md` 了解子 agent 调度和检查点协议，然后按 `processes/07` → `processes/10` 执行
+### ⚠️ 强制分步读取协议（Context Isolation Protocol）
+
+**核心规则：每一步只读该步的文件，严禁提前加载后续步骤。**
+
+执行流程：
+1. **初始化**：只读 `meta/paths.md` + `meta/sources.md`（路径约定和信源分级）
+2. **前处理**（串行 6 步）：严格按以下循环执行：
+   ```
+   for step in [01, 02, 03, 04, 05, 06]:
+       ① 读 processes/{step}-xxx.md          ← 只读当前步骤文件
+       ② 读该步骤引用的 core/*.md 或 meta/*.md（按文件中的"前置条件"指示）
+       ③ 执行该步骤的全部操作，产出文件
+       ④ 进入下一步前，不再引用上一步的 processes 文件内容
+   ```
+3. **后处理**：读 `processes/00-shared.md` 了解调度协议，然后按 `processes/07` → `processes/10` 同样分步执行
+
+**违规判定**：如果在执行 Step N 时引用了 Step N+1 或更后续步骤文件的内容，即视为违规。
+
+> 设计理由见 `dev/design/context-isolation.md`
 
 ## 数据参考
 
 | 文件 | 内容 | 何时读取 |
 |------|------|---------|
-| `meta/sources.md` | T0 域名表 + 信源分级规则 | scan 和 capability-extract 阶段 |
-| `meta/output-contracts.md` | 每步的输出结构 + 完整示例 | 每步执行前，查看对应步骤的示例 |
-| `meta/paths.md` | 路径约定表 | 需要拼接产出路径时 |
-| `core/*.md` | 方法论定义 | decompose/capability-extract/highground/evaluate 执行前 |
-| `plugins/*.md` | 可选增强 | 按需加载 |
+| `meta/paths.md` | 路径约定表 | 初始化时读取一次即可 |
+| `meta/sources.md` | T0 域名表 + 信源分级规则 | 由 Step 01 和 Step 03 的前置条件指示读取 |
+| `meta/output-contracts.md` | 每步的输出结构 + 完整示例 | 由每步的前置条件指示读取对应 §N 节 |
+| `core/*.md` | 方法论定义 | 由对应步骤的前置条件指示读取，**不在初始化阶段加载** |
+| `plugins/*.md` | 可选增强 | 由对应步骤的前置条件指示读取 |

@@ -4,6 +4,15 @@
 
 从信息源中识别相关素材，按信源质量分级，产出 `raw-materials.json`。
 
+## 前置条件
+
+读取 `meta/sources.md`（T0 域名表 + 信源分级规则）。本步骤不需要读取任何 core/*.md。
+
+> **🔒 上下文隔离**
+> - ✅ 允许读取：`meta/sources.md`、`meta/output-contracts.md`§1
+> - ❌ 禁止读取：`processes/02~06.md`、`processes/07~10.md`、`core/*.md`、`plugins/*.md`
+> - 📌 `output-contracts.md` 只读 §1 节，不要读其他章节
+
 ## 输入
 
 - 用户指令中的信息源描述（source_desc）

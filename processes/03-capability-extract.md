@@ -10,6 +10,11 @@
 - `core/capability-graph.md`（能力图谱方法论）
 - `core/architecture-decomposition.md`（分词方法论，理解分词输出格式）
 
+> **🔒 上下文隔离**
+> - ✅ 允许读取：`core/capability-graph.md`、`meta/output-contracts.md`§3、`meta/sources.md`（T0 域名表，用于信源预查找）、`{workDir}/.meta/decompositions.json`（Step 02 产出）、`{workDir}/.meta/raw-materials.json`（Step 01 产出）
+> - ❌ 禁止读取：`processes/01~02.md`、`processes/04~06.md`、`processes/07~10.md`、`core/strategic-highground.md`、`core/scenario-matrix.md`、`plugins/*.md`
+> - 📌 `output-contracts.md` 只读 §3 节；`sources.md` 只读 T0 域名表
+
 ## 输入
 
 - `decompositions.json`（Step ② 产出）

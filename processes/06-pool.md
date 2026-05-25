@@ -4,6 +4,15 @@
 
 合并前处理产出，写入总览导航，完成前处理阶段。
 
+## 前置条件
+
+无需加载额外方法论文件。读取前序步骤的产出 JSON 即可。
+
+> **🔒 上下文隔离**
+> - ✅ 允许读取：`meta/output-contracts.md`§6、`{workDir}/.meta/capability-graph.json`、`{workDir}/.meta/highgrounds.json`、`{workDir}/.meta/evaluations.json`（前序产出）
+> - ❌ 禁止读取：`processes/01~05.md`、`processes/07~10.md`、`core/*.md`、`plugins/*.md`
+> - 📌 `output-contracts.md` 只读 §6 节；本步骤不加载任何方法论
+
 ## 输入
 
 - `capability-graph.json`（Step ③ 产出）
