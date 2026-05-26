@@ -26,9 +26,7 @@
 | 能力摘要 | `{workDir}/.meta/summaries/{id}-{name}.json` | `.../summaries/A1-浏览器渲染管线.json` |
 | Briefing | `{workDir}/.meta/briefings/{seq}-{short_name}.md` | `.../briefings/01-长列表渲染.md` |
 | 能力图谱 | `{workDir}/.meta/capability-graph.json` | `...` |
-| 分词结果 | `{workDir}/.meta/decompositions.json` | `...` |
 | 评估结果 | `{workDir}/.meta/evaluations.json` | `...` |
-| 高地结果 | `{workDir}/.meta/highgrounds.json` | `...` |
 | 扫描结果 | `{workDir}/.meta/raw-materials.json` | `...` |
 | 候选池 | `{workDir}/.meta/candidates.md` | `...` |
 | 动态信源池 | `{workDir}/.meta/sources/dynamic-sources.json` | `...` |

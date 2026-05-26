@@ -1,4 +1,4 @@
-# Step ⑩: 学习阶梯
+# Step ⑦: 学习阶梯
 
 ## 目的
 
@@ -7,21 +7,21 @@
 ## 前置条件
 
 无需加载额外方法论文件。本步骤的 task 已内联全部指令。读取：
-- `meta/output-contracts.md`§10（本步输出格式）
+- `meta/output-contracts.md`§7（本步输出格式）
 - `{workDir}/.meta/capability-graph.json`（含能力依赖关系）
-- `{workDir}/.meta/summaries/*.json`（Step 07 产出）
-- `{workDir}/{seq}-{short_name}/overview.md`（Step 09 产出）
+- `{workDir}/.meta/summaries/*.json`（Step ④ 产出）
+- `{workDir}/{seq}-{short_name}/overview.md`（Step ⑥ 产出）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`core/shared-conventions.md`、`meta/output-contracts.md`§10、`{workDir}/.meta/capability-graph.json`（含能力依赖关系）、`{workDir}/.meta/summaries/*.json`（Step 07 产出）、`{workDir}/{seq}-{short_name}/overview.md`（Step 09 产出）
-> - ❌ 禁止读取：`processes/01~09.md`、`core/*.md`、`plugins/*.md`、`.meta/briefings/*.md`（已由 Step 09 消费，无需重复读取）
-> - 📌 `output-contracts.md` 只读 §10 节
+> - ✅ 允许读取：`core/shared-conventions.md`、`meta/output-contracts.md`§7、`{workDir}/.meta/capability-graph.json`（含能力依赖关系）、`{workDir}/.meta/summaries/*.json`（Step ④ 产出）、`{workDir}/{seq}-{short_name}/overview.md`（Step ⑥ 产出）
+> - ❌ 禁止读取：`processes/01~06.md`、`core/*.md`、`plugins/*.md`、`.meta/briefings/*.md`（已由 Step ⑥ 消费，无需重复读取）
+> - 📌 `output-contracts.md` 只读 §7 节
 
 ## 输入
 
 - `capability-graph.json`（前处理产出，含能力依赖关系）
-- `.meta/summaries/*.json`（Step ⑦ 产出）
-- `{seq}-{short_name}/overview.md` 等（Step ⑨ 产出的命题文件）
+- `.meta/summaries/*.json`（Step ④ 产出）
+- `{seq}-{short_name}/overview.md` 等（Step ⑥ 产出的命题文件）
 
 ## 执行步骤
 
@@ -29,16 +29,37 @@
 
 已有 `learning-ladder.md` 的命题跳过。
 
-### 2. 并行 spawn（简单窗口）
+### 2. 并行 spawn（简单窗口 + 轮询跟踪）
 
-> ⚠️ 按 `core/shared-conventions.md §简单窗口执行流程` + `§并行调度规则` 执行。禁止 `sessions_yield`。
+> ⚠️ 严格遵循 `core/shared-conventions.md` §简单窗口执行流程 + §并行调度规则。
+> **严禁 `sessions_yield`。** spawn 后必须进入轮询跟踪，主动权始终在主线程。
 
-学习阶梯之间无依赖，W=5，先完成先补位。
+#### 2.1 初始化
 
-**异常处理**：
-- 某个 agent 失败 → 标记该命题为 failed，窗口继续推进
-- 能力依赖图有环 → 打断循环依赖，标记 warning
-- 所有命题均完成或失败 → 进入 ⓖ 检查点
+从待办队列取前 W=5 个命题，逐个 spawn。label：`ladder-{seq}-{short_name}`。
+
+**预期产出**：`{workDir}/{seq}-{short_name}/learning-ladder.md`
+
+#### 2.2 轮询循环 + 槽位替换
+
+按 `core/shared-conventions.md` §**模式 A：简单窗口** 执行轮询循环。本步骤特有参数：
+
+| 参数 | 值 |
+|------|---|
+| W | 5 |
+| 超时 | 5 分钟 |
+| 槽位替换 | ✅ 简单窗口：agent 完成 → 释放槽位 → 从待办队列取下一个 spawn |
+| label | `ladder-{seq}-{short_name}` |
+| expected_files | 每个 agent：`{seq}-{short_name}/learning-ladder.md` |
+
+#### 2.3 超时与重试
+
+单 Agent 超过 5 分钟 → kill → 重试一次 → 仍失败则跳过该命题，标记 degraded
+
+#### 2.4 特殊异常
+
+- 能力依赖图有环 → 打断循环依赖，标记 warning（不 kill agent，让 agent 自行处理）
+- 所有命题均完成或 degraded → 进入 ⓖ 检查点
 
 **task 模板**：
 
@@ -63,10 +84,10 @@
 ## 能力详情
 用 read 工具读取以下文件：
 - {workDir}/.meta/summaries/{id}-{name}.json（每个涉及能力各一份）
-- {workDir}/{seq}-{short_name}/overview.md（Step ⑨ 产出）
+- {workDir}/{seq}-{short_name}/overview.md（Step ⑥ 产出）
 
 如果某个摘要文件不存在，跳过该能力并在学习阶梯中标注"⚠️ 该能力详情缺失"。
-如果 overview.md 不存在，停止执行并输出：`❌ 命题「{proposition_name}」的 overview.md 不存在，无法生成学习阶梯。请先完成 Step ⑨。`
+如果 overview.md 不存在，停止执行并输出：`❌ 命题「{proposition_name}」的 overview.md 不存在，无法生成学习阶梯。请先完成 Step ⑥。`
 
 ## 输出路径
 {workDir}/{seq}-{short_name}/learning-ladder.md

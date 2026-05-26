@@ -1,4 +1,4 @@
-# Step ⑦: 能力研究（多线程域分组方案）
+# Step ④: 能力研究（多线程域分组方案）
 
 ## 目的
 
@@ -8,15 +8,15 @@
 
 ⛔ 加载：
 - `plugins/capability-research-mode.md`（材料块格式 + 深度分级）
-- `meta/output-contracts.md`§7（能力研究产出格式）
+- `meta/output-contracts.md`§4（能力研究产出格式）
 - `meta/sources.md`（信源分级，T0 域名表）
 - `{workDir}/.meta/capability-graph.json`（前处理产出）
 - `{workDir}/README.md`（命题列表）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`core/shared-conventions.md`、`plugins/capability-research-mode.md`、`meta/output-contracts.md`§7（能力研究产出格式）、`meta/sources.md`（信源分级）、`{workDir}/.meta/capability-graph.json`、`{workDir}/README.md`
-> - ❌ 禁止读取：`processes/01~06.md`、`processes/08~10.md`、`core/*.md`（已由 task 内联，无需主 agent 再读）、`plugins/*.md`（除 `capability-research-mode.md` 外）
-> - 📌 `output-contracts.md` 只读 §7 节；`sources.md` 只读 T0 域名表
+> - ✅ 允许读取：`core/shared-conventions.md`、`plugins/capability-research-mode.md`、`meta/output-contracts.md`§4（能力研究产出格式）、`meta/sources.md`（信源分级）、`{workDir}/.meta/capability-graph.json`、`{workDir}/README.md`
+> - ❌ 禁止读取：`processes/01~03.md`、`processes/05~07.md`、`core/*.md`（已由 task 内联，无需主 agent 再读）、`plugins/*.md`（除 `capability-research-mode.md` 外）
+> - 📌 `output-contracts.md` 只读 §4 节；`sources.md` 只读 T0 域名表
 
 ## 输入
 
@@ -152,18 +152,45 @@ T=8min   A_2, D_2, E_2 完成 → 全部 25 个能力就绪
 输出：`Agent-{group_id} 完成：已研究 {能力列表}（共 N 个能力）`
 ```
 
-### 7. 并行 spawn 域 Agent
+### 7. 并行 spawn 域 Agent（DAG 调度 + 轮询跟踪）
 
-按依赖拓扑的批次顺序 spawn。使用 `core/shared-conventions.md` §**并行调度规则**执行（禁止使用 `sessions_yield`）。
+> ⚠️ 严格遵循 `core/shared-conventions.md` §并行调度规则。
+> **严禁 `sessions_yield`。** spawn 后必须进入轮询跟踪，主动权始终在主线程。
+> 本步骤使用 **DAG 调度**模式（子组间有跨依赖，按拓扑批次执行）。
 
-**第一批**：所有无跨组依赖的子组 Agent 并行启动
-```python
-for group in batch_1:
+#### 7.1 第一批 spawn
+
+所有无跨组依赖的子组 Agent 并行启动（上限 W=5）：
+
+```
+for group in batch_1 (无跨组依赖的组，按 fanout 降序):
     sessions_spawn(label=f"agent-{group.id}", task=group.task, ...)
-# group.id 格式：A_1, B_1, C_1, D_1, E_1 ...
+    记录 label 和 expected_files
 ```
 
-**后续批次**：轮询 `subagents list` 发现 Agent-A_1 完成 → spawn Agent-A_2 → 继续轮询
+#### 7.2 轮询循环 + 后续批次
+
+按 `core/shared-conventions.md` §**模式 B：DAG 调度** 执行轮询循环。本步骤特有参数：
+
+| 参数 | 值 |
+|------|---|
+| W | 5 |
+| 超时 | 15 分钟 |
+| 槽位替换 | ✅ DAG 模式：前置子组全部 completed → spawn 后续子组 |
+| label | `agent-{group_id}`（如 `agent-A_1`, `agent-B_1`） |
+| expected_files | 每个 agent：`capabilities/{id}-{name}.md` + `.meta/summaries/{id}-{name}.json`（按该子组负责的能力列表） |
+
+**DAG 特有**：阶段 B 中，`ready_groups` 的判定基于该子组的 `depends_on_groups` 是否全部 completed。
+
+#### 7.3 完成判定
+
+- **completed**：Agent status=completed 且 expected_files 均存在
+- **failed**：Agent status failed 或 expected_files 缺失
+- **degraded**：超时重试仍失败，降级跳过
+
+#### 7.4 退出
+
+所有子组 completed/failed/degraded → 统计结果，进入 ⓒ 检查点
 
 ### 8. 跨 Agent 依赖的文件协调
 
@@ -181,9 +208,9 @@ for group in batch_1:
 
 ### 9. 等待全部完成
 
-所有域 Agent 完成后：
+所有域 Agent 完成后（即上一步轮询循环退出后）：
 
-🚨 **🛑 必须停顿，进入 ⓔ 检查点**。展示能力研究质量摘要（完成数/跳过数/失败数，各能力主文件行数统计），使用 `clarify` 等待用户确认后才进入 Step ⑧。
+🚨 **🛑 必须停顿，进入 ⓒ 检查点**。展示能力研究质量摘要（完成数/跳过数/失败数，各能力主文件行数统计），使用 `clarify` 等待用户确认后才进入 Step ⑤。
 
 ---
 

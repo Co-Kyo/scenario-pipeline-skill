@@ -1,6 +1,6 @@
 # 共享约定
 
-> 上下文隔离规范从 Step 01 起适用；子 agent 调度从 Step ⑦ 起适用；其余规则按需查阅。
+> 上下文隔离规范从 Step 01 起适用；子 agent 调度从 Step ④ 起适用；其余规则按需查阅。
 
 ---
 
@@ -11,13 +11,13 @@
 ### 分步执行协议
 
 ```
-前处理循环（Step 01 → 06）：
+前处理循环（Step 01 → 03）：
   1. 读 processes/{step}.md           ← 仅当前步骤定义
   2. 读该步骤"前置条件"中列出的文件   ← 仅该步需要的方法论/契约
   3. 执行 → 产出文件
   4. 进入下一步
 
-后处理循环（Step 07 → 10）：
+后处理循环（Step 04 → 07）：
   同样遵循：读一步 → 执行一步 → 读下一步
 ```
 
@@ -33,7 +33,7 @@
 
 **文件类型分类**：
 - **🔵 meta 数据文件**（路径约定、信源分级、输出契约）：根据前置条件指示，按需加载对应 §N 节
-- **🟢 core 方法论文件**（分词、能力图谱、高地、评估矩阵）：仅在对应步骤的前置条件中加载
+- **🟢 core 方法论文件**（能力图谱、高地、评估矩阵）：仅在对应步骤的前置条件中加载
 - **🟠 plugins 可选增强**：仅在对应步骤的前置条件中加载
 - **🔴 processes 执行文件**：严格禁止跨步加载（Step N 不能加载 Step N+1 的文件）
 
@@ -47,7 +47,7 @@
 每个 processes 文件的"前置条件"部分应遵循以下模板验证：
 ```
 ✅ 前置条件包含 meta/ 数据文件引用（如 sources.md、output-contracts.md§N）
-✅ 前置条件包含必要的 core/*.md 方法论（如 architecture-decomposition.md）
+✅ 前置条件包含必要的 core/*.md 方法论（如 capability-graph.md）
 ✅ 前置条件包含前序步骤的产出文件
 ✅ 不包含同层或后续步骤的 processes 文件引用
 ✅ 不包含未被该步骤使用的 core 或 plugins 文件
@@ -58,13 +58,13 @@
 ## 前置条件
 
 ⛔ 加载：
-- `core/architecture-decomposition.md`（分词方法论）
+- `core/capability-graph.md`（能力图谱方法论）
 - `meta/output-contracts.md`§2（本步输出格式）
 - `{workDir}/.meta/raw-materials.json`（Step 01 产出）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`core/shared-conventions.md`、`core/architecture-decomposition.md`、`meta/output-contracts.md`§2、`{workDir}/.meta/raw-materials.json`（Step 01 产出）
-> - ❌ 禁止读取：`processes/01.md`、`processes/03~06.md`、`processes/07~10.md`、其他 `core/*.md`、`plugins/*.md`
+> - ✅ 允许读取：`core/shared-conventions.md`、`core/capability-graph.md`、`meta/output-contracts.md`§2、`{workDir}/.meta/raw-materials.json`（Step 01 产出）
+> - ❌ 禁止读取：`processes/01.md`、`processes/03~07.md`、其他 `core/*.md`、`plugins/*.md`
 > - 📌 `output-contracts.md` 只读 §2 节
 ```
 
@@ -74,57 +74,177 @@
 
 ### output-contracts.md 分节查阅
 
-`meta/output-contracts.md` 包含全部步骤的输出示例（§1-§10），**不要一次性全文加载**。
+`meta/output-contracts.md` 包含全部步骤的输出示例（§0-§7），**不要一次性全文加载**。
 每步执行时只查阅对应的 §N 节。如果文件较长，用 offset/limit 精确读取对应段落。
 
 ---
 
 ## 子 agent 调度
 
-> ⚠️ **关键词**：spawn 子 agent 后必须进入「**轮询跟踪**」。**严禁 `sessions_yield`。**
+> **核心约束**：spawn 后必须进入轮询循环。**严禁 `sessions_yield`。** 主动权始终在主线程。
 
-### 并发池定义
+### 全局参数
 
-固定 W=5 个并发槽位，计数单位是 Task Group（不是 agent 数）。任务完成释放槽位，新任务补位。
+| 参数 | 值 | 说明 |
+|------|---|------|
+| 并发槽位 W | 5 | 最大同时运行的 Task Group 数 |
+| 轮询间隔 | 15 秒 | `subagents list` 调用频率 |
+| 计数单位 | Task Group | 1 个命题 = 1 个 Task Group（Step ⑥ 特殊：1 命题 = 2 agent） |
 
-| 模式 | 适用步骤 | 入队条件 | 说明 |
-|------|---------|---------|------|
-| 简单窗口 | Step ⑧⑨⑩ | 有空位就进 | 任务互相独立，先完成先补位 |
-| DAG 调度 | Step ⑦ | 前置子组全部 completed | 子组间有跨依赖，按拓扑批次执行 |
+### 各步骤调度模式一览
 
-Step ⑨ 特殊：1 个命题 = 2 个 agent（Markdown + Experiment），W=5 命题 = 最多 10 agent 并行。
+| 步骤 | 模式 | Task Group 定义 | 超时 | 槽位替换 |
+|------|------|----------------|------|---------|
+| ⓪ 头脑风暴·维度 Agent | 一次性全部 spawn | 1 个维度 = 1 个 agent | 3 min | ❌ 无（一次性填满） |
+| ⓪ 头脑风暴·裁判 Agent | 单 agent 串行 | 1 个裁判 = 1 个 agent | 5 min | ❌ 无 |
+| ④ 能力研究 | DAG 调度 | 1 个子组 = 1 个 agent（≤5 能力） | 15 min | ✅ 按拓扑批次 |
+| ⑤ Briefing 组装 | 简单窗口 | 1 个命题 = 1 个 agent | 5 min | ✅ 先完成先补位 |
+| ⑥ 命题组装 | 简单窗口 | 1 个命题 = 2 个 agent（md + exp） | 8 min | ✅ 先完成先补位 |
+| ⑦ 学习阶梯 | 简单窗口 | 1 个命题 = 1 个 agent | 5 min | ✅ 先完成先补位 |
 
-### 并行调度规则
+### Label 命名规范
 
-1. **初始化**：按调度模式筛选可 spawn 的任务，逐个 spawn 直到槽位满，记录 label 和预期产出文件
-2. **双通道跟踪**（二选一或并用）：
-   - **轮询**：每 15s 调用 `subagents list` 检查状态
-   - **回调**：子 agent 完成后主动 `sessions_send` 回传结果
-3. **完成判定**：`status=completed` + `expected_files` 存在 → completed；否则 failed（expected_files 由各步骤自行定义）
-4. **槽位替换**：
-   - **简单窗口**：有 agent 完成 → 从待办队列取下一个 → 立即 spawn
-   - **DAG 调度**：有 agent 完成 → 检查哪些任务的前置依赖全部 completed → spawn
-5. **超时兜底**：单 agent 超过 15min → kill → 重试一次 → 仍失败则降级跳过
-6. **绝不挂起**：主动权始终在主线程，不进入被动等待状态
-7. **退出**：所有任务 completed/failed/degraded → 统计结果，进入下一步
+| 步骤 | Label 模式 | 示例 |
+|------|-----------|------|
+| ⓪ 维度 Agent | `brainstorm-{dimension}` | `brainstorm-scenario` |
+| ⓪ 裁判 Agent | `brainstorm-referee` | — |
+| ④ 能力研究 | `agent-{group_id}` | `agent-A_1`, `agent-B_1` |
+| ⑤ Briefing | `briefing-{seq}-{short_name}` | `briefing-01-长列表渲染` |
+| ⑥ 命题组装·Markdown | `asm-md-{seq}-{short_name}` | `asm-md-01-长列表渲染` |
+| ⑥ 命题组装·Experiment | `asm-exp-{seq}-{short_name}` | `asm-exp-01-长列表渲染` |
+| ⑦ 学习阶梯 | `ladder-{seq}-{short_name}` | `ladder-01-长列表渲染` |
 
-### 简单窗口执行流程
+### Expected Files 判定规则
 
-适用 Step ⑧⑨⑩。任务互相独立，无依赖约束。
+Agent 完成 ≠ 对话结束。必须验证 expected_files 存在于磁盘：
 
 ```
-1. 筛选待办任务集合，标记已存在的产出文件对应的任务为 completed
-2. 从待办队列取前 W=5 个，逐个 spawn
-3. 进入并行调度规则的轮询循环
-4. 任何 agent 完成 → 槽位释放 → 从待办队列取下一个 spawn
-5. 全部完成 → 统计结果，进入下一步
+completed = (agent.status == "completed") AND (所有 expected_files 存在)
+failed    = (agent.status == "failed") OR (expected_files 缺失)
+timeout   = (运行时间 > 超时阈值) → kill
+```
+
+expected_files 由各步骤的 processes 文件定义（如 `capabilities/{id}-{name}.md` + `.meta/summaries/{id}-{name}.json`）。
+
+### 模式 A：简单窗口（适用 ⑤⑥⑦）
+
+任务互相独立，无依赖约束。先完成先补位。
+
+```
+初始化：
+    待办队列 = 所有未完成的任务（按 priority/序号排序）
+    已跳过 = 产出文件已存在的任务 → 标记 completed
+    运行中计数 = 0
+
+    # 初始填满：从待办队列取前 W 个 spawn
+    while 运行中计数 < W 且 待办队列非空:
+        task = 待办队列.dequeue()
+        sessions_spawn(label=task.label, task=task.task)
+        运行中计数 += 1
+
+轮询循环：
+    while 待办队列非空 或 运行中计数 > 0:
+
+        ── 阶段 A：轮询状态 ──
+        sleep(15s)
+        agents = subagents list()
+        for agent in agents where agent.status in (completed, failed):
+            if agent.status == completed:
+                files_exist = check expected_files for agent.label
+                if files_exist:
+                    mark completed
+                else:
+                    mark failed  # 输出了但文件没写
+                运行中计数 -= 1
+            elif agent.status == failed:
+                mark failed
+                运行中计数 -= 1
+
+        for agent in agents where agent.running_time > 超时阈值:
+            kill(agent)
+            mark timeout
+            运行中计数 -= 1
+
+        ── 阶段 B：槽位替换 ──
+        while 运行中计数 < W 且 待办队列非空:
+            task = 待办队列.dequeue()
+            sessions_spawn(label=task.label, task=task.task)
+            运行中计数 += 1
+
+退出：
+    统计 completed/failed/timeout 数量
+    进入下一步
+```
+
+**超时重试**：timeout 的 agent 重试一次（重新 spawn 同一任务）。仍失败则标记 degraded，不阻塞其他任务。
+
+**Step ⑥ 特殊处理**：1 个命题 = 2 个 agent（Markdown + Experiment），两者独立可并行。
+- 槽位计数：1 个命题占 2 个槽位
+- 完成判定：2 个 agent 均结束才释放 2 个槽位
+- 部分完成：Markdown failed 但 Experiment completed → 标记 partial，不影响另一个
+
+### 模式 B：DAG 调度（适用 ④）
+
+子组间有跨依赖。必须按拓扑批次执行：前置子组全部 completed 后才能 spawn 后续子组。
+
+```
+初始化：
+    计算每个子组的 depends_on（来自 capability-graph 的依赖关系）
+    计算拓扑批次：batch_1 = 无依赖的子组, batch_2 = 依赖 batch_1 的子组, ...
+    运行中计数 = 0
+    当前批次 = 1
+
+    # 初始填满：batch_1 中取前 W 个 spawn
+    for group in batch_1 where 运行中计数 < W:
+        sessions_spawn(label=f"agent-{group.id}", task=group.task)
+        运行中计数 += 1
+
+轮询循环：
+    while 未完成的子组数 > 0:
+
+        ── 阶段 A：轮询状态 ──
+        sleep(15s)
+        agents = subagents list()
+        for agent in agents where agent.status in (completed, failed):
+            if agent.status == completed:
+                files_exist = check expected_files
+                if files_exist:
+                    mark completed
+                else:
+                    mark failed
+                运行中计数 -= 1
+            elif agent.status == failed:
+                mark failed
+                运行中计数 -= 1
+
+        for agent in agents where agent.running_time > 15min:
+            kill(agent)
+            mark timeout → 重试一次 → 仍失败 → degraded
+            运行中计数 -= 1
+
+        ── 阶段 B：DAG 槽位替换 ──
+        # 找出所有"前置依赖全部 completed"的待 spawn 子组
+        ready_groups = [g for g in pending if all(dep in completed for dep in g.depends_on)]
+        for group in ready_groups where 运行中计数 < W:
+            sessions_spawn(label=f"agent-{group.id}", task=group.task)
+            运行中计数 += 1
+
+退出：
+    统计结果，进入下一步
 ```
 
 ### task 组装规则
 
-每个子 agent 的 task 由三部分拼接：角色声明（一句话）+ 执行指令（从 processes 文件提取）+ 变量替换（workDir, capability_id 等）。
+每个子 agent 的 task 由三部分拼接：
 
-task 中不引用外部文件路径，所有必要信息已内联。步骤要求读取前置产出时，task 中给出具体路径 + 文件不存在时的降级动作。
+1. **角色声明**：一句话（如"你是「浏览器渲染管线」技术域的深度研究员"）
+2. **执行指令**：从 processes 文件提取的具体步骤
+3. **变量替换**：workDir、capability_id、命题名称等
+
+约束：
+- Step ④ 的 task **全部内联**（能力信息在分组时已确定，不读外部文件）
+- Step ⑤⑥⑦ 的 task **指定文件路径**（前置步骤产出量大，用 read 工具按需读取）
+- 文件不存在时的降级动作必须在 task 中声明（⑧ 标注"缺失"继续；⑨⑩ 停止并报错）
 
 ---
 
@@ -140,13 +260,12 @@ task 中不引用外部文件路径，所有必要信息已内联。步骤要求
 
 | 检查点 | 位置 | 核心产物 | 介入价值 |
 |--------|------|---------|---------|
-| ⓐ | Step ① 完成后 | raw-materials.json | 确认信源质量 |
-| ⓑ | Step ⑤ 完成后 | evaluations.json | 确认命题优先级 |
-| ⓒ | Step ⑥ 完成后（后处理启动前） | 执行计划 | 确认范围、调整参数 |
-| ⓔ | Step ⑦ 完成后 | capability 文件 + summary | 审查研究质量 |
-| ⓓ | Step ⑧ 完成后 | briefing 文件 | 审查素材提取完整性 |
-| ⓕ | Step ⑨ 完成后 | 命题目录文件 | 审查组装质量 |
-| ⓖ | Step ⑩ 完成后 | learning-ladder.md | 确认最终产出 |
+| ⓐ | Step ② 完成后 | capability-graph.json | 确认能力图谱质量 |
+| ⓑ | Step ③ 完成后（后处理启动前） | evaluations.json + 执行计划 | 确认命题优先级、范围、调整参数 |
+| ⓒ | Step ④ 完成后 | capability 文件 + summary | 审查研究质量 |
+| ⓓ | Step ⑤ 完成后 | briefing 文件 | 审查素材提取完整性 |
+| ⓕ | Step ⑥ 完成后 | 命题目录文件 | 审查组装质量 |
+| ⓖ | Step ⑦ 完成后 | learning-ladder.md | 确认最终产出 |
 
 ### 跳过条件
 
@@ -187,15 +306,15 @@ task 中不引用外部文件路径，所有必要信息已内联。步骤要求
 
 | 步骤 | 字段 | trace 内容 |
 |------|------|-----------|
+| ⓪ brainstorm | `year_inference_trace` | 年限推断依据（显式匹配/隐式信号/默认值） |
 | ① scan | `source_tier` | unknown 域名的评估依据（哪几个维度达标/不达标） |
 | ① scan | `fetch_status: "failed"` | 失败原因（超时/403/内容不相关） |
 | ① scan | 被丢弃的素材 | 丢弃原因（不达标/重复/无关），记录在 `discarded` 字段 |
-| ② decompose | `identification_trace` | 为什么这个场景算命题、那个不算 |
-| ③ capability-extract | `dependencies_trace` | 为什么 A 依赖 B |
-| ③ capability-extract | `merge_trace` | 为什么合并为一个（多个命题的相似能力合并） |
-| ③ capability-extract | `split_trace` | 为什么拆分为多个（一个粗粒度能力拆分为细粒度能力） |
-| ⑤ evaluate | `priority_trace` | 总分与阈值的对比判定过程 |
-| ⑨ assemble | `筛选_trace` | 候选来源、排除原因、保留理由 |
+| ② capability-graph | `dependencies_trace` | 为什么 A 依赖 B |
+| ② capability-graph | `merge_trace` | 为什么合并为一个（多个命题的相似能力合并） |
+| ② capability-graph | `split_trace` | 为什么拆分为多个（一个粗粒度能力拆分为细粒度能力） |
+| ③ evaluate | `priority_trace` | 总分与阈值的对比判定过程 |
+| ⑥ assemble | `筛选_trace` | 候选来源、排除原因、保留理由 |
 
 ---
 

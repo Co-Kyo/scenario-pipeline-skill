@@ -12,7 +12,7 @@
 
 > **🔒 上下文隔离**
 > - ✅ 允许读取：`core/shared-conventions.md`、`meta/sources.md`、`meta/output-contracts.md`§1、`{workDir}/.meta/requirement-web.json`（如存在）
-> - ❌ 禁止读取：`processes/02~06.md`、`processes/07~10.md`、`core/*.md`、`plugins/*.md`（`--year` 参数存在时，`plugins/year-granularity.md` 除外）
+> - ❌ 禁止读取：`processes/02~07.md`、`core/*.md`、`plugins/*.md`（`--year` 参数存在时，`plugins/year-granularity.md` 除外）
 > - 📌 `output-contracts.md` 只读 §1 节，不要读其他章节
 
 ## 输入
