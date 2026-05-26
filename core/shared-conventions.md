@@ -63,7 +63,7 @@
 - `{workDir}/.meta/raw-materials.json`（Step 01 产出）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`processes/00-shared.md`、`core/architecture-decomposition.md`、`meta/output-contracts.md`§2、`{workDir}/.meta/raw-materials.json`（Step 01 产出）
+> - ✅ 允许读取：`core/shared-conventions.md`、`core/architecture-decomposition.md`、`meta/output-contracts.md`§2、`{workDir}/.meta/raw-materials.json`（Step 01 产出）
 > - ❌ 禁止读取：`processes/01.md`、`processes/03~06.md`、`processes/07~10.md`、其他 `core/*.md`、`plugins/*.md`
 > - 📌 `output-contracts.md` 只读 §2 节
 ```

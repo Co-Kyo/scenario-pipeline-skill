@@ -12,7 +12,7 @@
 - `{workDir}/.meta/summaries/*.json`（Step 07 产出）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`processes/00-shared.md`、`meta/output-contracts.md`§8、`{workDir}/.meta/capability-graph.json`（含 propositions）、`{workDir}/.meta/summaries/*.json`（Step 07 产出）
+> - ✅ 允许读取：`core/shared-conventions.md`、`meta/output-contracts.md`§8、`{workDir}/.meta/capability-graph.json`（含 propositions）、`{workDir}/.meta/summaries/*.json`（Step 07 产出）
 > - ❌ 禁止读取：`processes/01~07.md`、`processes/09~10.md`、`core/*.md`、`plugins/*.md`
 > - 📌 `output-contracts.md` 只读 §8 节
 
@@ -33,7 +33,7 @@
 
 ### 3. 并行 spawn（简单窗口）
 
-> ⚠️ 按 `00-shared.md §简单窗口执行流程` + `§并行调度规则` 执行。禁止 `sessions_yield`。
+> ⚠️ 按 `core/shared-conventions.md §简单窗口执行流程` + `§并行调度规则` 执行。禁止 `sessions_yield`。
 
 Briefing 组装之间无依赖，W=5，先完成先补位。
 

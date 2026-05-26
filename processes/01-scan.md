@@ -8,8 +8,10 @@
 
 读取 `meta/sources.md`（T0 域名表 + 信源分级规则）+ `meta/output-contracts.md`§1（本步输出格式）。本步骤不需要读取任何 core/*.md。
 
+如果 `requirement-web.json` 存在（头脑风暴已执行），额外读取该文件作为精准输入。
+
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`processes/00-shared.md`、`meta/sources.md`、`meta/output-contracts.md`§1
+> - ✅ 允许读取：`core/shared-conventions.md`、`meta/sources.md`、`meta/output-contracts.md`§1、`{workDir}/.meta/requirement-web.json`（如存在）
 > - ❌ 禁止读取：`processes/02~06.md`、`processes/07~10.md`、`core/*.md`、`plugins/*.md`（`--year` 参数存在时，`plugins/year-granularity.md` 除外）
 > - 📌 `output-contracts.md` 只读 §1 节，不要读其他章节
 
@@ -18,10 +20,26 @@
 - 用户指令中的信息源描述（source_desc）
 - 目标主题（topic）
 - 可选约束：`--year`、`--source=<url>`
+- **可选**：`requirement-web.json`（头脑风暴产出，如存在则作为精准输入）
 
 ## 执行步骤
 
-### 1. 信源采集（双轨）
+### 1. 信源采集（双轨 or 定向）
+
+**如果 `requirement-web.json` 存在（定向模式）**：
+
+从需求网的 `propositions` 列表中，按 `search_priority` 顺序，为每个命题执行定向搜索：
+
+- **轨道 A — T0 定向搜索**：用命题的 `search_keywords.principles` + `search_keywords.practices` 拼接 `site:<domain>` 搜索
+- **轨道 B — 自由搜索**：用命题的 `search_keywords` 直接搜索，不限域名
+- **过滤**：用 `scope.excluded_keywords` 过滤搜索结果，排除不相关内容
+- **域偏好**：优先保留 `search_guidance.preferred_domains` 中的结果
+
+每个命题独立搜索，结果按命题 ID 标记来源（`from_proposition: "RW-P1"`）。
+
+**如果 `requirement-web.json` 不存在（原始模式）**：
+
+按原始逻辑执行：
 
 **轨道 A — T0 定向搜索**：
 读取 `meta/sources.md` 的 T0 域名表，逐个搜索：

@@ -7,6 +7,7 @@
 
 | 数据实体 | 诞生步骤 | 消费步骤 | 消费方式 |
 |---------|---------|---------|---------|
+| `requirement-web.json` | ⓪ 头脑风暴（裁判 Agent） | ① scan | 文件读取（定向模式） |
 | `raw-materials.json` | ① scan | ② decompose, ⑤ evaluate | 文件读写 |
 | `decompositions.json` | ② decompose | ③ capability-extract, ⑤ evaluate | 文件读写 |
 | `capability-graph.json` | ③ extract → ④ highground 追加 | 后处理全流程 | 文件读写 |
@@ -24,6 +25,10 @@
 ## 关键交接点
 
 ```
+头脑风暴 ─────────────────────────────────────────── 前处理
+
+  ⓪ requirement-web.json  ──────────────────────→  ① scan 定向输入（命题列表+搜索关键词）
+
 前处理 ──────────────────────────────────────────── 后处理
                                                       
   ③ capability-graph.json  ──────────────────────→  ⑦ 能力筛选（task 内联）
@@ -37,7 +42,12 @@
   ⑦ summaries/*.json       ─── read 工具 ────────→  ⑩ 能力详情
 ```
 
-**capability-graph.json 是前后处理的唯一交接文件。** 它承载了：
+**requirement-web.json 是头脑风暴→前处理的交接文件。** 它承载了：
+- 命题列表 + 搜索关键词（① scan 的定向输入）
+- 命题间依赖关系（② decompose 的参考）
+- 排除规则和搜索策略（① scan 的过滤条件）
+
+**capability-graph.json 是前处理→后处理的唯一交接文件。** 它承载了：
 - 原子能力列表 + 依赖关系（⑦ 筛选用）
 - 每个能力的 references（⑦ 信源用）
 - propositions（⑧⑨⑩ 命题元数据用）

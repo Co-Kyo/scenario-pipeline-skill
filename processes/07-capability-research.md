@@ -14,7 +14,7 @@
 - `{workDir}/README.md`（命题列表）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`processes/00-shared.md`、`plugins/capability-research-mode.md`、`meta/output-contracts.md`§7（能力研究产出格式）、`meta/sources.md`（信源分级）、`{workDir}/.meta/capability-graph.json`、`{workDir}/README.md`
+> - ✅ 允许读取：`core/shared-conventions.md`、`plugins/capability-research-mode.md`、`meta/output-contracts.md`§7（能力研究产出格式）、`meta/sources.md`（信源分级）、`{workDir}/.meta/capability-graph.json`、`{workDir}/README.md`
 > - ❌ 禁止读取：`processes/01~06.md`、`processes/08~10.md`、`core/*.md`（已由 task 内联，无需主 agent 再读）、`plugins/*.md`（除 `capability-research-mode.md` 外）
 > - 📌 `output-contracts.md` 只读 §7 节；`sources.md` 只读 T0 域名表
 
@@ -154,7 +154,7 @@ T=8min   A_2, D_2, E_2 完成 → 全部 25 个能力就绪
 
 ### 7. 并行 spawn 域 Agent
 
-按依赖拓扑的批次顺序 spawn。使用 `00-shared.md` §**并行调度规则**执行（禁止使用 `sessions_yield`）。
+按依赖拓扑的批次顺序 spawn。使用 `core/shared-conventions.md` §**并行调度规则**执行（禁止使用 `sessions_yield`）。
 
 **第一批**：所有无跨组依赖的子组 Agent 并行启动
 ```python

@@ -12,7 +12,7 @@
 - `{workDir}/.meta/briefings/{seq}-{short_name}.md`（Step 08 产出）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`processes/00-shared.md`、`meta/output-contracts.md`§9、`{workDir}/.meta/capability-graph.json`（含 propositions）、`{workDir}/.meta/briefings/{seq}-{short_name}.md`（Step 08 产出）
+> - ✅ 允许读取：`core/shared-conventions.md`、`meta/output-contracts.md`§9、`{workDir}/.meta/capability-graph.json`（含 propositions）、`{workDir}/.meta/briefings/{seq}-{short_name}.md`（Step 08 产出）
 > - ❌ 禁止读取：`processes/01~08.md`、`processes/10.md`、`core/*.md`、`plugins/*.md`、`.meta/summaries/*.json`（已内联到 Briefing 中，无需重复读取）
 > - 📌 `output-contracts.md` 只读 §9 节
 
@@ -29,7 +29,7 @@
 
 ### 2. 并行 spawn（简单窗口）
 
-> ⚠️ 按 `00-shared.md §简单窗口执行流程` + `§并行调度规则` 执行。禁止 `sessions_yield`。
+> ⚠️ 按 `core/shared-conventions.md §简单窗口执行流程` + `§并行调度规则` 执行。禁止 `sessions_yield`。
 
 命题组装之间无依赖，W=5 命题，先完成先补位。
 

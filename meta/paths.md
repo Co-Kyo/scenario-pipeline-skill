@@ -32,6 +32,7 @@
 | 扫描结果 | `{workDir}/.meta/raw-materials.json` | `...` |
 | 候选池 | `{workDir}/.meta/candidates.md` | `...` |
 | 动态信源池 | `{workDir}/.meta/sources/dynamic-sources.json` | `...` |
+| 需求网 | `{workDir}/.meta/requirement-web.json` | `...` |
 
 ## 命名规则
 

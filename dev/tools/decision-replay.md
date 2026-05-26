@@ -24,7 +24,7 @@
 ### 输入
 
 - 工作目录：`{workDir}`
-- Process 规范：`processes/00-shared.md` §决策凭据规范 + 各步骤 process 文件的校验清单
+- Process 规范：`core/shared-conventions.md` §决策凭据规范 + 各步骤 process 文件的校验清单
 
 ### 执行步骤
 
@@ -40,7 +40,7 @@
 
 #### Phase 2：比对规范
 
-读取 `processes/00-shared.md` §需要加 _trace 的字段清单，逐项检查：
+读取 `core/shared-conventions.md` §需要加 _trace 的字段清单，逐项检查：
 
 | 检查项 | 判定 |
 |--------|------|

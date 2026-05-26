@@ -12,11 +12,12 @@
 
 给它一个信息源（文章、博客、面试题集合），它会：
 
-1. **扫描** — 从信源中识别相关素材，按质量分级
-2. **分词** — 将复合场景拆解为原子能力，建立依赖图
-3. **研究** — 并行调用多个 agent 深度研究每个原子能力
-4. **组装** — 将研究成果编排为面试场景的四象限答案
-5. **阶梯** — 生成渐进式学习路径，从"不会"到"能讲"
+1. **头脑风暴** — 4 维度 Agent 将用户意图"揉开"成需求网（场景/技术/学习/约束）
+2. **定向扫描** — 基于需求网的命题列表和搜索关键词，精准扫描信源
+3. **分词** — 将复合场景拆解为原子能力，建立依赖图
+4. **研究** — 并行调用多个 agent 深度研究每个原子能力
+5. **组装** — 将研究成果编排为面试场景的四象限答案
+6. **阶梯** — 生成渐进式学习路径，从"不会"到"能讲"
 
 ```
 输入："扫描：这篇前端性能优化合集"
@@ -41,15 +42,15 @@
 ## 核心设计
 
 ```
-前处理（串行）           后处理（并行 + 检查点）
-① scan → ② decompose →  阶段一：⑦ 能力研究（并行）
-③ extract →              ⓔ barrier
-④ highground →           ⑧ Briefing 组装（并行）
-⑤ evaluate → ⑥ pool     ⓓ barrier
-                         阶段二：⑨ 命题组装（并行）
-                         ⓕ barrier
-                         阶段三：⑩ 学习阶梯（并行）
-                         ⓖ 完成
+⓪ 头脑风暴（前置）     前处理（串行）           后处理（并行 + 检查点）
+4 维度 Agent 并行      ① scan → ② decompose →  阶段一：⑦ 能力研究（并行）
+↓ 裁判收敛             ③ extract →              ⓔ barrier
+requirement-web.json → ④ highground →           ⑧ Briefing 组装（并行）
+ⓩ 检查点               ⑤ evaluate → ⑥ pool     ⓓ barrier
+                                              阶段二：⑨ 命题组装（并行）
+                                              ⓕ barrier
+                                              阶段三：⑩ 学习阶梯（并行）
+                                              ⓖ 完成
 ```
 
 每个阶段之间有显式 barrier + 检查点，确保上游产物完整后才进入下游。
@@ -114,6 +115,7 @@ scenario-pipeline-v2/
 │   └── paths.md                   路径约定表
 │
 ├── core/                       ← 方法论（agent 按需加载）
+│   ├── shared-conventions.md        子 agent 调度 + 检查点 + 状态管理 + 隔离规范
 │   ├── architecture-decomposition.md
 │   ├── capability-graph.md
 │   ├── strategic-highground.md
@@ -124,7 +126,7 @@ scenario-pipeline-v2/
 │   └── year-granularity.md
 │
 ├── processes/                  ← 执行文档（自包含，含示例）
-│   ├── 00-shared.md               子 agent 调度 + 检查点 + 状态管理
+│   ├── 00-brainstorm.md           多维头脑风暴（前置阶段）
 │   ├── 01-scan.md ~ 06-pool.md    前处理步骤
 │   └── 07 ~ 10                    后处理步骤
 │

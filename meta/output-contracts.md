@@ -4,6 +4,145 @@
 
 ---
 
+## §0 requirement-web.json（头脑风暴产出）
+
+路径：`{workDir}/.meta/requirement-web.json`
+
+```json
+{
+  "generated_at": "2026-05-26T12:00:00Z",
+  "raw_input": "3-5年前端web开发经验的候选人应该掌握的webpack&vite知识点",
+  "context": {
+    "domain": "前端构建工具",
+    "domain_up": "前端工程化",
+    "year": "L2",
+    "platform": "web",
+    "tech_stack": ["webpack", "vite"]
+  },
+  "propositions": [
+    {
+      "id": "RW-P1",
+      "name": "Webpack 模块解析与打包原理",
+      "description": "从入口文件到产物的完整打包链路：依赖图构建、模块解析、chunk 拆分、runtime 注入",
+      "depth": "原理",
+      "search_priority": "high",
+      "search_keywords": {
+        "principles": ["webpack 模块打包原理", "webpack dependency graph"],
+        "practices": ["webpack 打包流程分析", "webpack 构建产物解读"]
+      },
+      "covered_by_scenarios": ["S1", "S3", "S5"]
+    },
+    {
+      "id": "RW-P2",
+      "name": "Webpack 性能优化与调优",
+      "description": "构建速度优化（缓存、并行、增量编译）和产物体积优化（tree-shaking、代码分割、压缩）",
+      "depth": "实战",
+      "search_priority": "high",
+      "search_keywords": {
+        "principles": ["webpack tree-shaking 原理", "webpack 代码分割策略"],
+        "practices": ["webpack 构建性能优化", "webpack 缓存配置"]
+      },
+      "covered_by_scenarios": ["S2", "S4", "S6"]
+    },
+    {
+      "id": "RW-P3",
+      "name": "Vite ESM 机制与开发服务器原理",
+      "description": "Vite 基于浏览器原生 ESM 的按需编译机制、开发服务器的模块转换与 HMR 实现",
+      "depth": "原理",
+      "search_priority": "high",
+      "search_keywords": {
+        "principles": ["vite esm 原理", "vite 开发服务器机制"],
+        "practices": ["vite 预构建", "vite 模块转换"]
+      },
+      "covered_by_scenarios": ["S1", "S3"]
+    },
+    {
+      "id": "RW-P4",
+      "name": "Vite 生产构建与 Rollup 集成",
+      "description": "Vite 在生产环境使用 Rollup 打包的策略、插件系统、以及与 Webpack 的取舍",
+      "depth": "进阶",
+      "search_priority": "medium",
+      "search_keywords": {
+        "principles": ["vite rollup 构建", "vite 生产环境优化"],
+        "practices": ["vite 插件开发", "vite vs webpack 对比"]
+      },
+      "covered_by_scenarios": ["S4", "S7"]
+    },
+    {
+      "id": "RW-P5",
+      "name": "HMR 热更新机制对比",
+      "description": "Webpack HMR 与 Vite HMR 的实现差异、模块边界处理、状态保持策略",
+      "depth": "进阶",
+      "search_priority": "medium",
+      "search_keywords": {
+        "principles": ["webpack HMR 原理", "vite HMR 机制"],
+        "practices": ["HMR 状态保持", "HMR 模块边界"]
+      },
+      "covered_by_scenarios": ["S3", "S6"]
+    }
+  ],
+  "dependencies": {
+    "RW-P1": [],
+    "RW-P2": ["RW-P1"],
+    "RW-P3": [],
+    "RW-P4": ["RW-P3"],
+    "RW-P5": ["RW-P1", "RW-P3"]
+  },
+  "scope": {
+    "inclusions": [
+      "Webpack 5 的核心机制（不追溯 1-4 版本）",
+      "Vite 5 的核心机制",
+      "构建性能优化的通用策略"
+    ],
+    "exclusions": [
+      "Rollup 内部实现细节（Vite 的依赖，非直接考察点）",
+      "Webpack 1.x/2.x 版本差异（过时）",
+      "Gulp/Grunt 等旧工具链（不在范围内）",
+      "npm/yarn 基础用法（低于目标经验水平）"
+    ]
+  },
+  "search_guidance": {
+    "global_keywords": ["webpack", "vite", "前端构建"],
+    "excluded_keywords": ["gulp", "grunt", "rollup 内部", "webpack 1", "webpack 2"],
+    "preferred_domains": ["webpack.js.org", "vitejs.dev", "web.dev", "developer.mozilla.org"],
+    "depth_filter": "跳过入门教程，优先原理分析和实战优化"
+  },
+  "convergence_trace": {
+    "agents_completed": ["scenario", "technical", "learning", "constraint"],
+    "conflicts_resolved": [
+      {
+        "issue": "场景 Agent 将 Rollup 列为高频考点",
+        "resolution": "约束 Agent 排除 Rollup 内部实现 → 保留为 RW-P4 的关联知识，但不单独成题",
+        "source_agents": ["scenario", "constraint"]
+      }
+    ],
+    "gaps_filled": [
+      {
+        "item": "RW-P5 HMR 对比",
+        "reason": "场景和技术 Agent 均提到 HMR 但分散在不同命题中，裁判合并为独立命题",
+        "source_agents": ["scenario", "technical"]
+      }
+    ]
+  }
+}
+```
+
+**字段说明**：
+
+| 字段 | 含义 | 消费方 |
+|------|------|--------|
+| `context.domain` | 用户输入还原到的知识域 | Step ① 搜索范围 |
+| `context.domain_up` | 向上追溯的更大域 | Step ① 扩展搜索 |
+| `propositions` | 头脑风暴产出的命题列表 | Step ① 定向 scan 的目标清单 |
+| `propositions[].search_keywords` | 每个命题的推荐搜索词 | Step ① 轨道 A/B 的关键词来源 |
+| `propositions[].search_priority` | 扫描优先级 | Step ① 搜索资源分配 |
+| `dependencies` | 命题间依赖关系 | Step ② 分词的参考输入 |
+| `scope.exclusions` | 排除项 | Step ① 过滤不相关内容 |
+| `search_guidance` | 全局搜索策略 | Step ① 搜索参数 |
+| `convergence_trace` | 裁判合并决策的凭据 | 调试追溯，不进入消费链 |
+
+---
+
 ## §1 raw-materials.json（扫描产出）
 
 路径：`{workDir}/.meta/raw-materials.json`

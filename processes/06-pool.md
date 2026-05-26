@@ -13,7 +13,7 @@
 - `{workDir}/.meta/evaluations.json`（Step 05 产出）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`processes/00-shared.md`、`meta/output-contracts.md`§6、`{workDir}/.meta/capability-graph.json`、`{workDir}/.meta/highgrounds.json`、`{workDir}/.meta/evaluations.json`（前序产出）
+> - ✅ 允许读取：`core/shared-conventions.md`、`meta/output-contracts.md`§6、`{workDir}/.meta/capability-graph.json`、`{workDir}/.meta/highgrounds.json`、`{workDir}/.meta/evaluations.json`（前序产出）
 > - ❌ 禁止读取：`processes/01~05.md`、`processes/07~10.md`、`core/*.md`、`plugins/*.md`
 > - 📌 `output-contracts.md` 只读 §6 节；本步骤不加载任何方法论
 

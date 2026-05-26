@@ -13,7 +13,7 @@
 - `{workDir}/{seq}-{short_name}/overview.md`（Step 09 产出）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`processes/00-shared.md`、`meta/output-contracts.md`§10、`{workDir}/.meta/capability-graph.json`（含能力依赖关系）、`{workDir}/.meta/summaries/*.json`（Step 07 产出）、`{workDir}/{seq}-{short_name}/overview.md`（Step 09 产出）
+> - ✅ 允许读取：`core/shared-conventions.md`、`meta/output-contracts.md`§10、`{workDir}/.meta/capability-graph.json`（含能力依赖关系）、`{workDir}/.meta/summaries/*.json`（Step 07 产出）、`{workDir}/{seq}-{short_name}/overview.md`（Step 09 产出）
 > - ❌ 禁止读取：`processes/01~09.md`、`core/*.md`、`plugins/*.md`、`.meta/briefings/*.md`（已由 Step 09 消费，无需重复读取）
 > - 📌 `output-contracts.md` 只读 §10 节
 
@@ -31,7 +31,7 @@
 
 ### 2. 并行 spawn（简单窗口）
 
-> ⚠️ 按 `00-shared.md §简单窗口执行流程` + `§并行调度规则` 执行。禁止 `sessions_yield`。
+> ⚠️ 按 `core/shared-conventions.md §简单窗口执行流程` + `§并行调度规则` 执行。禁止 `sessions_yield`。
 
 学习阶梯之间无依赖，W=5，先完成先补位。
 
