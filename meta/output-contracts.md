@@ -15,11 +15,18 @@
   "context": {
     "domain": "前端构建工具",
     "domain_up": "前端工程化",
+    "target_level": "L2",
     "year": "L2",
     "year_source": "inferred: 用户原文含'3-5年'，显式匹配 → L2",
     "year_inference_trace": "正则匹配 '3-5年' → 取中间值4年 → 查阶梯映射：3-5年=L2",
     "platform": "web",
     "tech_stack": ["webpack", "vite"]
+  },
+  "strategy": {
+    "core_label": "方案攻克",
+    "premise_label": "概念确认",
+    "outlook_label": "决策方向",
+    "ratios": { "premise": "10-15%", "core": "70-80%", "outlook": "5-10%" }
   },
   "propositions": [
     {
@@ -33,7 +40,12 @@
         "practices": ["webpack 打包流程分析", "webpack 构建产物解读"]
       },
       "covered_by_scenarios": ["S1", "S3", "S5"],
-      "capability_ids": ["T1", "T3", "T5"]
+      "capability_ids": ["T1", "T3", "T5"],
+      "level_weight": {
+        "level": "L2",
+        "role": "core",
+        "reason": "方案级命题，涉及 2-3 技术层组合"
+      }
     }
   ],
   "dependencies": {
@@ -48,6 +60,8 @@
       "name": "模块解析策略",
       "layer": "工具层",
       "type": "generic",
+      "provisional_level": "L2",
+      "provisional_role": "core",
       "depends_on": [],
       "fanout": { "count": 3, "total": 5, "ratio": "3/5", "level": "60%" },
       "covers": ["RW-P1", "RW-P2", "RW-P5"]
@@ -81,19 +95,41 @@
 }
 ```
 
+### 中间产物：维度报告文件
+
+路径：`{workDir}/.meta/brainstorm/{dimension}.json`（dimension = scenario | technical | learning | constraint）
+
+每个维度 Agent 的产出独立持久化为 JSON 文件，供收敛者 Agent 读取合并。文件格式与各维度 Agent 的输出格式一致（见 `processes/00-brainstorm.md` §2.1-2.4）。
+
+**维度报告结构**：
+- 顶层字段：`dimension`、`target_level`、`anchor_coverage`（含 covered/supplemented/skipped/skip_reason）
+- entries 命名各自不同：`scenarios`（场景）、`capabilities`（技术）、`learning_path`（学习）、`constraints`（约束）
+- 每个 entry 必含 `level_weight`（level + role + reason）
+
+这些中间产物：
+- **必须保留**：供回溯审查和调试
+- **收敛者 Agent 通过 read 工具读取**：不再内联到 task 中
+- **校验方式**：`cat {file} | python3 -c "import sys,json; d=json.load(sys.stdin); assert 'dimension' in d"`
+
+---
+
 **字段说明**：
 
 | 字段 | 含义 | 消费方 |
 |------|------|--------|
 | `context.year` | 推断或指定的经验年限（L1-L4） | Step ① 搜索深度、Step ③ 入池阈值 |
+| `context.target_level` | 最终确认的经验年限级别（L1-L4） | 所有后续步骤的 level_weight 传导 |
 | `context.year_source` | 年限推断依据 | 调试追溯 |
 | `context.year_inference_trace` | 年限推断完整过程 | 调试追溯 |
+| `strategy` | 动态标准策略元数据（标签+比例） | Step ①-⑦ 的行为参数 |
 | `propositions` | 头脑风暴产出的命题列表 | Step ① 定向 scan 的目标清单 |
 | `propositions[].capability_ids` | 命题涉及的能力 ID | Step ② 能力图谱构建 |
+| `propositions[].level_weight` | 命题的层次权重（level+role+reason） | Step ① 密度搜索、Step ③ 评分、Step ⑥ 组装 |
 | `capability_web` | 能力图谱雏形（按能力 ID 组织，含 type: generic\|specialized） | Step ② 能力图谱构建 |
+| `capability_web[].provisional_level` | 能力的初步层次标注 | Step ④ 研究深度 |
 | `scope.exclusions` | 排除项 | Step ① 过滤不相关内容 |
 | `search_guidance` | 全局搜索策略 | Step ① 搜索参数 |
-| `convergence_trace` | 裁判合并决策的凭据 | 调试追溯，不进入消费链 |
+| `convergence_trace` | 收敛者合并决策的凭据 | 调试追溯，不进入消费链 |
 
 ---
 

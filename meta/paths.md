@@ -23,6 +23,11 @@
 
 | 用途 | 路径模板 | 示例 |
 |------|---------|------|
+| 共享锚点 | `{workDir}/.meta/brainstorm/anchors.json` | `.../brainstorm/anchors.json` |
+| 头脑风暴·场景维度 | `{workDir}/.meta/brainstorm/scenario.json` | `.../brainstorm/scenario.json` |
+| 头脑风暴·技术维度 | `{workDir}/.meta/brainstorm/technical.json` | `.../brainstorm/technical.json` |
+| 头脑风暴·学习维度 | `{workDir}/.meta/brainstorm/learning.json` | `.../brainstorm/learning.json` |
+| 头脑风暴·约束维度 | `{workDir}/.meta/brainstorm/constraint.json` | `.../brainstorm/constraint.json` |
 | 能力摘要 | `{workDir}/.meta/summaries/{id}-{name}.json` | `.../summaries/A1-浏览器渲染管线.json` |
 | Briefing | `{workDir}/.meta/briefings/{seq}-{short_name}.md` | `.../briefings/01-长列表渲染.md` |
 | 能力图谱 | `{workDir}/.meta/capability-graph.json` | `...` |
