@@ -9,8 +9,13 @@
 dev/
 │
 ├── design/                     ← 设计原理（why）
-│   ├── core-rationale.md           核心方法论的概念定义与设计决策
-│   └── CHANGELOG.md                架构变更记录
+│   ├── decisions/                  已落地的设计决策
+│   │   ├── core-rationale.md       核心方法论的概念定义与设计决策
+│   │   ├── context-isolation.md    上下文隔离协议的设计理由
+│   │   └── brainstorm-restructure.md  头脑风暴重构设计档案
+│   ├── issues/                     挂起的优化设计（待验证/待实施）
+│   │   └── dynamic-concurrency-w.md  动态并发调整 W
+│   └── CHANGELOG.md               架构变更记录
 │
 ├── pipeline-view/              ← 管道观测（怎么看）
 │   ├── 00-overview.md              管道全景 + 数据流图 + 产出结构
