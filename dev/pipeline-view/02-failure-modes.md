@@ -7,7 +7,7 @@
 
 | 故障点 | 表现 | 恢复策略 |
 |--------|------|---------|
-| ① scan 网络不通 | raw-materials.json 为空或条目过少 | 换搜索关键词、指定 `--source=<url>`、检查网络 |
+| ① scan 网络不通 | .raw-materials/index.json 为空或条目过少 | 换搜索关键词、指定 `--source=<url>`、检查网络 |
 | ① scan 信源全部 unknown | 无 T0 命中 | 全部 web_fetch 评估，不依赖 T0 表 |
 | ② capability-graph 素材不足 | 无法识别有效命题 | 提示用户补充信源后重新扫描 |
 | ② capability-graph 命题过多 | >10 个命题 | 提示用户用 `--filter` 缩小范围 |

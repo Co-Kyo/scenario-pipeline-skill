@@ -133,9 +133,22 @@
 
 ---
 
-## §1 raw-materials.json（扫描产出）
+## §1 .raw-materials/（扫描产出）
 
-路径：`{workDir}/.meta/raw-materials.json`
+路径：`{workDir}/.meta/.raw-materials/`
+
+### 目录结构
+
+```
+.raw-materials/
+├── index.json                    ← 索引（元数据 + 关系 + 统计）
+├── M1-rendering-performance.md   ← 每条 material 一个 markdown
+├── M2-setdata-optimization.md
+├── ...
+└── cross-comparison.md           ← 多源交叉比较
+```
+
+### index.json 示例
 
 ```json
 {
@@ -151,9 +164,11 @@
       "url": "https://web.dev/articles/rendering-performance",
       "domain": "web.dev",
       "source_tier": "T0",
-      "summary": "浏览器渲染管线的关键路径、重排重绘的触发条件与优化策略",
+      "from_proposition": "RW-P1",
       "relevance": "直接覆盖渲染管线和重排优化",
-      "fetch_status": "ok"
+      "fetch_status": "ok",
+      "depth_level": "原理级",
+      "file_path": "M1-rendering-performance.md"
     },
     {
       "id": "M2",
@@ -162,9 +177,11 @@
       "domain": "cloud.tencent.com",
       "source_tier": "T2",
       "source_tier_trace": "cloud.tencent.com 不在 T0 表中。web_fetch 验证内容：setData 性能优化文章含通信机制和批量更新策略详解，有代码示例。Tier 评估：内容来源=腾讯云官方技术社区(T1达标)、内容深度=原理+实践(达标)、引用规范=有外部链接(达标)，5维度中3个达标 → T2。",
-      "summary": "小程序 setData 的通信机制、批量更新策略、差量更新实现",
+      "from_proposition": "RW-P3",
       "relevance": "小程序场景的渲染性能优化",
-      "fetch_status": "ok"
+      "fetch_status": "ok",
+      "depth_level": "机制级",
+      "file_path": "M2-setdata-optimization.md"
     }
   ],
   "discarded": [
@@ -180,8 +197,84 @@
       "tier": "T2",
       "reason": "腾讯云官方技术社区，setData 性能优化文章质量高"
     }
-  ]
+  ],
+  "scan_summary": {
+    "total_propositions": 8,
+    "by_role": {
+      "core": { "count": 5, "avg_materials_per_proposition": 6.2, "target_avg": 8 },
+      "premise": { "count": 2, "avg_materials_per_proposition": 2.5, "target_avg": 3 },
+      "outlook": { "count": 1, "avg_materials_per_proposition": 1.0, "target_avg": 2 }
+    },
+    "density_compliance": "core 5/5 命题达到目标素材数",
+    "search_guidance_consumed": true,
+    "scope_exclusions_applied": 3
+  }
 }
+```
+
+### material markdown 示例（M1-rendering-performance.md）
+
+```markdown
+# Rendering Performance — web.dev
+
+- **URL**: https://web.dev/articles/rendering-performance
+- **Source Tier**: T0
+- **From Proposition**: RW-P1
+- **Depth Level**: 原理级
+
+## 内容提取
+
+### 核心概念
+- 渲染管线
+- 重排
+- 重绘
+- 合成层
+- requestAnimationFrame
+
+### 能力点
+
+#### 渲染管线关键路径
+- **技术层**: 浏览器层
+- **描述**: 从 DOM 变更到像素上屏的完整链路：Style → Layout → Paint → Composite
+- **核心观点**: 重排是最昂贵的操作，应尽量避免；合成层可以跳过 Layout 和 Paint
+
+#### 批量 DOM 更新策略
+- **技术层**: 框架层
+- **描述**: 通过 requestAnimationFrame 和 DocumentFragment 减少重排次数
+- **核心观点**: 多次 DOM 操作应合并为一次 reflow，利用浏览器的批量处理机制
+
+### 代码示例
+- requestAnimationFrame 回调示例
+- DocumentFragment 批量插入示例
+
+### 质量信号
+| 指标 | 值 |
+|------|-----|
+| 有代码 | ✓ |
+| 有图表 | ✓ |
+| 有基准测试 | ✗ |
+| 字数 | 4200 |
+
+## 原文摘要
+
+> 浏览器的渲染管线是前端性能的核心。每次 DOM 变更都会触发 Style → Layout → Paint → Composite 的完整链路。其中 Layout（重排）是最昂贵的操作...
+
+> requestAnimationFrame 回调在浏览器下一次重绘之前执行，是批量 DOM 更新的最佳时机。配合 DocumentFragment 可以将多次插入合并为一次 reflow...
+```
+
+### cross-comparison.md 示例
+
+```markdown
+# 多源交叉比较
+
+## 批量 DOM 更新策略
+
+- **覆盖来源**: M1, M2
+- **一致性**: 两个来源一致认为批量合并是减少通信/重排开销的核心手段
+- **互补性**: M1 侧重浏览器原生 API（rAF/DocumentFragment），M2 侧重框架层 setData 合并
+- **矛盾性**: 无
+- **深度差异**: M1=原理级, M2=机制级
+- **综合判断**: 批量更新在浏览器层靠 rAF+Fragment，在小程序层靠 setData 合并，本质相同：减少跨层通信次数
 ```
 
 ---

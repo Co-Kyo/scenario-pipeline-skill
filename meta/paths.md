@@ -32,7 +32,8 @@
 | Briefing | `{workDir}/.meta/briefings/{seq}-{short_name}.md` | `.../briefings/01-长列表渲染.md` |
 | 能力图谱 | `{workDir}/.meta/capability-graph.json` | `...` |
 | 评估结果 | `{workDir}/.meta/evaluations.json` | `...` |
-| 扫描结果 | `{workDir}/.meta/raw-materials.json` | `...` |
+| 扫描结果索引 | `{workDir}/.meta/.raw-materials/index.json` | `...` |
+| 扫描结果内容 | `{workDir}/.meta/.raw-materials/*.md` | `...` |
 | 候选池 | `{workDir}/.meta/candidates.md` | `...` |
 | 动态信源池 | `{workDir}/.meta/sources/dynamic-sources.json` | `...` |
 | 需求网 | `{workDir}/.meta/requirement-web.json` | `...` |

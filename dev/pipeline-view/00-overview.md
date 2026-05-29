@@ -216,7 +216,7 @@
    216|   216|    ├── capability-graph.json（命题数据已注入）
    217|   217|    ├── evaluations.json
    218|   218|    ├── highgrounds.json
-   219|   219|    ├── raw-materials.json
+   219|   219|    ├── .raw-materials/
    220|   220|    ├── candidates.md
    221|   221|    ├── pipeline-state.json
    222|   222|    ├── summaries/

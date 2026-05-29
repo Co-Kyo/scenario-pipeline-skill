@@ -11,10 +11,10 @@
 - `meta/output-contracts.md`§3（本步输出格式）
 - `{workDir}/.meta/requirement-web.json`（⓪ 产出，含命题和能力图谱雏形）
 - `{workDir}/.meta/capability-graph.json`（② 产出，含能力、高地、学习路径）
-- `{workDir}/.meta/raw-materials.json`（① 产出）
+- `{workDir}/.meta/.raw-materials/index.json`（① 产出索引）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`core/shared-conventions.md`、`core/scenario-matrix.md`、`meta/output-contracts.md`§3、`{workDir}/.meta/requirement-web.json`、`{workDir}/.meta/capability-graph.json`、`{workDir}/.meta/raw-materials.json`
+> - ✅ 允许读取：`core/shared-conventions.md`、`core/scenario-matrix.md`、`meta/output-contracts.md`§3、`{workDir}/.meta/requirement-web.json`、`{workDir}/.meta/capability-graph.json`、`{workDir}/.meta/.raw-materials/index.json`
 > - ❌ 禁止读取：`processes/01~02.md`、`processes/04~07.md`、`core/capability-graph.md`、`core/strategic-highground.md`、`plugins/*.md`（`--year` 参数存在时，`plugins/year-granularity.md` 除外）
 > - 📌 `output-contracts.md` 只读 §3 节
 
@@ -22,7 +22,7 @@
 
 - `requirement-web.json`（⓪ 产出）
 - `capability-graph.json`（② 产出）
-- `raw-materials.json`（① 产出）
+- `.raw-materials/index.json`（① 产出索引）
 
 ## 执行步骤
 

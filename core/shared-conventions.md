@@ -60,10 +60,10 @@
 ⛔ 加载：
 - `core/capability-graph.md`（能力图谱方法论）
 - `meta/output-contracts.md`§2（本步输出格式）
-- `{workDir}/.meta/raw-materials.json`（Step 01 产出）
+- `{workDir}/.meta/.raw-materials/index.json`（Step 01 产出索引）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`core/shared-conventions.md`、`core/capability-graph.md`、`meta/output-contracts.md`§2、`{workDir}/.meta/raw-materials.json`（Step 01 产出）
+> - ✅ 允许读取：`core/shared-conventions.md`、`core/capability-graph.md`、`meta/output-contracts.md`§2、`{workDir}/.meta/.raw-materials/index.json`（Step 01 产出）
 > - ❌ 禁止读取：`processes/01.md`、`processes/03~07.md`、其他 `core/*.md`、`plugins/*.md`
 > - 📌 `output-contracts.md` 只读 §2 节
 ```

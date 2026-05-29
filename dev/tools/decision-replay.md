@@ -60,7 +60,7 @@
 
 1. `evaluations.json` 中 priority ≠ high 的命题 → 是否有 `priority_trace`
 2. `capability-graph.json` 中非空 `dependencies` → 是否有 `dependencies_trace`
-3. `raw-materials.json` 中 `source_tier` 非 T0 的条目 → 是否有 `source_tier_trace`
+3. `.raw-materials/index.json` 中 `source_tier` 非 T0 的条目 → 是否有 `source_tier_trace`
 4. `edge-cases.md` 中的坑点 → 是否有 `筛选_trace`
 
 #### Phase 4：输出报告

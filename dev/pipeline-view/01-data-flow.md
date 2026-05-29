@@ -8,7 +8,7 @@
      8|     8|| 数据实体 | 诞生步骤 | 消费步骤 | 消费方式 |
      9|     9||---------|---------|---------|---------|
     10|    10|| `requirement-web.json` | ⓪ 头脑风暴（裁判 Agent） | ① scan | 文件读取（定向模式） |
-    11|    11|| `raw-materials.json` | ① scan | ② capability-graph, ③ evaluate-pool | 文件读写 |
+    11|    11|| `.raw-materials/index.json` + `*.md` | ① scan | ② capability-graph, ③ evaluate-pool | 文件读写 |
     12|    12|| `capability-graph.json（命题数据已注入）` | ② capability-graph | ② capability-graph, ③ evaluate-pool | 文件读写 |
     13|    13|| `capability-graph.json` | ③ extract → ④ highground 追加 | 后处理全流程 | 文件读写 |
     14|    14|| `evaluations.json` | ③ evaluate-pool | 入池归档（README.md） | 文件读写 |

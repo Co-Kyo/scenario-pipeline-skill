@@ -23,7 +23,7 @@ description: "前端复合工程场景知识管线。三阶段工作流：头脑
 ┌───────────────────────────────────────┼────────────────────────────────┐
 │                          前处理（串行 3 步）                           │
 │                                                                       │
-│  ① scan ──────────→ raw-materials.json                               │
+│  ① scan ──────────→ .raw-materials/（index + markdown）              │
 │       │                                                                │
 │  ② capability-graph → capability-graph.json（能力+高地+参考URL）      │
 │       │                                                        ⓐ 检查点│
@@ -118,7 +118,7 @@ deep research：<场景描述>
 | 阶段 | 编号 | 名称 | 核心产物 | 检查点 |
 |------|------|------|---------|--------|
 | 前置 | ⓪ | 头脑风暴 | requirement-web.json | ⓩ |
-| 前处理 | ① | 定向扫描 | raw-materials.json | — |
+| 前处理 | ① | 定向扫描 | .raw-materials/（index.json + markdown） | — |
 | 前处理 | ② | 能力图谱构建 | capability-graph.json | ⓐ |
 | 前处理 | ③ | 评估与入池 | .meta/evaluations.json + README.md | ⓑ |
 | 后处理 | ④ | 能力研究 | capabilities/*.md + summaries/*.json | ⓒ |
