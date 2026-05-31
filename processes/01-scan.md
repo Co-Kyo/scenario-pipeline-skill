@@ -1,12 +1,33 @@
-# Step ①: 广域扫描
+# Step ①: 广域扫描（两阶段管道）
 
 ## 目的
 
 基于头脑风暴产出的需求网，为每个命题按其 level_weight 差异化搜索信源，抓取内容并结构化提取，按信源质量分级，产出 `.raw-materials/` 目录（index.json + 多 markdown 文件）。
 
+## 架构
+
+```
+Phase A：并行搜索               Phase B：并行提取               Phase C：主线程 merge
+┌──────────────────────┐     ┌──────────────────────┐     ┌──────────────────────┐
+│ A0. 环境检查          │     │ agent-1: URL 批次 1  │     │ C1. 合并 partial      │
+│    └ Playwright 检查  │     │   内容抓取 + 提取     │     │     index → index.json│
+│    └ ⓩ 用户确认安装   │     │   → partial.1.json   │     │ C2. 域名分级汇总      │
+│ A1. 命题分批          │     │   + B1-M*.md         │     │ C3. cross-comparison  │
+│ A2. spawn 搜索 agent  │ ──→ │ agent-2: URL 批次 2  │ ──→ │ C4. scan_summary      │
+│    × N 并行           │     │   ...                │     │ C5. dynamic-sources   │
+│ A3. merge URL 列表    │     │ agent-N: URL 批次 N  │     │ C6. 写最终 index.json │
+│ A4. URL 分级+分批     │     │                      │     │                      │
+└──────────────────────┘     └──────────────────────┘     └──────────────────────┘
+       ↓                            ↓                            ↓
+  url-batches.json              partial results              .raw-materials/
+  (URL+tier+snippet)            + B*-M*.md                   最终产出
+```
+
+每个子阶段的统一模式：**分批 → 并行 agent → merge**。主线程只做分发和合并。
+
 ## 前置条件
 
-读取 `meta/sources.md`（T0 域名表 + 信源分级规则）+ `meta/output-contracts.md`§1（本步输出格式）。本步骤不需要读取任何 core/*.md。
+读取 `meta/sources.md`（T0 域名表 + 反爬域名表 + 信源分级规则）+ `meta/output-contracts.md`§1（本步输出格式）。本步骤不需要读取任何 core/*.md。
 
 如果 `requirement-web.json` 存在（头脑风暴已执行），读取该文件作为精准输入——**必须消费其中的 level_weight、search_keywords、search_guidance、scope 字段**。
 
@@ -14,7 +35,7 @@
 > - ✅ 允许读取：`core/shared-conventions.md`、`meta/sources.md`、`meta/output-contracts.md`§1、`{workDir}/.meta/requirement-web.json`（如存在）
 > - ❌ 禁止读取：`processes/02~07.md`、`core/*.md`
 > - 📌 `output-contracts.md` 只读 §1 节，不要读其他章节
-> - 📌 `plugins/anti-crawl-fetch.md` 仅在 `web_fetch` 失败时按需加载（见 Step 1 降级逻辑）
+> - 📌 `plugins/anti-crawl-fetch.md` 仅在 Phase B 的 agent 中按需加载（Phase A 不加载）
 
 ## 输入
 
@@ -23,343 +44,425 @@
 - 可选约束：`--year`、`--source=<url>`
 - **可选**：`requirement-web.json`（头脑风暴产出，如存在则作为精准输入）
 
-## 执行步骤
+---
 
-### 0. 读取密度参数（requirement-web.json 存在时）
+## Phase A：并行搜索（搜索发现）
 
-从 requirement-web.json 中提取以下字段，用于驱动后续搜索行为：
+> Phase A 对命题做搜索发现 URL。搜索本身按命题分批并行，主线程只做环境检查 + 分发 + merge。
 
-- **`strategy`**：core/premise/outlook 的标签和比例
-- **`propositions[].level_weight`**：每个命题的 role（core/premise/outlook）
-- **`search_guidance`**：全局搜索策略（global_keywords、excluded_keywords、preferred_domains、depth_filter）
-- **`scope.exclusions`**：排除项列表
+### A0. 环境检查 + Playwright 前置确认
 
-**从 `core/shared-conventions.md` 策略表中查表**，获取当前 target_level 对应的 scan 密度参数：
+> **🔴 Playwright 安装决策必须在 Phase A 完成，不得延迟到 Phase B。**
 
-```
-读取 shared-conventions.md §策略表，定位当前 target_level 行，取：
-  core:   kw={N}, r={M}     ← 关键词组数，每组取结果数
-  premise: kw={N}, r={M}
-  outlook: kw={N}, r={M}
+#### A0.1 检查 Playwright 是否已安装
+
+```bash
+node -e "require('playwright')" 2>/dev/null && echo "OK" || echo "MISSING"
 ```
 
-### 1. 信源采集（按 role 差异化搜索）
-对所有搜索结果（含 T0 命中和未命中的），执行 web_fetch 抓取完整页面内容。T0 域名不再跳过抓取——抓取是内容提取的前提。
+#### A0.2 用户确认
 
-**抓取策略**（按域名分流，域名分类统一来自 `meta/sources.md`）：
+🚨 **🛑 停住等待**。使用 `clarify` 向用户展示环境状态并确认：
 
 ```
-对每个搜索结果 URL：
-  1. 提取域名
-  2. 查 meta/sources.md：
-     - 命中反爬域名表 → 跳过 web_fetch，直接加载 plugins/anti-crawl-fetch.md 执行 Playwright
-     - 命中 T0 表 → web_fetch（高可信度，直接用）
-     - 都不命中 → 正常 web_fetch
-  3. web_fetch 失败（403/429/超时/内容<200字）？
-     → 是：进入降级流程（见 §1.1）
-     → 否：继续内容提取
+环境检查结果：
+- Playwright: [已安装 / 未安装]
+- 反爬域名预估：掘金、知乎、CSDN 等可能被命中
+
+选项：
+1. 安装 Playwright（推荐，约 2-5 分钟）
+2. 跳过 Playwright（反爬域名将标记为 failed）
 ```
 
-#### 1.1 反爬降级（Playwright Fallback）
+- 用户选择安装 → 前台执行安装，完成后继续
+- 用户选择跳过 → 标记 `playwright_available = false`
 
-当 `web_fetch` 失败时，按以下优先级尝试降级：
+安装命令（用户确认后）：
+```bash
+npm install playwright --registry=https://registry.npmmirror.com && npx playwright install chromium
+```
 
-1. **API 降级**（仅掘金）：掘金详情页 403 时，用 `POST https://api.juejin.cn/content_api/v1/article/detail` 获取内容
-2. **Playwright 降级**：加载 `plugins/anti-crawl-fetch.md`，按其指令用 Playwright headless Chromium 抓取
-3. **全部失败**：标记 `fetch_status: "failed"` + `fetch_status_trace`
+回退：npmmirror 超时则 `npm install playwright && npx playwright install chromium`
 
-**降级触发条件**（同时满足）：
-- `web_fetch` 返回 403 / 429 / 超时 / 内容 < 200 字
-- 域名不在排除列表中（如已知无法绕过的站点）
-- Playwright 环境可用（`node -e "require('playwright')" 2>/dev/null` 返回 OK）
-  - 如未安装，自动执行 `npm install playwright --registry=https://registry.npmmirror.com && npx playwright install chromium`
+### A1. 读取密度参数 + 命题分批
 
-**降级结果写回**：
-- 成功 → `fetch_status: "ok"` + `fetch_method: "playwright"` + `fetch_status_trace: "web_fetch {失败原因}，Playwright 降级成功"`
-- 失败 → `fetch_status: "failed"` + `fetch_status_trace: "web_fetch {失败原因} + Playwright 降级也失败：{错误原因}"`
+#### A0.3 创建输出目录
 
-**⚠️ 内存铁律**：Playwright 抓取必须逐个 URL 串行处理，每个 URL 完成后必须 close context + browser。批量完成后检查孤儿 Chromium 进程。
+```bash
+mkdir -p {workDir}/.meta/.raw-materials
+mkdir -p {workDir}/.meta/sources
+```
 
-### 1.5 内容提取（结构化）
+**必须在 spawn 任何 agent 之前完成**，否则 agent 写入时目录不存在会失败。
 
-对每条 fetch_status 为 "ok" 的 material，从抓取的完整页面内容中提取结构化信息：
+#### A1.1 读取密度参数
 
-**提取字段**：
+从 requirement-web.json 提取：
+- `strategy`：core/premise/outlook 标签和比例
+- `propositions[].level_weight`：每个命题的 role
+- `propositions[].search_keywords`：每个命题的关键词组（principles + practices）
+- `search_guidance`：全局搜索策略
+- `scope.exclusions`：排除项
+
+从 `core/shared-conventions.md` 策略表查表：
+```
+core:   kw={N}, r={M}
+premise: kw={N}, r={M}
+outlook: kw={N}, r={M}
+```
+
+#### A1.1.1 为每个命题计算具体搜索参数
+
+对 requirement-web.json 中的每个命题，查表计算：
+
+```
+输入：proposition.level_weight.role = "core"
+查表：core → kw=2, r=8
+命题的 search_keywords.principles = ["webpack 打包原理", "webpack dependency graph"]
+命题的 search_keywords.practices = ["webpack 打包流程分析", "webpack 构建产物解读"]
+计算：
+  原理轨道 = search_keywords.principles 的每个关键词 → 搜索工具，每条取 min(r, 3) = 3 条
+  实践轨道 = search_keywords.practices 的每个关键词 → 搜索工具，每条取 min(r, 3) = 3 条
+  excluded_keywords = scope.exclusions 中与该命题相关的排除词（如 "gulp", "grunt"）
+```
+
+每个命题最终产出一个结构化搜索计划：
 ```json
 {
-  "content_extract": {
-    "key_concepts": ["核心概念1", "核心概念2"],
-    "capability_points": [
-      {
-        "name": "能力点名称",
-        "layer": "技术层级（如：浏览器层/工程层/框架层）",
-        "description": "一句话描述",
-        "key_insight": "该来源对此能力点的核心观点"
-      }
-    ],
-    "code_examples": ["代码示例摘要（如有）"],
-    "depth_level": "概念级|机制级|原理级|架构级",
-    "quality_signals": {
-      "has_code": true,
-      "has_diagram": false,
-      "has_benchmark": true,
-      "word_count": 3500
-    }
-  }
+  "proposition_id": "RW-P1",
+  "name": "首屏加载慢——CRP关键渲染路径优化",
+  "role": "core",
+  "search_plan": [
+    {"query": "webpack 打包原理 site:web.dev", "max_results": 3, "轨道": "原理-T0"},
+    {"query": "webpack 打包原理", "max_results": 3, "轨道": "原理-自由"},
+    {"query": "webpack dependency graph site:developer.mozilla.org", "max_results": 3, "轨道": "原理-T0"},
+    {"query": "webpack dependency graph", "max_results": 3, "轨道": "原理-自由"},
+    {"query": "webpack 打包流程分析", "max_results": 3, "轨道": "实践-自由"},
+    {"query": "webpack 构建产物解读", "max_results": 3, "轨道": "实践-自由"}
+  ],
+  "excluded_keywords": ["gulp", "grunt", "rollup 内部"]
 }
 ```
 
-**提取规则**：
-- `key_concepts`：提取文中明确讨论的核心技术概念（3-8 个）
-- `capability_points`：提取文中涉及的原子能力点，每个能力点标注技术层级和核心观点
-- `depth_level`：根据内容深度判定——概念级（定义是什么）< 机制级（怎么工作的）< 原理级（为什么这样设计）< 架构级（如何选型/演进/治理）
-- `quality_signals`：客观质量指标，不依赖主观判断
+#### A1.2 命题分批
 
-### 1.6 多源交叉比较
+将命题按数量均匀分批：
 
-按 capability_points.name 分组，对**同一能力点被多个来源覆盖**的情况进行交叉比较：
+```
+批次大小 = ceil(命题数 / W)    ← W = min(5, 命题数)
+```
 
-**比较维度**：
-- **一致性**：多个来源对该能力点的描述是否一致？
-- **互补性**：不同来源是否提供了不同侧面的信息？（如：一个讲原理，一个讲实践）
-- **矛盾性**：不同来源是否存在冲突观点？（如：关于某方案的优劣判断相反）
-- **深度差异**：同一能力点在不同来源中的 depth_level 是否有差异？
+每批附带该批命题的搜索参数（role、search_keywords、density）。确保同一命题的所有关键词在同一 batch 中（不拆分命题）。
 
-**比较产出格式**：
+### A2. 并行 spawn 搜索 agent（简单窗口）
+
+> ⚠️ 严格遵循 `core/shared-conventions.md` §简单窗口执行流程。
+> **严禁 `sessions_yield`。** spawn 后必须进入轮询跟踪，主动权始终在主线程。
+
+#### A2.1 agent task 模板
+
+main thread 在 A1 分批时，为每个 batch 组装 task，**必须内联以下信息**（不依赖 agent 读外部文件）：
+
+```
+你是搜索发现专家。对以下命题批次执行搜索，收集 URL。
+
+## 信源参考
+T0 域名（直接信任）：{t0_domains 列表}
+反爬域名（标记 need_playwright=true，后续由 Playwright 抓取）：{anti_crawl_domains 列表}
+
+## 执行规则
+对本批次命题清单中的每个命题，按其 search_plan 逐条执行：
+1. 对 search_plan 中的每条 query 执行搜索，取 max_results 条结果
+2. 记录每条结果的：url、title（搜索结果标题）、snippet（搜索结果摘要）、domain
+3. 对搜索结果中的 URL，提取域名，与上方 T0/反爬列表比对分级
+4. 过滤：命中本命题 excluded_keywords 的结果跳过
+
+## 本批次命题清单
+每个命题的结构化搜索计划（由 A1.1.1 计算产出），直接内联到 task：
+```
+{propositions 搜索计划列表，每条含：
+  proposition_id, name, role,
+  search_plan: [{query, max_results, 轨道}],
+  excluded_keywords: [...]
+}
+```
+agent 对 search_plan 中的每条 query 执行搜索，取 max_results 条结果。
+
+## 输出格式
+用 write 工具写入 {workDir}/.meta/.raw-materials/search-batch.{batch_id}.json
+
 ```json
 {
-  "cross_source_comparison": [
+  "batch_id": "{batch_id}",
+  "propositions_searched": ["RW-P1", "RW-P2"],
+  "results": [
     {
-      "capability_point": "模块解析策略",
-      "covered_by": ["M1", "M3", "M7"],
-      "agreement": "多个来源一致认为 ESM 是现代模块解析的核心",
-      "complement": "M1 侧重 webpack 配置，M3 侧重原理解析，M7 侧重性能对比",
-      "contradiction": "",
-      "depth_variance": "M1=机制级, M3=原理级, M7=架构级",
-      "synthesis": "综合来看：模块解析应从 ESM 规范入手，理解 webpack 的 resolve 机制，再关注构建性能优化"
+      "url": "https://web.dev/articles/...",
+      "title": "搜索结果标题",
+      "snippet": "搜索结果摘要（100-200字）",
+      "domain": "web.dev",
+      "tier": "T0|anti-crawl|unknown",
+      "from_proposition": "RW-P1",
+      "keyword_group": "principles"
     }
+  ],
+  "excluded": [
+    {"url": "...", "reason": "命中 excluded_keywords"}
   ]
 }
 ```
 
-**比较规则**：
-- 仅对被 ≥2 个来源覆盖的能力点做比较
-- 单源覆盖的能力点标记 `coverage: "single_source"`，不做比较
-- `synthesis`（综合判断）是为下游 ②④⑥ 提供的高价值摘要
-
-
-#### 模式 A：requirement-web.json 存在（定向模式）
-
-对每个命题，**按其 `level_weight.role` 决定搜索策略**：
-
-**core 命题（深度搜索）**：
-- **轨道 1 — T0 定向**：用命题的 `search_keywords.principles` + `search_keywords.practices` 拼接 `site:<domain>` 搜索
-  - 每个 T0 域名取 min(r, 2) 条结果（r 来自策略表）
-  - 两类关键词（principles + practices）**都执行**
-- **轨道 2 — 自由搜索**：用命题的 `search_keywords` 直接搜索，不限域名
-  - 关键词组数 = 策略表 core 的 kw 值
-  - 每组取 r 条结果
-- **过滤**：用 `scope.excluded_keywords` + `search_guidance.excluded_keywords` 过滤搜索结果
-- **域偏好**：优先保留 `search_guidance.preferred_domains` 中的结果
-
-**premise 命题（浅扫）**：
-- **仅轨道 1 — T0 定向**：只用 `search_keywords.principles` 拼接 `site:<domain>` 搜索
-  - 每个 T0 域名取 min(r, 2) 条结果
-  - **不执行 practices 搜索**
-- **不执行轨道 2（自由搜索）**
-- 如果 T0 无结果，用 global_keywords 做一次兜底搜索，取 1-2 条
-
-**outlook 命题（确认存在）**：
-- **单次搜索**：用 `search_keywords.principles` 的第一个关键词做一次搜索
-- 取 min(r, 2) 条结果
-- 目标是确认该方向有内容存在，标注方向即可
-
-每个命题独立搜索，结果按命题 ID 标记来源（`from_proposition: "RW-P1"`）。
-
-**search_guidance 的消费方式**：
-- `global_keywords`：在自由搜索时作为补充关键词
-- `excluded_keywords`：在所有搜索结果中过滤（排除不相关内容）
-- `preferred_domains`：搜索结果中优先保留这些域名的内容
-- `depth_filter`：在搜索关键词中体现（如"跳过入门教程"）
-
-#### 模式 B：requirement-web.json 不存在（原始模式）
-
-按原始逻辑执行，不做 role 差异化：
-
-**轨道 A — T0 定向搜索**：读取 `meta/sources.md` 的 T0 域名表，逐个搜索：
-```
-web_search "<topic> site:<domain>"
-```
-每个域名取前 2 条结果。
-
-**轨道 B — 自由搜索**：不限域名，多路搜索覆盖不同维度：
-- 原理类关键词（"xxx 原理"、"xxx 机制"）
-- 实践类关键词（"xxx 最佳实践"、"xxx 优化"）
-- 面试类关键词（"xxx 面试题"、"xxx 常考"）
-每路取 5-10 条结果。
-
-### 2. 提取域名
-
-从所有搜索结果中提取域名，去重。（此步在内容提取之后，域名信息已从 fetch 过程中获取）
-
-### 3. 信源分级
-
-将域名列表与 `meta/sources.md` 的 T0 表比对：
-- 命中 T0 → 直接标记 `source_tier: "T0"`（无需 trace，T0 是硬编码规则）
-- 未命中 → 进入 Step 4 评估
-
-### 4. 内容评估（unknown 域名）
-
-对 unknown 域名的搜索结果，web_fetch 抓取内容，按 `meta/sources.md` §Tier 定义的评估标准判定：
-- 达标 → 标记对应 Tier（T1/T2/T3），**同时写入 `source_tier_trace`**
-- 不达标 → 记录到 `discarded` 列表（含 url、domain、丢弃原因），**不直接丢弃**
-
-**`source_tier_trace` 写入要求**：
-```
-"{域名} 不在 T0 表中。web_fetch 验证内容：{内容摘要1-2句}。Tier 评估：{哪几个维度达标/不达标}，判定为 {tier}。"
+## 完成后
+输出：`Search batch {batch_id} 完成：{total} 条结果 / {excluded} 条排除`
 ```
 
-**`discarded` 条目格式**：
-```json
-{
-  "url": "...",
-  "domain": "...",
-  "discard_reason": "内容不达标：正文<200字 / 内容与主题不相关 / 403/超时"
-}
-```
+#### A2.2 调度参数
 
-### 5. 动态注册
+| 参数 | 值 |
+|------|---|
+| W | min(5, 批次数) |
+| 超时 | 5 分钟 |
+| 槽位替换 | ✅ 简单窗口 |
+| label | `search-{batch_id}`（如 `search-B1`） |
+| expected_files | `{workDir}/.meta/.raw-materials/search-batch.{batch_id}.json` |
+| enabled_toolsets | `["search", "file"]`（需要搜索 + 写入能力） |
 
-Step 4 中达标的 unknown 域名，直接写入 `{workDir}/.meta/sources/dynamic-sources.json`：
+#### A2.3 完成判定
 
-```json
-{
-  "cloud.tencent.com": {
-    "tier": "T2",
-    "reason": "腾讯云官方技术社区，setData 性能优化文章质量高",
-    "discovered_by": "scan/2026-05-20",
-    "discovered_at": "2026-05-20T10:00:00Z"
-  }
-}
-```
+- **completed**：agent status=completed 且 search-batch.{batch_id}.json 存在且可解析
+- **failed**：agent status=failed 或文件不存在
+- **timeout**：>5 分钟 → kill → 重试一次
 
-### 6. 合并排序
+### A3. merge URL 列表
 
-按 Tier 排序：T0/T1 优先 → T2 → T3。同话题多源覆盖时保留最高 Tier。
+读取所有 `search-batch.{batch_id}.json`，合并：
 
-**定向模式额外规则**：按命题的 `level_weight.role` 分组统计：
-- 每个 core 命题的目标素材数 = 策略表 r 值
-- 每个 premise 命题的目标素材数 = 策略表 r 值
-- 每个 outlook 命题的目标素材数 = min(r, 2)
+1. 合并所有 `results[]` 数组
+2. **按 URL 去重**：同一 URL 被多个 batch 搜索到 → 保留 snippet 最长的那条，`from_proposition` 合并为数组
+3. 合并所有 `excluded[]`
+4. 统计去重后的总 URL 数
 
-### 7. 写入
+### A4. URL 分级 + 分批
 
-按 `meta/output-contracts.md` §1 的示例格式，写入 `{workDir}/.meta/.raw-materials/` 目录。
+对去重后的 URL 列表：
 
-**输出结构**：
+1. **分级**（查 `meta/sources.md`）：
+   - 域名命中 T0 表 → `tier: "T0"`, `need_playwright: false`
+   - 域名命中反爬表 → `tier: "anti-crawl"`, `need_playwright: true`
+   - 都不命中 → `tier: "unknown"`, `need_playwright: false`
+2. **分批**：按 URL 数量均匀分批，每批 30-50 条
+3. **写入 url-batches.json + per-batch 文件**：
+
+url-batches.json 是全局索引（供 Phase C merge 读取），同时为每个 batch 拆出独立文件（供 Phase B agent 读取，避免读大文件）：
+
 ```
 .raw-materials/
-├── index.json                    ← 索引（元数据 + 关系 + 统计）
-├── M1-rendering-performance.md   ← 每条 material 一个 markdown
-├── M2-setdata-optimization.md
-├── ...
-└── cross-comparison.md           ← 多源交叉比较
+├── url-batches.json      ← 全局索引（Phase C 读）
+├── url-batch.B1.json     ← Phase B agent-1 读这个
+├── url-batch.B2.json     ← Phase B agent-2 读这个
+└── url-batch.B3.json     ← Phase B agent-3 读这个
 ```
 
-**index.json 写入规则**：
-- `materials[]` 数组：每条保留轻量元数据（id、title、url、domain、source_tier、from_proposition、relevance、fetch_status、depth_level）+ `file_path`（指向对应 markdown 文件的相对路径）
-- 不在 index.json 中存储 content_extract 全文——内容在对应 markdown 文件中
-- `discarded[]` 数组：被丢弃的素材列表
-- `scan_summary` 对象：按 role 统计搜索覆盖情况
+每个 `url-batch.B{N}.json` 的格式与 url-batches.json 中对应 batch 的结构一致（含 urls 数组 + 元数据）。
 
-**每条 material 的 markdown 文件写入规则**：
-- 文件名：`{id}-{slug}.md`（slug 从 title 提取，小写+连字符）
-- 文件内容包含：
-  - 标题（# title）
-  - URL 和 source_tier 信息
-  - source_tier_trace（如有）
-  - `## 内容提取`：完整的 content_extract 结构化内容（key_concepts、capability_points、code_examples、quality_signals）
-  - `## 原文摘要`：原文的关键段落摘录（2-5 段，保留技术细节）
-- fetch_status="failed" 的 material：只写标题 + URL + 失败原因，不写内容提取
-
-**cross-comparison.md 写入规则**：
-- 从 cross_source_comparison 数组生成
-- 每个被比较的能力点一个 `## {capability_point}` 章节
-- 包含：covered_by、agreement、complement、contradiction、depth_variance、synthesis
-- 仅包含被 ≥2 个来源覆盖的能力点
-
-**必须写入**：
-- `{workDir}/.meta/.raw-materials/index.json`：索引文件
-- `{workDir}/.meta/.raw-materials/{id}-{slug}.md`：每条 material 的内容文件
-- `{workDir}/.meta/.raw-materials/cross-comparison.md`：多源交叉比较文件
-
-**`scan_summary` 格式**：
-```json
+url-batches.json 示例：
 {
-  "scan_summary": {
-    "total_propositions": 8,
-    "by_role": {
-      "core": { "count": 5, "avg_materials_per_proposition": 6.2, "target_avg": 8 },
-      "premise": { "count": 2, "avg_materials_per_proposition": 2.5, "target_avg": 3 },
-      "outlook": { "count": 1, "avg_materials_per_proposition": 1.0, "target_avg": 2 }
-    },
-    "density_compliance": "core 5/5 命题达到目标素材数",
-    "search_guidance_consumed": true,
-    "scope_exclusions_applied": 3
-  }
+  "generated_at": "ISO时间",
+  "total_urls": 150,
+  "total_batches": 3,
+  "playwright_available": true,
+  "t0_domains": ["web.dev", ...],
+  "anti_crawl_domains": ["juejin.cn", ...],
+  "batches": [
+    {
+      "batch_id": "B1",
+      "url_count": 50,
+      "propositions_covered": ["RW-P1", "RW-P2"],
+      "urls": [
+        {
+          "url": "https://web.dev/articles/...",
+          "title": "搜索结果标题",
+          "snippet": "搜索结果摘要",
+          "domain": "web.dev",
+          "tier": "T0",
+          "need_playwright": false,
+          "from_proposition": "RW-P1"
+        }
+      ]
+    }
+  ],
+  "excluded": [...]
 }
 ```
 
-## 输出
+**关键**：每条 URL 携带 `title` + `snippet`（来自 Phase A 搜索结果），供 Phase B agent 判断 relevance。
 
-- 目录：`{workDir}/.meta/.raw-materials/`（index.json + {N} 个 markdown + cross-comparison.md）
-- 摘要（stdout，≤300 字）：信源数量、Tier 分布、按 role 的搜索覆盖统计、Top 3 素材
+### A5. 产出汇总
 
-## 校验清单
-- [ ] .raw-materials/ 目录已创建，包含 index.json + 对应 markdown 文件 + cross-comparison.md
-- [ ] index.json 中每条 material 有 file_path 指向对应 markdown
-- [ ] index.json 中不包含 content_extract 全文（内容在 markdown 中）
-- [ ] 每个 material markdown 包含：标题、URL、source_tier、内容提取、原文摘要
-- [ ] fetch_status="failed" 的 material markdown 只写标题+URL+失败原因
-- [ ] cross-comparison.md 包含所有被 ≥2 个来源覆盖的能力点比较
-- [ ] 定向模式下 index.json 每条 material 包含 from_proposition 字段
+Phase A 完成后 stdout 输出：
+```
+Phase A 完成：
+- 命题数：15
+- 去重后 URL 总数：150
+- T0 命中：30 | 反爬域名：20 | unknown：100
+- 分批数：3
+- Playwright：可用 / 不可用
+```
 
-- [ ] requirement-web.json 存在时，每个命题的 level_weight.role 已被读取
-- [ ] core 命题执行了 principles + practices 双轨搜索
-- [ ] premise 命题仅执行了 principles 搜索（未执行 practices 和自由搜索）
-- [ ] outlook 命题仅执行了单次确认搜索
-- [ ] 搜索密度参数（kw/r）与 shared-conventions.md 策略表一致
+---
+
+## Phase B：并行提取（内容抓取 + 结构化提取）
+
+> Phase B 对 URL 做内容抓取 + 结构化提取。每个 agent 处理一批 URL，互相独立。
+
+### B1. 组装 agent task
+
+从 `url-batches.json` 读取批次信息，为每个 batch 组装 agent task。
+
+**task 模板**（注意：URL 列表从文件读取，不内联到 task）：
+
+```
+你是内容提取专家。对 URL 批次 {batch_id} 执行内容抓取 + 结构化提取。
+
+## 输入文件
+用 read 工具读取：{workDir}/.meta/.raw-materials/url-batch.{batch_id}.json
+获取 URL 列表。
+
+## 环境信息
+- Playwright 可用：{playwright_available}
+- T0 域名列表：{t0_domains}
+- 反爬域名列表：{anti_crawl_domains}
+
+## 执行规则
+
+### 抓取策略（按域名分流）
+对每个 URL：
+1. tier == "T0" → 内容抓取工具直接抓取
+2. need_playwright == true && playwright_available == true → 加载 plugins/anti-crawl-fetch.md，用 Playwright 抓取
+3. need_playwright == true && playwright_available == false → 标记 fetch_status: "failed"
+4. tier == "unknown" → 内容抓取工具，失败则 Playwright 降级（如可用）
+5. 内容抓取失败（403/429/超时/内容<200字）→ 同上降级逻辑
+
+### 内容提取（fetch_status="ok" 时）
+用 url-batch.{batch_id}.json 中的 snippet 判断 relevance，再从抓取内容中提取：
+- key_concepts（3-8 个核心技术概念）
+- capability_points（原子能力点，含 name/layer/description/key_insight）
+- depth_level（概念级|机制级|原理级|架构级）
+- quality_signals（has_code/has_diagram/word_count）
+
+### 产出文件
+1. {workDir}/.meta/.raw-materials/partial.{batch_id}.json
+2. {workDir}/.meta/.raw-materials/B{batch_id}-M{N}-{slug}.md（全局唯一文件名）
+
+### partial index 格式
+```json
+{
+  "batch_id": "{batch_id}",
+  "materials": [
+    {
+      "id": "B{batch_id}-M{N}",
+      "title": "标题",
+      "url": "https://...",
+      "domain": "domain.com",
+      "source_tier": "T0|T1|T2|T3",
+      "from_proposition": ["RW-P1"],
+      "relevance": "与命题的关联说明",
+      "fetch_status": "ok|failed",
+      "fetch_method": "direct|playwright",
+      "fetch_status_trace": "失败原因",
+      "depth_level": "原理级",
+      "file_path": "B{batch_id}-M{N}-{slug}.md"
+    }
+  ],
+  "discarded": []
+}
+```
+
+**文件名规则**：`B{batch_id}-M{N}-{slug}.md`（如 `B1-M3-rendering-performance.md`），确保全局唯一，不与其他 batch 碰撞。
+
+## 完成后
+输出：`Batch {batch_id} 完成：{ok} 成功 / {failed} 失败 / {total} 总计`
+```
+
+### B2. 并行 spawn（简单窗口）
+
+| 参数 | 值 |
+|------|---|
+| W | min(5, 批次数) |
+| 超时 | 10 分钟 |
+| 槽位替换 | ✅ 简单窗口 |
+| label | `extract-{batch_id}`（如 `extract-B1`） |
+| expected_files | `{workDir}/.meta/.raw-materials/partial.{batch_id}.json` |
+| enabled_toolsets | `["web", "file"]`（需要内容抓取 + 读取 + 写入能力） |
+
+轮询、完成判定、重试逻辑同 A2。
+
+---
+
+## Phase C：合并产出（主线程）
+
+> Phase C 是轻量的 merge 阶段。主线程串行执行。
+
+### C1. 合并 partial index
+
+读取所有 `partial.{batch_id}.json`，合并为最终 `index.json`：
+
+1. 合并所有 `materials[]` 数组（ID 已全局唯一，无需重编号）
+2. 合并所有 `discarded[]`
+3. 填充 `scan_summary`
+
+### C2. 域名分级汇总
+
+统计 `source_tier` 分布。对 `tier == "unknown"` 的域名按 `meta/sources.md` §Unknown 域名评估标准分级：
+- 达标 → 标记 Tier + `source_tier_trace`
+- 不达标 → 移入 `discarded`
+
+### C3. 多源交叉比较
+
+按 `capability_points.name` 分组，对被 ≥2 个来源覆盖的能力点做交叉比较（一致性、互补性、矛盾性、深度差异、synthesis）。
+
+写入 `{workDir}/.meta/.raw-materials/cross-comparison.md`
+
+### C4. 动态信源注册
+
+unknown 域名评估达标后写入 `{workDir}/.meta/sources/dynamic-sources.json`
+
+### C5. 写入最终 index.json
+
+按 `meta/output-contracts.md`§1 格式写入。
+
+### C6. 校验清单
+
+- [ ] index.json 每条 material 有 `file_path` 指向对应 markdown
+- [ ] material markdown 文件名全局唯一（B{batch}-M{N}-{slug}.md）
+- [ ] `fetch_status="ok"` 的 material 包含 content_extract
+- [ ] `fetch_status="failed"` 的 material 包含 fetch_status_trace
+- [ ] cross-comparison.md 包含所有被 ≥2 来源覆盖的能力点
+- [ ] 定向模式下每条 material 包含 from_proposition
 - [ ] search_guidance.excluded_keywords 和 scope.exclusions 已用于过滤
-- [ ] 每条 material 包含 id、title、url、domain、source_tier、relevance、fetch_status
-- [ ] fetch_status="ok" 的 material 包含 content_extract（含 key_concepts、capability_points、depth_level、quality_signals）
-- [ ] fetch_status="failed" 的 material 不包含 content_extract，但包含 fetch_status_trace
-- [ ] 域名分类查 meta/sources.md（T0 → web_fetch，anti-crawl → Playwright，都不命中 → 先 web_fetch 再降级）
-- [ ] Playwright 抓取成功的 material 包含 fetch_method: "playwright"
-- [ ] Playwright 抓取失败的 material 包含两级失败原因的 trace
-- [ ] Playwright 抓取期间无孤儿进程残留
-- [ ] cross_source_comparison 仅包含被 ≥2 个来源覆盖的能力点
-- [ ] cross_source_comparison 每条含 agreement/complement/contradiction/synthesis
-- [ ] 定向模式下每条 material 包含 from_proposition 字段
-- [ ] source_tier 来自 T0 表或内容评估，非凭空填写
-- [ ] unknown 域名的 material 包含 `source_tier_trace`
-- [ ] `fetch_status: "failed"` 的 material 包含 `fetch_status_trace`
-- [ ] 被丢弃的素材记录在 `discarded` 数组中（含 `discard_reason`）
-- [ ] 动态注册的域名已写入 dynamic-sources.json
-- [ ] .raw-materials/index.json 包含 scan_summary 统计
-- [ ] JSON 格式符合 output-contracts.md §1 示例
+- [ ] Playwright 抓取的 material 包含 fetch_method: "playwright"
+- [ ] 被丢弃的素材记录在 discarded 中
+- [ ] 动态注册域名已写入 dynamic-sources.json
+- [ ] index.json 包含 scan_summary
+
+---
 
 ## 异常处理
 
 | 场景 | 处理 |
 |------|------|
-| web_search 全部无结果 | 换关键词重试，或提示用户补充 `--source=<url>` |
-| web_fetch 超时/403 | anti-crawl 域名 → 直接 Playwright；其他域名 → 先试 web_fetch 再降级 |
-| Playwright 未安装 | anti-crawl 域名 → 标记 failed + trace "Playwright 未安装"；T0/unknown 域名 → web_fetch 结果直接用 |
-| Playwright 降级也失败 | 标记 fetch_status: "failed" + trace 含两级失败原因 |
-| 所有域名都是 unknown | 全部 web_fetch 评估，失败时走降级流程 |
-| premise 命题 T0 无结果 | 用 global_keywords 兜底搜索一次，取 1-2 条 |
-| outlook 命题搜索无结果 | 标记 `search_status: "not_found"`，不阻塞流程，该命题在后续步骤中标记为"方向待验证" |
-| core 命题素材数低于策略表 r 值 | 在 scan_summary 中标注缺口，不阻塞流程，后续步骤可感知覆盖不足 |
+| Phase A 搜索 agent 超时 | 检查 search-batch 文件是否已写入：完整则保留，不完整则重试 |
+| Phase A 搜索结果过多（>200 URL/批） | 按 Tier 优先级截断：保留 T0+T1，T2/T3 取前 50 |
+| Phase B agent 超时 | 检查 partial 文件：完整则保留，不完整则重试 |
+| Phase B agent 全部失败 | 降级为仅 URL 列表（无内容提取） |
+| Playwright 安装失败 | playwright_available=false，反爬域名直接 failed |
+| Playwright 抓取也失败 | fetch_status: "failed" + 两级 trace |
+| premise 命题 T0 无结果 | global_keywords 兜底一次 |
+| outlook 命题搜索无结果 | 标记 search_status: "not_found"，不阻塞 |
+| core 命题素材数低于 r 值 | scan_summary 标注缺口，不阻塞 |
+| Phase C merge 时 partial 缺失 | 跳过该 batch，标注 degraded |
+
+---
 
 ## 检查点
 

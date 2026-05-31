@@ -142,11 +142,106 @@
 
 ```
 .raw-materials/
+├── search-batch.B1.json         ← Phase A 产出：各批次搜索结果
+├── search-batch.B2.json
+├── ...
+├── url-batches.json             ← Phase A merge 产出：URL 批次分配表
+├── partial.B1.json              ← Phase B 产出：各批次 partial index
+├── partial.B2.json
+├── ...
 ├── index.json                    ← 索引（元数据 + 关系 + 统计）
-├── M1-rendering-performance.md   ← 每条 material 一个 markdown
-├── M2-setdata-optimization.md
+├── B1-M1-rendering-performance.md  ← material markdown
+├── B1-M2-setdata-optimization.md   ← 命名：B{batch}-M{N}-{slug}.md
+├── B2-M1-...
 ├── ...
 └── cross-comparison.md           ← 多源交叉比较
+```
+
+### search-batch.json 示例（Phase A 搜索 agent 产出）
+
+路径：`{workDir}/.meta/.raw-materials/search-batch.{batch_id}.json`
+
+```json
+{
+  "batch_id": "B1",
+  "propositions_searched": ["RW-P1", "RW-P2"],
+  "results": [
+    {
+      "url": "https://web.dev/articles/rendering-performance",
+      "title": "Rendering Performance — web.dev",
+      "snippet": "Learn about the rendering pipeline and how to optimize layout, paint, and composite...",
+      "domain": "web.dev",
+      "tier": "T0",
+      "from_proposition": "RW-P1",
+      "keyword_group": "principles"
+    }
+  ],
+  "excluded": [
+    {"url": "https://example.com/gulp-docs", "reason": "命中 excluded_keywords: gulp"}
+  ]
+}
+```
+
+### url-batches.json 示例（Phase A merge 产出）
+
+路径：`{workDir}/.meta/.raw-materials/url-batches.json`
+
+```json
+{
+  "generated_at": "2026-05-31T22:30:00+08:00",
+  "total_urls": 150,
+  "total_batches": 3,
+  "playwright_available": true,
+  "t0_domains": ["web.dev", "developer.mozilla.org"],
+  "anti_crawl_domains": ["juejin.cn", "zhihu.com"],
+  "batches": [
+    {
+      "batch_id": "B1",
+      "url_count": 50,
+      "propositions_covered": ["RW-P1", "RW-P2"],
+      "urls": [
+        {
+          "url": "https://web.dev/articles/rendering-performance",
+          "title": "Rendering Performance — web.dev",
+          "snippet": "Learn about the rendering pipeline and how to optimize layout, paint, and composite...",
+          "domain": "web.dev",
+          "tier": "T0",
+          "need_playwright": false,
+          "from_proposition": "RW-P1"
+        }
+      ]
+    }
+  ],
+  "excluded": [
+    {"url": "https://example.com/gulp-docs", "reason": "命中 excluded_keywords: gulp"}
+  ]
+}
+```
+
+### partial index 示例（Phase B 产出）
+
+路径：`{workDir}/.meta/.raw-materials/partial.{batch_id}.json`
+
+```json
+{
+  "batch_id": "B1",
+  "materials": [
+    {
+      "id": "B1-M1",
+      "title": "Rendering Performance — web.dev",
+      "url": "https://web.dev/articles/rendering-performance",
+      "domain": "web.dev",
+      "source_tier": "T0",
+      "from_proposition": ["RW-P1"],
+      "relevance": "直接覆盖渲染管线和重排优化",
+      "fetch_status": "ok",
+      "fetch_method": "web_fetch",
+      "depth_level": "原理级",
+      "file_path": "B1-M1-rendering-performance.md"
+    }
+  ],
+  "discarded": []
+}
 ```
 
 ### index.json 示例

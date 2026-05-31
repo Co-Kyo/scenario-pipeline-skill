@@ -44,14 +44,16 @@
 
 ```
 ⓪ 头脑风暴（前置）     前处理（串行 3 步）       后处理（并行 + 检查点）
-年限自动推断             ① scan → 定向扫描        ④ 能力研究（并行）× N
-4 维度 Agent 并行        ② capability-graph →     ⓒ barrier
-↓ 裁判收敛                 能力图谱+高地           ⑤ Briefing 组装（并行）× M
-requirement-web.json    ③ evaluate-pool →         ⓓ barrier
-含能力图谱+分词结构        评估+入池               ⑥ 命题组装（并行）× M
-ⓩ 检查点               ⓐ barrier                  ⓕ barrier
-                       ⓑ barrier                  ⑦ 学习阶梯（并行）× M
-                                                  ⓖ 完成
+年限自动推断             ① scan（两阶段管道）      ④ 能力研究（并行）× N
+4 维度 Agent 并行          Phase A: 串行搜索       ⓒ barrier
+↓ 裁判收敛                 Phase B: 并行提取(W=5)  ⑤ Briefing 组装（并行）× M
+requirement-web.json      Phase C: merge          ⓓ barrier
+含能力图谱+分词结构        ② capability-graph →     ⑥ 命题组装（并行）× M
+ⓩ 检查点                     能力图谱+高地           ⓕ barrier
+                           ③ evaluate-pool →       ⑦ 学习阶梯（并行）× M
+                              评估+入池              ⓖ 完成
+                           ⓐ barrier
+                           ⓑ barrier
 ```
 
 每个阶段之间有显式 barrier + 检查点，确保上游产物完整后才进入下游。

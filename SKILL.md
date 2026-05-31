@@ -23,7 +23,10 @@ description: "前端复合工程场景知识管线。三阶段工作流：头脑
 ┌───────────────────────────────────────┼────────────────────────────────┐
 │                          前处理（串行 3 步）                           │
 │                                                                       │
-│  ① scan ──────────→ .raw-materials/（index + markdown）              │
+│  ① scan（两阶段管道）                                                  │
+│    Phase A: 串行搜索 + Playwright前置 → url-batches.json             │
+│    Phase B: 并行agent提取（W=5） → partial results                    │
+│    Phase C: merge → .raw-materials/（index + markdown）              │
 │       │                                                                │
 │  ② capability-graph → capability-graph.json（能力+高地+参考URL）      │
 │       │                                                        ⓐ 检查点│

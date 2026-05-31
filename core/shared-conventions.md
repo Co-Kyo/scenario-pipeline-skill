@@ -157,9 +157,11 @@ level 描述概念的客观归属层，role 描述概念相对于目标用户的
 ### 各步骤调度模式一览
 
 | 步骤 | 模式 | Task Group 定义 | 超时 | 槽位替换 |
-|------|------|----------------|------|---------|
+|------|------|----------------|------|---------:|
 | ⓪ 头脑风暴·维度 Agent | 一次性全部 spawn | 1 个维度 = 1 个 agent | 3 min | ❌ 无（一次性填满） |
 | ⓪ 头脑风暴·收敛者 Agent | 单 agent 串行 | 1 个收敛者 = 1 个 agent | 5 min | ❌ 无 |
+| ① scan·Phase A | 简单窗口 | 1 个命题批次 = 1 个 agent | 5 min | ✅ 先完成先补位 |
+| ① scan·Phase B | 简单窗口 | 1 个 URL 批次 = 1 个 agent | 10 min | ✅ 先完成先补位 |
 | ④ 能力研究 | DAG 调度 | 1 个子组 = 1 个 agent（≤5 能力） | 15 min | ✅ 按拓扑批次 |
 | ⑤ Briefing 组装 | 简单窗口 | 1 个命题 = 1 个 agent | 5 min | ✅ 先完成先补位 |
 | ⑥ 命题组装 | 简单窗口 | 1 个命题 = 2 个 agent（md + exp） | 8 min | ✅ 先完成先补位 |
@@ -168,9 +170,11 @@ level 描述概念的客观归属层，role 描述概念相对于目标用户的
 ### Label 命名规范
 
 | 步骤 | Label 模式 | 示例 |
-|------|-----------|------|
+|------|-----------|------ |
 | ⓪ 维度 Agent | `brainstorm-{dimension}` | `brainstorm-scenario` |
 | ⓪ 收敛者 Agent | `brainstorm-integrator` | — |
+| ① scan·Phase A | `search-{batch_id}` | `search-B1` |
+| ① scan·Phase B | `extract-{batch_id}` | `extract-B1` |
 | ④ 能力研究 | `agent-{group_id}` | `agent-A_1`, `agent-B_1` |
 | ⑤ Briefing | `briefing-{seq}-{short_name}` | `briefing-01-长列表渲染` |
 | ⑥ 命题组装·Markdown | `asm-md-{seq}-{short_name}` | `asm-md-01-长列表渲染` |
