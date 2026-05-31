@@ -121,6 +121,7 @@
 | `context.target_level` | 最终确认的经验年限级别（L1-L4） | 所有后续步骤的 level_weight 传导 |
 | `context.year_source` | 年限推断依据 | 调试追溯 |
 | `context.year_inference_trace` | 年限推断完整过程 | 调试追溯 |
+| `materials[].fetch_method` | 内容获取方式（`web_fetch` 或 `playwright`） | Step ② 区分信源获取路径 |
 | `strategy` | 动态标准策略元数据（标签+比例） | Step ①-⑦ 的行为参数 |
 | `propositions` | 头脑风暴产出的命题列表 | Step ① 定向 scan 的目标清单 |
 | `propositions[].capability_ids` | 命题涉及的能力 ID | Step ② 能力图谱构建 |
@@ -167,6 +168,7 @@
       "from_proposition": "RW-P1",
       "relevance": "直接覆盖渲染管线和重排优化",
       "fetch_status": "ok",
+      "fetch_method": "playwright",
       "depth_level": "原理级",
       "file_path": "M1-rendering-performance.md"
     },

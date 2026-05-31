@@ -79,6 +79,63 @@
 
 ---
 
+## T1 预置信源（大厂技术博客、高质量工程文章）
+
+以下域名经实测验证，内容质量稳定，直接按 T1 处理，无需运行时评估。
+
+### 国内大厂技术博客
+
+| 域名 | 名称 | 验证来源 |
+|------|------|---------|
+| tech.meituan.com | 美团技术团队 | 小程序性能优化、前端工程化 |
+| cloud.tencent.com | 腾讯云技术社区 | setData 优化、小程序 CI/CD |
+| mp.weixin.qq.com | 微信公众号技术文章 | Taro 跨端原理、小程序架构 |
+| developers.aliyun.com | 阿里云开发者中心 | 前端性能、Node.js 实践 |
+| aotu.io | 字节跳动前端技术博客 | 跨端框架、构建优化 |
+| ai.baidu.com | 百度 AI 技术博客 | 小程序、智能体 |
+| developer.baidu.com | 百度开发者中心 | 小程序 SDK、地图 API |
+
+### 国际高质量博客
+
+| 域名 | 名称 | 验证来源 |
+|------|------|---------|
+| smashingmagazine.com | Smashing Magazine | 前端设计、性能优化 |
+| dev.to | Dev.to 开发者社区 | 前端实践、框架对比 |
+| css-tricks.com | CSS-Tricks | CSS 技巧、布局方案 |
+| overflowBlog.stackoverflow.com | Stack Overflow 博客 | 工程实践、调试技巧 |
+
+---
+
+## T2 预置信源（优质社区、技术专栏）
+
+以下域名内容质量中等偏上，直接按 T2 处理。
+
+| 域名 | 名称 | 说明 |
+|------|------|------|
+| blog.logrocket.com | LogRocket 博客 | 前端调试、性能分析 |
+| blog.sentry.io | Sentry 博客 | 错误监控、前端稳定性 |
+| thenewstack.io | The New Stack | 云原生、DevOps、前端工具链 |
+| infoq.cn | InfoQ 中文站 | 架构决策、技术趋势 |
+| oschina.net | 开源中国 | 开源项目、工具评测 |
+
+---
+
+## 反爬域名（Anti-Crawl）
+
+以下域名已确认 web_fetch 无法获取内容，scan 步骤必须跳过 web_fetch，直接走 Playwright 抓取。
+
+| 域名模式 | 站点 | 反爬机制 |
+|---------|------|---------|
+| `juejin.cn` | 掘金 | JS 渲染 + Cookie 检测 + 详情页 403 |
+| `zhihu.com` / `zhuanlan.zhihu.com` | 知乎 | 强制登录弹窗 + 指纹检测 + 内容折叠 |
+| `blog.csdn.net` / `csdn.net` | CSDN | 登录弹窗 + 内容折叠 + 广告遮挡 |
+| `segmentfault.com` | 思否 | JS 渲染 + 登录弹窗 |
+| `jianshu.com` | 简书 | JS 渲染 + 登录弹窗 |
+
+**维护规则**：域名升级反爬 → 加入此表；域名放松反爬 → 移到 T1/T2/T3。所有变更集中在本文件。
+
+---
+
 ## Tier 定义
 
 | Tier | 定义 | 典型来源 |

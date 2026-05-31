@@ -24,7 +24,8 @@ dev/
 │
 └── tools/                      ← 开发工具（怎么审）
     ├── skill-audit-rules.md        Skill 文件审查规则（what&how / _trace）
-    └── decision-replay.md          决策回放 prompt（_trace 埋点 → 决策链路报告）
+    ├── decision-replay.md          决策回放 prompt（_trace 埋点 → 决策链路报告）
+    └── domain-sources-generator.md 领域信源生成器（为任意技术领域定制 sources.md）
 ```
 
 ## 各目录职责

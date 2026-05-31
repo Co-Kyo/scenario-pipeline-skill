@@ -12,8 +12,9 @@
 
 > **🔒 上下文隔离**
 > - ✅ 允许读取：`core/shared-conventions.md`、`meta/sources.md`、`meta/output-contracts.md`§1、`{workDir}/.meta/requirement-web.json`（如存在）
-> - ❌ 禁止读取：`processes/02~07.md`、`core/*.md`、`plugins/*.md`（`--year` 参数存在时，`plugins/year-granularity.md` 除外）
+> - ❌ 禁止读取：`processes/02~07.md`、`core/*.md`
 > - 📌 `output-contracts.md` 只读 §1 节，不要读其他章节
+> - 📌 `plugins/anti-crawl-fetch.md` 仅在 `web_fetch` 失败时按需加载（见 Step 1 降级逻辑）
 
 ## 输入
 
@@ -45,7 +46,39 @@
 ### 1. 信源采集（按 role 差异化搜索）
 对所有搜索结果（含 T0 命中和未命中的），执行 web_fetch 抓取完整页面内容。T0 域名不再跳过抓取——抓取是内容提取的前提。
 
-**抓取失败处理**：403/404/429/超时 → 标记 `fetch_status: "failed"` + `fetch_status_trace`，跳过该条的后续提取步骤，但仍保留 URL 信息用于 scan_summary 统计。
+**抓取策略**（按域名分流，域名分类统一来自 `meta/sources.md`）：
+
+```
+对每个搜索结果 URL：
+  1. 提取域名
+  2. 查 meta/sources.md：
+     - 命中反爬域名表 → 跳过 web_fetch，直接加载 plugins/anti-crawl-fetch.md 执行 Playwright
+     - 命中 T0 表 → web_fetch（高可信度，直接用）
+     - 都不命中 → 正常 web_fetch
+  3. web_fetch 失败（403/429/超时/内容<200字）？
+     → 是：进入降级流程（见 §1.1）
+     → 否：继续内容提取
+```
+
+#### 1.1 反爬降级（Playwright Fallback）
+
+当 `web_fetch` 失败时，按以下优先级尝试降级：
+
+1. **API 降级**（仅掘金）：掘金详情页 403 时，用 `POST https://api.juejin.cn/content_api/v1/article/detail` 获取内容
+2. **Playwright 降级**：加载 `plugins/anti-crawl-fetch.md`，按其指令用 Playwright headless Chromium 抓取
+3. **全部失败**：标记 `fetch_status: "failed"` + `fetch_status_trace`
+
+**降级触发条件**（同时满足）：
+- `web_fetch` 返回 403 / 429 / 超时 / 内容 < 200 字
+- 域名不在排除列表中（如已知无法绕过的站点）
+- Playwright 环境可用（`node -e "require('playwright')" 2>/dev/null` 返回 OK）
+  - 如未安装，自动执行 `npm install playwright --registry=https://registry.npmmirror.com && npx playwright install chromium`
+
+**降级结果写回**：
+- 成功 → `fetch_status: "ok"` + `fetch_method: "playwright"` + `fetch_status_trace: "web_fetch {失败原因}，Playwright 降级成功"`
+- 失败 → `fetch_status: "failed"` + `fetch_status_trace: "web_fetch {失败原因} + Playwright 降级也失败：{错误原因}"`
+
+**⚠️ 内存铁律**：Playwright 抓取必须逐个 URL 串行处理，每个 URL 完成后必须 close context + browser。批量完成后检查孤儿 Chromium 进程。
 
 ### 1.5 内容提取（结构化）
 
@@ -300,6 +333,10 @@ Step 4 中达标的 unknown 域名，直接写入 `{workDir}/.meta/sources/dynam
 - [ ] 每条 material 包含 id、title、url、domain、source_tier、relevance、fetch_status
 - [ ] fetch_status="ok" 的 material 包含 content_extract（含 key_concepts、capability_points、depth_level、quality_signals）
 - [ ] fetch_status="failed" 的 material 不包含 content_extract，但包含 fetch_status_trace
+- [ ] 域名分类查 meta/sources.md（T0 → web_fetch，anti-crawl → Playwright，都不命中 → 先 web_fetch 再降级）
+- [ ] Playwright 抓取成功的 material 包含 fetch_method: "playwright"
+- [ ] Playwright 抓取失败的 material 包含两级失败原因的 trace
+- [ ] Playwright 抓取期间无孤儿进程残留
 - [ ] cross_source_comparison 仅包含被 ≥2 个来源覆盖的能力点
 - [ ] cross_source_comparison 每条含 agreement/complement/contradiction/synthesis
 - [ ] 定向模式下每条 material 包含 from_proposition 字段
@@ -316,8 +353,10 @@ Step 4 中达标的 unknown 域名，直接写入 `{workDir}/.meta/sources/dynam
 | 场景 | 处理 |
 |------|------|
 | web_search 全部无结果 | 换关键词重试，或提示用户补充 `--source=<url>` |
-| web_fetch 超时/403 | 标记 `fetch_status: "failed"` + `fetch_status_trace: "超时/403/429/内容不相关"`，跳过该条 |
-| 所有域名都是 unknown | 全部 web_fetch 评估，不依赖 T0 表 |
+| web_fetch 超时/403 | anti-crawl 域名 → 直接 Playwright；其他域名 → 先试 web_fetch 再降级 |
+| Playwright 未安装 | anti-crawl 域名 → 标记 failed + trace "Playwright 未安装"；T0/unknown 域名 → web_fetch 结果直接用 |
+| Playwright 降级也失败 | 标记 fetch_status: "failed" + trace 含两级失败原因 |
+| 所有域名都是 unknown | 全部 web_fetch 评估，失败时走降级流程 |
 | premise 命题 T0 无结果 | 用 global_keywords 兜底搜索一次，取 1-2 条 |
 | outlook 命题搜索无结果 | 标记 `search_status: "not_found"`，不阻塞流程，该命题在后续步骤中标记为"方向待验证" |
 | core 命题素材数低于策略表 r 值 | 在 scan_summary 中标注缺口，不阻塞流程，后续步骤可感知覆盖不足 |
