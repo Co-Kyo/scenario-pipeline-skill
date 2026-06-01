@@ -25,30 +25,37 @@ description: "Step ① scan 的 web_fetch 反爬降级方案。当 web_fetch 失
 
 ## 环境检查
 
-### Step 1：检查 Playwright 是否已安装
+> **🔴 Playwright 使用全局安装，不在产物目录安装。**
+
+### Step 1：检查 Playwright 是否已全局安装
 
 ```bash
-node -e "require('playwright')" 2>/dev/null && echo "OK" || echo "MISSING"
+# 全局检查（不依赖当前目录）
+npx playwright --version 2>/dev/null && echo "OK" || echo "MISSING"
 ```
 
 - 输出 `OK` → 跳过安装，直接执行
-- 输出 `MISSING` → 进入 Step 2 安装
+- 输出 `MISSING` → 进入 Step 2 全局安装
 
-### Step 2：安装 Playwright（npmmirror 加速）
+> **注意**：Playwright 通过 npx 调用，不要用 `require('playwright')`（全局安装后 require 路径可能找不到）。
+
+### Step 2：全局安装 Playwright（npmmirror 加速）
 
 国内环境 npmjs.org 延迟极高（超时 5s+），必须切源：
 
 ```bash
-npm install playwright --registry=https://registry.npmmirror.com && npx playwright install chromium
+npm install -g playwright --registry=https://registry.npmmirror.com && npx playwright install chromium
 ```
 
 **回退策略**：如果 npmmirror 也超时，尝试官方源：
 
 ```bash
-npm install playwright && npx playwright install chromium
+npm install -g playwright && npx playwright install chromium
 ```
 
 **标记**：安装成功后，后续步骤不再重复检查。安装失败标记 `fetch_status: "failed"` + `fetch_status_trace: "Playwright 安装失败"`。
+
+> **注意**：全局安装后，`require('playwright')` 在任何目录都能访问，不需要在产物目录安装。
 
 ---
 

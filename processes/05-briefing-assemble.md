@@ -34,7 +34,7 @@
 ### 3. 并行 spawn（简单窗口 + 轮询跟踪）
 
 > ⚠️ 严格遵循 `core/shared-conventions.md` §简单窗口执行流程 + §并行调度规则。
-> **严禁 `sessions_yield`。** spawn 后必须进入轮询跟踪，主动权始终在主线程。
+> 调度规则详见 `core/shared-conventions.md` §子 agent 调度。
 
 #### 3.1 初始化
 

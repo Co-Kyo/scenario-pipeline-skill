@@ -30,7 +30,7 @@
 ### 2. 并行 spawn（简单窗口 + 轮询跟踪，2-agent-per-命题）
 
 > ⚠️ 严格遵循 `core/shared-conventions.md` §简单窗口执行流程 + §并行调度规则。
-> **严禁 `sessions_yield`。** spawn 后必须进入轮询跟踪，主动权始终在主线程。
+> 调度规则详见 `core/shared-conventions.md` §子 agent 调度。
 
 **步骤特有：2-agent-per-命题**
 - 每个命题 spawn 2 个 agent（Markdown + Experiment），两者无相互依赖，可并行

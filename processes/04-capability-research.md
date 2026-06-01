@@ -155,18 +155,17 @@ T=8min   A_2, D_2, E_2 完成 → 全部 25 个能力就绪
 ### 7. 并行 spawn 域 Agent（DAG 调度 + 轮询跟踪）
 
 > ⚠️ 严格遵循 `core/shared-conventions.md` §并行调度规则。
-> **严禁 `sessions_yield`。** spawn 后必须进入轮询跟踪，主动权始终在主线程。
+> 调度规则详见 `core/shared-conventions.md` §子 agent 调度。
 > 本步骤使用 **DAG 调度**模式（子组间有跨依赖，按拓扑批次执行）。
 
 #### 7.1 第一批 spawn
 
 所有无跨组依赖的子组 Agent 并行启动（上限 W=5）：
 
-```
-for group in batch_1 (无跨组依赖的组，按 fanout 降序):
-    sessions_spawn(label=f"agent-{group.id}", task=group.task, ...)
-    记录 label 和 expected_files
-```
+对 batch_1 中所有无跨组依赖的子组（按 fanout 降序），启动子 agent：
+- label: `agent-{group.id}`
+- task: 拼接角色声明 + 执行指令 + 变量替换
+- 记录每个 agent 的 label 和 expected_files
 
 #### 7.2 轮询循环 + 后续批次
 

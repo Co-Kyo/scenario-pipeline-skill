@@ -144,28 +144,27 @@ level 描述概念的客观归属层，role 描述概念相对于目标用户的
 
 ## 子 agent 调度
 
-> **核心约束**：spawn 后必须进入轮询循环。**严禁 `sessions_yield`。** 主动权始终在主线程。
+> **核心约束**：任务驱动分发——主线程描述任务意图，平台负责分发执行。子 agent 只负责执行单一任务并产出文件，不参与调度决策。**严禁使用 `sessions_yield`**（不稳定，易造成会话假死）。
 
 ### 全局参数
 
 | 参数 | 值 | 说明 |
 |------|---|------|
-| 并发槽位 W | 5 | 最大同时运行的 Task Group 数 |
-| 轮询间隔 | 15 秒 | `subagents list` 调用频率 |
+| 并发上限 W | 5 | 最大同时运行的 Task Group 数（平台可按自身能力调整） |
 | 计数单位 | Task Group | 1 个命题 = 1 个 Task Group（Step ⑥ 特殊：1 命题 = 2 agent） |
 
 ### 各步骤调度模式一览
 
-| 步骤 | 模式 | Task Group 定义 | 超时 | 槽位替换 |
-|------|------|----------------|------|---------:|
-| ⓪ 头脑风暴·维度 Agent | 一次性全部 spawn | 1 个维度 = 1 个 agent | 3 min | ❌ 无（一次性填满） |
-| ⓪ 头脑风暴·收敛者 Agent | 单 agent 串行 | 1 个收敛者 = 1 个 agent | 5 min | ❌ 无 |
-| ① scan·Phase A | 简单窗口 | 1 个命题批次 = 1 个 agent | 5 min | ✅ 先完成先补位 |
-| ① scan·Phase B | 简单窗口 | 1 个 URL 批次 = 1 个 agent | 10 min | ✅ 先完成先补位 |
-| ④ 能力研究 | DAG 调度 | 1 个子组 = 1 个 agent（≤5 能力） | 15 min | ✅ 按拓扑批次 |
-| ⑤ Briefing 组装 | 简单窗口 | 1 个命题 = 1 个 agent | 5 min | ✅ 先完成先补位 |
-| ⑥ 命题组装 | 简单窗口 | 1 个命题 = 2 个 agent（md + exp） | 8 min | ✅ 先完成先补位 |
-| ⑦ 学习阶梯 | 简单窗口 | 1 个命题 = 1 个 agent | 5 min | ✅ 先完成先补位 |
+| 步骤 | 模式 | Task Group 定义 | 并发策略 |
+|------|------|----------------|---------|
+| ⓪ 头脑风暴·维度 Agent | 批量并行 | 1 个维度 = 1 个 agent | 全部同时启动 |
+| ⓪ 头脑风暴·收敛者 Agent | 串行 | 1 个收敛者 = 1 个 agent | 等待所有维度完成后启动 |
+| ① scan·Phase A | 滚动窗口 | 1 个命题批次 = 1 个 agent | 完成一个补一个，不超过 W |
+| ① scan·Phase B | 滚动窗口 | 1 个 URL 批次 = 1 个 agent | 完成一个补一个，不超过 W |
+| ④ 能力研究 | 拓扑分批 | 1 个子组 = 1 个 agent（≤5 能力） | 按依赖拓扑顺序分批，每批内并行不超过 W |
+| ⑤ Briefing 组装 | 滚动窗口 | 1 个命题 = 1 个 agent | 完成一个补一个，不超过 W |
+| ⑥ 命题组装 | 滚动窗口 | 1 个命题 = 2 个 agent（md + exp） | 两者独立并行，1 命题占 2 个槽位 |
+| ⑦ 学习阶梯 | 滚动窗口 | 1 个命题 = 1 个 agent | 完成一个补一个，不超过 W |
 
 ### Label 命名规范
 
@@ -181,124 +180,54 @@ level 描述概念的客观归属层，role 描述概念相对于目标用户的
 | ⑥ 命题组装·Experiment | `asm-exp-{seq}-{short_name}` | `asm-exp-01-长列表渲染` |
 | ⑦ 学习阶梯 | `ladder-{seq}-{short_name}` | `ladder-01-长列表渲染` |
 
-### Expected Files 判定规则
+### 完成判定规则
 
-Agent 完成 ≠ 对话结束。必须验证 expected_files 存在于磁盘：
+子 agent 完成后，主线程必须验证产出文件存在：
 
 ```
-completed = (agent.status == "completed") AND (所有 expected_files 存在)
-failed    = (agent.status == "failed") OR (expected_files 缺失)
-timeout   = (运行时间 > 超时阈值) → kill
+completed = 所有 expected_files 存在于磁盘
+failed    = 任一 expected_files 缺失
 ```
 
 expected_files 由各步骤的 processes 文件定义（如 `capabilities/{id}-{name}.md` + `.meta/summaries/{id}-{name}.json`）。
 
-### 模式 A：简单窗口（适用 ⑤⑥⑦）
+### 调度模式一：批量并行（适用 ⓪ 维度 Agent）
 
-任务互相独立，无依赖约束。先完成先补位。
+**意图**：所有任务无依赖，一次性全部启动。
 
-```
-初始化：
-    待办队列 = 所有未完成的任务（按 priority/序号排序）
-    已跳过 = 产出文件已存在的任务 → 标记 completed
-    运行中计数 = 0
+1. 组装所有任务的 task
+2. **一次性**启动全部（不超过 W 个，超出则分两批）
+3. 等待全部完成
+4. 验证 expected_files，标记 completed/failed
+5. 失败的任务重试一次；仍失败则标记 degraded，不阻塞后续
 
-    # 初始填满：从待办队列取前 W 个 spawn
-    while 运行中计数 < W 且 待办队列非空:
-        task = 待办队列.dequeue()
-        sessions_spawn(label=task.label, task=task.task)
-        运行中计数 += 1
+### 调度模式二：滚动窗口（适用 ①⑤⑥⑦）
 
-轮询循环：
-    while 待办队列非空 或 运行中计数 > 0:
+**意图**：任务互相独立，完成一个补一个，保持并发数接近 W。
 
-        ── 阶段 A：轮询状态 ──
-        sleep(15s)
-        agents = subagents list()
-        for agent in agents where agent.status in (completed, failed):
-            if agent.status == completed:
-                files_exist = check expected_files for agent.label
-                if files_exist:
-                    mark completed
-                else:
-                    mark failed  # 输出了但文件没写
-                运行中计数 -= 1
-            elif agent.status == failed:
-                mark failed
-                运行中计数 -= 1
+1. 待办队列 = 所有未完成任务（按序号排序）
+2. 跳过：产出文件已存在的任务 → 直接标记 completed
+3. 启动前 W 个任务
+4. 循环：等待任一任务完成 → 验证文件 → 补位下一个待办任务
+5. 全部完成后统计结果，进入下一步
 
-        for agent in agents where agent.running_time > 超时阈值:
-            kill(agent)
-            mark timeout
-            运行中计数 -= 1
-
-        ── 阶段 B：槽位替换 ──
-        while 运行中计数 < W 且 待办队列非空:
-            task = 待办队列.dequeue()
-            sessions_spawn(label=task.label, task=task.task)
-            运行中计数 += 1
-
-退出：
-    统计 completed/failed/timeout 数量
-    进入下一步
-```
-
-**超时重试**：timeout 的 agent 重试一次（重新 spawn 同一任务）。仍失败则标记 degraded，不阻塞其他任务。
+**超时重试**：超时的任务重试一次。仍失败则标记 degraded，不阻塞其他任务。
 
 **Step ⑥ 特殊处理**：1 个命题 = 2 个 agent（Markdown + Experiment），两者独立可并行。
 - 槽位计数：1 个命题占 2 个槽位
-- 完成判定：2 个 agent 均结束才释放 2 个槽位
 - 部分完成：Markdown failed 但 Experiment completed → 标记 partial，不影响另一个
 
-### 模式 B：DAG 调度（适用 ④）
+### 调度模式三：拓扑分批（适用 ④ 能力研究）
 
-子组间有跨依赖。必须按拓扑批次执行：前置子组全部 completed 后才能 spawn 后续子组。
+**意图**：任务间有依赖关系，必须按拓扑顺序分批执行。
 
-```
-初始化：
-    计算每个子组的 depends_on（来自 capability-graph 的依赖关系）
-    计算拓扑批次：batch_1 = 无依赖的子组, batch_2 = 依赖 batch_1 的子组, ...
-    运行中计数 = 0
-    当前批次 = 1
-
-    # 初始填满：batch_1 中取前 W 个 spawn
-    for group in batch_1 where 运行中计数 < W:
-        sessions_spawn(label=f"agent-{group.id}", task=group.task)
-        运行中计数 += 1
-
-轮询循环：
-    while 未完成的子组数 > 0:
-
-        ── 阶段 A：轮询状态 ──
-        sleep(15s)
-        agents = subagents list()
-        for agent in agents where agent.status in (completed, failed):
-            if agent.status == completed:
-                files_exist = check expected_files
-                if files_exist:
-                    mark completed
-                else:
-                    mark failed
-                运行中计数 -= 1
-            elif agent.status == failed:
-                mark failed
-                运行中计数 -= 1
-
-        for agent in agents where agent.running_time > 15min:
-            kill(agent)
-            mark timeout → 重试一次 → 仍失败 → degraded
-            运行中计数 -= 1
-
-        ── 阶段 B：DAG 槽位替换 ──
-        # 找出所有"前置依赖全部 completed"的待 spawn 子组
-        ready_groups = [g for g in pending if all(dep in completed for dep in g.depends_on)]
-        for group in ready_groups where 运行中计数 < W:
-            sessions_spawn(label=f"agent-{group.id}", task=group.task)
-            运行中计数 += 1
-
-退出：
-    统计结果，进入下一步
-```
+1. 读取 capability-graph 的依赖关系，计算拓扑批次：
+   - batch_1 = 无依赖的子组
+   - batch_2 = 依赖 batch_1 的子组
+   - ...
+2. 对每个批次：按滚动窗口模式执行（批次内并行不超过 W）
+3. 一批全部 completed 后才进入下一批
+4. 批内失败的任务重试一次；仍失败则标记 degraded
 
 ### task 组装规则
 
@@ -312,6 +241,26 @@ expected_files 由各步骤的 processes 文件定义（如 `capabilities/{id}-{
 - Step ④ 的 task **全部内联**（能力信息在分组时已确定，不读外部文件）
 - Step ⑤⑥⑦ 的 task **指定文件路径**（前置步骤产出量大，用 read 工具按需读取）
 - 文件不存在时的降级动作必须在 task 中声明（⑧ 标注"缺失"继续；⑨⑩ 停止并报错）
+
+---
+
+## 平台适配说明
+
+本 skill 的调度描述是**声明式**的——定义了"做什么"和"约束是什么"，不规定"怎么调用 API"。不同 agent 平台应自行将上述调度模式映射到自身能力：
+
+| 调度意图 | 可能的平台实现 |
+|---------|--------------|
+| 启动子 agent | spawn / delegate_task / sub_agent.create / ... |
+| 等待完成 | 轮询检查状态 / 同步阻塞等待 / 回调通知 / ... |
+| 验证文件 | 文件系统 stat / read / find / ... |
+| 超时处理 | kill + 重试 / 设置 timeout 参数 / 忽略（同步模型无超时概念） / ... |
+| 并发控制 | 信号量 / 槽位计数 / 平台内置限制 / ... |
+
+**同步 vs 异步**：
+- **异步平台**（支持 spawn + poll）：按滚动窗口模式实现，可实现"完成一个补一个"
+- **同步平台**（delegate_task 阻塞）：每批启动 W 个子 agent，同步等待全部完成后再启动下一批。退化为"批次并行"，但正确性不受影响
+
+**降级原则**：如果平台不支持某种调度能力（如无法 kill 超时 agent），跳过该机制，标记 degraded 继续。调度策略的正确性不应依赖某个特定平台能力。
 
 ---
 
