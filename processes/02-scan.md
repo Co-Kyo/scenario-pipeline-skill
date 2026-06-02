@@ -31,6 +31,8 @@ Phase A：并行搜索               Phase B：并行提取               Phase 
 
 如果 `requirement-web.json` 存在（头脑风暴已执行），读取该文件作为精准输入——**必须消费其中的 level_weight、search_keywords、search_guidance、scope 字段**。
 
+如果 `partition-analysis.json` 存在（⓪b 分区已执行），**只处理 `current_session.proposition_ids` 中的命题**，按 `current_session.scan_batches` 分批执行。排期到 `deferred_sessions` 的命题不进入本轮 scan。
+
 > **🔍 搜索能力要求**
 > Phase A 的搜索 agent 需要网络搜索能力。具体实现由执行平台提供：
 > - 主 agent 直接可用的 web_search 工具
@@ -38,8 +40,8 @@ Phase A：并行搜索               Phase B：并行提取               Phase 
 > - 平台应确保搜索 agent 能获取结构化的搜索结果（URL、标题、摘要）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`core/shared-conventions.md`、`meta/sources.md`、`meta/output-contracts.md`§1、`{workDir}/.meta/requirement-web.json`（如存在）
-> - ❌ 禁止读取：`processes/02~07.md`、`core/*.md`
+> - ✅ 允许读取：`core/shared-conventions.md`、`meta/sources.md`、`meta/output-contracts.md`§1、`{workDir}/.meta/requirement-web.json`（如存在）、`{workDir}/.meta/partition-analysis.json`（如存在）
+> - ❌ 禁止读取：`processes/03~08.md`、`core/*.md`
 > - 📌 `output-contracts.md` 只读 §1 节，不要读其他章节
 > - 📌 `plugins/anti-crawl-fetch.md` 仅在 Phase B 的 agent 中按需加载（Phase A 不加载）
 
@@ -114,6 +116,8 @@ mkdir -p {workDir}/.meta/sources
 - `propositions[].search_keywords`：每个命题的关键词组（principles + practices）
 - `search_guidance`：全局搜索策略
 - `scope.exclusions`：排除项
+
+**如果 partition-analysis.json 存在**：只处理 `current_session.proposition_ids` 中的命题。从 requirement-web.json 中筛选这些命题的 level_weight 和 search_keywords，跳过不在列表中的命题。
 
 从 `core/shared-conventions.md` 策略表查表：
 ```

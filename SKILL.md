@@ -21,32 +21,41 @@ description: "前端复合工程场景知识管线。三阶段工作流：头脑
 └───────────────────────────────────────┼────────────────────────────────┘
                                         │
 ┌───────────────────────────────────────┼────────────────────────────────┐
+│                      ① 依赖整理与分区                                 │
+│                                                                       │
+│  依赖整理 → DAG → 三层分区（连通分量+拓扑深度+社区发现）              │
+│       │                                                                │
+│  → partition-analysis.json + execution-plan.md                        │
+│                                              │               ⓧ 检查点│
+└───────────────────────────────────────┼────────────────────────────────┘
+                                        │
+┌───────────────────────────────────────┼────────────────────────────────┐
 │                          前处理（串行 3 步）                           │
 │                                                                       │
-│  ① scan（两阶段管道）                                                  │
+│  ② scan（两阶段管道）                                                  │
 │    Phase A: 串行搜索 + Playwright前置 → url-batches.json             │
 │    Phase B: 并行agent提取（W=5） → partial results                    │
 │    Phase C: merge → .raw-materials/（index + markdown）              │
 │       │                                                                │
-│  ② capability-graph → capability-graph.json（能力+高地+参考URL）      │
+│  ③ capability-graph → capability-graph.json（能力+高地+参考URL）      │
 │       │                                                        ⓐ 检查点│
-│  ③ evaluate-pool ──→ evaluations.json + README.md                    │
+│  ④ evaluate-pool ──→ evaluations.json + README.md                    │
 │                                              │                ⓑ 检查点│
 └───────────────────────────────────────┼────────────────────────────────┘
                                         │
 ┌───────────────────────────────────────┼────────────────────────────────┐
 │                      后处理（并行 + 检查点）                           │
 │                                                                       │
-│  ④ capability-research ──→ capabilities/*.md + summaries/*.json      │
+│  ⑤ capability-research ──→ capabilities/*.md + summaries/*.json      │
 │       │  × N 并行（DAG 拓扑调度）                            ⓒ 检查点│
 │                                                                       │
-│  ⑤ briefing-assemble  ──→ briefings/*.md                             │
+│  ⑥ briefing-assemble  ──→ briefings/*.md                             │
 │       │  × M 并行（简单窗口 W=5）                            ⓓ 检查点│
 │                                                                       │
-│  ⑥ assemble ──────────→ {命题}/overview+edge+trade+exp+ref           │
+│  ⑦ assemble ──────────→ {命题}/overview+edge+trade+exp+ref           │
 │       │  × M 并行（每命题 2 agent）                          ⓕ 检查点│
 │                                                                       │
-│  ⑦ learning-ladder ───→ {命题}/learning-ladder.md                    │
+│  ⑧ learning-ladder ───→ {命题}/learning-ladder.md                    │
 │          × M 并行（简单窗口 W=5）                            ⓖ 检查点│
 └───────────────────────────────────────────────────────────────────────┘
 ```
@@ -89,16 +98,20 @@ deep research：<场景描述>
    - 自动从自然语言推断经验年限（L1-L4）
    - 判断是否可跳过（topic 明确 + year 已推断 + platform 已指定 → 跳过）
    - 不可跳过 → 4 维度 Agent 并行（均注入年限颗粒度规则）→ 裁判 Agent 收敛 → 写入 requirement-web.json
-   - ⓩ 检查点：用户确认需求网（含年限推断结果）后进入前处理
-3. **前处理**（串行 3 步）：严格按以下循环执行：
+   - ⓩ 检查点：用户确认需求网（含年限推断结果）后进入分区
+3. **依赖整理与分区**：读 `processes/01-partition.md` → 执行 → 产出 `partition-analysis.json` + `execution-plan.md`
+   - 依赖整理：确认/生成命题间依赖关系
+   - 三层分区：连通分量 → 拓扑深度 → 社区发现
+   - ⓧ 检查点：用户确认执行计划后进入前处理
+4. **前处理**（串行 3 步）：严格按以下循环执行：
    ```
-   for step in [01, 02, 03]:
+   for step in [02, 03, 04]:
        ① 读 processes/{step}-xxx.md          ← 只读当前步骤文件
        ② 读该步骤引用的 core/*.md 或 meta/*.md（按文件中的"前置条件"指示）
        ③ 执行该步骤的全部操作，产出文件
        ④ 进入下一步前，不再引用上一步的 processes 文件内容
    ```
-4. **后处理**：按 `processes/04` → `processes/07` 分步执行（共享约定已在初始化时加载）
+5. **后处理**：按 `processes/05` → `processes/08` 分步执行（共享约定已在初始化时加载）
 
 **违规判定**：如果在执行 Step N 时引用了 Step N+1 或更后续步骤文件的内容，即视为违规。
 
@@ -110,6 +123,8 @@ deep research：<场景描述>
 |------|------|---------|
 | `core/shared-conventions.md` | 共享约定（调度/检查点/隔离/增量复用/凭据/比例） | 初始化时读取，全程持有 |
 | `processes/00-brainstorm.md` | 头脑风暴执行文档（年限推断/维度定义/裁判逻辑/输出格式） | 头脑风暴阶段读取 |
+| `processes/01-partition.md` | 依赖整理与分区执行文档 | 头脑风暴确认后、scan 前读取 |
+| `meta/partition-analysis-schema.md` | 分区 JSON 的结构定义 | 由 00b-partition 前置条件指示读取 |
 | `meta/paths.md` | 路径约定表 | 初始化时读取一次即可 |
 | `meta/sources.md` | T0 域名表 + 信源分级规则 | 由 Step 00 和 Step 01 的前置条件指示读取 |
 | `meta/output-contracts.md` | 每步的输出结构 + 完整示例 | 由每步的前置条件指示读取对应 §N 节 |
@@ -121,10 +136,11 @@ deep research：<场景描述>
 | 阶段 | 编号 | 名称 | 核心产物 | 检查点 |
 |------|------|------|---------|--------|
 | 前置 | ⓪ | 头脑风暴 | requirement-web.json | ⓩ |
-| 前处理 | ① | 定向扫描 | .raw-materials/（index.json + markdown） | — |
-| 前处理 | ② | 能力图谱构建 | capability-graph.json | ⓐ |
-| 前处理 | ③ | 评估与入池 | .meta/evaluations.json + README.md | ⓑ |
-| 后处理 | ④ | 能力研究 | capabilities/*.md + summaries/*.json | ⓒ |
-| 后处理 | ⑤ | Briefing 组装 | briefings/*.md | ⓓ |
-| 后处理 | ⑥ | 命题组装 | 命题目录（overview/edge/trade/exp/ref） | ⓕ |
-| 后处理 | ⑦ | 学习阶梯 | learning-ladder.md | ⓖ |
+| 前置 | ① | 依赖整理与分区 | partition-analysis.json + execution-plan.md | ⓧ |
+| 前处理 | ② | 定向扫描 | .raw-materials/（index.json + markdown） | — |
+| 前处理 | ③ | 能力图谱构建 | capability-graph.json | ⓐ |
+| 前处理 | ④ | 评估与入池 | .meta/evaluations.json + README.md | ⓑ |
+| 后处理 | ⑤ | 能力研究 | capabilities/*.md + summaries/*.json | ⓒ |
+| 后处理 | ⑥ | Briefing 组装 | briefings/*.md | ⓓ |
+| 后处理 | ⑦ | 命题组装 | 命题目录（overview/edge/trade/exp/ref） | ⓕ |
+| 后处理 | ⑧ | 学习阶梯 | learning-ladder.md | ⓖ |

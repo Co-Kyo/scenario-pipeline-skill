@@ -11,15 +11,15 @@ description: "Step ① scan 的 web_fetch 反爬降级方案。当 web_fetch 失
 
 ## 域名分类
 
-域名路由逻辑在 `processes/01-scan.md` 的抓取策略中定义。域名分类统一维护在 `meta/sources.md`（T0 表 + 反爬域名表）。
+域名路由逻辑在 `processes/02-scan.md` 的抓取策略中定义。域名分类统一维护在 `meta/sources.md`（T0 表 + 反爬域名表）。
 
-本插件只负责：当 01-scan.md 判定某个 URL 需要走 Playwright 时，提供执行指令。
+本插件只负责：当 02-scan.md 判定某个 URL 需要走 Playwright 时，提供执行指令。
 
 ---
 
 ## 触发条件
 
-01-scan.md 的抓取策略判定某 URL 需要走 Playwright 时，加载本插件执行。
+02-scan.md 的抓取策略判定某 URL 需要走 Playwright 时，加载本插件执行。
 
 ---
 

@@ -128,11 +128,12 @@ scenario-pipeline/
 │   └── year-granularity.md         经验年限颗粒度规则
 │
 ├── processes/                  ← 执行文档（自包含，含示例）
-│   ├── 00-brainstorm.md           多维头脑风暴 + 年限自动推断 + 分词（前置阶段）
-│   ├── 01-scan.md                 定向扫描
-│   ├── 02-capability-graph.md     能力图谱构建（含战略高地识别）
-│   ├── 03-evaluate-pool.md        评估与入池
-│   ├── 04 ~ 07                    后处理步骤
+│   ├── 00-brainstorm.md           多维头脑风暴
+│   ├── 01-partition.md             依赖整理与分区 + 年限自动推断 + 分词（前置阶段）
+│   ├── 02-scan.md                 定向扫描
+│   ├── 03-capability-graph.md     能力图谱构建（含战略高地识别）
+│   ├── 04-evaluate-pool.md        评估与入池
+│   ├── 05 ~ 08                    后处理步骤
 │
 └── dev/                        ← 开发与观测（人类阅读 + 审查工具）
     ├── design/                     设计原理（why）

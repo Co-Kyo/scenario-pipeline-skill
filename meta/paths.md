@@ -18,6 +18,7 @@
 | 命题 experiment | `{workDir}/{seq}-{short_name}/experiment/` |
 | 命题 references | `{workDir}/{seq}-{short_name}/references.md` |
 | 命题学习阶梯 | `{workDir}/{seq}-{short_name}/learning-ladder.md` |
+| 执行计划 | `{workDir}/execution-plan.md` |
 
 ## .meta 内部路径
 
@@ -37,6 +38,7 @@
 | 候选池 | `{workDir}/.meta/candidates.md` |
 | 动态信源池 | `{workDir}/.meta/sources/dynamic-sources.json` |
 | 需求网 | `{workDir}/.meta/requirement-web.json` |
+| 分区分析 | `{workDir}/.meta/partition-analysis.json` |
 | 检查点记录 | `{workDir}/.meta/checkpoints/barrier-{N}.md` |
 
 ## 命名规则

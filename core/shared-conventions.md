@@ -296,12 +296,13 @@ expected_files 由各步骤的 processes 文件定义（如 `capabilities/{id}-{
 | 编号 | 文件 | 位置 | 核心产物 | 介入价值 |
 |------|------|------|---------|---------| 
 | ⓩ | barrier-0.md | Step ⓪ 完成后 | requirement-web.json | 确认需求网、年限推断、命题拆分 |
-| ⓐ | barrier-1.md | Step ② 完成后 | capability-graph.json | 确认能力图谱质量 |
-| ⓑ | barrier-2.md | Step ③ 完成后（后处理启动前） | evaluations.json + 执行计划 | 确认命题优先级、范围、调整参数 |
-| ⓒ | barrier-3.md | Step ④ 完成后 | capability 文件 + summary | 审查研究质量 |
-| ⓓ | barrier-4.md | Step ⑤ 完成后 | briefing 文件 | 审查素材提取完整性 |
-| ⓕ | barrier-5.md | Step ⑥ 完成后 | 命题目录文件 | 审查组装质量 |
-| ⓖ | barrier-6.md | Step ⑦ 完成后 | learning-ladder.md | 确认最终产出 |
+| ⓧ | barrier-1.md | Step ① 完成后 | partition-analysis.json + execution-plan.md | 确认分区方案、执行计划 |
+| ⓐ | barrier-2.md | Step ③ 完成后 | capability-graph.json | 确认能力图谱质量 |
+| ⓑ | barrier-3.md | Step ④ 完成后（后处理启动前） | evaluations.json + 执行计划 | 确认命题优先级、范围、调整参数 |
+| ⓒ | barrier-4.md | Step ⑤ 完成后 | capability 文件 + summary | 审查研究质量 |
+| ⓓ | barrier-5.md | Step ⑥ 完成后 | briefing 文件 | 审查素材提取完整性 |
+| ⓕ | barrier-6.md | Step ⑦ 完成后 | 命题目录文件 | 审查组装质量 |
+| ⓖ | barrier-7.md | Step ⑧ 完成后 | learning-ladder.md | 确认最终产出 |
 
 ### 跳过条件
 
