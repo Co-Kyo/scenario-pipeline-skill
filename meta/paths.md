@@ -4,39 +4,39 @@
 
 ## 核心路径
 
-| 用途 | 路径模板 | 示例 |
-|------|---------|------|
-| 总览导航 | `{workDir}/README.md` | `workflow/research/README.md` |
-| 全局学习阶梯 | `{workDir}/learning-ladder.md`（可选） | `workflow/research/learning-ladder.md` |
-| 能力知识库目录 | `{workDir}/capabilities/` | `workflow/research/capabilities/` |
-| 能力主文件 | `{workDir}/capabilities/{id}-{name}.md` | `.../capabilities/A1-浏览器渲染管线.md` |
-| 能力知识库索引 | `{workDir}/capabilities/README.md` | `.../capabilities/README.md` |
-| 命题目录 | `{workDir}/{seq}-{short_name}/` | `.../01-长列表渲染/` |
-| 命题 overview | `{workDir}/{seq}-{short_name}/overview.md` | `.../01-长列表渲染/overview.md` |
-| 命题 edge-cases | `{workDir}/{seq}-{short_name}/edge-cases.md` | `.../01-长列表渲染/edge-cases.md` |
-| 命题 trade-offs | `{workDir}/{seq}-{short_name}/trade-offs.md` | `.../01-长列表渲染/trade-offs.md` |
-| 命题 experiment | `{workDir}/{seq}-{short_name}/experiment/` | `.../01-长列表渲染/experiment/` |
-| 命题 references | `{workDir}/{seq}-{short_name}/references.md` | `.../01-长列表渲染/references.md` |
-| 命题学习阶梯 | `{workDir}/{seq}-{short_name}/learning-ladder.md` | `.../01-长列表渲染/learning-ladder.md` |
+| 用途 | 路径 |
+|------|------|
+| 总览导航 | `{workDir}/README.md` |
+| 全局学习阶梯 | `{workDir}/learning-ladder.md`（可选） |
+| 能力知识库目录 | `{workDir}/capabilities/` |
+| 能力主文件 | `{workDir}/capabilities/{id}-{name}.md` |
+| 能力知识库索引 | `{workDir}/capabilities/README.md` |
+| 命题目录 | `{workDir}/{seq}-{short_name}/` |
+| 命题 overview | `{workDir}/{seq}-{short_name}/overview.md` |
+| 命题 edge-cases | `{workDir}/{seq}-{short_name}/edge-cases.md` |
+| 命题 trade-offs | `{workDir}/{seq}-{short_name}/trade-offs.md` |
+| 命题 experiment | `{workDir}/{seq}-{short_name}/experiment/` |
+| 命题 references | `{workDir}/{seq}-{short_name}/references.md` |
+| 命题学习阶梯 | `{workDir}/{seq}-{short_name}/learning-ladder.md` |
 
 ## .meta 内部路径
 
-| 用途 | 路径模板 | 示例 |
-|------|---------|------|
-| 共享锚点 | `{workDir}/.meta/brainstorm/anchors.json` | `.../brainstorm/anchors.json` |
-| 头脑风暴·场景维度 | `{workDir}/.meta/brainstorm/scenario.json` | `.../brainstorm/scenario.json` |
-| 头脑风暴·技术维度 | `{workDir}/.meta/brainstorm/technical.json` | `.../brainstorm/technical.json` |
-| 头脑风暴·学习维度 | `{workDir}/.meta/brainstorm/learning.json` | `.../brainstorm/learning.json` |
-| 头脑风暴·约束维度 | `{workDir}/.meta/brainstorm/constraint.json` | `.../brainstorm/constraint.json` |
-| 能力摘要 | `{workDir}/.meta/summaries/{id}-{name}.json` | `.../summaries/A1-浏览器渲染管线.json` |
-| Briefing | `{workDir}/.meta/briefings/{seq}-{short_name}.md` | `.../briefings/01-长列表渲染.md` |
-| 能力图谱 | `{workDir}/.meta/capability-graph.json` | `...` |
-| 评估结果 | `{workDir}/.meta/evaluations.json` | `...` |
-| 扫描结果索引 | `{workDir}/.meta/.raw-materials/index.json` | `...` |
-| 扫描结果内容 | `{workDir}/.meta/.raw-materials/*.md` | `...` |
-| 候选池 | `{workDir}/.meta/candidates.md` | `...` |
-| 动态信源池 | `{workDir}/.meta/sources/dynamic-sources.json` | `...` |
-| 需求网 | `{workDir}/.meta/requirement-web.json` | `...` |
+| 用途 | 路径 |
+|------|------|
+| 共享锚点 | `{workDir}/.meta/brainstorm/anchors.json` |
+| 头脑风暴·场景维度 | `{workDir}/.meta/brainstorm/scenario.json` |
+| 头脑风暴·技术维度 | `{workDir}/.meta/brainstorm/technical.json` |
+| 头脑风暴·学习维度 | `{workDir}/.meta/brainstorm/learning.json` |
+| 头脑风暴·约束维度 | `{workDir}/.meta/brainstorm/constraint.json` |
+| 能力摘要 | `{workDir}/.meta/summaries/{id}-{name}.json` |
+| Briefing | `{workDir}/.meta/briefings/{seq}-{short_name}.md` |
+| 能力图谱 | `{workDir}/.meta/capability-graph.json` |
+| 评估结果 | `{workDir}/.meta/evaluations.json` |
+| 扫描结果索引 | `{workDir}/.meta/.raw-materials/index.json` |
+| 扫描结果内容 | `{workDir}/.meta/.raw-materials/*.md` |
+| 候选池 | `{workDir}/.meta/candidates.md` |
+| 动态信源池 | `{workDir}/.meta/sources/dynamic-sources.json` |
+| 需求网 | `{workDir}/.meta/requirement-web.json` |
 
 ## 命名规则
 

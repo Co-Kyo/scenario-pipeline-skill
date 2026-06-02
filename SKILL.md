@@ -84,7 +84,7 @@ deep research：<场景描述>
 **核心规则：每一步只读该步的文件，严禁提前加载后续步骤。**
 
 执行流程：
-1. **初始化**：读 `core/shared-conventions.md`（共享约定）+ `meta/paths.md`（路径约定）
+1. **初始化**：读 `core/shared-conventions.md`（共享约定）+ `meta/paths.md`（路径约定）。向用户确认产出目录（workDir）——告知默认路径，等用户确认后再继续
 2. **头脑风暴**（前置阶段）：读 `processes/00-brainstorm.md` → 执行 → 产出 `requirement-web.json`
    - 自动从自然语言推断经验年限（L1-L4）
    - 判断是否可跳过（topic 明确 + year 已推断 + platform 已指定 → 跳过）
