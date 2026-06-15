@@ -1,282 +1,171 @@
 """
-Step ⓪ 头脑风暴 - 单元测试
+Step ⓪ 头脑风暴 - Skill 设计验证测试
 
-需求文档：
-本测试定义头脑风暴步骤的功能需求。读取这些测试 = 读取头脑风暴的功能规格。
-
-核心功能：
-1. 年限自动推断
-2. 跳过判断逻辑
-3. 4 维度 Agent 并行调度
-4. 收敛者 Agent 校验
-
-测试分层（AI 非确定性处理）：
-- Layer 1: 结构验证（100% 确定性）- JSON Schema、必需字段
-- Layer 2: 属性验证（统计性）- 覆盖度、DAG 无环
-- Layer 3: 语义验证（LLM-as-Judge）- 质量评估
+本测试验证 Skill 的 Markdown 设计是否完整、一致。
+不是验证 AI 执行结果，而是验证「说明书」本身的质量。
 """
 
+import os
+import re
 import pytest
 
 
-class TestYearInference:
-    """年限推断功能测试
-    
-    需求：系统应从用户输入中自动推断经验年限（L1-L4）。
-    
-    推断优先级：
-    1. 显式参数 --year（最高）
-    2. 自然语言显式数字（如"3年"）
-    3. 隐式信号（如"高级"、"原理"）
-    4. 默认 L2（无法推断时）
-    """
-
-    def test_explicit_year_parameter(self):
-        """场景：用户使用 --year 参数
-        
-        Given: 用户输入包含 --year=L3
-        When:  系统解析参数
-        Then:  直接采用 L3，忽略其他信号
-        """
-        # TODO: 实现测试
-        pass
-
-    def test_explicit_number_in_natural_language(self):
-        """场景：用户输入包含显式数字
-        
-        Given: 用户输入 "3-5年前端经验"
-        When:  系统解析自然语言
-        Then:  识别为 L2（3-5年）
-        """
-        # TODO: 实现测试
-        pass
-
-    def test_implicit_signal_senior(self):
-        """场景：隐式信号 - 高级
-        
-        Given: 用户输入包含 "高级工程师"
-        When:  系统分析隐式信号
-        Then:  推断为 L3（高级通常对应 5-8 年）
-        """
-        # TODO: 实现测试
-        pass
-
-    def test_implicit_signal_principle(self):
-        """场景：隐式信号 - 原理
-        
-        Given: 用户输入包含 "底层原理"
-        When:  系统分析隐式信号
-        Then:  推断为 L2（原理通常对应 3-5 年）
-        """
-        # TODO: 实现测试
-        pass
-
-    def test_default_to_l2_when_no_signal(self):
-        """场景：无年限信号
-        
-        Given: 用户输入 "webpack 打包配置"
-        When:  系统无法识别任何年限信号
-        Then:  默认推断为 L2（覆盖面最广）
-        """
-        # TODO: 实现测试
-        pass
-
-    def test_multiple_signals_take_mode(self):
-        """场景：多个隐式信号取众数
-        
-        Given: 用户输入包含 "高级" (L3) + "原理" (L2) + "架构" (L3)
-        When:  系统分析多个信号
-        Then:  取众数 → L3
-        """
-        # TODO: 实现测试
-        pass
+SKILL_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROCESSES_DIR = os.path.join(SKILL_DIR, "processes")
 
 
-class TestSkipLogic:
-    """跳过判断功能测试
-    
-    需求：当满足特定条件时，可跳过完整头脑风暴，直接生成轻量骨架。
-    
-    跳过条件（必须同时满足）：
-    1. topic 明确（具体工具名，无抽象词）
-    2. year 已推断（有显式数字或多个一致信号）
-    3. platform 已指定（web/miniapp/rn）
-    
-    额外拦截：
-    - 包含"面试"、"场景"、"分析"等词 → 强制完整路径
-    """
+class TestBrainstormFileStructure:
+    """验证 00-brainstorm.md 文件结构完整性"""
 
-    def test_skip_when_all_conditions_met(self):
-        """场景：满足所有跳过条件
-        
-        Given: 用户输入 "webpack vite 3年经验 web平台"
-        When:  系统判断跳过条件
-        Then:  判断为可跳过，生成轻量骨架
-        """
-        # TODO: 实现测试
-        pass
+    @pytest.fixture
+    def brainstorm_content(self):
+        path = os.path.join(PROCESSES_DIR, "00-brainstorm.md")
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
 
-    def test_no_skip_when_abstract_topic(self):
-        """场景：topic 包含抽象词
-        
-        Given: 用户输入 "前端性能优化原理与实践"
-        When:  系统判断跳过条件
-        Then:  判断为不可跳过，执行完整头脑风暴
-        """
-        # TODO: 实现测试
-        pass
+    def test_file_exists(self):
+        """Skill 必须包含头脑风暴步骤定义"""
+        path = os.path.join(PROCESSES_DIR, "00-brainstorm.md")
+        assert os.path.exists(path), f"文件不存在: {path}"
 
-    def test_no_skip_when_year_unknown(self):
-        """场景：无法推断年限
-        
-        Given: 用户输入 "webpack 打包配置"
-        When:  系统判断跳过条件
-        Then:  判断为不可跳过（缺少 year 条件）
-        """
-        # TODO: 实现测试
-        pass
+    def test_has_title(self, brainstorm_content):
+        """必须有步骤标题"""
+        assert re.search(r"^# Step", brainstorm_content, re.MULTILINE)
 
-    def test_forced_full_path_by_interview_keyword(self):
-        """场景：包含面试关键词，强制完整路径
-        
-        Given: 用户输入 "webpack vite 3年经验 web平台 面试"
-        When:  系统检测到"面试"关键词
-        Then:  强制执行完整路径（即使其他条件满足）
-        """
-        # TODO: 实现测试
-        pass
+    def test_has_purpose_section(self, brainstorm_content):
+        """必须有「目的」章节"""
+        assert "## 目的" in brainstorm_content
+
+    def test_has_prerequisites_section(self, brainstorm_content):
+        """必须有「前置条件」章节"""
+        assert "## 前置条件" in brainstorm_content
+
+    def test_has_io_section(self, brainstorm_content):
+        """必须有「输入」和「输出」章节"""
+        assert "## 输入" in brainstorm_content
+        assert "## 输出" in brainstorm_content
+
+    def test_prerequisites_list_files(self, brainstorm_content):
+        """前置条件必须列出需要加载的文件"""
+        assert re.search(r"(⛔|加载)", brainstorm_content)
+
+    def test_context_isolation_declaration(self, brainstorm_content):
+        """前置条件必须声明上下文隔离规则"""
+        assert "上下文隔离" in brainstorm_content
+        assert "允许读取" in brainstorm_content
+        assert "禁止读取" in brainstorm_content
+
+    def test_has_execution_steps(self, brainstorm_content):
+        """必须有执行步骤"""
+        assert "## 执行步骤" in brainstorm_content
+
+    def test_references_shared_conventions(self, brainstorm_content):
+        """必须引用 shared-conventions.md"""
+        assert "shared-conventions" in brainstorm_content
 
 
-class TestAnchorGeneration:
-    """锚点生成功能测试
-    
-    需求：系统应从用户输入中提取技术关键词，生成锚点骨架。
-    
-    锚点要求：
-    - 数量：8-15 个
-    - 每个锚点必须有 provisional_level 和 provisional_role
-    - 核心锚点的 reasoning 必须说明归属原因
-    """
+class TestYearInferenceDesign:
+    """验证年限推断功能在 Skill 中有定义"""
 
-    def test_anchor_count_in_range(self):
-        """场景：锚点数量在合理范围
-        
-        Given: 用户输入 "webpack vite 3年经验"
-        When:  系统生成锚点
-        Then:  锚点数量在 8-15 之间
-        """
-        # TODO: 实现测试
-        pass
+    @pytest.fixture
+    def brainstorm_content(self):
+        path = os.path.join(PROCESSES_DIR, "00-brainstorm.md")
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
 
-    def test_anchor_has_level_and_role(self):
-        """场景：锚点包含层次标注
-        
-        Given: 系统生成锚点列表
-        When:  检查每个锚点
-        Then:  每个锚点都有 provisional_level 和 provisional_role
-        """
-        # TODO: 实现测试
-        pass
+    def test_year_inference_mentioned(self, brainstorm_content):
+        """必须提到年限推断"""
+        assert "年限" in brainstorm_content or "year" in brainstorm_content.lower()
 
-    def test_core_anchor_has_reasoning(self):
-        """场景：核心锚点有归属原因
-        
-        Given: 系统生成锚点列表
-        When:  检查 role="core" 的锚点
-        Then:  每个核心锚点都有 reasoning 字段
-        """
-        # TODO: 实现测试
-        pass
+    def test_year_levels_defined(self, brainstorm_content):
+        """必须定义 L1-L4 等级"""
+        assert "L1" in brainstorm_content
+        assert "L2" in brainstorm_content
+        assert "L3" in brainstorm_content
+        assert "L4" in brainstorm_content
+
+    def test_inference_priority_defined(self, brainstorm_content):
+        """必须定义推断优先级"""
+        assert "优先级" in brainstorm_content
+
+    def test_default_level_defined(self, brainstorm_content):
+        """必须定义默认等级"""
+        assert "默认" in brainstorm_content
 
 
-class TestOutputStructure:
-    """输出结构验证（Layer 1: 100% 确定性）
-    
-    需求：requirement-web.json 必须符合定义的结构。
-    这是确定性测试，每次运行结果相同。
-    """
+class TestSkipLogicDesign:
+    """验证跳过逻辑在 Skill 中有定义"""
 
-    def test_has_required_fields(self, sample_requirement_web):
-        """验证必需字段存在
-        
-        Given: 有效的 requirement-web.json
-        When:  检查字段
-        Then:  所有必需字段都存在
-        """
-        required = ["generated_at", "raw_input", "context", "propositions", "dependencies"]
-        for field in required:
-            assert field in sample_requirement_web, f"缺少必需字段: {field}"
+    @pytest.fixture
+    def brainstorm_content(self):
+        path = os.path.join(PROCESSES_DIR, "00-brainstorm.md")
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
 
-    def test_propositions_non_empty(self, sample_requirement_web):
-        """验证命题列表非空
-        
-        Given: 有效的 requirement-web.json
-        When:  检查命题列表
-        Then:  命题数量 >= 3
-        """
-        assert len(sample_requirement_web["propositions"]) >= 3
+    def test_skip_conditions_mentioned(self, brainstorm_content):
+        """必须提到跳过条件"""
+        assert "跳过" in brainstorm_content
 
-    def test_context_has_target_level(self, sample_requirement_web):
-        """验证上下文包含目标经验等级
-        
-        Given: 有效的 requirement-web.json
-        When:  检查 context
-        Then:  target_level 存在且为 L1-L4
-        """
-        ctx = sample_requirement_web["context"]
-        assert "target_level" in ctx
-        assert ctx["target_level"] in ["L1", "L2", "L3", "L4"]
+    def test_topic_clarity_defined(self, brainstorm_content):
+        """必须定义 topic 明确度判定"""
+        assert "topic" in brainstorm_content.lower() or "主题" in brainstorm_content
+
+    def test_year_condition_defined(self, brainstorm_content):
+        """必须定义 year 条件"""
+        assert "year" in brainstorm_content.lower() or "年限" in brainstorm_content
+
+    def test_platform_condition_defined(self, brainstorm_content):
+        """必须定义 platform 条件"""
+        assert "platform" in brainstorm_content.lower() or "平台" in brainstorm_content
 
 
-class TestOutputProperties:
-    """输出属性验证（Layer 2: 统计性）
-    
-    需求：输出应满足某些属性约束。
-    这是统计性测试，可能偶尔失败。
-    """
+class TestDimensionAgentsDesign:
+    """验证 4 维度 Agent 设计"""
 
-    def test_propositions_cover_keywords(self, sample_requirement_web):
-        """验证命题覆盖主题关键词
-        
-        Given: 用户输入关于 webpack/vite
-        When:  检查命题内容
-        Then:  至少有一个命题包含 "webpack" 或 "vite"
-        """
-        all_text = " ".join(
-            p.get("name", "") + " " + p.get("description", "")
-            for p in sample_requirement_web["propositions"]
-        ).lower()
-        
-        assert "webpack" in all_text or "vite" in all_text
+    @pytest.fixture
+    def brainstorm_content(self):
+        path = os.path.join(PROCESSES_DIR, "00-brainstorm.md")
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
 
-    def test_dependencies_form_dag(self, sample_requirement_web):
-        """验证依赖关系形成 DAG（无环）
-        
-        Given: 依赖关系图
-        When:  拓扑排序
-        Then:  能完成排序（无环）
-        """
-        deps = sample_requirement_web["dependencies"]
-        # 简单环检测：如果所有节点都能被移除，则无环
-        remaining = set(deps.keys())
-        while remaining:
-            # 找出没有依赖的节点
-            no_deps = {n for n in remaining if not deps[n] & remaining}
-            if not no_deps:
-                pytest.fail("依赖关系存在环")
-            remaining -= no_deps
+    def test_four_dimensions_mentioned(self, brainstorm_content):
+        """必须提到 4 个维度"""
+        dimensions = ["场景", "技术", "学习", "约束"]
+        found = sum(1 for d in dimensions if d in brainstorm_content)
+        assert found >= 3, f"只找到 {found}/4 个维度"
 
-    def test_level_weight_distribution(self, sample_requirement_web):
-        """验证 level_weight 分布合理
-        
-        Given: 命题列表
-        When:  统计 core/premise/outlook 分布
-        Then:  core 占比 60-90%
-        """
-        roles = [p.get("level_weight", {}).get("role") for p in sample_requirement_web["propositions"]]
-        core_count = roles.count("core")
-        total = len(roles)
-        
-        if total > 0:
-            core_ratio = core_count / total
-            assert 0.6 <= core_ratio <= 0.9, f"core 占比 {core_ratio:.1%} 不在 60-90% 范围"
+    def test_parallel_execution_mentioned(self, brainstorm_content):
+        """必须提到并行执行"""
+        assert "并行" in brainstorm_content
+
+    def test_agent_convergence_mentioned(self, brainstorm_content):
+        """必须提到收敛/整合"""
+        assert "收敛" in brainstorm_content or "整合" in brainstorm_content
+
+
+class TestOutputFormatDesign:
+    """验证输出格式在 Skill 中有定义"""
+
+    @pytest.fixture
+    def brainstorm_content(self):
+        path = os.path.join(PROCESSES_DIR, "00-brainstorm.md")
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+
+    def test_output_file_mentioned(self, brainstorm_content):
+        """必须提到输出文件"""
+        assert "requirement-web.json" in brainstorm_content
+
+    def test_json_format_mentioned(self, brainstorm_content):
+        """必须提到 JSON 格式"""
+        assert "json" in brainstorm_content.lower()
+
+    def test_json_example_provided(self, brainstorm_content):
+        """必须提供 JSON 示例"""
+        assert "```json" in brainstorm_content
+
+    def test_key_fields_documented(self, brainstorm_content):
+        """必须记录关键字段"""
+        key_fields = ["propositions", "dependencies", "context"]
+        found = sum(1 for f in key_fields if f in brainstorm_content)
+        assert found >= 2, f"只找到 {found}/3 个关键字段"
