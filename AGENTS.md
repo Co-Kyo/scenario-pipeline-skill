@@ -70,3 +70,55 @@ node {skillDir}/scripts/build-dashboard-v2.js {workDir}
 | `plugins/` | Optional enhancements | Per step's prerequisites |
 | `dev/` | Design docs + tools | No (human/audit only) |
 | `scripts/` | Utility scripts | Only step ⑨ dashboard build |
+| `tests/` | Test cases (requirements) | No (human/agent review) |
+
+## Testing (测试即需求)
+
+测试文件定义 Skill 的功能需求。读测试 = 读需求规格。
+
+```bash
+# 运行所有测试
+pytest tests/
+
+# 运行特定步骤测试
+pytest tests/unit/test_00_brainstorm.py
+```
+
+测试风格：Given-When-Then（BDD），详见 `tests/README.md`。
+
+### 测试驱动开发流程
+
+当用户要求修改 Skill 功能时，执行以下流程：
+
+```bash
+# 前置检查
+git branch --show-current          # 必须在 main
+git status --short                 # 必须干净
+
+# 1. 创建分支
+git checkout -b test/<简述>
+
+# 2. 修改测试 → 提交
+git add tests/ && git commit -m "test: 新增 xxx 需求"
+
+# 3. 运行测试 → 确认失败
+pytest tests/unit/test_<步骤>.py -v  # 新测试必须 FAILED
+
+# 4. 修复 Skill → 提交
+git add processes/ && git commit -m "fix: 实现 xxx"
+
+# 5. 运行测试 → 确认通过
+pytest tests/unit/test_<步骤>.py -v  # 必须 PASSED
+
+# 6. 全量回归
+pytest tests/ -v  # 必须全部 PASSED
+
+# 7. 合并
+git checkout main && git merge test/<简述> --no-ff
+
+# 8. 合并后验证
+pytest tests/ -v  # 必须全部 PASSED
+# 如果失败 → git reset --hard HEAD~1
+```
+
+详细流程见 `dev/design/decisions/testing-strategy.md` §工作流（Agent 执行版）。
