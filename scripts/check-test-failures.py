@@ -18,6 +18,11 @@ import json
 import subprocess
 import re
 
+# Fix encoding on Windows
+if sys.platform == "win32":
+    sys.stdout.reconfigure(encoding='utf-8')
+    sys.stderr.reconfigure(encoding='utf-8')
+
 
 def run_tests(test_path="tests/"):
     """运行测试，返回结果"""
