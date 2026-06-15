@@ -1,6 +1,6 @@
 ---
 name: scenario-pipeline
-description: "前端复合工程场景知识管线。三阶段工作流：头脑风暴（年限推断+需求网+分词）→ 前处理（定向扫描→能力图谱构建→评估入池）+ 后处理（能力研究→Briefing→命题组装→学习阶梯）。触发词：'扫描' / '研究' / 'deep scan' / 'deep research' / 'scenario research'。"
+description: "前端复合工程场景知识管线。三阶段工作流：头脑风暴（年限推断+需求网+分词）→ 前处理（定向扫描→能力图谱构建→评估入池）+ 后处理（能力研究→Briefing→命题组装→学习阶梯）。触发模式：'使用这个skill，对[N]年前端web开发经验的候选人在面试场景中会遇到的[主题]进行前处理' / '...进行分析' / '...应该掌握的[主题]进行前处理'。"
 ---
 
 # Scenario Pipeline
@@ -57,6 +57,9 @@ description: "前端复合工程场景知识管线。三阶段工作流：头脑
 │                                                                       │
 │  ⑧ learning-ladder ───→ {命题}/learning-ladder.md                    │
 │          × M 并行（简单窗口 W=5）                            ⓖ 检查点│
+│                                                                       │
+│  ⑨ build-dashboard ──→ dashboard-v2.html（导向学习看板）             │
+│          CDN marked.js，内嵌全部 Markdown + 分析数据         ⓗ 检查点│
 └───────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -67,24 +70,28 @@ description: "前端复合工程场景知识管线。三阶段工作流：头脑
 | **命题研究** | `{seq}-{name}/overview + edge-cases + trade-offs + experiment` | 面试前的深度答案速查 |
 | **能力知识库** | `capabilities/{id}-{name}.md` | 跨命题的原子能力参考手册 |
 | **学习阶梯** | `{seq}-{name}/learning-ladder.md` | 从不会到会的渐进式引导路径 |
+| **导向学习看板** | `dashboard-v2.html` | 7视图可视化：学习路径/热力图/技术层/难度矩阵/评估/批次，一键打开 |
 
 ## 触发方式
 
-**前处理（扫描提取）：**
+用户习惯用以下句式启动管线（自动识别年限+主题+阶段）：
+
+**前处理：**
 ```
-扫描：<信息源描述>
-deep scan：<信息源描述>
+使用这个skill，对[N]年前端web开发经验的候选人在面试场景中会遇到的[主题]进行前处理
+使用这个skill，对[N]年前端web开发经验的候选人应该掌握的[主题]进行前处理
 ```
 
-**后处理（深度研究）：**
+**分析（含后处理）：**
 ```
-研究：<场景描述>
-deep research：<场景描述>
+使用这个skill，对[N]年前端web开发经验的候选人可能在面试场景中遇到的[主题]进行分析
 ```
 
-**参数：** `--depth=shallow|normal|deep` `--platform=web|miniapp|rn|all` `--no-experiment` `--append` `--batch=pending` `--year=L1|L2|L3|L4`
-
-> 💡 `--year` 参数可省略，系统会从用户自然语言中自动推断经验年限。
+**参数（可选，通常从自然语言自动推断）：**
+- `--depth=shallow|normal|deep`
+- `--platform=web|miniapp|rn|all`
+- `--no-experiment` `--append` `--batch=pending`
+- `--year=L1|L2|L3|L4`（省略时自动从「N年前端经验」推断）
 
 ## 执行入口
 
@@ -111,7 +118,7 @@ deep research：<场景描述>
        ③ 执行该步骤的全部操作，产出文件
        ④ 进入下一步前，不再引用上一步的 processes 文件内容
    ```
-5. **后处理**：按 `processes/05` → `processes/08` 分步执行（共享约定已在初始化时加载）
+5. **后处理**：按 `processes/05` → `processes/09` 分步执行（共享约定已在初始化时加载）
 
 **违规判定**：如果在执行 Step N 时引用了 Step N+1 或更后续步骤文件的内容，即视为违规。
 
@@ -126,7 +133,7 @@ deep research：<场景描述>
 | `processes/01-partition.md` | 依赖整理与分区执行文档 | 头脑风暴确认后、scan 前读取 |
 | `meta/partition-analysis-schema.md` | 分区 JSON 的结构定义 | 由 00b-partition 前置条件指示读取 |
 | `meta/paths.md` | 路径约定表 | 初始化时读取一次即可 |
-| `meta/sources.md` | T0 域名表 + 信源分级规则 | 由 Step 00 和 Step 01 的前置条件指示读取 |
+| `meta/sources.md` | T0 域名表 + 信源分级规则 | 由 Step 0 和 Step ① 的前置条件指示读取 |
 | `meta/output-contracts.md` | 每步的输出结构 + 完整示例 | 由每步的前置条件指示读取对应 §N 节 |
 | `core/*.md` | 方法论定义 | 由对应步骤的前置条件指示读取，**不在初始化阶段加载** |
 | `plugins/*.md` | 可选增强 | 由对应步骤的前置条件指示读取 |
@@ -144,3 +151,4 @@ deep research：<场景描述>
 | 后处理 | ⑥ | Briefing 组装 | briefings/*.md | ⓓ |
 | 后处理 | ⑦ | 命题组装 | 命题目录（overview/edge/trade/exp/ref） | ⓕ |
 | 后处理 | ⑧ | 学习阶梯 | learning-ladder.md | ⓖ |
+| 后处理 | ⑨ | 看板生成 | dashboard-v2.html（导向学习看板） | ⓗ |

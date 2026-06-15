@@ -1,4 +1,4 @@
-# Step ⓪b: 依赖整理与命题分区
+# Step ①: 依赖整理与命题分区
 
 ## 目的
 
@@ -27,6 +27,12 @@
 ---
 
 ## 执行步骤
+
+> **快捷方式**：可用脚本自动完成 DAG 构建、连通分量检测和分区：
+> ```bash
+> python {skillDir}/scripts/partition-propositions.py {workDir}
+> ```
+> 脚本产出 `partition-analysis.json` 和 `barrier-1.md`。如脚本执行成功，可跳过下方手动步骤 1-6，直接进入检查点。
 
 ### 1. 依赖关系确认
 

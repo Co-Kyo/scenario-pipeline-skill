@@ -1,4 +1,4 @@
-# Step ②: 能力图谱构建
+# Step ③: 能力图谱构建
 
 ## 目的
 
@@ -164,7 +164,7 @@ web_search "<能力名称>"
 
 顶层必须包含 `highgrounds` 和 `learning_path` 字段。
 
-命题数据由 ③ evaluate-pool 直接读取 requirement-web.json，② 不注入 propositions 字段。
+命题数据由 ④ evaluate-pool 直接读取 requirement-web.json，③ 不注入 propositions 字段。
 
 写入 `{workDir}/.meta/capability-graph.json`。
 
@@ -187,7 +187,6 @@ web_search "<能力名称>"
 - [ ] references 中每条 URL 包含 source 字段（"scan_reuse" 或 "supplementary_search"）
 - [ ] scan_reuse 的 URL 从对应 markdown 文件中复制了 `## 内容提取` 段落
 - [ ] t0_missing 字段存在
-- [ ] propositions 字段已注入（含 capability_ids）
 - [ ] highgrounds 字段已注入（含 strategic_value）
 - [ ] learning_path 字段已注入（拓扑排序）
 - [ ] dependency_graph 和 qualifier_injection 为顶层字段
@@ -205,4 +204,4 @@ web_search "<能力名称>"
 
 ## 检查点
 
-🚨 **🛑 必须停顿，进入 ⓐ 检查点**。展示能力图谱摘要（能力数量、扇出度 Top 3、战略高地、学习路径），使用 `clarify` 等待用户确认后才进入 Step ③。
+🚨 **🛑 必须停顿，进入 ⓐ 检查点**。展示能力图谱摘要（能力数量、扇出度 Top 3、战略高地、学习路径），使用 `clarify` 等待用户确认后才进入 Step ④。

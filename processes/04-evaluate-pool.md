@@ -1,4 +1,4 @@
-# Step ③: 评估与入池
+# Step ④: 评估与入池
 
 ## 目的
 
@@ -10,25 +10,39 @@
 - `core/scenario-matrix.md`（四维评估矩阵方法论）
 - `meta/output-contracts.md`§3（本步输出格式）
 - `{workDir}/.meta/requirement-web.json`（⓪ 产出，含命题和能力图谱雏形）
-- `{workDir}/.meta/capability-graph.json`（② 产出，含能力、高地、学习路径）
-- `{workDir}/.meta/.raw-materials/index.json`（① 产出索引）
+- `{workDir}/.meta/capability-graph.json`（③ 产出，含能力、高地、学习路径）
+- `{workDir}/.meta/.raw-materials/index.json`（② 产出索引）
+- `{workDir}/.meta/partition-analysis.json`（① 产出，确定当前 session 命题范围）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`core/shared-conventions.md`、`core/scenario-matrix.md`、`meta/output-contracts.md`§3、`{workDir}/.meta/requirement-web.json`、`{workDir}/.meta/capability-graph.json`、`{workDir}/.meta/.raw-materials/index.json`
-> - ❌ 禁止读取：`processes/01~02.md`、`processes/04~07.md`、`core/capability-graph.md`、`core/strategic-highground.md`、`plugins/*.md`（`--year` 参数存在时，`plugins/year-granularity.md` 除外）
+> - ✅ 允许读取：`core/shared-conventions.md`、`core/scenario-matrix.md`、`meta/output-contracts.md`§3、`{workDir}/.meta/requirement-web.json`、`{workDir}/.meta/capability-graph.json`、`{workDir}/.meta/.raw-materials/index.json`、`{workDir}/.meta/partition-analysis.json`
+> - ❌ 禁止读取：`processes/01~02.md`、`processes/05~08.md`、`core/capability-graph.md`、`core/strategic-highground.md`、`plugins/*.md`（`--year` 参数存在时，`plugins/year-granularity.md` 除外）
 > - 📌 `output-contracts.md` 只读 §3 节
 
 ## 输入
 
 - `requirement-web.json`（⓪ 产出）
-- `capability-graph.json`（② 产出）
-- `.raw-materials/index.json`（① 产出索引）
+- `capability-graph.json`（③ 产出）
+- `.raw-materials/index.json`（② 产出索引）
+- `partition-analysis.json`（① 产出，含 `current_session.proposition_ids`）
 
 ## 执行步骤
 
+> **快捷方式**：可用脚本自动完成四维评估：
+> ```bash
+> python {skillDir}/scripts/evaluate-propositions.py {workDir}
+> ```
+> 脚本产出 `evaluations.json`。如脚本执行成功，可跳过下方手动步骤 0-3，直接进入步骤 4（入池归档）。
+
+### 0. 过滤评估范围
+
+从 `partition-analysis.json` 读取 `current_session.proposition_ids`。**只评估当前 session 的命题**——deferred 命题缺乏 scan 素材，「文档真空」和「经验壁垒」两个维度无法可靠打分。
+
+deferred 命题会在其对应 session 执行 evaluate-pool 时被独立评估。若 partition-analysis.json 不存在（分区步骤被跳过），则评估全部命题作为降级策略。
+
 ### 1. 逐命题四维打分
 
-对每个命题，按以下四个维度打分（1-3 分）：
+对当前 session 的每个命题，按以下四个维度打分（1-3 分）：
 
 | 维度 | 含义 | 3 分标准 | 2 分标准 | 1 分标准 |
 |------|------|---------|---------|---------|

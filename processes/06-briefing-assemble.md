@@ -1,4 +1,4 @@
-# Step ⑤: Briefing 组装
+# Step ⑥: Briefing 组装
 
 ## 目的
 
@@ -9,17 +9,17 @@
 无需加载额外方法论文件或 plugin。本步骤的 task 已内联全部指令。读取：
 - `meta/output-contracts.md`§5（本步输出格式）
 - `{workDir}/.meta/capability-graph.json`（含 propositions）
-- `{workDir}/.meta/summaries/*.json`（Step ④ 产出）
+- `{workDir}/.meta/summaries/*.json`（Step ⑤ 产出）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`core/shared-conventions.md`、`meta/output-contracts.md`§5、`{workDir}/.meta/capability-graph.json`（含 propositions）、`{workDir}/.meta/summaries/*.json`（Step ④ 产出）
+> - ✅ 允许读取：`core/shared-conventions.md`、`meta/output-contracts.md`§5、`{workDir}/.meta/capability-graph.json`（含 propositions）、`{workDir}/.meta/summaries/*.json`（Step ⑤ 产出）
 > - ❌ 禁止读取：`processes/01~04.md`、`processes/06~07.md`、`core/*.md`、`plugins/*.md`
 > - 📌 `output-contracts.md` 只读 §5 节
 
 ## 输入
 
 - `capability-graph.json`（前处理产出，含 propositions 和 capabilities）
-- `.meta/summaries/*.json`（Step ④ 产出的能力摘要）
+- `.meta/summaries/*.json`（Step ⑤ 产出的能力摘要）
 
 ## 执行步骤
 
@@ -91,7 +91,7 @@
 ### Step 1: 读取能力摘要
 对每个涉及的能力，用 read 工具读取 {workDir}/.meta/summaries/{id}-{name}.json。
 - 文件存在 → 提取内容，进入 Step 2
-- 文件不存在（read 返回错误）→ 在 Briefing 对应能力位置标注"⚠️ 该能力摘要缺失（Step ④ 未产出）"，跳过该能力继续处理其余能力
+- 文件不存在（read 返回错误）→ 在 Briefing 对应能力位置标注"⚠️ 该能力摘要缺失（Step ⑤ 未产出）"，跳过该能力继续处理其余能力
 
 ### Step 2: 提取关键信息
 从每个能力摘要中提取：
@@ -143,7 +143,7 @@
 
 所有 Briefing agent 完成后：
 
-🚨 **🛑 必须停顿，进入 ⓓ 检查点**。展示 Briefing 组装摘要（完成数/跳过数/失败数），使用 `clarify` 等待用户确认后才进入 Step ⑥。
+🚨 **🛑 必须停顿，进入 ⓓ 检查点**。展示 Briefing 组装摘要（完成数/跳过数/失败数），使用 `clarify` 等待用户确认后才进入 Step ⑦。
 
 ## 输出
 
