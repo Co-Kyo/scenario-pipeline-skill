@@ -1,6 +1,13 @@
 # 路径约定
 
-> 所有产出路径基于 `workDir` 派生。主 agent 按此表拼接路径，无需工具。
+> 所有路径基于两个根目录派生。主 agent 按此表拼接路径，无需工具。
+
+## 根目录定义
+
+| 占位符 | 含义 | 确定方式 |
+|--------|------|----------|
+| `{skillDir}` | Skill 仓库根目录（含 `SKILL.md` 的目录） | Agent 读取 `SKILL.md` 时的所在目录 |
+| `{workDir}` | 产出目录（用户确认后确定） | 初始化时向用户确认 |
 
 ## 核心路径
 
@@ -18,7 +25,23 @@
 | 命题 experiment | `{workDir}/{seq}-{short_name}/experiment/` |
 | 命题 references | `{workDir}/{seq}-{short_name}/references.md` |
 | 命题学习阶梯 | `{workDir}/{seq}-{short_name}/learning-ladder.md` |
+| 导向学习看板 | `{workDir}/dashboard-v2.html` |
 | 执行计划 | `{workDir}/execution-plan.md` |
+
+## Skill 内部路径
+
+> 以下路径用于引用 skill 自身的文件（脚本、方法论、约定等）。
+
+| 用途 | 路径 |
+|------|------|
+| 构建脚本 | `{skillDir}/scripts/build-dashboard-v2.js` |
+| 看板模板 | `{skillDir}/scripts/dashboard-template.html` |
+| 分组脚本 | `{skillDir}/scripts/group-capabilities.py` |
+| 评估脚本 | `{skillDir}/scripts/evaluate-propositions.py` |
+| 分区脚本 | `{skillDir}/scripts/partition-propositions.py` |
+| 共享约定 | `{skillDir}/core/shared-conventions.md` |
+| 输出契约 | `{skillDir}/meta/output-contracts.md` |
+| 信源定义 | `{skillDir}/meta/sources.md` |
 
 ## .meta 内部路径
 

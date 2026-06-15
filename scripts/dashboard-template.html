@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>性能场景分析题 · 导向学习看板</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root{--bg:#0a0a0f;--surface:#12121a;--surface2:#1a1a25;--border:#2a2a3a;--text:#e8e8f0;--text2:#8888a0;--accent:#6c5ce7;--accent2:#a29bfe;--green:#00b894;--yellow:#fdcb6e;--red:#e17055;--blue:#74b9ff;--orange:#fab1a0}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+h1{font-size:24px;font-weight:700;margin-bottom:4px}
+h2{font-size:18px;font-weight:700;margin:20px 0 10px;color:var(--accent2)}
+h3{font-size:15px;font-weight:600;margin:14px 0 8px}
+h4{font-size:13px;font-weight:600;margin:10px 0 6px}
+p{margin:6px 0}a{color:var(--accent2)}a:hover{text-decoration:underline}
+code{background:var(--surface2);padding:2px 5px;border-radius:4px;font-size:12px;font-family:'SF Mono',monospace}
+pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;overflow-x:auto;margin:10px 0;font-size:12px}
+pre code{background:none;padding:0}
+blockquote{border-left:3px solid var(--accent);padding:6px 14px;margin:10px 0;color:var(--text2);background:var(--surface);border-radius:0 8px 8px 0}
+table{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}
+th{text-align:left;padding:8px 10px;background:var(--surface2);color:var(--text2);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+td{padding:8px 10px;border-top:1px solid var(--border)}
+tr:hover{background:var(--surface2)}
+ul,ol{margin:6px 0 6px 20px}li{margin:3px 0}
+hr{border:none;border-top:1px solid var(--border);margin:16px 0}
+
+.header{padding:18px 24px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
+.header-left h1{margin-bottom:4px}.header .meta{color:var(--text2);font-size:12px;margin-bottom:10px}
+.header-stats{display:flex;gap:12px;flex-wrap:wrap}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 16px;text-align:center;min-width:80px}
+.stat-num{font-size:22px;font-weight:700;color:var(--accent2)}
+.stat-label{font-size:10px;color:var(--text2);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+
+.nav-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);padding:0 24px;margin-top:14px;flex-wrap:wrap}
+.nav-tab{padding:9px 18px;cursor:pointer;color:var(--text2);font-size:13px;font-weight:500;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
+.nav-tab:hover{color:var(--text)}.nav-tab.active{color:var(--accent2);border-bottom-color:var(--accent)}
+
+.layout{display:flex;gap:0;padding:14px 24px 24px;min-height:calc(100vh - 180px)}
+.sidebar{width:250px;flex-shrink:0;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;position:sticky;top:20px;max-height:calc(100vh - 48px);overflow-y:auto}
+.sidebar h3{font-size:11px;color:var(--text2);margin:10px 0 5px;text-transform:uppercase;letter-spacing:.5px}
+.sidebar-item{display:block;padding:6px 10px;border-radius:6px;color:var(--text);font-size:12px;cursor:pointer;text-decoration:none;margin-bottom:1px;transition:all .15s}
+.sidebar-item:hover{background:var(--surface2)}.sidebar-item.active{background:var(--accent);color:#fff}
+.sidebar-item .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.dot-high{background:var(--red)}.dot-medium{background:var(--yellow)}
+
+.content{flex:1;min-width:0;padding-left:18px}
+
+.overview-table{width:100%;border-collapse:collapse;font-size:12px}
+.overview-table th{text-align:left;padding:9px;background:var(--surface2);color:var(--text2);font-size:10px;text-transform:uppercase;cursor:pointer}
+.overview-table th:hover{color:var(--text)}.overview-table td{padding:9px;border-top:1px solid var(--border)}
+.overview-table tr:hover{background:var(--surface2);cursor:pointer}
+.overview-table tr.active{background:rgba(108,92,231,.15)}
+
+.prop-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:14px;flex-wrap:wrap}
+.prop-tab{padding:6px 14px;cursor:pointer;color:var(--text2);font-size:12px;font-weight:500;border-bottom:2px solid transparent;transition:all .15s}
+.prop-tab:hover{color:var(--text)}.prop-tab.active{color:var(--accent2);border-bottom-color:var(--accent)}
+.prop-tab-content{display:none}.prop-tab-content.active{display:block}
+
+.badge{display:inline-block;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600;text-transform:uppercase}
+.badge-high{background:var(--red);color:#fff}.badge-medium{background:var(--yellow);color:#000}
+.badge-core{background:var(--blue);color:#fff}.badge-premise{background:var(--green);color:#fff}.badge-outlook{background:var(--accent);color:#fff}
+
+.search-box{width:100%;padding:7px 11px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;margin-bottom:10px}
+.search-box:focus{outline:none;border-color:var(--accent)}
+
+.view-panel{display:none}.view-panel.active{display:block}
+
+.path-container{padding:16px 0}
+.path-row{display:flex;align-items:flex-start;margin-bottom:14px}
+.path-depth-label{width:60px;flex-shrink:0;font-size:11px;font-weight:700;color:var(--accent2);padding-top:8px;text-align:right}
+.path-depth-label .depth-num{font-size:20px;line-height:1}
+.path-cards{flex:1;display:flex;gap:8px;flex-wrap:wrap}
+.path-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;cursor:pointer;transition:all .2s;min-width:150px;max-width:230px;flex:1 1 160px;border-left:3px solid var(--accent)}
+.path-card:hover{border-color:var(--accent2);transform:translateY(-2px);box-shadow:0 4px 12px rgba(108,92,231,.15)}
+.path-card.premise{border-left-color:var(--green)}.path-card.outlook{border-left-color:var(--yellow)}
+.path-card .pc-name{font-size:12px;font-weight:600;margin-bottom:5px;line-height:1.3}
+.path-card .pc-meta{display:flex;gap:6px;flex-wrap:wrap}
+.path-card .pc-meta span{font-size:10px;color:var(--text2);background:var(--surface2);padding:2px 6px;border-radius:3px}
+
+.heatmap-scroll{overflow-x:auto;margin-top:10px}
+.heatmap-grid{display:grid;grid-template-columns:110px repeat(15, minmax(36px, 1fr));gap:2px;font-size:10px}
+.heatmap-cell{padding:5px 3px;text-align:center;border-radius:3px;transition:all .15s;cursor:pointer;min-height:28px;display:flex;align-items:center;justify-content:center}
+.heatmap-cell.cap-name{background:var(--surface2);text-align:left;font-weight:500;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;justify-content:flex-start;padding:5px 6px}
+.heatmap-cell.prop-header{writing-mode:vertical-lr;font-size:8px;font-weight:600;transform:rotate(180deg);background:var(--surface2);color:var(--text2);min-height:auto;padding:8px 2px}
+.heatmap-cell.filled{font-weight:700}
+.heatmap-cell.filled:hover{transform:scale(1.25);z-index:1;box-shadow:0 0 8px rgba(108,92,231,.4)}
+.heat-1{background:rgba(108,92,231,.12);color:var(--accent2)}
+.heat-2{background:rgba(108,92,231,.32);color:var(--accent2)}
+.heat-3{background:rgba(108,92,231,.55);color:#fff}
+.heat-4plus{background:rgba(108,92,231,.8);color:#fff}
+
+.layer-section{margin-bottom:14px}
+.layer-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;cursor:pointer}
+.layer-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.layer-title{font-size:13px;font-weight:600}
+.layer-count{font-size:10px;color:var(--text2);background:var(--surface2);padding:2px 7px;border-radius:10px}
+.layer-caps{display:flex;flex-wrap:wrap;gap:5px;padding:6px 0 0 18px}
+.layer-cap-tag{font-size:10px;padding:3px 8px;border-radius:5px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;transition:all .15s}
+.layer-cap-tag:hover{border-color:var(--accent);color:var(--accent2)}
+
+.matrix-container{position:relative;width:100%;height:360px;margin-top:10px;border:1px solid var(--border);border-radius:12px;background:var(--surface);padding:20px}
+.matrix-quadrant{position:absolute;border:1px dashed rgba(136,136,170,.3);border-radius:4px}
+.matrix-q1{top:30px;left:20px;right:50%;bottom:50%}
+.matrix-q2{top:30px;right:20px;left:50%;bottom:50%}
+.matrix-q3{bottom:30px;left:20px;right:50%;top:50%}
+.matrix-q4{bottom:30px;right:20px;left:50%;top:50%}
+.matrix-q-label{position:absolute;font-size:9px;color:var(--text2);font-weight:600}
+.matrix-point{position:absolute;width:10px;height:10px;border-radius:50%;cursor:pointer;transition:all .2s;z-index:2}
+.matrix-point:hover{transform:scale(1.8);box-shadow:0 0 12px rgba(108,92,231,.5)}
+.matrix-point.core{background:var(--blue)}.matrix-point.premise{background:var(--green)}.matrix-point.outlook{background:var(--yellow)}
+.matrix-pt-label{position:absolute;font-size:9px;color:var(--text2);white-space:nowrap;pointer-events:none;transform:translate(-50%,-100%);opacity:0;transition:opacity .15s;top:-4px;left:50%;background:var(--bg);padding:2px 4px;border-radius:3px;border:1px solid var(--border)}
+.matrix-point:hover .matrix-pt-label{opacity:1}
+.matrix-axis-label{position:absolute;font-size:10px;color:var(--text2);font-weight:600}
+.matrix-axis-y{top:50%;left:6px;transform:translateY(-50%) rotate(-90deg)}
+.matrix-axis-x{bottom:6px;left:50%;transform:translateX(-50%)}
+
+.eval-bar-row{display:flex;align-items:center;margin-bottom:5px;gap:8px}
+.eval-bar-name{width:130px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex-shrink:0;cursor:pointer;color:var(--accent2)}
+.eval-bar-name:hover{text-decoration:underline}
+.eval-bar-track{flex:1;height:18px;background:var(--surface2);border-radius:4px;overflow:hidden;display:flex}
+.eval-bar-seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:600;color:#fff;transition:width .6s ease}
+.seg-cross{background:var(--accent)}.seg-doc{background:var(--blue)}.seg-exp{background:var(--orange)}.seg-heat{background:var(--green)}
+.eval-total{width:26px;font-size:11px;font-weight:700;text-align:right;flex-shrink:0}
+
+.batch-flow{display:flex;align-items:flex-start;gap:0;margin-top:10px;overflow-x:auto;padding-bottom:10px}
+.batch-col{min-width:170px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px;flex-shrink:0}
+.batch-num{font-size:10px;font-weight:700;color:var(--accent2);text-transform:uppercase;letter-spacing:1px;margin-bottom:3px}
+.batch-desc{font-size:10px;color:var(--text2);margin-bottom:8px}
+.batch-groups{display:flex;flex-direction:column;gap:3px}
+.batch-group-tag{font-size:9px;padding:3px 7px;border-radius:4px;background:var(--surface2);border:1px solid var(--border)}
+.batch-arrow{font-size:22px;color:var(--border);padding:4px 6px;flex-shrink:0;align-self:center}
+
+.insights-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px}
+.insight-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px}
+.insight-icon{font-size:22px;margin-bottom:4px}
+.insight-title{font-size:12px;font-weight:600;margin-bottom:3px}
+.insight-text{font-size:10px;color:var(--text2);line-height:1.5}
+.insight-hl{color:var(--accent2);font-weight:600}
+
+.cap-tags{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.cap-tag{font-size:10px;padding:3px 7px;border-radius:4px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;transition:all .15s}
+.cap-tag:hover{border-color:var(--accent);color:var(--accent2)}
+.cap-tag.shared{border-color:var(--yellow);color:var(--yellow)}
+
+.landing{padding:16px 0}
+
+/* Prop view nav */
+.prop-nav{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.prop-nav .back-btn{font-size:12px;color:var(--accent2);cursor:pointer;text-decoration:none;padding:4px 0}
+.prop-nav .back-btn:hover{text-decoration:underline}
+.prop-nav .prop-title{font-size:18px;font-weight:700;color:var(--text)}
+.prop-nav .prop-meta{margin-left:auto;display:flex;gap:6px}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="header-left">
+    <h1>导向学习看板</h1>
+    <div class="meta">性能场景分析题 · L2 (3-5年) · 15命题 · 36原子能力 · 6技术层</div>
+  </div>
+  <div class="header-stats" id="headerStats"></div>
+</div>
+
+<div class="nav-tabs" id="navTabs"></div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <input type="text" class="search-box" placeholder="搜索命题..." oninput="filterSidebar(this.value)">
+    <div id="sidebarContent"></div>
+  </aside>
+  <main class="content" id="mainContent">
+    <div class="view-panel active" id="panel-overview"></div>
+    <div class="view-panel" id="panel-path"></div>
+    <div class="view-panel" id="panel-heatmap"></div>
+    <div class="view-panel" id="panel-layers"></div>
+    <div class="view-panel" id="panel-matrix"></div>
+    <div class="view-panel" id="panel-eval"></div>
+    <div class="view-panel" id="panel-batches"></div>
+    <div id="propView" style="display:none"></div>
+  </main>
+</div>
+
+<script>
+const TABS=[
+  {id:'overview',label:'概述'},{id:'edge',label:'边界case'},
+  {id:'tradeoffs',label:'权衡'},{id:'refs',label:'参考'},{id:'ladder',label:'学习阶梯'}
+];
+const PROPS=[{id:"RW-P2",name:"Core Web Vitals指标不达标的提升方案",priority:"high",difficulty:"high",score:9,caps:10,role:"core"},{id:"RW-P5",name:"HTTP多级缓存策略设计与配置",priority:"high",difficulty:"high",score:9,caps:12,role:"core"},{id:"RW-P6",name:"关键资源预加载策略与优先级控制方案",priority:"high",difficulty:"high",score:9,caps:12,role:"core"},{id:"RW-P7",name:"代码分割与Chunk拆分优化方案",priority:"high",difficulty:"high",score:9,caps:11,role:"core"},{id:"RW-P1",name:"渲染性能瓶颈诊断与系统性优化方案",priority:"high",difficulty:"high",score:8,caps:9,role:"core"},{id:"RW-P3",name:"长任务拆分与主线程调度优化方案",priority:"high",difficulty:"high",score:8,caps:8,role:"core"},{id:"RW-P4",name:"内存泄漏定位与修复方案",priority:"high",difficulty:"high",score:8,caps:8,role:"core"},{id:"RW-P8",name:"高性能CSS动画与GPU合成优化方案",priority:"high",difficulty:"high",score:8,caps:9,role:"core"},{id:"RW-P9",name:"前端性能监控体系设计与数据驱动的优化闭环",priority:"high",difficulty:"high",score:9,caps:14,role:"core"},{id:"RW-P10",name:"全链路性能优化方案",priority:"high",difficulty:"high",score:9,caps:13,role:"core"},{id:"RW-P11",name:"图片加载性能优化全链路方案",priority:"high",difficulty:"medium",score:8,caps:8,role:"core"},{id:"RW-P12",name:"构建产物体积优化与Tree-shaking深度实践",priority:"high",difficulty:"high",score:8,caps:9,role:"core"},{id:"RW-P13",name:"浏览器渲染管线与事件循环的协同工作机制",priority:"medium",difficulty:"medium",score:5,caps:7,role:"premise"},{id:"RW-P14",name:"HTTP协议演进对前端性能的影响全景分析",priority:"medium",difficulty:"medium",score:5,caps:7,role:"premise"},{id:"RW-P15",name:"性能预算与准入治理体系设计",priority:"high",difficulty:"high",score:8,caps:9,role:"outlook"}];
+
+CONTENT_JS_PLACEHOLDER
+
+ANALYTICS_JS_PLACEHOLDER
+
+var currentPid=null,currentView='overview';
+
+function init(){renderHeaderStats();renderNavTabs();renderSidebar();showView('overview');document.getElementById('sidebarContent').addEventListener('click',function(e){var el=e.target.closest('.sidebar-item');if(el)loadProp(el.getAttribute('data-pid'));});}
+
+function renderNavTabs(){
+  var tabs=[{id:'overview',label:'总览',icon:'📊'},{id:'path',label:'学习路径',icon:'🗺️'},{id:'heatmap',label:'能力热力图',icon:'🔥'},{id:'layers',label:'技术层分布',icon:'🏗️'},{id:'matrix',label:'难度矩阵',icon:'📐'},{id:'eval',label:'评估分析',icon:'📈'},{id:'batches',label:'执行批次',icon:'⚡'}];
+  document.getElementById('navTabs').innerHTML=tabs.map(function(t){return '<div class="nav-tab'+(t.id==='overview'?' active':'')+'" data-view="'+t.id+'" onclick="showView(\''+t.id+'\')">'+t.icon+' '+t.label+'</div>';}).join('');
+}
+
+function showView(viewId){
+  currentView=viewId;document.getElementById('propView').style.display='none';
+  var ps=document.querySelectorAll('.view-panel');for(var i=0;i<ps.length;i++)ps[i].classList.remove('active');
+  var ts=document.querySelectorAll('.nav-tab');for(var i=0;i<ts.length;i++)ts[i].classList.toggle('active',ts[i].getAttribute('data-view')===viewId);
+  var t=document.getElementById('panel-'+viewId);if(t){t.classList.add('active');
+  switch(viewId){case'overview':renderOverview();break;case'path':renderPath();break;case'heatmap':renderHeatmap();break;case'layers':renderLayers();break;case'matrix':renderMatrix();break;case'eval':renderEval();break;case'batches':renderBatches();break;}}
+}
+
+function renderHeaderStats(){
+  var sc=ANALYTICS.capFreq.filter(function(c){return c.count>=3;}).length;
+  var hc=ANALYTICS.capFreq[0];
+  var as=Math.round(PROPS.reduce(function(s,p){return s+p.score;},0)/PROPS.length*10)/10;
+  document.getElementById('headerStats').innerHTML='<div class="stat-card"><div class="stat-num">'+PROPS.length+'</div><div class="stat-label">命题</div></div><div class="stat-card"><div class="stat-num">'+ANALYTICS.totalCaps+'</div><div class="stat-label">原子能力</div></div><div class="stat-card"><div class="stat-num">'+sc+'</div><div class="stat-label">枢纽能力</div></div><div class="stat-card"><div class="stat-num">'+as+'</div><div class="stat-label">平均评分</div></div><div class="stat-card"><div class="stat-num">'+hc.count+'</div><div class="stat-label">最高复用</div></div>';
+}
+
+function renderSidebar(){
+  var groups={core:[],premise:[],outlook:[]};
+  PROPS.forEach(function(p){
+    var dot=p.priority==='high'?'dot-high':'dot-medium';
+    groups[p.role||'core'].push('<a class="sidebar-item" data-pid="'+p.id+'"><span class="dot '+dot+'"></span>'+p.name+'</a>');
+  });
+  var h='';
+  if(groups.core.length)h+='<div><h3>核心命题</h3>'+groups.core.join('')+'</div>';
+  if(groups.premise.length)h+='<div><h3>前置基础</h3>'+groups.premise.join('')+'</div>';
+  if(groups.outlook.length)h+='<div><h3>进阶展望</h3>'+groups.outlook.join('')+'</div>';
+  document.getElementById('sidebarContent').innerHTML=h;
+}
+
+function filterSidebar(q){q=q.toLowerCase();var items=document.querySelectorAll('.sidebar-item');for(var i=0;i<items.length;i++)items[i].style.display=items[i].textContent.toLowerCase().indexOf(q)>=0?'':'none';}
+
+// ===== OVERVIEW =====
+function renderOverview(){
+  var hc=ANALYTICS.capFreq[0];
+  var hd=PROPS.filter(function(p){return p.difficulty==='high';}).length;
+  document.getElementById('panel-overview').innerHTML=
+    '<div class="insights-row">'+
+    '<div class="insight-card"><div class="insight-icon">🎯</div><div class="insight-title">推荐起点</div><div class="insight-text">从 <span class="insight-hl">'+(hc?hc.name:'')+'</span> 开始，它被 <span class="insight-hl">'+(hc?hc.count:0)+'</span> 个命题共享，是体系核心枢纽</div></div>'+
+    '<div class="insight-card"><div class="insight-icon">🔥</div><div class="insight-title">高难度集中区</div><div class="insight-text"><span class="insight-hl">'+hd+'/15</span> 命题为高难度，集中在渲染管线、网络协议、监控架构方向</div></div>'+
+    '<div class="insight-card"><div class="insight-icon">🏗️</div><div class="insight-title">技术层覆盖</div><div class="insight-text">跨越 <span class="insight-hl">'+Object.keys(ANALYTICS.layerDist).length+'</span> 个技术层，浏览器层和运行时层是核心战场</div></div>'+
+    '<div class="insight-card"><div class="insight-icon">📋</div><div class="insight-title">学习策略</div><div class="insight-text">核心命题分2批拓扑排序执行（Depth 1→2），同层可并行。从基础概念→深度优化→工程实践</div></div>'+
+    '</div>'+
+    '<h2>命题总览</h2>'+
+    '<table class="overview-table"><thead><tr><th>#</th><th>命题</th><th>优先级</th><th>难度</th><th>评分</th><th>能力数</th><th>推荐顺序</th></tr></thead><tbody id="overviewBody"></tbody></table>';
+  
+  var evalOrder=ANALYTICS.evalBreakdown.slice().sort(function(a,b){return a.rec_order-b.rec_order;});
+  var rows=PROPS.map(function(p,i){
+    var eo=evalOrder.find(function(e){return e.id===p.id;});
+    var priBadge='<span class="badge badge-'+p.priority+'">'+p.priority+'</span>';
+    var roleBadge='<span class="badge badge-'+p.role+'">'+p.role+'</span>';
+    return '<tr data-pid="'+p.id+'" onclick="loadProp(\''+p.id+'\')"><td>'+(i+1)+'</td><td><strong>'+p.name+'</strong> <span style="color:var(--text2);font-size:11px">'+roleBadge+'</span></td><td>'+priBadge+'</td><td>'+p.difficulty+'</td><td>'+p.score+'</td><td>'+p.caps+'</td><td>'+(eo?eo.rec_order:'-')+'</td></tr>';
+  }).join('');
+  document.getElementById('overviewBody').innerHTML=rows;
+}
+
+// ===== LEARNING PATH =====
+function renderPath(){
+  var dg={};
+  ANALYTICS.depthOrder.forEach(function(item){
+    if(!dg[item.depth])dg[item.depth]=[];
+    dg[item.depth].push(item);
+  });
+  var dl={0:'前置基础',1:'第一梯队：核心入口',2:'第二梯队：深度优化',3:'顶层视野'};
+  var html='<div class="landing"><h2>学习路径 — DAG拓扑排序</h2><p style="color:var(--text2);font-size:12px;margin-bottom:16px">基于命题依赖关系的拓扑排序，自下而上逐层推进。同层命题可并行学习。点击卡片查看完整命题内容。</p><div class="path-container">';
+  var ds=Object.keys(dg).map(Number).sort(function(a,b){return a-b;});
+  ds.forEach(function(d,idx){
+    html+='<div class="path-row"><div class="path-depth-label"><div class="depth-num">'+(d+1)+'</div><div>'+(dl[d]||'Layer'+d)+'</div></div><div class="path-cards">';
+    dg[d].forEach(function(p){
+      var cls=p.role==='premise'?' premise':(p.role==='outlook'?' outlook':'');
+      html+='<div class="path-card'+cls+'" onclick="loadProp(\''+p.id+'\')"><div class="pc-name">'+p.name+'</div><div class="pc-meta"><span>'+p.caps+' 能力</span><span>'+(p.difficulty==='high'?'⚡高难':'○中难')+'</span><span>评分 '+p.score+'</span></div></div>';
+    });
+    html+='</div></div>';
+    if(idx<ds.length-1)html+='<div style="text-align:center;color:var(--border);font-size:18px;margin:-8px 0 4px 60px">↓</div>';
+  });
+  html+='</div></div>';
+  document.getElementById('panel-path').innerHTML=html;
+}
+
+// ===== HEATMAP =====
+function renderHeatmap(){
+  var tc=ANALYTICS.capFreq.slice(0,22);
+  var h='<div class="landing"><h2>能力热力图 — 命题×能力覆盖矩阵</h2><p style="color:var(--text2);font-size:12px;margin-bottom:12px">行=原子能力（按复用频次排序），列=命题。颜色越深表示该命题涉及此能力。括号内为复用次数。悬停/点击可跳转。</p><div class="heatmap-scroll"><div class="heatmap-grid">';
+  h+='<div class="heatmap-cell"></div>';
+  PROPS.forEach(function(p){h+='<div class="heatmap-cell prop-header" onclick="loadProp(\''+p.id+'\')" title="'+p.name+'">'+p.id.replace('RW-','')+'</div>';});
+  tc.forEach(function(c){
+    h+='<div class="heatmap-cell cap-name" title="'+c.name+' — '+c.count+'个命题">'+c.name.replace(/[（(].*?[）)]/g,'').slice(0,14)+'</div>';
+    PROPS.forEach(function(p){
+      var ok=(ANALYTICS.propCaps[p.id]||[]).indexOf(c.id)!==-1;
+      if(ok){
+        var hc=c.count>=4?'heat-4plus':c.count===3?'heat-3':c.count===2?'heat-2':'heat-1';
+        h+='<div class="heatmap-cell filled '+hc+'" onclick="loadProp(\''+p.id+'\')" title="'+p.name+' → '+c.name+'">●</div>';
+      }else{h+='<div class="heatmap-cell"></div>';}
+    });
+  });
+  h+='</div></div><div style="display:flex;gap:12px;margin-top:10px;font-size:10px;color:var(--text2)"><span>● <span style="padding:2px 6px;border-radius:3px;background:rgba(108,92,231,.12);color:var(--accent2)">1命题</span></span><span>● <span style="padding:2px 6px;border-radius:3px;background:rgba(108,92,231,.32);color:var(--accent2)">2命题</span></span><span>● <span style="padding:2px 6px;border-radius:3px;background:rgba(108,92,231,.55);color:#fff">3命题</span></span><span>● <span style="padding:2px 6px;border-radius:3px;background:rgba(108,92,231,.8);color:#fff">4+命题</span></span></div></div>';
+  document.getElementById('panel-heatmap').innerHTML=h;
+}
+
+// ===== LAYERS =====
+function renderLayers(){
+  var h='<div class="landing"><h2>技术层分布 — 知识领域地图</h2><p style="color:var(--text2);font-size:12px;margin-bottom:14px">36个原子能力按技术层分类，颜色标记每个能力被多少命题共享（括号内为复用次数）。</p>';
+  ANALYTICS.layerOrder.forEach(function(ln){
+    var d=ANALYTICS.layerDist[ln];if(!d)return;
+    var c=ANALYTICS.layerColors[ln]||'#666';
+    h+='<div class="layer-section"><div class="layer-header"><div class="layer-dot" style="background:'+c+'"></div><div class="layer-title">'+ln+'</div><div class="layer-count">'+d.caps.length+' 能力</div></div><div class="layer-caps">';
+    d.caps.forEach(function(cap){
+      var cnt=0;
+      var freq=ANALYTICS.capFreq.find(function(f){return f.id===cap.id;});
+      if(freq)cnt=freq.count;
+      var borderColor=cnt>=3?'var(--yellow)':(cnt>=2?'var(--accent2)':'var(--border)');
+      h+='<span class="layer-cap-tag" style="border-color:'+borderColor+'" title="'+cap.name+' — '+cnt+'命题">'+cap.name.replace(/[（(].*?[）)]/g,'').slice(0,16)+' <span style="color:var(--text2)">('+cnt+')</span></span>';
+    });
+    h+='</div></div>';
+  });
+  h+='</div>';
+  document.getElementById('panel-layers').innerHTML=h;
+}
+
+// ===== MATRIX =====
+function renderMatrix(){
+  var h='<div class="landing"><h2>难度-重要性矩阵</h2><p style="color:var(--text2);font-size:12px;margin-bottom:10px">X轴=难度，Y轴=优先级（反向：上=high）。圆圈颜色=命题角色。悬停查看名称，点击跳转。</p><div class="matrix-container">';
+  h+='<div class="matrix-quadrant matrix-q1"><div class="matrix-q-label" style="top:4px;left:8px">优先攻克</div></div>';
+  h+='<div class="matrix-quadrant matrix-q2"><div class="matrix-q-label" style="top:4px;right:8px">核心战场</div></div>';
+  h+='<div class="matrix-quadrant matrix-q3"><div class="matrix-q-label" style="bottom:4px;left:8px">快速收获</div></div>';
+  h+='<div class="matrix-quadrant matrix-q4"><div class="matrix-q-label" style="bottom:4px;right:8px">长期投入</div></div>';
+  h+='<div class="matrix-axis-label matrix-axis-y">优先级 ↑</div>';
+  h+='<div class="matrix-axis-label matrix-axis-x">难度 →</div>';
+
+  // jitter to prevent overlap
+  var rng=3;
+  PROPS.forEach(function(p,i){
+    var x=p.difficulty==='high'?0.7:0.3;
+    var y=p.priority==='high'?0.25:0.7;
+    var jx=((i*7)%rng-rng/2)/100;
+    var jy=((i*11)%rng-rng/2)/100;
+    var px=(jx+x)*100,py=(jy+y)*100;
+    h+='<div class="matrix-point '+p.role+'" style="left:'+px+'%;top:'+py+'%" onclick="loadProp(\''+p.id+'\')"><div class="matrix-pt-label">'+p.id.replace('RW-','')+': '+p.name.slice(0,16)+'</div></div>';
+  });
+  h+='</div></div>';
+  document.getElementById('panel-matrix').innerHTML=h;
+}
+
+// ===== EVAL BARS =====
+function renderEval(){
+  var eb=ANALYTICS.evalBreakdown.slice().sort(function(a,b){return b.total-a.total;});
+  var mm={cross_stack:4,doc_vacuum:4,experience:4,heat:4};
+  var h='<div class="landing"><h2>评估分析 — 命题评分拆解</h2><p style="color:var(--text2);font-size:12px;margin-bottom:12px">堆叠条展示每道命题的4维度评分组成。按总分降序排列。点击命题名查看详情。</p>';
+  eb.forEach(function(e){
+    var pct=function(v){return Math.round(v/(mm.cross_stack+mm.doc_vacuum+mm.experience+mm.heat)*100);};
+    h+='<div class="eval-bar-row"><span class="eval-bar-name" onclick="loadProp(\''+e.id+'\')" title="'+e.name+'">'+e.name+'</span><div class="eval-bar-track">';
+    h+='<div class="eval-bar-seg seg-cross" style="width:'+pct(e.cross_stack)+'%" title="跨栈耦合: '+e.cross_stack+'">C</div>';
+    h+='<div class="eval-bar-seg seg-doc" style="width:'+pct(e.doc_vacuum)+'%" title="文档真空: '+e.doc_vacuum+'">D</div>';
+    h+='<div class="eval-bar-seg seg-exp" style="width:'+pct(e.experience)+'%" title="经验壁垒: '+e.experience+'">E</div>';
+    h+='<div class="eval-bar-seg seg-heat" style="width:'+pct(e.heat)+'%" title="热度: '+e.heat+'">H</div>';
+    h+='</div><span class="eval-total">'+e.total+'</span></div>';
+  });
+  h+='<div style="display:flex;gap:14px;margin-top:10px;font-size:10px;color:var(--text2)"><span><span style="display:inline-block;width:10px;height:10px;background:var(--accent);border-radius:2px;margin-right:3px"></span> C=跨栈耦合</span><span><span style="display:inline-block;width:10px;height:10px;background:var(--blue);border-radius:2px;margin-right:3px"></span> D=文档真空</span><span><span style="display:inline-block;width:10px;height:10px;background:var(--orange);border-radius:2px;margin-right:3px"></span> E=经验壁垒</span><span><span style="display:inline-block;width:10px;height:10px;background:var(--green);border-radius:2px;margin-right:3px"></span> H=热度</span></div></div>';
+  document.getElementById('panel-eval').innerHTML=h;
+}
+
+// ===== BATCHES =====
+function renderBatches(){
+  var h='<div class="landing"><h2>执行批次 — 并行化分解</h2><p style="color:var(--text2);font-size:12px;margin-bottom:12px">能力研究阶段的分组并行策略。同批次内可并行执行，跨批次串行。基于依赖关系图计算最小批次序列。</p><div class="batch-flow">';
+  ANALYTICS.batchInfo.forEach(function(b,idx){
+    h+='<div class="batch-col"><div class="batch-num">批次 '+(b.batch)+'</div><div class="batch-desc">'+b.desc+'</div><div class="batch-groups">';
+    b.groups.forEach(function(g){
+      h+='<div class="batch-group-tag">'+g+'</div>';
+    });
+    h+='</div></div>';
+    if(idx<ANALYTICS.batchInfo.length-1)h+='<div class="batch-arrow">→</div>';
+  });
+  h+='</div></div>';
+  document.getElementById('panel-batches').innerHTML=h;
+}
+
+// ===== LOAD PROPOSITION =====
+function loadProp(pid){
+  currentPid=pid;
+  var ps=document.querySelectorAll('.view-panel');for(var i=0;i<ps.length;i++)ps[i].classList.remove('active');
+  var ts=document.querySelectorAll('.nav-tab');for(var i=0;i<ts.length;i++)ts[i].classList.remove('active');
+  var s=document.querySelectorAll('.sidebar-item');for(var i=0;i<s.length;i++)s[i].classList.toggle('active',s[i].getAttribute('data-pid')===pid);
+  
+  var p=PROPS.find(function(x){return x.id===pid;});
+  if(!p)return;
+  
+  var propCaps=ANALYTICS.propCaps[pid]||[];
+  var h='<div id="propNav" class="prop-nav"><span class="back-btn" onclick="showView(currentView)">← 返回</span><span class="prop-title">'+p.name+'</span><span class="prop-meta">';
+  h+='<span class="badge badge-'+p.role+'">'+p.role+'</span>';
+  h+='<span class="badge badge-'+p.priority+'">'+p.priority+'</span>';
+  h+='</span></div>';
+  
+  // Capability tags
+  h+='<div class="cap-tags">';
+  propCaps.forEach(function(cid){
+    var cn=ANALYTICS.capNames[cid]||cid;
+    var fc=ANALYTICS.capFreq.find(function(f){return f.id===cid;});
+    var shared=(fc&&fc.count>=3)?' shared':'';
+    var layer=ANALYTICS.capLayer[cid]||'';
+    var lc=ANALYTICS.layerColors[layer]||'#666';
+    h+='<span class="cap-tag'+shared+'" style="border-left:2px solid '+lc+'" title="'+layer+' — '+(fc?fc.count+'命题':'')+'">'+cn+'</span>';
+  });
+  h+='</div>';
+  
+  // Tab bar
+  h+='<div class="prop-tabs" id="propTabs">';
+  TABS.forEach(function(t,i){
+    h+='<div class="prop-tab'+(i===0?' active':'')+'" data-tab="'+t.id+'" onclick="switchPropTab(\''+t.id+'\')">'+t.label+'</div>';
+  });
+  h+='</div>';
+  
+  // Tab content
+  TABS.forEach(function(t,i){
+    h+='<div class="prop-tab-content'+(i===0?' active':'')+'" id="propTab-'+t.id+'"></div>';
+  });
+  
+  document.getElementById('propView').style.display='block';
+  document.getElementById('propView').innerHTML=h;
+  
+  // Render content
+  if(marked&&CONTENT[pid]){
+    TABS.forEach(function(t){
+      var md=CONTENT[pid][t.id]||'# 内容加载失败';
+      document.getElementById('propTab-'+t.id).innerHTML=marked.parse(md);
+    });
+  }else{
+    document.getElementById('propTab-overview').innerHTML='<p style="color:var(--red)">marked.js 或内容数据加载失败。请检查 CDN 连接。</p>';
+  }
+}
+
+function switchPropTab(tabId){
+  var tabs=document.querySelectorAll('#propTabs .prop-tab');
+  for(var i=0;i<tabs.length;i++)tabs[i].classList.toggle('active',tabs[i].getAttribute('data-tab')===tabId);
+  var cs=document.querySelectorAll('.prop-tab-content');
+  for(var i=0;i<cs.length;i++)cs[i].classList.toggle('active',cs[i].id==='propTab-'+tabId);
+}
+
+// ===== BOOT =====
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+</body>
+</html>
