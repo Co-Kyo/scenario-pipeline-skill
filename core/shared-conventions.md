@@ -1,6 +1,6 @@
 # 共享约定
 
-> 上下文隔离规范从 Step 01 起适用；子 agent 调度从 Step ④ 起适用；其余规则按需查阅。
+> 上下文隔离规范从 Step ① 起适用；子 agent 调度从 Step ④ 起适用；其余规则按需查阅。
 
 ---
 
@@ -11,13 +11,13 @@
 ### 分步执行协议
 
 ```
-前处理循环（Step 01 → 03）：
+前处理循环（Step ② → ④）：
   1. 读 processes/{step}.md           ← 仅当前步骤定义
   2. 读该步骤"前置条件"中列出的文件   ← 仅该步需要的方法论/契约
   3. 执行 → 产出文件
   4. 进入下一步
 
-后处理循环（Step 04 → 07）：
+后处理循环（Step ⑤ → ⑧）：
   同样遵循：读一步 → 执行一步 → 读下一步
 ```
 
@@ -60,10 +60,10 @@
 ⛔ 加载：
 - `core/capability-graph.md`（能力图谱方法论）
 - `meta/output-contracts.md`§2（本步输出格式）
-- `{workDir}/.meta/.raw-materials/index.json`（Step 01 产出索引）
+- `{workDir}/.meta/.raw-materials/index.json`（Step ② 产出索引）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`core/shared-conventions.md`、`core/capability-graph.md`、`meta/output-contracts.md`§2、`{workDir}/.meta/.raw-materials/index.json`（Step 01 产出）
+> - ✅ 允许读取：`core/shared-conventions.md`、`core/capability-graph.md`、`meta/output-contracts.md`§2、`{workDir}/.meta/.raw-materials/index.json`（Step ② 产出）
 > - ❌ 禁止读取：`processes/01.md`、`processes/03~07.md`、其他 `core/*.md`、`plugins/*.md`
 > - 📌 `output-contracts.md` 只读 §2 节
 ```
@@ -165,6 +165,7 @@ level 描述概念的客观归属层，role 描述概念相对于目标用户的
 | ⑤ Briefing 组装 | 滚动窗口 | 1 个命题 = 1 个 agent | 完成一个补一个，不超过 W |
 | ⑥ 命题组装 | 滚动窗口 | 1 个命题 = 2 个 agent（md + exp） | 两者独立并行，1 命题占 2 个槽位 |
 | ⑦ 学习阶梯 | 滚动窗口 | 1 个命题 = 1 个 agent | 完成一个补一个，不超过 W |
+| ⑨ 看板生成 | 主线程串行 | — | 主 agent 直接调用 scripts/build-dashboard-v2.js，不 spawn 子 agent |
 
 ### Label 命名规范
 
@@ -179,6 +180,7 @@ level 描述概念的客观归属层，role 描述概念相对于目标用户的
 | ⑥ 命题组装·Markdown | `asm-md-{seq}-{short_name}` | `asm-md-01-长列表渲染` |
 | ⑥ 命题组装·Experiment | `asm-exp-{seq}-{short_name}` | `asm-exp-01-长列表渲染` |
 | ⑦ 学习阶梯 | `ladder-{seq}-{short_name}` | `ladder-01-长列表渲染` |
+| ⑨ 看板生成 | — | 主线程执行，无 label |
 
 ### 完成判定规则
 
@@ -190,6 +192,43 @@ failed    = 任一 expected_files 缺失
 ```
 
 expected_files 由各步骤的 processes 文件定义（如 `capabilities/{id}-{name}.md` + `.meta/summaries/{id}-{name}.json`）。
+
+### 即时文件校验（Proactive File Validation）
+
+> **核心问题**：子 agent 报告「completed successfully」≠ 产出文件真实存在且合法。平台只看到进程正常退出 + 有输出，但可能输出是输入骨架的回显而非实际产出。
+
+**触发时机**：每个子 agent 完成事件到达后，**立刻**执行以下校验，不等同批其他 agent 完成。
+
+**校验三步**：
+
+```
+Step 1: 文件存在性检查
+  → expected_file 是否存在于磁盘？
+  → 不存在 → 标记 pending-retry，准备补发
+
+Step 2: JSON 合法性检查（仅 JSON 产物）
+  → json.load(file) 是否报错？
+  → 报错 → 标记 pending-retry
+
+Step 3: 关键字段匹配检查
+  → 维度报告：必须含 dimension 字段 + entries 数组非空
+  → 能力研究：必须含 capability_id 字段
+  → 组装产物：必须含 overview 字段
+  → 字段缺失 → 标记 pending-retry
+```
+
+**三步全过** → completed；**任一步失败** → pending-retry（立即补发，不等其他 agent）。
+
+**补发规则**：
+- 每个 agent 最多补发 1 次
+- 补发使用与原始完全相同的 task
+- 补发仍失败 → 标记 degraded，不阻塞后续流程
+- 补发期间继续接受其他 agent 的完成事件
+
+**与批量并行模式的关系**：
+- 批量并行（⓪ 维度 Agent）：所有 agent spawn 后，每收到一个完成事件就立刻校验，不等全部完成
+- 滚动窗口（①⑤⑥⑦）：同理，每完成一个立刻校验，校验通过才补位下一个
+- 拓扑分批（④）：批内每完成一个立刻校验，批内全部 completed 后才进入下一批
 
 ### 调度模式一：批量并行（适用 ⓪ 维度 Agent）
 
@@ -213,7 +252,7 @@ expected_files 由各步骤的 processes 文件定义（如 `capabilities/{id}-{
 
 **超时重试**：超时的任务重试一次。仍失败则标记 degraded，不阻塞其他任务。
 
-**Step ⑥ 特殊处理**：1 个命题 = 2 个 agent（Markdown + Experiment），两者独立可并行。
+**Step ⑦ 特殊处理**：1 个命题 = 2 个 agent（Markdown + Experiment），两者独立可并行。
 - 槽位计数：1 个命题占 2 个槽位
 - 部分完成：Markdown failed 但 Experiment completed → 标记 partial，不影响另一个
 
@@ -241,6 +280,10 @@ expected_files 由各步骤的 processes 文件定义（如 `capabilities/{id}-{
 - Step ④ 的 task **全部内联**（能力信息在分组时已确定，不读外部文件）
 - Step ⑤⑥⑦ 的 task **指定文件路径**（前置步骤产出量大，用 read 工具按需读取）
 - 文件不存在时的降级动作必须在 task 中声明（⑧ 标注"缺失"继续；⑨⑩ 停止并报错）
+
+### 大文件写入规则
+
+子 agent 产出合并型 JSON（多源合并，预估 > 20KB）时，禁止使用 write 工具，必须用 exec + Python 写入。
 
 ---
 
@@ -303,6 +346,7 @@ expected_files 由各步骤的 processes 文件定义（如 `capabilities/{id}-{
 | ⓓ | barrier-5.md | Step ⑥ 完成后 | briefing 文件 | 审查素材提取完整性 |
 | ⓕ | barrier-6.md | Step ⑦ 完成后 | 命题目录文件 | 审查组装质量 |
 | ⓖ | barrier-7.md | Step ⑧ 完成后 | learning-ladder.md | 确认最终产出 |
+| ⓗ | barrier-8.md | Step ⑨ 完成后 | dashboard-v2.html | 确认看板交付 |
 
 ### 跳过条件
 
@@ -322,6 +366,7 @@ expected_files 由各步骤的 processes 文件定义（如 `capabilities/{id}-{
 | Briefing 已存在 | `.meta/briefings/{seq}-{short_name}.md` 存在 | 跳过该 Briefing |
 | 命题文件已存在 | `{seq}-{short_name}/overview.md` 存在 | 跳过该命题组装 |
 | 学习阶梯已存在 | `{seq}-{short_name}/learning-ladder.md` 存在 | 跳过该阶梯生成 |
+| 看板已存在 | `dashboard-v2.html` 存在 | 跳过看板生成 |
 
 ---
 
