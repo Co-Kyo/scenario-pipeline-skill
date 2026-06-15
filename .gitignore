@@ -1,2 +1,3 @@
-.mimocode
+# .mimocode/plans  # 允许提交 plans
+.mimocode/snapshot
 __pycache__/
