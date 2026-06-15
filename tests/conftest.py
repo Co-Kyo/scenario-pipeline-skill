@@ -67,6 +67,30 @@ def sample_propositions():
             "search_priority": "high",
             "level_weight": {"level": "L2", "role": "core"},
         },
+        {
+            "id": "RW-P3",
+            "name": "模块化基础概念",
+            "description": "ES Module 与 CommonJS 的区别",
+            "depth": "概念",
+            "search_priority": "medium",
+            "level_weight": {"level": "L2", "role": "premise"},
+        },
+        {
+            "id": "RW-P4",
+            "name": "构建工具选型决策",
+            "description": "Webpack vs Vite 的适用场景分析",
+            "depth": "决策",
+            "search_priority": "medium",
+            "level_weight": {"level": "L2", "role": "outlook"},
+        },
+        {
+            "id": "RW-P5",
+            "name": "Tree Shaking 原理与实践",
+            "description": "ES Module 静态分析实现 dead code elimination",
+            "depth": "原理",
+            "search_priority": "high",
+            "level_weight": {"level": "L2", "role": "core"},
+        },
     ]
 
 
@@ -84,6 +108,6 @@ def sample_requirement_web(sample_context, sample_propositions):
             "ratios": {"premise": "10-15%", "core": "70-80%", "outlook": "5-10%"},
         },
         "propositions": sample_propositions,
-        "dependencies": {"RW-P1": [], "RW-P2": ["RW-P1"]},
+        "dependencies": {"RW-P1": [], "RW-P2": ["RW-P1"], "RW-P3": [], "RW-P4": ["RW-P1", "RW-P2"], "RW-P5": ["RW-P1"]},
         "capability_web": {},
     }
