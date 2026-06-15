@@ -123,18 +123,13 @@ pytest tests/ -v  # 必须全部 PASSED
 
 详细流程见 `dev/design/decisions/testing-strategy.md` §工作流（Agent 执行版）。
 
-## 决策协议（Agent Team）
+## 入口文件
 
-对于架构级决策（涉及多文件、多角色），必须启动 Agent Team 交叉讨论：
+本 skill 提供两个 Agent 入口：
 
-| 场景 | 触发 |
-|------|------|
-| 新增入口文件 | TEST.md、PATCH.md |
-| 模块边界调整 | processes/ 拆分、core/ 重构 |
-| 跨层设计变更 | 测试策略、错误处理 |
+| 入口 | 文件 | 用途 |
+|------|------|------|
+| 执行 | `SKILL.md` | 运行管线 |
+| 测试 | `TEST.md` | 测试 + 修复 |
 
-**Agent 角色**：架构师（结构风险）、测试专家（可测试性）、实现者（可行性）
-
-**流程**：定义问题 → 并行 spawn 3 Agent → 综合反馈 → 决策 → 记录
-
-详细流程见 `dev/design/decisions/agent-team-protocol.md`。
+Agent 框架根据用户意图选择入口。
