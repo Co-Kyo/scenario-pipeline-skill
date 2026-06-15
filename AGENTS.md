@@ -125,11 +125,12 @@ pytest tests/ -v  # 必须全部 PASSED
 
 ## 入口文件
 
-本 skill 提供两个 Agent 入口：
+本 skill 提供三个 Agent 入口：
 
 | 入口 | 文件 | 用途 |
 |------|------|------|
 | 执行 | `SKILL.md` | 运行管线 |
-| 测试 | `TEST.md` | 测试 + 修复 |
+| 测试 | `TEST.md` | 测试 Skill 设计 |
+| 修复 | `PATCH.md` | 修复测试失败 |
 
 Agent 框架根据用户意图选择入口。
