@@ -1,6 +1,6 @@
 ---
 name: scenario-pipeline-test
-description: "Skill 测试与修复入口。触发模式：'测试这个skill' / '运行测试' / '检查skill质量' / '修复测试失败' / 'patch skill'。"
+description: "Skill 测试入口。触发模式：'测试这个skill' / '运行测试' / '检查skill质量'。"
 ---
 
 # Scenario Pipeline Test
