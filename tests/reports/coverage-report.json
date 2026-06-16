@@ -1,0 +1,144 @@
+{
+  "coverage_rate": 0.7727272727272727,
+  "total_skill_files": 22,
+  "total_test_files": 21,
+  "covered": 17,
+  "uncovered": [
+    "meta/partition-analysis-schema.md",
+    "meta/sources.md",
+    "plugins/anti-crawl-fetch.md",
+    "plugins/capability-research-mode.md",
+    "plugins/year-granularity.md"
+  ],
+  "details": {
+    "processes/00-brainstorm.md": {
+      "covered_by": [
+        "tests\\property\\test_level_weight.py",
+        "tests\\property\\test_proposition_coverage.py",
+        "tests\\unit\\test_00_brainstorm.py"
+      ],
+      "test_count": 30
+    },
+    "processes/01-partition.md": {
+      "covered_by": [
+        "tests\\property\\test_dag_no_cycle.py",
+        "tests\\unit\\test_01_partition.py"
+      ],
+      "test_count": 14
+    },
+    "processes/02-scan.md": {
+      "covered_by": [
+        "tests\\unit\\test_02_scan.py"
+      ],
+      "test_count": 10
+    },
+    "processes/03-capability-graph.md": {
+      "covered_by": [
+        "tests\\unit\\test_03_capability_graph.py"
+      ],
+      "test_count": 9
+    },
+    "processes/04-evaluate-pool.md": {
+      "covered_by": [
+        "tests\\unit\\test_04_evaluate_pool.py"
+      ],
+      "test_count": 8
+    },
+    "processes/05-capability-research.md": {
+      "covered_by": [
+        "tests\\unit\\test_05_capability_research.py"
+      ],
+      "test_count": 8
+    },
+    "processes/06-briefing-assemble.md": {
+      "covered_by": [
+        "tests\\unit\\test_06_briefing_assemble.py"
+      ],
+      "test_count": 7
+    },
+    "processes/07-assemble.md": {
+      "covered_by": [
+        "tests\\unit\\test_07_assemble.py"
+      ],
+      "test_count": 8
+    },
+    "processes/08-learning-ladder.md": {
+      "covered_by": [
+        "tests\\unit\\test_08_learning_ladder.py"
+      ],
+      "test_count": 8
+    },
+    "processes/09-build-dashboard.md": {
+      "covered_by": [
+        "tests\\unit\\test_09_build_dashboard.py"
+      ],
+      "test_count": 8
+    },
+    "core/capability-graph.md": {
+      "covered_by": [
+        "tests\\unit\\test_03_capability_graph.py",
+        "tests\\unit\\test_core_files.py"
+      ],
+      "test_count": 18
+    },
+    "core/scenario-matrix.md": {
+      "covered_by": [
+        "tests\\unit\\test_core_files.py"
+      ],
+      "test_count": 9
+    },
+    "core/shared-conventions.md": {
+      "covered_by": [
+        "tests\\unit\\test_00_brainstorm.py",
+        "tests\\unit\\test_shared_conventions.py",
+        "tests\\unit\\test_skill_audit.py"
+      ],
+      "test_count": 60
+    },
+    "core/strategic-highground.md": {
+      "covered_by": [
+        "tests\\unit\\test_core_files.py"
+      ],
+      "test_count": 9
+    },
+    "meta/output-contracts.md": {
+      "covered_by": [
+        "tests\\unit\\test_output_contracts.py",
+        "tests\\unit\\test_skill_audit.py"
+      ],
+      "test_count": 22
+    },
+    "meta/partition-analysis-schema.md": {
+      "covered_by": [],
+      "test_count": 0
+    },
+    "meta/paths.md": {
+      "covered_by": [
+        "tests\\unit\\test_meta_paths.py"
+      ],
+      "test_count": 14
+    },
+    "meta/sources.md": {
+      "covered_by": [],
+      "test_count": 0
+    },
+    "plugins/anti-crawl-fetch.md": {
+      "covered_by": [],
+      "test_count": 0
+    },
+    "plugins/capability-research-mode.md": {
+      "covered_by": [],
+      "test_count": 0
+    },
+    "plugins/year-granularity.md": {
+      "covered_by": [],
+      "test_count": 0
+    },
+    "SKILL.md": {
+      "covered_by": [
+        "tests\\unit\\test_meta_paths.py"
+      ],
+      "test_count": 14
+    }
+  }
+}

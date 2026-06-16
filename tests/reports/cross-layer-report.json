@@ -1,0 +1,25 @@
+{
+  "layers": {
+    "L1": {
+      "status": "PASS",
+      "passed": 166,
+      "failed": 0,
+      "skipped": 0
+    },
+    "L2": {
+      "status": "PASS",
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0
+    },
+    "L3": {
+      "status": "PASS",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 7
+    }
+  },
+  "issues": [],
+  "issue_count": 0,
+  "high_count": 0
+}

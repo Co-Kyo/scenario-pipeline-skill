@@ -1,0 +1,230 @@
+{
+  "kill_rate": 93.33333333333333,
+  "total": 15,
+  "killed": 14,
+  "survived": 1,
+  "results": [
+    {
+      "id": "M01",
+      "name": "添加 why 泄漏词（设计理念）",
+      "status": "KILLED",
+      "reason": "测试捕获了变异（1 个测试失败）",
+      "failed_count": 1,
+      "targets": [
+        "processes\\00-brainstorm.md",
+        "processes\\01-partition.md",
+        "processes\\02-scan.md",
+        "processes\\03-capability-graph.md",
+        "processes\\04-evaluate-pool.md",
+        "processes\\05-capability-research.md",
+        "processes\\06-briefing-assemble.md",
+        "processes\\07-assemble.md",
+        "processes\\08-learning-ladder.md",
+        "processes\\09-build-dashboard.md"
+      ]
+    },
+    {
+      "id": "M02",
+      "name": "添加 why 泄漏词（之所以）",
+      "status": "KILLED",
+      "reason": "测试捕获了变异（1 个测试失败）",
+      "failed_count": 1,
+      "targets": [
+        "processes\\00-brainstorm.md",
+        "processes\\01-partition.md",
+        "processes\\02-scan.md",
+        "processes\\03-capability-graph.md",
+        "processes\\04-evaluate-pool.md",
+        "processes\\05-capability-research.md",
+        "processes\\06-briefing-assemble.md",
+        "processes\\07-assemble.md",
+        "processes\\08-learning-ladder.md",
+        "processes\\09-build-dashboard.md"
+      ]
+    },
+    {
+      "id": "M03",
+      "name": "删除前置条件章节",
+      "status": "KILLED",
+      "reason": "测试捕获了变异（10 个测试失败）",
+      "failed_count": 10,
+      "targets": [
+        "processes\\00-brainstorm.md",
+        "processes\\01-partition.md",
+        "processes\\02-scan.md",
+        "processes\\03-capability-graph.md",
+        "processes\\04-evaluate-pool.md",
+        "processes\\05-capability-research.md",
+        "processes\\06-briefing-assemble.md",
+        "processes\\07-assemble.md",
+        "processes\\08-learning-ladder.md",
+        "processes\\09-build-dashboard.md"
+      ]
+    },
+    {
+      "id": "M04",
+      "name": "删除上下文隔离声明",
+      "status": "KILLED",
+      "reason": "测试捕获了变异（1 个测试失败）",
+      "failed_count": 1,
+      "targets": [
+        "processes\\00-brainstorm.md",
+        "processes\\01-partition.md",
+        "processes\\02-scan.md",
+        "processes\\03-capability-graph.md",
+        "processes\\04-evaluate-pool.md",
+        "processes\\05-capability-research.md",
+        "processes\\06-briefing-assemble.md",
+        "processes\\07-assemble.md",
+        "processes\\08-learning-ladder.md",
+        "processes\\09-build-dashboard.md"
+      ]
+    },
+    {
+      "id": "M05",
+      "name": "删除 _trace 定义",
+      "status": "KILLED",
+      "reason": "测试捕获了变异（1 个测试失败）",
+      "failed_count": 1,
+      "targets": [
+        "core\\shared-conventions.md"
+      ]
+    },
+    {
+      "id": "M06",
+      "name": "删除 §0 输出契约",
+      "status": "KILLED",
+      "reason": "测试捕获了变异（1 个测试失败）",
+      "failed_count": 1,
+      "targets": [
+        "meta\\output-contracts.md"
+      ]
+    },
+    {
+      "id": "M07",
+      "name": "删除 §1 输出契约",
+      "status": "KILLED",
+      "reason": "测试捕获了变异（1 个测试失败）",
+      "failed_count": 1,
+      "targets": [
+        "meta\\output-contracts.md"
+      ]
+    },
+    {
+      "id": "M08",
+      "name": "删除 DAG 关键字",
+      "status": "SURVIVED",
+      "reason": "测试未捕获变异（所有测试仍通过）",
+      "failed_count": 0,
+      "targets": [
+        "processes\\00-brainstorm.md",
+        "processes\\01-partition.md",
+        "processes\\02-scan.md",
+        "processes\\03-capability-graph.md",
+        "processes\\04-evaluate-pool.md",
+        "processes\\05-capability-research.md",
+        "processes\\06-briefing-assemble.md",
+        "processes\\07-assemble.md",
+        "processes\\08-learning-ladder.md",
+        "processes\\09-build-dashboard.md"
+      ]
+    },
+    {
+      "id": "M09",
+      "name": "删除 requirement-web 引用",
+      "status": "KILLED",
+      "reason": "测试捕获了变异（1 个测试失败）",
+      "failed_count": 1,
+      "targets": [
+        "processes\\01-partition.md"
+      ]
+    },
+    {
+      "id": "M10",
+      "name": "删除 JSON 示例",
+      "status": "KILLED",
+      "reason": "测试捕获了变异（1 个测试失败）",
+      "failed_count": 1,
+      "targets": [
+        "processes\\00-brainstorm.md"
+      ]
+    },
+    {
+      "id": "M11",
+      "name": "删除年限等级定义",
+      "status": "KILLED",
+      "reason": "测试捕获了变异（1 个测试失败）",
+      "failed_count": 1,
+      "targets": [
+        "processes\\00-brainstorm.md",
+        "processes\\01-partition.md",
+        "processes\\02-scan.md",
+        "processes\\03-capability-graph.md",
+        "processes\\04-evaluate-pool.md",
+        "processes\\05-capability-research.md",
+        "processes\\06-briefing-assemble.md",
+        "processes\\07-assemble.md",
+        "processes\\08-learning-ladder.md",
+        "processes\\09-build-dashboard.md"
+      ]
+    },
+    {
+      "id": "M12",
+      "name": "删除并行执行描述",
+      "status": "KILLED",
+      "reason": "测试捕获了变异（1 个测试失败）",
+      "failed_count": 1,
+      "targets": [
+        "processes\\00-brainstorm.md",
+        "processes\\01-partition.md",
+        "processes\\02-scan.md",
+        "processes\\03-capability-graph.md",
+        "processes\\04-evaluate-pool.md",
+        "processes\\05-capability-research.md",
+        "processes\\06-briefing-assemble.md",
+        "processes\\07-assemble.md",
+        "processes\\08-learning-ladder.md",
+        "processes\\09-build-dashboard.md"
+      ]
+    },
+    {
+      "id": "M13",
+      "name": "删除 year_inference_trace 定义",
+      "status": "KILLED",
+      "reason": "测试捕获了变异（1 个测试失败）",
+      "failed_count": 1,
+      "targets": [
+        "core\\shared-conventions.md"
+      ]
+    },
+    {
+      "id": "M14",
+      "name": "删除 source_tier 定义",
+      "status": "KILLED",
+      "reason": "测试捕获了变异（1 个测试失败）",
+      "failed_count": 1,
+      "targets": [
+        "core\\shared-conventions.md"
+      ]
+    },
+    {
+      "id": "M15",
+      "name": "删除环检测描述",
+      "status": "KILLED",
+      "reason": "测试捕获了变异（1 个测试失败）",
+      "failed_count": 1,
+      "targets": [
+        "processes\\00-brainstorm.md",
+        "processes\\01-partition.md",
+        "processes\\02-scan.md",
+        "processes\\03-capability-graph.md",
+        "processes\\04-evaluate-pool.md",
+        "processes\\05-capability-research.md",
+        "processes\\06-briefing-assemble.md",
+        "processes\\07-assemble.md",
+        "processes\\08-learning-ladder.md",
+        "processes\\09-build-dashboard.md"
+      ]
+    }
+  ]
+}
