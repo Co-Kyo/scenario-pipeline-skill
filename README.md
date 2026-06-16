@@ -44,16 +44,16 @@
 
 ```
 ⓪ 头脑风暴（前置）     前处理（串行 3 步）       后处理（并行 + 检查点）
-年限自动推断             ① scan（两阶段管道）      ④ 能力研究（并行）× N
+年限自动推断             ② scan（两阶段管道）      ⑤ 能力研究（并行）× N
 4 维度 Agent 并行          Phase A: 串行搜索       ⓒ barrier
-↓ 裁判收敛                 Phase B: 并行提取(W=5)  ⑤ Briefing 组装（并行）× M
+↓ 裁判收敛                 Phase B: 并行提取(W=5)  ⑥ Briefing 组装（并行）× M
 requirement-web.json      Phase C: merge          ⓓ barrier
-含能力图谱+分词结构        ② capability-graph →     ⑥ 命题组装（并行）× M
+含能力图谱+分词结构        ③ capability-graph →     ⑦ 命题组装（并行）× M
 ⓩ 检查点                     能力图谱+高地           ⓕ barrier
-                           ③ evaluate-pool →       ⑦ 学习阶梯（并行）× M
-                              评估+入池              ⓖ 完成
-                           ⓐ barrier
-                           ⓑ barrier
+                           ④ evaluate-pool →       ⑧ 学习阶梯（并行）× M
+① 依赖整理与分区            评估+入池              ⓖ 完成
+                            ⓐ barrier              ⑨ 看板生成
+                            ⓑ barrier              ⓗ 完成
 ```
 
 每个阶段之间有显式 barrier + 检查点，确保上游产物完整后才进入下游。
@@ -110,36 +110,85 @@ deep research：P1、P2、P4 --no-experiment
 
 ```
 scenario-pipeline/
-├── SKILL.md                    ← Agent 执行入口（触发方式 + 管道全景）
+├── SKILL.md                    ← 用户入口（执行管线）
+├── AGENTS.md                   ← Agent 执行指引
 │
-├── meta/                       ← 数据定义
-│   ├── sources.md                 T0 域名表 + 信源分级规则
-│   ├── output-contracts.md        每步输出结构 + 完整 JSON 示例
-│   └── paths.md                   路径约定表
+├── processes/                  ← 步骤定义（10 个）
+│   ├── 00-brainstorm.md           头脑风暴
+│   ├── 01-partition.md             依赖整理与分区
+│   ├── 02-scan.md                  定向扫描
+│   ├── 03-capability-graph.md      能力图谱构建
+│   ├── 04-evaluate-pool.md         评估与入池
+│   ├── 05-capability-research.md   能力研究
+│   ├── 06-briefing-assemble.md     Briefing 组装
+│   ├── 07-assemble.md              命题组装
+│   ├── 08-learning-ladder.md       学习阶梯
+│   └── 09-build-dashboard.md       看板生成
 │
-├── core/                       ← 方法论（agent 按需加载）
-│   ├── shared-conventions.md        子 agent 调度 + 检查点 + 状态管理 + 隔离规范
-│   ├── capability-graph.md
-│   ├── strategic-highground.md
-│   └── scenario-matrix.md
+├── core/                       ← 方法论（4 个）
+├── meta/                       ← 数据定义（4 个）
+├── plugins/                    ← 可选增强（3 个）
 │
-├── plugins/                    ← 可选插件
-│   ├── capability-research-mode.md
-│   └── year-granularity.md         经验年限颗粒度规则
+├── dev/                        ← 开发者文档
+│   ├── TEST.md                     开发者测试入口
+│   ├── PATCH.md                    开发者修复入口
+│   ├── architecture-overview.md    架构全貌
+│   ├── design/                     设计决策
+│   └── tools/                      开发工具
 │
-├── processes/                  ← 执行文档（自包含，含示例）
-│   ├── 00-brainstorm.md           多维头脑风暴
-│   ├── 01-partition.md             依赖整理与分区 + 年限自动推断 + 分词（前置阶段）
-│   ├── 02-scan.md                 定向扫描
-│   ├── 03-capability-graph.md     能力图谱构建（含战略高地识别）
-│   ├── 04-evaluate-pool.md        评估与入池
-│   ├── 05 ~ 08                    后处理步骤
+├── tests/                      ← 测试框架（184 个测试）
+│   ├── unit/                       Layer 1 结构验证（166 个）
+│   ├── property/                   Layer 2 属性验证（9 个）
+│   └── semantic/                   Layer 3 语义验证（9 个）
 │
-└── dev/                        ← 开发与观测（人类阅读 + 审查工具）
-    ├── design/                     设计原理（why）
-    ├── pipeline-view/              管道观测视角
-    └── tools/                      开发工具
+└── scripts/                    ← 工具脚本（13 个）
+    ├── build-dashboard-v2.js       看板生成
+    ├── mutation-test.py            变异测试
+    ├── test-coverage.py            测试覆盖率
+    ├── cross-layer-check.py        跨层一致性
+    └── regression-check.py         回归检测
 ```
+
+---
+
+## 测试框架
+
+| 层 | 测试数 | 验证内容 |
+|----|--------|----------|
+| Layer 1 | 166 | 文件结构、章节、关键词 |
+| Layer 2 | 9 | 命题覆盖度、DAG 无环、level_weight 分布 |
+| Layer 3 | 9 | 命题质量、能力准确性、学习阶梯合理性 |
+
+```bash
+# 运行所有测试
+pytest tests/ -v
+
+# 运行特定层测试
+pytest tests/unit/ -v        # Layer 1
+pytest tests/property/ -v    # Layer 2
+pytest tests/semantic/ -v    # Layer 3
+```
+
+---
+
+## 质量保障
+
+| 机制 | 脚本 | 功能 |
+|------|------|------|
+| 变异测试 | `python scripts/mutation-test.py` | 故意引入 bug，验证测试捕获能力 |
+| 测试覆盖率 | `python scripts/test-coverage.py` | 度量 Skill 被测试覆盖的程度 |
+| 跨层一致性 | `python scripts/cross-layer-check.py` | Layer 1/2/3 结果是否一致 |
+| 回归检测 | `python scripts/regression-check.py` | 新测试是否破坏旧测试 |
+
+---
+
+## 入口文件
+
+| 入口 | 文件 | 用途 |
+|------|------|------|
+| 用户 | `SKILL.md` | 运行管线 |
+| 开发者 | `dev/TEST.md` | 测试 Skill 设计 |
+| 开发者 | `dev/PATCH.md` | 修复测试失败 |
 
 ---
 
