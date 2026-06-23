@@ -205,3 +205,15 @@ web_search "<能力名称>"
 ## 检查点
 
 🚨 **🛑 必须停顿，进入 ⓐ 检查点**。展示能力图谱摘要（能力数量、扇出度 Top 3、战略高地、学习路径），使用 `clarify` 等待用户确认后才进入 Step ④。
+
+---
+
+### 看板刷新
+
+运行增量构建脚本，更新看板：
+
+```bash
+node {skillDir}/scripts/build-dashboard.js {workDir} --step=3
+```
+
+看板文件 `{workDir}/dashboard.html` 随管线推进逐步生长。用户可随时打开查看当前进度。

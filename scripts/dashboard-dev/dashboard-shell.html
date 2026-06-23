@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scenario Pipeline · 长链路看板</title>
+    <!--
+      Data injection placeholder.
+      In dev mode this is null. The build script (build-dashboard.js) replaces
+      the PIPELINE_DATA_PLACEHOLDER comment with the actual PipelineData JSON
+      when generating the final dashboard.html.
+    -->
+    <script>
+      window.__PIPELINE_DATA__ = null; /* PIPELINE_DATA_PLACEHOLDER */
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

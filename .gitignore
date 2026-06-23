@@ -1,3 +1,7 @@
 # .mimocode/plans  # 允许提交 plans
 .mimocode/snapshot
 __pycache__/
+.workbuddy
+node_modules
+deliverables
+demo_output

@@ -160,3 +160,15 @@
 | 能力依赖图有环 | 打断循环依赖，标记 warning |
 | 能力数量过多（>8） | 合并相似能力，减少阶段数 |
 | 阶段数超过 5 个 | 合并相邻阶段 |
+
+---
+
+### 看板刷新
+
+运行增量构建脚本，更新看板：
+
+```bash
+node {skillDir}/scripts/build-dashboard.js {workDir} --step=8
+```
+
+看板文件 `{workDir}/dashboard.html` 随管线推进逐步生长。用户可随时打开查看当前进度。

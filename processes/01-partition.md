@@ -132,3 +132,15 @@
 | `{workDir}/.meta/partition-analysis.json` | JSON 有效，包含 current_session |
 | `{workDir}/execution-plan.md` | 文件存在且非空 |
 | `{workDir}/.meta/checkpoints/barrier-1.md` | 文件存在 |
+
+---
+
+### 看板刷新
+
+运行增量构建脚本，更新看板：
+
+```bash
+node {skillDir}/scripts/build-dashboard.js {workDir} --step=1
+```
+
+看板文件 `{workDir}/dashboard.html` 随管线推进逐步生长。用户可随时打开查看当前进度。

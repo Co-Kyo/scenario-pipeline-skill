@@ -510,3 +510,15 @@ unknown 域名评估达标后写入 `{workDir}/.meta/sources/dynamic-sources.jso
 ## 完成
 
 Phase C merge 完成后直接进入 Step ③（能力图谱构建）。扫描暂不设用户检查点——Phase A/B 的 prod 摘要（index.json 中的 `scan_summary`）即是本阶段的质量信号。Scan 的任何质量偏差留到 Step ③ 结束后（ⓐ 检查点）一并审查。
+
+---
+
+### 看板刷新
+
+运行增量构建脚本，更新看板：
+
+```bash
+node {skillDir}/scripts/build-dashboard.js {workDir} --step=2
+```
+
+看板文件 `{workDir}/dashboard.html` 随管线推进逐步生长。用户可随时打开查看当前进度。

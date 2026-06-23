@@ -313,3 +313,15 @@ T0 缺失: {t0_missing}
 | 某个子组 Agent 全部失败 | 将该子组能力降级为逐个 spawn 重试 |
 | 所有子组 Agent 均无跨组依赖 | 全部并行启动，无需拓扑编排 |
 | 拆分后子组能力数 > 4 | 违反上限约束，必须重新拆分；检查拆分算法是否遗漏依赖链 |
+
+---
+
+### 看板刷新
+
+运行增量构建脚本，更新看板：
+
+```bash
+node {skillDir}/scripts/build-dashboard.js {workDir} --step=5
+```
+
+看板文件 `{workDir}/dashboard.html` 随管线推进逐步生长。用户可随时打开查看当前进度。

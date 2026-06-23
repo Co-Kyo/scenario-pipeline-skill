@@ -1130,3 +1130,15 @@ year={year}({year_source}),target_level={L1/L2/L3/L4},platform={platform},depth=
 - 删除不需要的命题
 - 调整排序优先级
 - 修改排除规则
+
+---
+
+### 看板刷新
+
+运行增量构建脚本，更新看板：
+
+```bash
+node {skillDir}/scripts/build-dashboard.js {workDir} --step=0
+```
+
+看板文件 `{workDir}/dashboard.html` 随管线推进逐步生长。用户可随时打开查看当前进度。
