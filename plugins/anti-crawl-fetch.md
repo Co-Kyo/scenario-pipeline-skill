@@ -1,11 +1,11 @@
 ---
 name: anti-crawl-fetch
-description: "Step ③ scan 的 web_fetch 反爬降级方案。当 web_fetch 失败（403/超时/JS渲染空白）时，用 Playwright headless Chromium 绕过反爬提取内容。触发条件：fetch_status=failed 且域名不在排除列表中。"
+description: "Step 03 scan 的 web_fetch 反爬降级方案。当 web_fetch 失败（403/超时/JS渲染空白）时，用 Playwright headless Chromium 绕过反爬提取内容。触发条件：fetch_status=failed 且域名不在排除列表中。"
 ---
 
 # 反爬降级抓取（Anti-Crawl Fallback）
 
-> 本 plugin 被 Step ③ scan 按需加载。当 `web_fetch` 失败时，作为降级方案执行。
+> 本 plugin 被 Step 03 scan 按需加载。当 `web_fetch` 失败时，作为降级方案执行。
 
 ---
 
@@ -228,7 +228,7 @@ curl -s -X POST 'https://api.juejin.cn/content_api/v1/article/detail' \
 
 ## 结果写回
 
-降级抓取成功后，将提取结果转换为 Step ③ scan 的 material 格式：
+降级抓取成功后，将提取结果转换为 Step 03 scan 的 material 格式：
 
 ```json
 {

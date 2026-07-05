@@ -1,4 +1,4 @@
-# Step ④: 能力图谱构建
+# Step 04: 能力图谱构建
 
 **目的**：跨命题去重合并原子能力，计算扇出度与战略价值，预查找参考 URL
 
@@ -20,14 +20,14 @@
 - `assets/04-capability-graph/method.md`（战略高地方法论）
 - `assets/04-capability-graph/schemas.md`（本步输出格式）
 - `assets/common/ref-sources.md`（T0 域名表，用于信源预查找）
-- `{workDir}/.meta/requirement-web.json`（① 产出，含 capability_web 和 decompositions）
-- `{workDir}/.meta/.raw-materials/index.json`（② 产出索引，含 URL + 元数据）
-- `{workDir}/.meta/.raw-materials/*.md`（② 产出内容文件，按需读取）
+- `{workDir}/.meta/requirement-web.json`（01 产出，含 capability_web 和 decompositions）
+- `{workDir}/.meta/.raw-materials/index.json`（02 产出索引，含 URL + 元数据）
+- `{workDir}/.meta/.raw-materials/*.md`（02 产出内容文件，按需读取）
 
 ## 输入
 
-- `requirement-web.json`（① 产出，含 capability_web + decompositions）
-- `.raw-materials/index.json`（② 产出索引）+ 对应 markdown 内容文件
+- `requirement-web.json`（01 产出，含 capability_web + decompositions）
+- `.raw-materials/index.json`（02 产出索引）+ 对应 markdown 内容文件
 
 ## 执行步骤
 
@@ -44,7 +44,7 @@
 **第一轮：名称+层级匹配**
 - 相同能力（同名同层）→ 候选合并
 
-**第二轮：内容语义比对**（利用 ② 产出的 markdown 内容）
+**第二轮：内容语义比对**（利用 02 产出的 markdown 内容）
 - 对候选合并的能力对，读取各自在 `.raw-materials/` 中匹配到的 markdown 文件
 - 比对 `## 内容提取 > ### 能力点` 中的 `description` 和 `key_insight`
 - **合并**：描述内容一致或高度重叠 → 合并为一条，保留最高 Tier 来源
@@ -61,7 +61,7 @@
 
 ### 3. 标注依赖关系与 trace
 
-基于 ② 产出的 markdown 内容，辅助推断能力间的依赖关系：
+基于 02 产出的 markdown 内容，辅助推断能力间的依赖关系：
 
 **推断依据**（按优先级）：
 1. **技术层级关系**：从 markdown 的 capability_points 中读取 `layer` 字段。不同层之间存在自然依赖——框架层能力通常依赖浏览器层能力，工程层能力通常依赖框架层能力
@@ -79,11 +79,11 @@
 
 分析不同限定词向命题注入的特化能力集，记录为 `qualifier_injection`。
 
-### 5. 信源 URL 预查找（先复用 ②，再补搜）
+### 5. 信源 URL 预查找（先复用 02，再补搜）
 
-**对每个原子能力，必须有参考 URL。** 优先从 ② scan 的产物中取，取不到的才补搜。
+**对每个原子能力，必须有参考 URL。** 优先从 02 scan 的产物中取，取不到的才补搜。
 
-#### 5.1 从 ② 结果复用
+#### 5.1 从 02 结果复用
 
 读取 `.raw-materials/index.json`，按以下逻辑匹配：
 
@@ -105,9 +105,9 @@
 }
 ```
 
-#### 5.2 补搜（仅对 ② 未覆盖的能力）
+#### 5.2 补搜（仅对 02 未覆盖的能力）
 
-如果某个能力在 ② 的 `.raw-materials/index.json` 中没有匹配到任何材料，执行补搜：
+如果某个能力在 02 的 `.raw-materials/index.json` 中没有匹配到任何材料，执行补搜：
 
 **轨道 A — T0 定向**：
 ```
@@ -139,7 +139,7 @@ web_search "<能力名称>"
 
 #### 5.3 复用 scan 的内容提取
 
-对于从 ② 复用的 URL，**直接从对应 markdown 文件中复制 `## 内容提取` 整段**，不再重复抓取和提取。补搜的 URL 需要自行提取 content_extract 并写入新的 markdown 文件。
+对于从 02 复用的 URL，**直接从对应 markdown 文件中复制 `## 内容提取` 整段**，不再重复抓取和提取。补搜的 URL 需要自行提取 content_extract 并写入新的 markdown 文件。
 
 **复用的 content_extract 来源**：
 - 从 `.raw-materials/{file_path}` 的 markdown 中读取 `## 内容提取` 段落
@@ -168,7 +168,7 @@ web_search "<能力名称>"
 
 顶层必须包含 `highgrounds` 和 `learning_path` 字段。
 
-命题数据由 ⑤ evaluate-pool 直接读取 requirement-web.json，④ 不注入 propositions 字段。
+命题数据由 05 evaluate-pool 直接读取 requirement-web.json，04 不注入 propositions 字段。
 
 写入 `{workDir}/.meta/capability-graph.json`。
 
@@ -209,4 +209,4 @@ web_search "<能力名称>"
 
 ## 检查点
 
-🚨 **🛑 必须停顿，进入 ⓐ 检查点**。展示能力图谱摘要（能力数量、扇出度 Top 3、战略高地、学习路径），使用 `clarify` 等待用户确认后才进入 Step ⑤。
+🚨 **🛑 必须停顿，进入 Barrier 3 检查点**。展示能力图谱摘要（能力数量、扇出度 Top 3、战略高地、学习路径），使用 `clarify` 等待用户确认后才进入 Step 05。

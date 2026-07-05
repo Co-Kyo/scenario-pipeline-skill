@@ -1,4 +1,4 @@
-# Step ②: 依赖整理与命题分区
+# Step 02: 依赖整理与命题分区
 
 **目的**：将命题列表整理为依赖图（DAG），自动识别分区点，分批执行
 
@@ -15,7 +15,7 @@
 ## 前置条件
 
 加载：
-- `{workDir}/.meta/requirement-web.json`（① 产出，含命题列表 + 能力图谱雏形）
+- `{workDir}/.meta/requirement-web.json`（01 产出，含命题列表 + 能力图谱雏形）
 - `assets/02-partition/schemas.md`（分区 JSON 的结构定义）
 
 ## 输入
@@ -105,7 +105,7 @@
 
 ## 检查点
 
-⚠️ **检查点 ⓧ**：写入 `{workDir}/.meta/checkpoints/barrier-2.md` 后停住等待用户确认。
+⚠️ **检查点 Barrier 2**：写入 `{workDir}/.meta/checkpoints/barrier-2.md` 后停住等待用户确认。
 
 展示内容：
 - 分区结果摘要（几个 session，每个 session 几个命题）

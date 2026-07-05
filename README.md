@@ -44,17 +44,17 @@
 ## 核心设计
 
 ```
-⓪ 意图锚定                前处理（串行 3 步）       后处理（并行 + 检查点）
-年限推断+锚点生成          ③ scan（两阶段管道）      ⑥ 能力研究（并行）× N
-① 头脑风暴                  Phase A: 串行搜索       ⓒ barrier
-  4维度Agent并行+收敛        Phase B: 并行提取(W=5)  ⑦ Briefing 组装（并行）× M
-requirement-web.json       Phase C: merge          ⓓ barrier
-含能力图谱+分词结构         ④ capability-graph →     ⑧ 命题组装（并行）× M
-ⓩ 检查点                      能力图谱+高地           ⓕ barrier
-                            ⑤ evaluate-pool →       ⑨ 学习阶梯（并行）× M
-                               评估+入池              ⓖ 完成
-                            ⓐ barrier
-                            ⓑ barrier
+00 意图锚定                前处理（串行 3 步）       后处理（并行 + 检查点）
+年限推断+锚点生成          03 scan（两阶段管道）      06 能力研究（并行）× N
+01 头脑风暴                  Phase A: 串行搜索       Barrier 5
+  4维度Agent并行+收敛        Phase B: 并行提取(W=5)  07 Briefing 组装（并行）× M
+requirement-web.json       Phase C: merge          Barrier 6
+含能力图谱+分词结构         04 capability-graph →     08 命题组装（并行）× M
+Barrier 1 检查点                      能力图谱+高地           Barrier 7
+                            05 evaluate-pool →       09 学习阶梯（并行）× M
+                               评估+入池              Barrier 8 完成
+                            Barrier 3
+                            Barrier 4
 ```
 
 每个阶段之间有显式 barrier + 检查点，确保上游产物完整后才进入下游。

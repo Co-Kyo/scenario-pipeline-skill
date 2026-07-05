@@ -1,20 +1,20 @@
 # 上下文隔离规范（Context Isolation）
 
 > **每一步只加载当前步骤所需的文件，严禁预加载后续步骤。**
-> 从 Step ② 起适用。
+> 从 Step 02 起适用。
 
 ---
 
 ## 分步执行协议
 
 ```
-前处理循环（Step ③ → ⑤）：
+前处理循环（Step 03 → 05）：
   1. 读 processes/{step}.md           ← 仅当前步骤定义
   2. 读该步骤"前置条件"中列出的文件   ← 仅该步需要的方法论/契约
   3. 执行 → 产出文件
   4. 进入下一步
 
-后处理循环（Step ⑥ → ⑨）：
+后处理循环（Step 06 → 09）：
   同样遵循：读一步 → 执行一步 → 读下一步
 ```
 
@@ -57,10 +57,10 @@
 ⛔ 加载：
 - `assets/04-capability-graph/method.md`（能力图谱方法论）
 - `assets/04-capability-graph/schemas.md`（本步输出格式）
-- `{workDir}/.meta/.raw-materials/index.json`（Step ③ 产出索引）
+- `{workDir}/.meta/.raw-materials/index.json`（Step 03 产出索引）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`assets/common/rule-isolation.md`、`assets/04-capability-graph/method.md`、`assets/04-capability-graph/schemas.md`§2、`{workDir}/.meta/.raw-materials/index.json`（Step ③ 产出）
+> - ✅ 允许读取：`assets/common/rule-isolation.md`、`assets/04-capability-graph/method.md`、`assets/04-capability-graph/schemas.md`§2、`{workDir}/.meta/.raw-materials/index.json`（Step 03 产出）
 > - ❌ 禁止读取：`processes/02.md`、`processes/04~08.md`、其他 `assets/{step-id}/method.md`、`plugins/*.md`
 > - 📌 `schemas.md` 只读 §2 节
 ```

@@ -1,6 +1,6 @@
 # Plugin: 能力研究模式 (capability-research-mode)
 
-> Step ⑥ 的域 Agent task 中引用本文件的格式规范。
+> Step 06 的域 Agent task 中引用本文件的格式规范。
 
 ---
 
@@ -143,4 +143,4 @@ capability_block:
 | **教学模式** | 技术培训 | 增加"常见误区"和"渐进式示例"字段 |
 | **审计模式** | 技术选型 | 增加"性能基准数据"和"兼容性矩阵"字段 |
 
-替换方式：在 Step ⑥ 的 task 模板中调整对本 plugin 格式规范的引用，或替换为自定义 plugin。
+替换方式：在 Step 06 的 task 模板中调整对本 plugin 格式规范的引用，或替换为自定义 plugin。

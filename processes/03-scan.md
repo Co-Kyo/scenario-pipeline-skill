@@ -1,4 +1,4 @@
-# Step ③: 广域扫描（两阶段管道）
+# Step 03: 广域扫描（两阶段管道）
 
 **目的**：为每个命题按其 level_weight 差异化搜索信源，抓取内容并结构化提取
 
@@ -19,7 +19,7 @@
 
 如果 `requirement-web.json` 存在（头脑风暴已执行），读取该文件作为精准输入——**必须消费其中的 level_weight、search_keywords、search_guidance、scope 字段**。
 
-如果 `partition-analysis.json` 存在（② 分区已执行），**只处理 `current_session.proposition_ids` 中的命题**，按 `current_session.scan_batches` 分批执行。排期到 `deferred_sessions` 的命题不进入本轮 scan。
+如果 `partition-analysis.json` 存在（02 分区已执行），**只处理 `current_session.proposition_ids` 中的命题**，按 `current_session.scan_batches` 分批执行。排期到 `deferred_sessions` 的命题不进入本轮 scan。
 
 ## 输入
 
@@ -457,4 +457,4 @@ unknown 域名评估达标后写入 `{workDir}/.meta/sources/dynamic-sources.jso
 
 ## 检查点
 
-🚨 **🛑 必须停顿，进入 ⓐ 检查点**。展示信源质量摘要（Tier 分布、素材数、丢弃数、按 role 的搜索覆盖统计），使用 `clarify` 等待用户确认后才进入 Step ④。
+🚨 **🛑 必须停顿，进入 Barrier 3 检查点**。展示信源质量摘要（Tier 分布、素材数、丢弃数、按 role 的搜索覆盖统计），使用 `clarify` 等待用户确认后才进入 Step 04。

@@ -1,4 +1,4 @@
-# Step ⑨: 学习阶梯
+# Step 09: 学习阶梯
 
 **目的**：为每个已组装的命题生成学习阶梯——从"不会"到"能讲"的渐进式引导路径
 
@@ -16,14 +16,14 @@
 无需加载额外方法论文件。本步骤的 task 已内联全部指令。读取：
 - `assets/09-learning-ladder/schemas.md`（本步输出格式）
 - `{workDir}/.meta/capability-graph.json`（含能力依赖关系）
-- `{workDir}/.meta/summaries/*.json`（Step ⑥ 产出）
-- `{workDir}/{seq}-{short_name}/overview.md`（Step ⑧ 产出）
+- `{workDir}/.meta/summaries/*.json`（Step 06 产出）
+- `{workDir}/{seq}-{short_name}/overview.md`（Step 08 产出）
 
 ## 输入
 
 - `capability-graph.json`（前处理产出，含能力依赖关系）
-- `.meta/summaries/*.json`（Step ⑥ 产出）
-- `{seq}-{short_name}/overview.md` 等（Step ⑧ 产出的命题文件）
+- `.meta/summaries/*.json`（Step 06 产出）
+- `{seq}-{short_name}/overview.md` 等（Step 08 产出的命题文件）
 
 ## 执行步骤
 
@@ -61,7 +61,7 @@
 #### 2.4 特殊异常
 
 - 能力依赖图有环 → 打断循环依赖，标记 warning（不 kill agent，让 agent 自行处理）
-- 所有命题均完成或 degraded → 进入 ⓖ 检查点
+- 所有命题均完成或 degraded → 进入 Barrier 8 检查点
 
 **task 模板**：
 
@@ -86,10 +86,10 @@
 ## 能力详情
 用 read 工具读取以下文件：
 - {workDir}/.meta/summaries/{id}-{name}.json（每个涉及能力各一份）
-- {workDir}/{seq}-{short_name}/overview.md（Step ⑧ 产出）
+- {workDir}/{seq}-{short_name}/overview.md（Step 08 产出）
 
 如果某个摘要文件不存在，跳过该能力并在学习阶梯中标注"⚠️ 该能力详情缺失"。
-如果 overview.md 不存在，停止执行并输出：`❌ 命题「{proposition_name}」的 overview.md 不存在，无法生成学习阶梯。请先完成 Step ⑧。`
+如果 overview.md 不存在，停止执行并输出：`❌ 命题「{proposition_name}」的 overview.md 不存在，无法生成学习阶梯。请先完成 Step 08。`
 
 ## 输出路径
 {workDir}/{seq}-{short_name}/learning-ladder.md
@@ -140,7 +140,7 @@
 
 所有学习阶梯 agent 完成后：
 
-🚨 **🛑 必须停顿，进入 ⓖ 检查点**。展示学习阶梯摘要（完成数/跳过数/失败数），使用 `clarify` 等待用户确认。
+🚨 **🛑 必须停顿，进入 Barrier 8 检查点**。展示学习阶梯摘要（完成数/跳过数/失败数），使用 `clarify` 等待用户确认。
 
 ## 输出
 

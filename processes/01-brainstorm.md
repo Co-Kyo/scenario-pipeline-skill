@@ -1,4 +1,4 @@
-# Step ①: 头脑风暴
+# Step 01: 头脑风暴
 
 **目的**：基于共享骨架，通过 4 维度 Agent 并行分析 + 收敛者校验，产出结构化需求网（requirement-web.json）
 
@@ -25,12 +25,12 @@
 - `assets/01-brainstorm/technical-agent.md`（技术 Agent 定义）
 - `assets/01-brainstorm/learning-agent.md`（学习 Agent 定义）
 - `assets/01-brainstorm/constraint-agent.md`（约束 Agent 定义）
-- `{workDir}/.meta/brainstorm/anchors.json`（Step ⓪ 产出的共享骨架）
+- `{workDir}/.meta/brainstorm/anchors.json`（Step 00 产出的共享骨架）
 
 ## 输入
 
-- `{workDir}/.meta/brainstorm/anchors.json`（Step ⓪ 产出）
-- 用户指令原文 + 已解析约束（从 Step ⓪ 传递）
+- `{workDir}/.meta/brainstorm/anchors.json`（Step 00 产出）
+- 用户指令原文 + 已解析约束（从 Step 00 传递）
 
 ---
 
@@ -271,9 +271,9 @@ Agent 超时后,**禁止直接丢弃该维度**,必须先执行以下检查:
 - `strategy`:从 `anchors.json` 继承的策略元数据(core_label / premise_label / outlook_label / ratios)
 - `level_weight`:每个 proposition 携带 level_weight(level + role + reason)
 
-### 7. 注入 Step ②
+### 7. 注入 Step 02
 
-将 `requirement-web.json` 作为 Step ② scan 的附加输入。Step ② 在执行时读取以下数据:
+将 `requirement-web.json` 作为 Step 02 scan 的附加输入。Step 02 在执行时读取以下数据:
 - 从 requirement-web 中读取 `propositions` 列表,为每个命题执行定向搜索
 - 从 `search_guidance` 中获取每个命题的推荐关键词
 - 从 `scope.exclusions` 中获取排除规则,过滤不相关内容
@@ -307,6 +307,6 @@ Agent 超时后,**禁止直接丢弃该维度**,必须先执行以下检查:
 | 场景 | 处理 |
 |------|------|
 | 维度 Agent 超时(>3min) | 检查输出文件是否已写入磁盘:完整则保留使用,不完整则丢弃并补发一次(最多补发 1 次),补发仍超时则标为 missing |
-| 4 个维度 Agent 全部超时 | 检查各维度文件:保留完整的,缺失的尝试补发,补发后仍 3+ 个缺失 → 跳过头脑风暴,Step ② 按原始指令扫描 |
+| 4 个维度 Agent 全部超时 | 检查各维度文件:保留完整的,缺失的尝试补发,补发后仍 3+ 个缺失 → 跳过头脑风暴,Step 02 按原始指令扫描 |
 | 收敛者 Agent 超时(>5min) | 检查 requirement-web.json 是否已写入磁盘:完整则直接使用,不完整则重试一次,重试失败 → **执行 §6.0 降级协议**(基于骨架+存活维度重建最小 requirement-web.json) |
 | 收敛者输出 JSON 解析失败 | 重试一次;仍失败 → **执行 §6.0 降级协议** |

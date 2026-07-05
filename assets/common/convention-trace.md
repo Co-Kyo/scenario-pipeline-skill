@@ -18,12 +18,12 @@
 
 | 步骤 | 字段 | trace 内容 |
 |------|------|-----------|
-| ⓪ brainstorm | `year_inference_trace` | 年限推断依据（显式匹配/隐式信号/默认值） |
-| ③ scan | `source_tier` | unknown 域名的评估依据（哪几个维度达标/不达标） |
-| ③ scan | `fetch_status: "failed"` | 失败原因（超时/403/内容不相关） |
-| ③ scan | 被丢弃的素材 | 丢弃原因（不达标/重复/无关），记录在 `discarded` 字段 |
-| ④ capability-graph | `dependencies_trace` | 为什么 A 依赖 B |
-| ④ capability-graph | `merge_trace` | 为什么合并为一个（多个命题的相似能力合并） |
-| ④ capability-graph | `split_trace` | 为什么拆分为多个（一个粗粒度能力拆分为细粒度能力） |
-| ⑤ evaluate | `priority_trace` | 总分与阈值的对比判定过程 |
-| ⑧ assemble | `筛选_trace` | 候选来源、排除原因、保留理由 |
+| 00 brainstorm | `year_inference_trace` | 年限推断依据（显式匹配/隐式信号/默认值） |
+| 03 scan | `source_tier` | unknown 域名的评估依据（哪几个维度达标/不达标） |
+| 03 scan | `fetch_status: "failed"` | 失败原因（超时/403/内容不相关） |
+| 03 scan | 被丢弃的素材 | 丢弃原因（不达标/重复/无关），记录在 `discarded` 字段 |
+| 04 capability-graph | `dependencies_trace` | 为什么 A 依赖 B |
+| 04 capability-graph | `merge_trace` | 为什么合并为一个（多个命题的相似能力合并） |
+| 04 capability-graph | `split_trace` | 为什么拆分为多个（一个粗粒度能力拆分为细粒度能力） |
+| 05 evaluate | `priority_trace` | 总分与阈值的对比判定过程 |
+| 08 assemble | `筛选_trace` | 候选来源、排除原因、保留理由 |

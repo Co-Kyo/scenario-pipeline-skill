@@ -9,36 +9,36 @@
 | 参数 | 值 | 说明 |
 |------|---|------|
 | 并发上限 W | 5 | 最大同时运行的 Task Group 数（平台可按自身能力调整） |
-| 计数单位 | Task Group | 1 个命题 = 1 个 Task Group（Step ⑧ 特殊：1 命题 = 2 agent） |
+| 计数单位 | Task Group | 1 个命题 = 1 个 Task Group（Step 08 特殊：1 命题 = 2 agent） |
 
 ## 各步骤调度模式一览
 
 | 步骤 | 模式 | Task Group 定义 | 并发策略 |
 |------|------|----------------|---------|
-| ① 头脑风暴·维度 Agent | 批量并行 | 1 个维度 = 1 个 agent | 全部同时启动 |
-| ① 头脑风暴·收敛者 Agent | 串行 | 1 个收敛者 = 1 个 agent | 等待所有维度完成后启动 |
-| ③ scan·Phase A | 滚动窗口 | 1 个命题批次 = 1 个 agent | 完成一个补一个，不超过 W |
-| ③ scan·Phase B | 滚动窗口 | 1 个 URL 批次 = 1 个 agent | 完成一个补一个，不超过 W |
-| ⑥ 能力研究 | 拓扑分批 | 1 个子组 = 1 个 agent（≤5 能力） | 按依赖拓扑顺序分批，每批内并行不超过 W |
-| ⑦ Briefing 组装 | 滚动窗口 | 1 个命题 = 1 个 agent | 完成一个补一个，不超过 W |
-| ⑧ 命题组装 | 滚动窗口 | 1 个命题 = 2 个 agent（md + exp） | 两者独立并行，1 命题占 2 个槽位 |
-| ⑨ 学习阶梯 | 滚动窗口 | 1 个命题 = 1 个 agent | 完成一个补一个，不超过 W |
-| ⑩ 看板生成 | 主线程串行 | — | 主 agent 直接调用 scripts/build-dashboard-v2.js，不 spawn 子 agent |
+| 01 头脑风暴·维度 Agent | 批量并行 | 1 个维度 = 1 个 agent | 全部同时启动 |
+| 01 头脑风暴·收敛者 Agent | 串行 | 1 个收敛者 = 1 个 agent | 等待所有维度完成后启动 |
+| 03 scan·Phase A | 滚动窗口 | 1 个命题批次 = 1 个 agent | 完成一个补一个，不超过 W |
+| 03 scan·Phase B | 滚动窗口 | 1 个 URL 批次 = 1 个 agent | 完成一个补一个，不超过 W |
+| 06 能力研究 | 拓扑分批 | 1 个子组 = 1 个 agent（≤5 能力） | 按依赖拓扑顺序分批，每批内并行不超过 W |
+| 07 Briefing 组装 | 滚动窗口 | 1 个命题 = 1 个 agent | 完成一个补一个，不超过 W |
+| 08 命题组装 | 滚动窗口 | 1 个命题 = 2 个 agent（md + exp） | 两者独立并行，1 命题占 2 个槽位 |
+| 09 学习阶梯 | 滚动窗口 | 1 个命题 = 1 个 agent | 完成一个补一个，不超过 W |
+| 10 看板生成 | 主线程串行 | — | 主 agent 直接调用 scripts/build-dashboard-v2.js，不 spawn 子 agent |
 
 ## Label 命名规范
 
 | 步骤 | Label 模式 | 示例 |
 |------|-----------|------ |
-| ① 维度 Agent | `brainstorm-{dimension}` | `brainstorm-scenario` |
-| ① 收敛者 Agent | `brainstorm-integrator` | — |
-| ③ scan·Phase A | `search-{batch_id}` | `search-B1` |
-| ③ scan·Phase B | `extract-{batch_id}` | `extract-B1` |
-| ⑥ 能力研究 | `agent-{group_id}` | `agent-A_1`, `agent-B_1` |
-| ⑦ Briefing | `briefing-{seq}-{short_name}` | `briefing-01-长列表渲染` |
-| ⑧ 命题组装·Markdown | `asm-md-{seq}-{short_name}` | `asm-md-01-长列表渲染` |
-| ⑧ 命题组装·Experiment | `asm-exp-{seq}-{short_name}` | `asm-exp-01-长列表渲染` |
-| ⑨ 学习阶梯 | `ladder-{seq}-{short_name}` | `ladder-01-长列表渲染` |
-| ⑩ 看板生成 | — | 主线程执行，无 label |
+| 01 维度 Agent | `brainstorm-{dimension}` | `brainstorm-scenario` |
+| 01 收敛者 Agent | `brainstorm-integrator` | — |
+| 03 scan·Phase A | `search-{batch_id}` | `search-B1` |
+| 03 scan·Phase B | `extract-{batch_id}` | `extract-B1` |
+| 06 能力研究 | `agent-{group_id}` | `agent-A_1`, `agent-B_1` |
+| 07 Briefing | `briefing-{seq}-{short_name}` | `briefing-01-长列表渲染` |
+| 08 命题组装·Markdown | `asm-md-{seq}-{short_name}` | `asm-md-01-长列表渲染` |
+| 08 命题组装·Experiment | `asm-exp-{seq}-{short_name}` | `asm-exp-01-长列表渲染` |
+| 09 学习阶梯 | `ladder-{seq}-{short_name}` | `ladder-01-长列表渲染` |
+| 10 看板生成 | — | 主线程执行，无 label |
 
 ## 完成判定规则
 
@@ -84,13 +84,13 @@ Step 3: 关键字段匹配检查
 - 补发期间继续接受其他 agent 的完成事件
 
 **与批量并行模式的关系**：
-- 批量并行（① 维度 Agent）：所有 agent spawn 后，每收到一个完成事件就立刻校验，不等全部完成
-- 滚动窗口（③⑦⑧⑨）：同理，每完成一个立刻校验，校验通过才补位下一个
-- 拓扑分批（⑥）：批内每完成一个立刻校验，批内全部 completed 后才进入下一批
+- 批量并行（01 维度 Agent）：所有 agent spawn 后，每收到一个完成事件就立刻校验，不等全部完成
+- 滚动窗口（03070809）：同理，每完成一个立刻校验，校验通过才补位下一个
+- 拓扑分批（06）：批内每完成一个立刻校验，批内全部 completed 后才进入下一批
 
 ---
 
-## 调度模式一：批量并行（适用 ① 维度 Agent）
+## 调度模式一：批量并行（适用 01 维度 Agent）
 
 **意图**：所有任务无依赖，一次性全部启动。
 
@@ -100,7 +100,7 @@ Step 3: 关键字段匹配检查
 4. 验证 expected_files，标记 completed/failed
 5. 失败的任务重试一次；仍失败则标记 degraded，不阻塞后续
 
-## 调度模式二：滚动窗口（适用 ③⑦⑧⑨）
+## 调度模式二：滚动窗口（适用 03070809）
 
 **意图**：任务互相独立，完成一个补一个，保持并发数接近 W。
 
@@ -112,11 +112,11 @@ Step 3: 关键字段匹配检查
 
 **超时重试**：超时的任务重试一次。仍失败则标记 degraded，不阻塞其他任务。
 
-**Step ⑨ 特殊处理**：1 个命题 = 2 个 agent（Markdown + Experiment），两者独立可并行。
+**Step 09 特殊处理**：1 个命题 = 2 个 agent（Markdown + Experiment），两者独立可并行。
 - 槽位计数：1 个命题占 2 个槽位
 - 部分完成：Markdown failed 但 Experiment completed → 标记 partial，不影响另一个
 
-## 调度模式三：拓扑分批（适用 ⑥ 能力研究）
+## 调度模式三：拓扑分批（适用 06 能力研究）
 
 **意图**：任务间有依赖关系，必须按拓扑顺序分批执行。
 
@@ -139,9 +139,9 @@ Step 3: 关键字段匹配检查
 3. **变量替换**：workDir、capability_id、命题名称等
 
 约束：
-- Step ⑥ 的 task **全部内联**（能力信息在分组时已确定，不读外部文件）
-- Step ⑦⑧⑨ 的 task **指定文件路径**（前置步骤产出量大，用 read 工具按需读取）
-- 文件不存在时的降级动作必须在 task 中声明（⑧ 标注"缺失"继续；⑨⑩ 停止并报错）
+- Step 06 的 task **全部内联**（能力信息在分组时已确定，不读外部文件）
+- Step 070809 的 task **指定文件路径**（前置步骤产出量大，用 read 工具按需读取）
+- 文件不存在时的降级动作必须在 task 中声明（08 标注"缺失"继续；0910 停止并报错）
 
 ## 大文件写入规则
 

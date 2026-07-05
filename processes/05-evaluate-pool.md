@@ -1,4 +1,4 @@
-# Step ⑤: 评估与入池
+# Step 05: 评估与入池
 
 **目的**：用四维评估矩阵对每个命题打分，确定优先级和学习顺序
 
@@ -17,15 +17,15 @@
 加载：
 - `assets/05-evaluate-pool/method.md`（四维评估矩阵方法论）
 - `assets/05-evaluate-pool/schemas.md`（本步输出格式）
-- `{workDir}/.meta/requirement-web.json`（① 产出，含命题和能力图谱雏形）
-- `{workDir}/.meta/capability-graph.json`（④ 产出，含能力、高地、学习路径）
-- `{workDir}/.meta/.raw-materials/index.json`（② 产出索引）
+- `{workDir}/.meta/requirement-web.json`（01 产出，含命题和能力图谱雏形）
+- `{workDir}/.meta/capability-graph.json`（04 产出，含能力、高地、学习路径）
+- `{workDir}/.meta/.raw-materials/index.json`（02 产出索引）
 
 ## 输入
 
-- `requirement-web.json`（① 产出）
-- `capability-graph.json`（④ 产出）
-- `.raw-materials/index.json`（② 产出索引）
+- `requirement-web.json`（01 产出）
+- `capability-graph.json`（04 产出）
+- `.raw-materials/index.json`（02 产出索引）
 
 ## 执行步骤
 
@@ -98,7 +98,7 @@
 
 #### 4.3 更新 capability-graph.json
 
-将 `highgrounds` 和 `learning_path` 字段追加到 capability-graph.json（如 ④ 已写入则跳过）。
+将 `highgrounds` 和 `learning_path` 字段追加到 capability-graph.json（如 04 已写入则跳过）。
 
 ## 输出
 
@@ -130,4 +130,4 @@
 
 ## 检查点
 
-🚨 **🛑 必须停顿，进入 ⓑ 检查点**。展示评估摘要（命题评估表、优先级分布、难度分级、推荐学习顺序、后处理执行计划），使用 `clarify` 等待用户确认后才进入后处理。
+🚨 **🛑 必须停顿，进入 Barrier 4 检查点**。展示评估摘要（命题评估表、优先级分布、难度分级、推荐学习顺序、后处理执行计划），使用 `clarify` 等待用户确认后才进入后处理。
