@@ -1,13 +1,13 @@
 # Step ①: 广域扫描（两阶段管道）
 
-> **目的**：为每个命题按其 level_weight 差异化搜索信源，抓取内容并结构化提取
-> 
-> **核心流程**：
-> - Phase A：并行搜索（命题分批 → 搜索 agent → merge URL 列表）
-> - Phase B：并行提取（URL 分批 → 内容抓取 + 结构化提取）
-> - Phase C：主线程 merge（合并 partial index + 域名分级 + cross-comparison）
-> 
-> **关键产出**：`.raw-materials/` 目录（index.json + markdown 文件）
+**目的**：为每个命题按其 level_weight 差异化搜索信源，抓取内容并结构化提取
+
+**核心流程**：
+- Phase A：并行搜索（命题分批 → 搜索 agent → merge URL 列表）
+- Phase B：并行提取（URL 分批 → 内容抓取 + 结构化提取）
+- Phase C：主线程 merge（合并 partial index + 域名分级 + cross-comparison）
+
+**关键产出**：`.raw-materials/` 目录（index.json + markdown 文件）
 
 ---
 

@@ -1,13 +1,13 @@
 # Step ⑤: Briefing 组装
 
-> **目的**：为每个待处理命题组装 Briefing——从能力摘要中提取关键信息，供后续命题组装使用
-> 
-> **核心流程**：
-> 1. 筛选待处理命题（从 capability-graph.json 获取）
-> 2. 增量检查（已存在则跳过）
-> 3. 并行 spawn（简单窗口 W=5，轮询替换）
-> 
-> **关键产出**：`briefings/{seq}-{short_name}.md`
+**目的**：为每个待处理命题组装 Briefing——从能力摘要中提取关键信息，供后续命题组装使用
+
+**核心流程**：
+1. 筛选待处理命题（从 capability-graph.json 获取）
+2. 增量检查（已存在则跳过）
+3. 并行 spawn（简单窗口 W=5，轮询替换）
+
+**关键产出**：`briefings/{seq}-{short_name}.md`
 
 ---
 

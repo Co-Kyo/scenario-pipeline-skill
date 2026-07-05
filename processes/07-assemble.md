@@ -1,13 +1,13 @@
 # Step ⑥: 命题组装
 
-> **目的**：为每个命题组装四象限研究输出（overview / edge-cases / trade-offs / experiment / references）
-> 
-> **核心流程**：
-> 1. 筛选待组装命题（已有全部文件则跳过）
-> 2. 2-agent-per-命题（Markdown + Experiment 并行）
-> 3. 简单窗口调度（W=5 命题 = 最多 10 agent 并行）
-> 
-> **关键产出**：`{命题目录}/overview + edge-cases + trade-offs + experiment + references`
+**目的**：为每个命题组装四象限研究输出（overview / edge-cases / trade-offs / experiment / references）
+
+**核心流程**：
+1. 筛选待组装命题（已有全部文件则跳过）
+2. 2-agent-per-命题（Markdown + Experiment 并行）
+3. 简单窗口调度（W=5 命题 = 最多 10 agent 并行）
+
+**关键产出**：`{命题目录}/overview + edge-cases + trade-offs + experiment + references`
 
 ---
 
