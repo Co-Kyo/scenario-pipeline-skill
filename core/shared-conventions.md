@@ -283,7 +283,7 @@ Step 3: 关键字段匹配检查
 
 ### 大文件写入规则
 
-子 agent 产出合并型 JSON（多源合并，预估 > 20KB）时，禁止使用 write 工具，必须用 exec + Python 写入。
+子 agent 产出合并型 JSON（多源合并，预估 > 20KB）时，使用 write 工具写入。
 
 ---
 

@@ -21,20 +21,6 @@
 - `meta/sources.md`(T0 域名表,供收敛者 Agent 校验搜索方向的可行性)
 - `plugins/year-granularity.md`(年限颗粒度规则,用于命题粒度过滤)
 
-### 🛑 必需环境检查：Python 3
-
-```bash
-python -c "import sys; assert sys.version_info >= (3, 8); print('Python', sys.version)" 2>&1 || (
-  echo "Python 3.8+ 不可用，这是管线的必需依赖。"
-  echo "安装方式：https://www.python.org/downloads/"
-  echo "或 Windows Store 搜索 Python 3.12"
-  echo "安装后确保 'python' 命令在 PATH 中可用。"
-  exit 1
-)
-```
-
-> **如果在 spawn 任何 agent 之前先检查 Python，管线不需要在验证阶段才回报环境缺失。**
-
 > **🔒 上下文隔离**
 >
 > - ✅ 允许读取:`core/shared-conventions.md`、`meta/output-contracts.md`§0、`meta/sources.md`、`plugins/year-granularity.md`
@@ -705,8 +691,6 @@ level 和 role 是两个独立字段,但存在**强制约束关系**:
 - **failed**:Agent 返回错误 / 补发仍失败
 - **timeout**:单 Agent 运行超过 3 分钟(头脑风暴的维度 Agent 体量小,3 分钟足够;不走 15 分钟的通用超时)
 
-> **校验方式**:`cat {workDir}/.meta/brainstorm/{dimension}.json | python3 -c "import sys,json; d=json.load(sys.stdin); assert 'dimension' in d and len(d.get('scenarios',d.get('capabilities',d.get('learning_path',d.get('constraints',[])))))>0"`
-
 #### 3.1.3.1 超时后文件检查(必须执行)
 
 Agent 超时后,**禁止直接丢弃该维度**,必须先执行以下检查:
@@ -744,29 +728,11 @@ Agent 超时后,**禁止直接丢弃该维度**,必须先执行以下检查:
 
 所有 4 个维度 Agent(含补发)结束后,主 agent 必须执行以下检查:
 
-```python
-# 校验脚本
-import os, json
-
-EXPECTED_DIMENSIONS = ['scenario', 'technical', 'learning', 'constraint']
-results = {}
-for dim in EXPECTED_DIMENSIONS:
-    path = f'{workDir}/.meta/brainstorm/{dim}.json'
-    if not os.path.exists(path):
-        results[dim] = 'MISSING'
-        continue
-    try:
-        with open(path, 'r', encoding='utf-8') as f:
-            d = json.load(f)
-        entries_key = {'scenario':'scenarios','technical':'capabilities','learning':'learning_path','constraint':'constraints'}
-        entries = d.get(entries_key.get(dim, ''), [])
-        if d.get('dimension') != dim or len(entries) == 0:
-            results[dim] = 'INVALID'
-        else:
-            results[dim] = f'OK ({len(entries)} entries)'
-    except Exception as e:
-        results[dim] = f'PARSE_ERROR: {e}'
-```
+对每个维度(scenario/technical/learning/constraint):
+1. 检查 `{workDir}/.meta/brainstorm/{dim}.json` 是否存在
+2. 读取文件,验证是合法 JSON
+3. 验证包含 `dimension` 字段且值与维度名一致
+4. 验证对应 entries 数组非空(scenarios/capabilities/learning_path/constraints)
 
 #### 3.2.2 决策矩阵
 
@@ -860,124 +826,17 @@ for dim in EXPECTED_DIMENSIONS:
 
 **降级时主 agent 执行以下转换**:
 
-```python
-import json, os
-from datetime import datetime, timezone
-
-workDir = '{workDir}'  # 替换为实际路径
-
-# 1. 读取存活的维度报告
-surviving = {}
-for dim in ['scenario', 'technical', 'learning', 'constraint']:
-    path = os.path.join(workDir, '.meta', 'brainstorm', f'{dim}.json')
-    if os.path.exists(path):
-        with open(path, 'r', encoding='utf-8') as f:
-            surviving[dim] = json.load(f)
-
-# 2. 读取骨架
-anchors_path = os.path.join(workDir, '.meta', 'brainstorm', 'anchors.json')
-with open(anchors_path, 'r', encoding='utf-8') as f:
-    anchors_data = json.load(f)
-
-# 3. 重建 requirement-web.json
-req = {
-    'generated_at': datetime.now(timezone.utc).isoformat(),
-    'raw_input': anchors_data.get('topic', ''),
-    'context': {
-        'domain': '前端性能优化',
-        'domain_up': '前端工程化',
-        'target_level': anchors_data.get('target_level', 'L2'),
-        'year': anchors_data.get('target_level', 'L2'),
-        'year_source': anchors_data.get('year_inference_trace', ''),
-        'year_inference_trace': anchors_data.get('year_inference_trace', ''),
-        'platform': 'web',
-        'tech_stack': []
-    },
-    'strategy': anchors_data.get('strategy', {}),
-    'propositions': [],  # 从场景维度转换
-    'dependencies': {},
-    'capability_web': {},  # 从技术维度转换(如果存在)
-    'scope': {'inclusions': [], 'exclusions': []},
-    'search_guidance': {
-        'global_keywords': [],
-        'excluded_keywords': [],
-        'preferred_domains': [],
-        'depth_filter': '跳过入门教程,优先原理分析和实战优化'
-    },
-    'convergence_trace': {
-        'agents_completed': list(surviving.keys()),
-        'conflicts_resolved': [],
-        'gaps_filled': [],
-        'degraded': True,
-        'missing_dimensions': [d for d in ['scenario','technical','learning','constraint'] if d not in surviving]
-    }
-}
-
-# 4. 场景 → propositions 转换
-if 'scenario' in surviving:
-    scenarios = surviving['scenario'].get('scenarios', [])
-    for i, s in enumerate(scenarios, 1):
-        prop = {
-            'id': f'RW-P{i}',
-            'name': s.get('name', ''),
-            'description': s.get('description', ''),
-            'depth': s.get('depth', '进阶'),
-            'search_priority': 'high' if s.get('frequency') == '高频' else 'medium',
-            'search_keywords': {'principles': [s.get('name', '')], 'practices': [s.get('name', '')]},
-            'covered_by_scenarios': [s.get('id', '')],
-            'capability_ids': s.get('anchor_ref', []),
-            'level_weight': s.get('level_weight', {'level': 'L2', 'role': 'core', 'reason': '降级转换'})
-        }
-        req['propositions'].append(prop)
-        req['dependencies'][prop['id']] = []
-
-# 5. 技术维度 → capability_web 转换(如果存在)
-if 'technical' in surviving:
-    caps = surviving['technical'].get('capabilities', [])
-    for c in caps:
-        cap_id = c.get('id', '')
-        req['capability_web'][cap_id] = {
-            'name': c.get('name', ''),
-            'layer': c.get('layer', ''),
-            'type': c.get('type', 'generic'),
-            'provisional_level': c.get('level_weight', {}).get('level', 'L2'),
-            'provisional_role': c.get('level_weight', {}).get('role', 'core'),
-            'depends_on': c.get('depends_on', []),
-            'fanout': {'count': len(c.get('covers', [])), 'total': len(req['propositions']), 'ratio': f"{len(c.get('covers', []))}/{len(req['propositions'])}", 'level': f"{int(len(c.get('covers', []))/max(len(req['propositions']),1)*100)}%"},
-            'covers': c.get('covers', [])
-        }
-
-# 6. 约束维度 → scope 转换
-if 'constraint' in surviving:
-    excl = surviving['constraint'].get('exclusions', [])
-    req['scope']['exclusions'] = [e.get('content', '') for e in excl]
-
-# 7. 骨架锚点 → search_guidance
-all_tags = []
-for a in anchors_data.get('anchors', []):
-    all_tags.extend(a.get('tags', []))
-req['search_guidance']['global_keywords'] = list(set(all_tags))[:10]
-
-# 8. 写入
-out_path = os.path.join(workDir, '.meta', 'requirement-web.json')
-with open(out_path, 'w', encoding='utf-8') as f:
-    json.dump(req, f, ensure_ascii=False, indent=2)
-
-print(f'降级产物已写入: {out_path}')
-print(f'  propositions: {len(req["propositions"])}')
-print(f'  capability_web: {len(req["capability_web"])} entries')
-print(f'  exclusions: {len(req["scope"]["exclusions"])}')
-```
-
-**降级产物校验**:写入后执行以下校验:
-```python
-with open(out_path, 'r', encoding='utf-8') as f:
-    d = json.load(f)
-assert 'propositions' in d and len(d['propositions']) > 0, 'propositions 缺失或为空'
-assert 'context' in d and 'target_level' in d['context'], 'context 缺失'
-assert 'scope' in d and 'exclusions' in d['scope'], 'scope 缺失'
-print('降级产物校验通过')
-```
+1. **读取存活的维度报告**:逐个检查 scenario/technical/learning/constraint.json 是否存在,读取有效内容
+2. **读取骨架**:读取 anchors.json 获取 target_level、strategy 等元数据
+3. **重建 requirement-web.json**:
+   - context:从 anchors.json 提取 target_level、year_inference_trace,填充默认值
+   - propositions:将 scenario 维度的 scenarios[] 转换为 propositions[]格式
+   - capability_web:将 technical 维度的 capabilities[] 转换为 capability_web 格式
+   - scope.exclusions:从 constraint 维度的 exclusions[] 提取
+   - search_guidance.global_keywords:从 anchors.json 的 tags[] 提取
+   - convergence_trace:标注 degraded=true 和 missing_dimensions
+4. **写入**:将重建的 requirement-web.json 写入 `{workDir}/.meta/`
+5. **校验**:验证写入的 JSON 包含 propositions(非空)、context、scope 字段
 
 **降级后行为**:标注 `"degraded": true` + `"missing_dimensions": [...]` 在 `convergence_trace` 中,后续步骤读取时可据此调整深度(如跳过深度研究,仅做基础扫描)。
 
@@ -1048,9 +907,9 @@ year={year}({year_source}),target_level={L1/L2/L3/L4},platform={platform},depth=
 5. **补位**:检测 anchor_coverage 覆盖缺口(骨架中有锚点但 4 个维度都没覆盖),决定是否补充
 6. **图谱构建**:产出 capability_web(按能力 ID 组织,含 type、fanout、covers、dependencies),每个命题附带 capability_ids
 
-## 大文件写入
+## 写入产出
 
-按 core/shared-conventions.md「大文件写入规则」,用 exec + Python 写入 requirement-web.json,写入后验证 json.load 不报错。
+将 requirement-web.json 写入 `{workDir}/.meta/requirement-web.json`
 
 ## 输出格式
 
@@ -1070,7 +929,7 @@ year={year}({year_source}),target_level={L1/L2/L3/L4},platform={platform},depth=
 
 ### 5. 写入
 
-收敛者 Agent 将产出写入 `{workDir}/.meta/requirement-web.json`(使用 exec + Python,见上方「大文件写入」规则)。
+收敛者 Agent 将产出写入 `{workDir}/.meta/requirement-web.json`。
 头脑风暴的中间产物(4 份维度报告 + anchors.json)已持久化在 `{workDir}/.meta/brainstorm/` 目录下,可供回溯审查。
 
 **传递到 requirement-web.json 的元数据**:

@@ -109,7 +109,6 @@
 这些中间产物：
 - **必须保留**：供回溯审查和调试
 - **收敛者 Agent 通过 read 工具读取**：不再内联到 task 中
-- **校验方式**：`cat {file} | python3 -c "import sys,json; d=json.load(sys.stdin); assert 'dimension' in d"`
 
 ---
 
