@@ -15,16 +15,12 @@
 
 ## 前置条件
 
-⛔ 加载:
-
-- `meta/output-contracts.md`§0(需求网输出格式)
-- `meta/sources.md`(T0 域名表,供收敛者 Agent 校验搜索方向的可行性)
-- `plugins/year-granularity.md`(年限颗粒度规则,用于命题粒度过滤)
-
-> **🔒 上下文隔离**
->
-> - ✅ 允许读取:`core/shared-conventions.md`、`meta/output-contracts.md`§0、`meta/sources.md`、`plugins/year-granularity.md`
-> - ❌ 禁止读取:`processes/01~07.md`、`core/*.md`(`plugins/year-granularity.md` 除外)
+加载：
+- `assets/00-brainstorm/schemas.md`（JSON 格式定义）
+- `assets/00-brainstorm/year-rules.md`（年限推断规则）
+- `assets/00-brainstorm/level-weight.md`（level/role 约束）
+- `assets/00-brainstorm/schemas.md`§0（requirement-web.json 格式）
+- `assets/common/sources.md`（T0 域名表）
 
 ## 输入
 
@@ -43,606 +39,41 @@
 
 #### 1.1 年限推断规则
 
-**优先级**:显式参数 `--year` > 自然语言显式数字 > 隐式信号推断
+详见 `assets/00-brainstorm/year-rules.md`
 
-**显式数字匹配**(正则):
-
-| 模式 | 示例 | 映射 |
-|------|------|------|
-| `(\d+)-(\d+)年` | "3-5年" → L2 | 取中间值查阶梯 |
-| `(\d+)年以上` | "5年以上" → L3 | 下界查阶梯 |
-| `(\d+)年左右` | "3年左右" → L2 | 直接查阶梯 |
-| `(\d+)年经验` | "2年经验" → L1 | 直接查阶梯 |
-
-**阶梯映射**:
-
-| 年限 | 阶梯 |
-|------|------|
-| 1-3 年 | L1 |
-| 3-5 年 | L2 |
-| 5-8 年 | L3 |
-| 8+ 年 | L4 |
-
-**隐式信号匹配**(当无显式数字时):
-
-| 信号类型 | 关键词 | 映射 |
-|---------|--------|------|
-| 职级词 | 初级、入门、新手、小白 | L1 |
-| 职级词 | 中级、熟练、有经验 | L2 |
-| 职级词 | 高级、资深、专家 | L3 |
-| 职级词 | 架构、首席、技术总监 | L4 |
-| 岗位词 | 校招、应届、实习 | L1 |
-| 岗位词 | 社招、初中级开发 | L2 |
-| 岗位词 | Tech Lead、Team Lead、架构师 | L3/L4 |
-| 场景词 | 面试准备、八股文、刷题 | L2 |
-| 场景词 | 架构选型、技术决策、治理 | L3 |
-| 场景词 | 团队工程化、组织级、体系建设 | L4 |
-| 深度词 | 怎么用、基本用法、入门 | L1 |
-| 深度词 | 原理、机制、优化、源码 | L2 |
-| 深度词 | 为什么选、trade-off、演进 | L3 |
-
-**冲突处理**:
-
-1. 显式参数 `--year` 优先级最高,直接采用
-2. 显式数字(如"3-5年")优先级次之
-3. 多个隐式信号取众数(出现最多的等级)
-4. 无法推断 → 默认 L2(覆盖面最广,可由用户在 z 检查点修正)
-
-**推断结果写入**:`inferred_year` 字段,附带 `year_inference_trace`(推断依据)
-
-```bash
-year_inference_trace 示例:
-  "用户原文含'3-5年',显式匹配 → L2"
-  "用户原文含'高级'+'架构选型',隐式信号[L3,L3] → L2 被覆盖 → L3"
-  "无年限信号,默认 L2"
-```
+**推断结果写入**：`inferred_year` 字段，附带 `year_inference_trace`（推断依据）
 
 #### 1.2 跳过判断
 
-**跳过条件(必须同时满足全部 3 项)**:
-
-1. **topic 明确度判定**(确定性规则,非 LLM 推理):
-   - ✅ 明确:tech_stack 中的每个词都是具体工具/框架名(如"webpack"、"vite"、"React"),且 raw_input 中不包含以下抽象词:原理、实践、场景、分析、架构、设计、治理、演进
-   - ❌ 不明确:topic 包含抽象维度词(如"底层原理与工程实践"),或 tech_stack 为空
-2. **year 已推断**:通过正则匹配或隐式信号推断出 L1-L4,且置信度为高(有显式数字匹配或多个一致的隐式信号)
-3. **platform 已指定**:从 raw_input 或 tech_stack 中可以确定 platform(web/miniapp/rn)
-
-**场景复杂度检查**(额外拦截条件):
-
-即使上述 3 项均满足,如果 raw_input 中包含以下场景化关键词,强制走完整路径:
-
-- "面试"、"场景"、"分析"、"考察"、"问"(暗示需要场景化拆分)
-- "中大型"、"复杂"、"多团队"(暗示需要约束维度的精细边界)
-
-**操作(轻量提取 → 层次骨架)**:
-
-1. 从用户指令中提取核心技术关键词
-2. 为每个关键词分配临时能力 ID(T1, T2, ...),附一句话描述
-3. 区分 generic / specialized 属性
-4. **按 target_level 给每个锚点标注 provisional_level 和 provisional_role**:
-   - 核心锚点(命中目标年限)→ provisional_level = target_level, provisional_role = "core"
-   - 基础锚点(低于目标年限)→ provisional_level = target_level - 1, provisional_role = "premise"
-   - 展望锚点(高于目标年限)→ provisional_level = target_level + 1, provisional_role = "outlook"
-   - **level 与 role 的强制约束**:core → level=target_level;premise → level=target_level-1;outlook → level=target_level+1
-5. **按 role 分组**,生成 l{N}_core_ids / l{N}_premise_ids / l{N}_outlook_ids
-6. **注入策略元数据**:从 core/shared-conventions.md 的策略表中提取对应级别的标签和比例
-7. 写入 `{workDir}/.meta/brainstorm/anchors.json`
-
-**anchors.json 格式**(层次骨架):
-
-```json
-{
-  "generated_at": "2026-05-27T13:00:00+08:00",
-  "source": "lightweight_extraction",
-  "topic": "webpack & vite",
-  "target_level": "L2",
-  "year_inference_trace": "用户原文含'3-5年',显式匹配 → L2",
-  "strategy": {
-    "core_label": "方案攻克",
-    "premise_label": "概念确认",
-    "outlook_label": "决策方向",
-    "ratios": { "premise": "10-15%", "core": "70-80%", "outlook": "5-10%" }
-  },
-  "anchors": [
-    {
-      "id": "T1",
-      "name": "模块解析与依赖图",
-      "provisional_level": "L2",
-      "provisional_role": "core",
-      "reasoning": "webpack/vite 核心机制,3-5 年必须理解依赖图构建",
-      "description": "ESM/CJS 模块规范差异、依赖图构建、resolve 配置",
-      "type": "generic",
-      "tags": ["webpack", "vite", "esm", "cjs"]
-    },
-    {
-      "id": "T2",
-      "name": "npm 包管理基础",
-      "provisional_level": "L1",
-      "provisional_role": "premise",
-      "reasoning": "1-3 年基础,L2 用户应该已经掌握",
-      "description": "npm/yarn 基本用法、package.json 结构",
-      "type": "generic",
-      "tags": ["npm", "yarn"]
-    },
-    {
-      "id": "T3",
-      "name": "Monorepo 构建隔离",
-      "provisional_level": "L3",
-      "provisional_role": "outlook",
-      "reasoning": "5-8 年架构决策级,L2 用户了解概念即可",
-      "description": "多包仓库的构建隔离、依赖提升、workspace 协议",
-      "type": "generic",
-      "tags": ["monorepo", "pnpm"]
-    }
-  ],
-  "l2_core_ids": ["T1"],
-  "l1_premise_ids": ["T2"],
-  "l3_outlook_ids": ["T3"]
-}
-```
-
-**约束**:
-
-- 锚点数量:8-15 个(太少覆盖不足,太多失去锚定意义)
-- 每个锚点必须有 `provisional_level` 和 `provisional_role`
-- 核心锚点的 `reasoning` 必须说明"为什么这个锚点属于核心区域"
-- 锚点是**草案**,维度 Agent 可以补充遗漏的能力(用新 ID),但核心锚点不可忽略
-
-**写入**:`{workDir}/.meta/brainstorm/anchors.json`
+详见 `assets/00-brainstorm/skip-rules.md`
 
 ---
 
 ### 2. 组装 4 份维度 Agent task
 
-每个 Agent 的 task 由五部分拼接:**角色声明** + **维度任务** + **约束注入** + **锚点注入** + **文件写入指令**。
+每个 Agent 的 task 由五部分拼接：**角色声明** + **维度任务** + **约束注入** + **锚点注入** + **文件写入指令**。
 
-**⚠️ 关键变更**:所有 4 个 Agent 均收到年限颗粒度规则,按对应阶梯过滤产出。
+详见 `assets/00-brainstorm/task-templates.md`（年限约束注入块 + 共享骨架注入块）
 
-#### 年限约束注入块(所有 Agent 共享)
+### level_weight 打标规则（level 与 role 的关系）
 
-在每个 Agent 的 task 中注入以下约束块:
-
-```
-## 经验年限约束
-- 推断年限:{target_level}({year_desc})
-- 命题粒度要求:{粒度描述}
-- 命题命名模式:{命名模式}
-- 入池阈值:{阈值}
-- 深度要求:{深度调整}
-- 排除范围:{排除项}
-```
-
-注入内容来源:`plugins/year-granularity.md` 对应阶梯的定义。
-
-#### 共享骨架注入块(所有 Agent 共享)
-
-在每个 Agent 的 task 中注入以下层次骨架块(内容来自 §1.2 产出的 `anchors.json`):
-
-```
-## 共享层次骨架(主 agent 已按 {target_level} 核心预组织)
-
-### {core_label}(占 {core_ratio},你的主要工作区域)
-{core_anchors 格式化列表,每项含 id/name/description/reasoning}
-
-### {premise_label}(占 {premise_ratio})
-{premise_anchors 格式化列表}
-
-### {outlook_label}(占 {outlook_ratio})
-{outlook_anchors 格式化列表}
-
-## 你的工作流
-1. **检阅{core_label}**:理解核心锚点的定义和 reasoning,形成你的行动内核
-2. **完善{core_label}**:围绕核心锚点展开你的维度分析({dimension_specific_instruction})
-3. **向下扩展**:检查{premise_label}中是否有遗漏,补充必要的 premise 条目
-4. **向上扩展**:检查{outlook_label}中是否有遗漏,补充必要的 outlook 条目
-5. **自检比例**:确认你的输出中 core 占 {core_ratio},premise 占 {premise_ratio},outlook 占 {outlook_ratio}
-6. **自检 level_weight**:确认每个条目的 level 与 role 关系正确(见下方规则)
-7. **报告完成**
-```
-
-### level_weight 打标规则(level 与 role 的关系)
-
-level 和 role 是两个独立字段,但存在**强制约束关系**:
-
-| role | level 必须是 | 含义 | 示例(target_level=L2) |
-|------|------------|------|----------------------|
-| `core` | **= target_level** | 概念本身属于目标层 | level=L2, role=core |
-| `premise` | **= target_level - 1** | 概念本身低于目标层 | level=L1, role=premise |
-| `outlook` | **= target_level + 1** | 概念本身高于目标层 | level=L3, role=outlook |
-
-**禁止**:
-
-- ❌ level=L1, role=outlook(L1 是最低层,不存在比 L1 更低的 outlook)
-- ❌ level=L2, role=premise 且 target_level=L2(premise 必须低于目标层)
-- ❌ level 与 role 不匹配(如 level=L2, role=outlook 且 target_level=L2)
-
-**正确示例**(target_level=L2):
-
-```json
-{ "level": "L2", "role": "core" }
-{ "level": "L1", "role": "premise" }
-{ "level": "L3", "role": "outlook" }
-```
-
-**正确示例**(target_level=L1):
-
-```json
-{ "level": "L1", "role": "core" }
-{ "level": "L2", "role": "outlook" }
-```
+详见 `assets/00-brainstorm/level-weight.md`
 
 #### 2.1 场景 Agent
 
-**角色**:你是一个资深前端面试官和技术场景分析师。
-
-**任务**:从"这个知识点会被怎样考"的角度,展开用户输入。**你必须将产出的 JSON 用 write 工具写入指定文件(详见下方「⚠️ 文件写入」),未写入文件视为任务未完成。**
-
-具体要求:
-
-1. 列出该主题下所有可能出现的面试/实战场景(≥5 个)
-2. **按年限阶梯过滤**:
-   - L1:只保留"概念级"场景(是什么、怎么用)
-   - L2:只保留"方案级"场景(怎么做、有哪些方案、各有什么坑)
-   - L3:只保留"决策级"场景(为什么选 A 不选 B、代价是什么)
-   - L4:只保留"体系级"场景(如何设计、如何演进、如何治理)
-3. 每个场景标注:场景描述、考察深度(基础/进阶/深水区)、出现频率(高频/中频/低频)
-4. 按面试出现频率排序
-5. **insights 生成**:你的输出必须包含 insights 对象,其中:
-   - `depth_distribution`:将场景按深度分为 deep_water(深水区,需大规模实战)/ advanced(进阶,需项目经验)/ basic(基础,阅读即懂)三层,每层列出场景 ID
-   - `cross_anchor_clustering`:识别覆盖场景最多的 3 个锚点组合,说明为什么这些锚点组合是高频考察点
-
-**输出格式**:
-
-```json
-{
-  "dimension": "scenario",
-  "target_level": "L2",
-  "anchor_coverage": {
-    "covered": ["T1", "T3"],
-    "supplemented": [],
-    "skipped": ["T7"],
-    "skip_reason": "与场景维度无关"
-  },
-  "year_filtered": true,
-  "scenarios": [
-    {
-      "id": "S1",
-      "name": "场景名称",
-      "anchor_ref": ["T1"],
-      "level_weight": {
-        "level": "L2",
-        "role": "core",
-        "reason": "方案级场景,涉及 2-3 技术层组合"
-      },
-      "confidence": "high",
-      "description": "场景描述",
-      "depth": "基础|进阶|深水区",
-      "frequency": "高频|中频|低频",
-      "granularity_match": "该场景符合 L2 的方案级粒度"
-    }
-  ],
-  "excluded_scenarios": [
-    {
-      "name": "被过滤的场景名称",
-      "reason": "低于/高于目标年限粒度(如:L2 下过滤掉 L1 概念级场景)"
-    }
-  ],
-  "insights": {
-    "depth_distribution": {
-      "deep_water": ["S3"],
-      "advanced": ["S1", "S2", "S4"],
-      "basic": ["S5"]
-    },
-    "cross_anchor_clustering": [
-      {
-        "anchors": ["T1", "T2"],
-        "reason": "模块解析与 npm 包管理组合覆盖最多方案级场景,是构建工具面试的核心考察区域"
-      },
-      {
-        "anchors": ["T1", "T3"],
-        "reason": "模块解析与 Monorepo 组合覆盖进阶/架构决策场景,体现工程化深度"
-      },
-      {
-        "anchors": ["T2", "T3"],
-        "reason": "包管理与 Monorepo 组合覆盖依赖治理场景,是大规模项目的常见痛点"
-      }
-    ]
-  }
-}
-```
-
-**⚠️ 文件写入**:输出完成后,必须使用 write 工具将上述 JSON 写入 `{workDir}/.meta/brainstorm/scenario.json`。
+详见 `assets/00-brainstorm/scenario-agent.md`
 
 #### 2.2 技术 Agent
 
-**角色**:你是一个技术专家,擅长拆解技术能力、识别依赖关系。
-
-**任务**:从"这个主题涉及哪些技术能力"的角度,展开用户输入。为每个命题标注涉及的原子能力,并区分通用能力和特化能力。**你必须将产出的 JSON 用 write 工具写入指定文件(详见下方「⚠️ 文件写入」),未写入文件视为任务未完成。**
-
-具体要求:
-
-1. 拆解该主题涉及的所有技术能力点(原子级别,不可再分)
-2. 每个能力点标注:名称、所属技术层、一句话描述、通用/特化属性
-3. **通用/特化判定**:
-   - **通用能力**:不依赖特定工具/框架/平台即可理解和掌握的能力(如渲染管线、网络协议、算法、内存管理)
-   - **特化能力**:绑定特定工具/框架/平台的能力(如 Vue 响应式、React Fiber、Webpack 插件体系)
-   - 判定标准:换个工具/框架,这个能力是否仍然有意义?是→通用,否→特化
-4. 标注能力点之间的前置依赖关系(A 依赖 B)
-5. 标注每个能力覆盖哪些命题(fanout 雏形)
-6. **按年限过滤能力**:L1 跳过深层原理能力,L2 跳过基础用法能力,L3 跳过入门概念能力
-7. **insights 生成**:你的输出必须包含 insights 对象,其中:
-   - `critical_path`:识别 3-4 条最长的依赖链(从无依赖的基础能力到最深层能力),标注每条链的长度和覆盖的能力数
-   - `layer_distribution`:按技术层级(如浏览器层/网络层/框架层/工程层/工具层等)对能力分组,统计每层的能力数量
-   - `bottleneck_capabilities`:识别 1-3 个技术债最高、性能瓶颈核心或架构复杂度最高的能力,说明原因
-8. **补充能力(必须执行,不可跳过)**:完成上述 1-7 后,执行以下检查--列出你的 capabilities 中出现的所有 layer 值,然后对照以下常见技术层清单,**逐层确认是否有对应能力**:
-   - 网络层(HTTP、请求封装、缓存、离线策略)
-   - 工具层(DevTools、调试、性能分析)
-   - 运行时层(引擎机制、渲染队列、脚本执行)
-   - 安全层(鉴权、数据加密、防护策略)
-   **清单中有但你的 capabilities 中没有对应能力的层,必须用 `T_ADD{N}` 格式补充 1-2 个能力。** 具体操作分两步:
-   - 第一步:将补充的能力追加到 capabilities 数组末尾
-   - 第二步:将补充的能力 ID(如 T_ADD1)写入 anchor_coverage.supplemented 数组
-   两步都必须完成,缺少任何一步都是不完整的输出。
-
-**输出格式**:
-
-```json
-{
-  "dimension": "technical",
-  "target_level": "L2",
-  "anchor_coverage": {
-    "covered": ["T1", "T2"],
-    "supplemented": ["T_ADD1"],
-    "skipped": [],
-    "skip_reason": ""
-  },
-  "capabilities": [
-    {
-      "id": "T1",
-      "name": "能力名称",
-      "anchor_ref": ["T1"],
-      "level_weight": {
-        "level": "L2",
-        "role": "core",
-        "reason": "方案级能力,构建工具核心机制"
-      },
-      "confidence": "high",
-      "layer": "技术层(如:浏览器层/网络层/工程层/框架层/工具层/算法层/协议层等,按实际技术域自行归类)",
-      "description": "一句话描述",
-      "type": "generic|specialized",
-      "depends_on": [],
-      "covers": ["命题ID"]
-    },
-    {
-      "id": "T_ADD1",
-      "name": "补充能力名称",
-      "anchor_ref": [],
-      "level_weight": {
-        "level": "L2",
-        "role": "core",
-        "reason": "supplemented: anchors 未覆盖但面试高频考察"
-      },
-      "confidence": "medium",
-      "layer": "工程层",
-      "description": "supplemented 理由说明",
-      "type": "generic",
-      "depends_on": [],
-      "covers": ["命题ID"]
-    }
-  ],
-  "excluded_capabilities": [],
-  "insights": {
-    "critical_path": [
-      {
-        "path": ["T2", "T1", "T_ADD1"],
-        "length": 3,
-        "covered_capabilities": 3,
-        "description": "npm 包管理 → 模块解析 → 补充能力,从基础到方案级的最长依赖链"
-      }
-    ],
-    "layer_distribution": {
-      "工程层": ["T1", "T_ADD1"],
-      "工具层": ["T2"]
-    },
-    "bottleneck_capabilities": [
-      {
-        "id": "T1",
-        "reason": "作为模块解析核心,被多个上层能力依赖,修改影响面最大"
-      }
-    ]
-  }
-}
-```
-
-**⚠️ 文件写入**:输出完成后,必须使用 write 工具将上述 JSON 写入 `{workDir}/.meta/brainstorm/technical.json`。
+详见 `assets/00-brainstorm/technical-agent.md`
 
 #### 2.3 学习 Agent
 
-**角色**:你是一个前端教育者,擅长设计渐进式学习路径。
-
-**任务**:从"从不会到会应该学什么"的角度,展开用户输入。**你必须将产出的 JSON 用 write 工具写入指定文件(详见下方「⚠️ 文件写入」),未写入文件视为任务未完成。**
-
-具体要求:
-
-1. **按目标经验年限**,列出从基础到目标水平的学习路径
-2. 每个学习节点标注:节点名称、前置节点、预估学习时长、验证标准(做到/做不到)
-3. 标注哪些节点是"战略高地"--掌握后能解锁最多其他节点
-4. 考虑不同起点(有框架经验 vs 无框架经验)的分支路径
-5. **路径终点应与年限阶梯匹配**:L1 止于"概念辨析",L2 止于"原理+取舍",L3 止于"架构决策"
-6. **分支路径**:请根据用户可能的不同背景设计 2 条分支路径:
-   - "有框架经验"路径:标注 skip_nodes(有经验可跳过的节点)和 estimated_saving
-   - "无框架经验"路径:标注 must_pass(必须经过的节点)
-7. **insights 生成**:你的输出必须包含 insights 对象,其中:
-   - `strategic_reason`:对每个 is_strategic=true 的节点,说明"掌握后可解锁哪些下游能力,理由是什么"
-   - `core_insight`:用一句话总结该技术领域的核心矛盾或主线(如"小程序开发的核心矛盾是双线程通信开销")
-   - `common_pitfalls`:列出 3-5 个该领域最常见的坑和应对策略
-   - `path_endpoint_rationale`:说明该级别(L1/L2/L3/L4)学习路径的终点定义和边界
-
-**输出格式**:
-
-```json
-{
-  "dimension": "learning",
-  "target_level": "L2",
-  "anchor_coverage": {
-    "covered": ["T1", "T2"],
-    "supplemented": [],
-    "skipped": [],
-    "skip_reason": ""
-  },
-  "learning_path": [
-    {
-      "id": "L1",
-      "name": "节点名称",
-      "anchor_ref": ["T2"],
-      "level_weight": {
-        "level": "L1",
-        "role": "premise",
-        "reason": "基础前置节点"
-      },
-      "confidence": "high",
-      "prerequisites": [],
-      "estimated_time": "2h|1d|1w",
-      "verification": "做到才算过的标准",
-      "is_strategic": false
-    }
-  ],
-  "branches": {
-    "with_framework_experience": {
-      "skip_nodes": ["L1"],
-      "estimated_saving": "1-2d",
-      "description": "有框架经验的用户可跳过 npm/yarn 基础操作"
-    },
-    "without_framework_experience": {
-      "must_pass": ["L1", "L2"],
-      "estimated_total_time": "5-7d",
-      "description": "无框架经验需从零掌握模块管理和基础构建概念"
-    }
-  },
-  "excluded_learning_path": [],
-  "insights": {
-    "strategic_reason": {
-      "L3": "掌握模块解析依赖图后可解锁:构建优化(理解 chunk 拆分原理)、插件开发(理解 tapable 钩子触发时机)、Monorepo 构建隔离(理解依赖提升与 hoist 机制)"
-    },
-    "core_insight": "构建工具的核心矛盾是开发体验(快)与生产产出(小)之间的 trade-off",
-    "common_pitfalls": [
-      "混淆 dev 和 prod 配置导致线上性能问题 → 始终分离配置",
-      "过度配置 resolve.alias 导致模块解析失控 → 仅对深层嵌套路径使用",
-      "忽略 node_modules 的幽灵依赖(phantom dependencies)→ 锁定依赖版本"
-    ],
-    "path_endpoint_rationale": "L2 学习路径止于'原理+取舍'层级:能理解构建工具内部机制(如依赖图构建流程),能在 webpack 和 vite 之间做合理选型,但不要求深入源码实现或架构治理"
-  }
-}
-```
-
-**⚠️ 文件写入**:输出完成后,必须使用 write 工具将上述 JSON 写入 `{workDir}/.meta/brainstorm/learning.json`。
+详见 `assets/00-brainstorm/learning-agent.md`
 
 #### 2.4 约束 Agent
 
-**角色**:你是一个需求分析专家,擅长识别隐含约束和边界条件。
-
-**任务**:从"哪些该包含、哪些该排除"的角度,展开用户输入。**你必须将产出的 JSON 用 write 工具写入指定文件(详见下方「⚠️ 文件写入」),未写入文件视为任务未完成。**
-
-具体要求:
-
-1. 从用户指令中提取所有显式约束(年限、平台、技术栈)
-2. 推断隐式约束(如"3-5年"意味着不需要讲基础概念,但需要讲原理)
-3. 明确排除项(哪些内容超出目标经验范围)
-4. **按年限阶梯调整**(直接引用 `year-granularity.md` 对应阶梯的规则):
-   - L1:基础题→概念辨析,排除原理和架构
-   - L2:进阶题→原理+取舍,排除基础概念和体系治理
-   - L3:深水区→手写实现+性能优化+架构决策
-   - L4:体系级→治理+演进+跨团队协作
-5. 为每个约束标注 `level_weight`(level + role + reason)和 `anchor_ref`(该约束影响哪些锚点)
-6. **排除理由规范**:exclusions 中的每条排除项必须使用结构化格式,包含 `content`(排除内容)和 `reason_type`(原因类型枚举,**只能**是以下四个值之一):
-   - `"out_of_scope"`:内容超出目标年限的考察范围
-   - `"below_target"`:内容低于目标年限应掌握的水平
-   - `"deprecated"`:技术方案已停止维护或被替代
-   - `"not_frontend"`:内容超出前端开发者的能力边界
-7. **时效性约束**:增加一条约束"排除已停止维护的技术方案(如 mpvue、wepy 等),聚焦当前活跃维护的主流方案"
-8. **经验年限约束**:如果用户指定了经验年限,在 constraints 中显式声明一条"经验年限约束:{N}年经验的核心考察点是{具体描述}",将隐含经验要求显式化
-
-**输出格式**:
-
-```json
-{
-  "dimension": "constraint",
-  "target_level": "L2",
-  "anchor_coverage": {
-    "covered": ["T1", "T2", "T3"],
-    "supplemented": [],
-    "skipped": [],
-    "skip_reason": ""
-  },
-  "constraints": [
-    {
-      "id": "C1",
-      "name": "排除基础概念",
-      "anchor_ref": [],
-      "level_weight": {
-        "level": "L2",
-        "role": "core",
-        "reason": "L2 方案级命题的核心约束"
-      },
-      "confidence": "high",
-      "constraint_type": "exclusion",
-      "scope": "所有低于 L2 的命题",
-      "impact": "过滤掉概念级场景和基础用法能力"
-    },
-    {
-      "id": "C2",
-      "name": "重点覆盖原理机制",
-      "anchor_ref": ["T1", "T2"],
-      "level_weight": {
-        "level": "L2",
-        "role": "core",
-        "reason": "L2 方案级需要理解原理才能做方案选型"
-      },
-      "confidence": "high",
-      "constraint_type": "depth_adjustment",
-      "scope": "所有 L2 命题",
-      "impact": "原理机制部分重点展开"
-    }
-  ],
-  "excluded_constraints": [
-    {
-      "name": "npm/yarn 基础用法约束",
-      "reason": "低于 L2 经验水平,不构成有效约束"
-    }
-  ],
-  "explicit_constraints": {
-    "year": "L2",
-    "year_source": "inferred: 用户原文含'3-5年'",
-    "platform": "web",
-    "tech_stack": ["webpack", "vite"]
-  },
-  "inferred_constraints": [
-    "不需要讲解 npm/yarn 基础用法(L2 下,基础操作已掌握)",
-    "需要覆盖构建性能优化和插件开发(L2 方案级深度)"
-  ],
-  "exclusions": [
-    { "content": "Rollup 内部实现", "reason_type": "out_of_scope" },
-    { "content": "Webpack 1.x/2.x 版本差异", "reason_type": "deprecated" },
-    { "content": "npm/yarn 基础用法", "reason_type": "below_target" }
-  ],
-  "depth_adjustments": {
-    "基础概念": "跳过或一笔
-  ],
-  "exclusions": [
-    { "content": "Rollup 内部实现", "reason_type": "out_of_scope" },
-    { "content": "Webpack 1.x/2.x 版本差异", "reason_type": "deprecated" },
-    { "content": "npm/yarn 基础用法", "reason_type": "below_target" }
-  ],
-  "depth_adjustments": {
-    "基础概念": "跳过或一笔带过",
-    "原理机制": "重点展开",
-    "实战优化": "需要案例"
-  },
-  "insights": {}
-}
-```
-
-**⚠️ 文件写入**:输出完成后,必须使用 write 工具将上述 JSON 写入 `{workDir}/.meta/brainstorm/constraint.json`。
+详见 `assets/00-brainstorm/constraint-agent.md`
 
 ---
 
@@ -652,8 +83,8 @@ level 和 role 是两个独立字段,但存在**强制约束关系**:
 
 ### 3.1 Spawn 4 个维度 Agent(并行 + 轮询跟踪)
 
-> ⚠️ 本步骤采用「简单窗口」调度模式(4 个任务互相独立),严格遵循 `core/shared-conventions.md` 的并行调度规则。
-> 调度规则详见 `core/shared-conventions.md` §子 agent 调度。
+> ⚠️ 本步骤采用「简单窗口」调度模式(4 个任务互相独立),严格遵循 `assets/common/conventions.md` 的并行调度规则。
+> 调度规则详见 `assets/common/conventions.md` §子 agent 调度。
 
 #### 3.1.1 初始化
 
@@ -670,7 +101,7 @@ level 和 role 是两个独立字段,但存在**强制约束关系**:
 
 #### 3.1.2 轮询跟踪
 
-按 `core/shared-conventions.md` §**模式 A: 简单窗口** 执行轮询循环。本步骤特有参数:
+按 `assets/common/conventions.md` §**模式 A: 简单窗口** 执行轮询循环。本步骤特有参数:
 
 | 参数 | 值 |
 |------|---|
@@ -684,7 +115,7 @@ level 和 role 是两个独立字段,但存在**强制约束关系**:
 
 #### 3.1.3 完成判定
 
-> **⚠️ 即时校验**:每个 agent 完成事件到达后,**立刻**执行以下三步校验(详见 `core/shared-conventions.md` §即时文件校验),不等同批其他 agent 完成。
+> **⚠️ 即时校验**:每个 agent 完成事件到达后,**立刻**执行以下三步校验(详见 `assets/common/conventions.md` §即时文件校验),不等同批其他 agent 完成。
 
 - **completed**:三步校验全通过(文件存在 + JSON 合法 + 含 `dimension` 字段且 entries 非空)
 - **pending-retry**:任一校验失败 → 立即补发(不等其他 agent)
@@ -840,90 +271,9 @@ Agent 超时后,**禁止直接丢弃该维度**,必须先执行以下检查:
 
 **降级后行为**:标注 `"degraded": true` + `"missing_dimensions": [...]` 在 `convergence_trace` 中,后续步骤读取时可据此调整深度(如跳过深度研究,仅做基础扫描)。
 
-收敛者 Agent 读取共享骨架 + 4 份维度报告,执行校验、对齐、收束、去重、补位:
+收敛者 Agent 读取共享骨架 + 4 份维度报告，执行校验、对齐、收束、去重、补位。
 
-#### 4.1 校验 + 对齐
-
-- 检查 4 个维度输出中的 level_weight 是否跨维度一致(同一锚点 T1 在不同维度中的 level/role 应一致)
-- 不一致时按优先级对齐:约束维度 > 技术维度 > 场景维度 > 学习维度
-- 记录对齐原因
-
-#### 4.2 收束
-
-- 用 anchor_ref 编织跨维度关系图
-- 建立场景↔能力映射、学习节点↔能力前置关系
-- 标注覆盖度缺口(某场景无能力覆盖 / 某能力无场景关联)
-
-#### 4.3 去重
-
-- 同一维度内:两个条目引用相同锚点且描述重叠 → 合并(保留更详细的)
-- 不同维度:引用相同锚点但命名不同 → 不合并,标注为"同一锚点的不同视角"
-
-#### 4.4 补位
-
-- 检测 anchor_coverage 覆盖缺口(骨架中有锚点但 4 个维度都没覆盖),决定是否补充
-- 检查依赖链完整性:如果 A 依赖 B,但 B 不在列表中 → 补入 B
-
-#### 4.5 构建能力图谱
-
-收敛者 Agent 产出:
-- `capability_web`:按能力 ID 组织的结构(含 name、layer、type、depends_on、fanout、covers)
-- 每个命题附带 `capability_ids`
-- `qualifier_injection`:限定词注入映射
-- 排序:按 fanout(被多少场景覆盖)输出推荐的扫描优先级
-
-**收敛者 task 模板**:
-
-```text
-你是头脑风暴的收敛者(Integrator)。你收到了 4 个维度 Agent 的输出和一份共享骨架,需要执行校验、对齐、收束、去重、补位,最终产出 requirement-web.json。
-
-## 用户原始指令
-{raw_input}
-
-## 已解析约束
-year={year}({year_source}),target_level={L1/L2/L3/L4},platform={platform},depth={depth}
-
-## 策略元数据
-{strategy 对象,从 anchors.json 中提取}
-
-## 共享骨架
-`{workDir}/.meta/brainstorm/anchors.json`(使用 read 工具读取)
-
-## 4 份维度报告(文件路径,使用 read 工具逐个读取)
-
-- 场景维度:`{workDir}/.meta/brainstorm/scenario.json`(entries 命名:scenarios)
-- 技术维度:`{workDir}/.meta/brainstorm/technical.json`(entries 命名:capabilities)
-- 学习维度:`{workDir}/.meta/brainstorm/learning.json`(entries 命名:learning_path)
-- 约束维度:`{workDir}/.meta/brainstorm/constraint.json`(entries 命名:constraints)
-
-## 你的任务
-
-1. **校验**:检查 4 个维度输出中的 level_weight 是否跨维度一致(同一锚点 T1 在不同维度中的 level/role 应一致)
-2. **对齐**:不一致时按优先级对齐(约束维度 > 技术维度 > 场景维度 > 学习维度),记录对齐原因
-3. **收束**:用 anchor_ref 编织跨维度关系图,建立场景↔能力映射、学习节点↔能力前置关系
-4. **去重**:
-   - 同一维度内:两个条目引用相同锚点且描述重叠 → 合并(保留更详细的)
-   - 不同维度:引用相同锚点但命名不同 → 不合并,标注为"同一锚点的不同视角"
-5. **补位**:检测 anchor_coverage 覆盖缺口(骨架中有锚点但 4 个维度都没覆盖),决定是否补充
-6. **图谱构建**:产出 capability_web(按能力 ID 组织,含 type、fanout、covers、dependencies),每个命题附带 capability_ids
-
-## 写入产出
-
-将 requirement-web.json 写入 `{workDir}/.meta/requirement-web.json`
-
-## 输出格式
-
-严格按 meta/output-contracts.md §0 的 requirement-web.json 格式输出。
-
-注意:requirement-web.json 除了标准字段外,还必须包含:
-- context.target_level(L1/L2/L3/L4)
-- context.year_source(推断依据)
-- context.year_inference_trace(完整推断过程)
-- strategy(从 anchors.json 继承的策略元数据)
-- capability_web(能力图谱雏形)
-- qualifier_injection(限定词注入映射)
-- 每个 proposition 附带 capability_ids 和 level_weight
-```
+**收敛者任务模板**：详见 `assets/00-brainstorm/task-templates.md`
 
 ---
 

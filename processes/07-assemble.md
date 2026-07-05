@@ -14,14 +14,9 @@
 ## 前置条件
 
 无需加载额外方法论文件。本步骤的 task 已内联全部指令。读取：
-- `meta/output-contracts.md`§6（本步输出格式）
+- `assets/07-assemble/schemas.md`（本步输出格式）
 - `{workDir}/.meta/capability-graph.json`（含 propositions）
 - `{workDir}/.meta/briefings/{seq}-{short_name}.md`（Step ⑤ 产出）
-
-> **🔒 上下文隔离**
-> - ✅ 允许读取：`core/shared-conventions.md`、`meta/output-contracts.md`§6、`{workDir}/.meta/capability-graph.json`（含 propositions）、`{workDir}/.meta/briefings/{seq}-{short_name}.md`（Step ⑤ 产出）
-> - ❌ 禁止读取：`processes/01~05.md`、`processes/07.md`、`core/*.md`、`plugins/*.md`、`.meta/summaries/*.json`（已内联到 Briefing 中，无需重复读取）
-> - 📌 `output-contracts.md` 只读 §6 节
 
 ## 输入
 
@@ -36,8 +31,8 @@
 
 ### 2. 并行 spawn（简单窗口 + 轮询跟踪，2-agent-per-命题）
 
-> ⚠️ 严格遵循 `core/shared-conventions.md` §简单窗口执行流程 + §并行调度规则。
-> 调度规则详见 `core/shared-conventions.md` §子 agent 调度。
+> ⚠️ 严格遵循 `assets/common/conventions.md` §简单窗口执行流程 + §并行调度规则。
+> 调度规则详见 `assets/common/conventions.md` §子 agent 调度。
 
 **步骤特有：2-agent-per-命题**
 - 每个命题 spawn 2 个 agent（Markdown + Experiment），两者无相互依赖，可并行
@@ -55,7 +50,7 @@
 
 #### 2.2 轮询循环 + 槽位替换
 
-按 `core/shared-conventions.md` §**模式 A：简单窗口** 执行轮询循环。本步骤特有参数：
+按 `assets/common/conventions.md` §**模式 A：简单窗口** 执行轮询循环。本步骤特有参数：
 
 | 参数 | 值 |
 |------|---|
@@ -186,7 +181,7 @@
 
 如果文件不存在（read 返回错误），停止执行并输出：`❌ 命题「{proposition_name}」的 Briefing 文件不存在，无法组装实验。请先完成 Step ⑤。`
 
-如 Briefing 中无 experiment_code 字段或字段为空，按 meta/sources.md 的 T0 域名列表搜索补充，禁止凭记忆生成代码。
+如 Briefing 中无 experiment_code 字段或字段为空，按 common/sources.md 的 T0 域名列表搜索补充，禁止凭记忆生成代码。
 
 ## 输出目录
 {workDir}/{seq}-{short_name}/experiment/

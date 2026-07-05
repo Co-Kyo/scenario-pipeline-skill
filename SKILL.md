@@ -93,7 +93,7 @@ deep research：<场景描述>
 **核心规则：每一步只读该步的文件，严禁提前加载后续步骤。**
 
 执行流程：
-1. **初始化**：读 `core/shared-conventions.md`（共享约定）+ `meta/paths.md`（路径约定）。向用户确认产出目录（workDir）——告知默认路径，等用户确认后再继续
+1. **初始化**：读 `assets/common/conventions.md`（共享约定）+ `assets/common/paths.md`（路径约定）。向用户确认产出目录（workDir）——告知默认路径，等用户确认后再继续
 2. **头脑风暴**（前置阶段）：读 `processes/00-brainstorm.md` → 执行 → 产出 `requirement-web.json`
    - 自动从自然语言推断经验年限（L1-L4）
    - 判断是否可跳过（topic 明确 + year 已推断 + platform 已指定 → 跳过）
@@ -107,7 +107,7 @@ deep research：<场景描述>
    ```
    for step in [02, 03, 04]:
        ① 读 processes/{step}-xxx.md          ← 只读当前步骤文件
-       ② 读该步骤引用的 core/*.md 或 meta/*.md（按文件中的"前置条件"指示）
+       ② 读该步骤引用的 assets/{step-id}/method.md 或 assets/{step-id}/schemas.md（按文件中的"前置条件"指示）
        ③ 执行该步骤的全部操作，产出文件
        ④ 进入下一步前，不再引用上一步的 processes 文件内容
    ```
@@ -121,14 +121,12 @@ deep research：<场景描述>
 
 | 文件 | 内容 | 何时读取 |
 |------|------|---------|
-| `core/shared-conventions.md` | 共享约定（调度/检查点/隔离/增量复用/凭据/比例） | 初始化时读取，全程持有 |
-| `processes/00-brainstorm.md` | 头脑风暴执行文档（年限推断/维度定义/裁判逻辑/输出格式） | 头脑风暴阶段读取 |
+| `assets/common/conventions.md` | 共享约定（调度/检查点/隔离/增量复用/凭据/比例） | 初始化时读取，全程持有 |
+| `assets/common/sources.md` | T0 域名表 + 信源分级规则 | 由 Step 00 和 Step 01 的前置条件指示读取 |
+| `assets/common/paths.md` | 路径约定表 | 初始化时读取一次即可 |
+| `processes/00-brainstorm.md` | 头脑风暴执行文档 | 头脑风暴阶段读取 |
 | `processes/01-partition.md` | 依赖整理与分区执行文档 | 头脑风暴确认后、scan 前读取 |
-| `meta/partition-analysis-schema.md` | 分区 JSON 的结构定义 | 由 00b-partition 前置条件指示读取 |
-| `meta/paths.md` | 路径约定表 | 初始化时读取一次即可 |
-| `meta/sources.md` | T0 域名表 + 信源分级规则 | 由 Step 00 和 Step 01 的前置条件指示读取 |
-| `meta/output-contracts.md` | 每步的输出结构 + 完整示例 | 由每步的前置条件指示读取对应 §N 节 |
-| `core/*.md` | 方法论定义 | 由对应步骤的前置条件指示读取，**不在初始化阶段加载** |
+| `assets/{step-id}/method.md` | 方法论定义 | 由对应步骤的前置条件指示读取，**不在初始化阶段加载** |
 | `plugins/*.md` | 可选增强 | 由对应步骤的前置条件指示读取 |
 
 ## 流程步骤索引

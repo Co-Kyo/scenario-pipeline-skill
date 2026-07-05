@@ -15,19 +15,14 @@
 
 ## 前置条件
 
-⛔ 加载：
-- `core/capability-graph.md`（能力图谱方法论）
-- `core/strategic-highground.md`（战略高地方法论）
-- `meta/output-contracts.md`§2（本步输出格式）
-- `meta/sources.md`（T0 域名表，用于信源预查找）
+加载：
+- `assets/03-capability-graph/method.md`（能力图谱方法论）
+- `assets/03-capability-graph/method.md`（战略高地方法论）
+- `assets/03-capability-graph/schemas.md`（本步输出格式）
+- `assets/common/sources.md`（T0 域名表，用于信源预查找）
 - `{workDir}/.meta/requirement-web.json`（⓪ 产出，含 capability_web 和 decompositions）
 - `{workDir}/.meta/.raw-materials/index.json`（① 产出索引，含 URL + 元数据）
 - `{workDir}/.meta/.raw-materials/*.md`（① 产出内容文件，按需读取）
-
-> **🔒 上下文隔离**
-> - ✅ 允许读取：`core/shared-conventions.md`、`core/capability-graph.md`、`core/strategic-highground.md`、`meta/output-contracts.md`§2、`meta/sources.md`、`{workDir}/.meta/requirement-web.json`、`{workDir}/.meta/.raw-materials/index.json`、`{workDir}/.meta/.raw-materials/*.md`
-> - ❌ 禁止读取：`processes/01.md`、`processes/03~07.md`、`core/scenario-matrix.md`、`plugins/*.md`
-> - 📌 `output-contracts.md` 只读 §2 节；`sources.md` 只读 T0 域名表
 
 ## 输入
 
@@ -124,7 +119,7 @@ web_search "<能力名称> site:<域名>"
 ```
 web_search "<能力名称>"
 ```
-提取域名，与 `meta/sources.md` T0 表比对分级。unknown 域名 web_fetch 评估。
+提取域名，与 `assets/common/sources.md` T0 表比对分级。unknown 域名 web_fetch 评估。
 
 **质量校验**：
 - 每个写入 JSON 的 URL 都必须 web_fetch 验证过
@@ -169,7 +164,7 @@ web_search "<能力名称>"
 
 ### 7. 写入
 
-按 `meta/output-contracts.md`§2 的示例格式，构造 `capability-graph.json`。
+按 `assets/03-capability-graph/schemas.md` 的示例格式，构造 `capability-graph.json`。
 
 顶层必须包含 `highgrounds` 和 `learning_path` 字段。
 

@@ -39,18 +39,18 @@
 
 **违规检查清单**：
 - ❌ Step N 加载 Step N+1 或更后续的 processes 文件
-- ❌ 初始化阶段加载 core/*.md（应在对应步骤的前置条件中加载）
-- ❌ 一次性加载 `meta/output-contracts.md` 全文（应按 §N 节分段查阅）
+- ❌ 初始化阶段加载 assets/{step-id}/method.md（应在对应步骤的前置条件中加载）
+- ❌ 一次性加载 `assets/{step-id}/schemas.md` 全文（应按 §N 节分段查阅）
 - ❌ 子 agent 在 spawn 前预加载后续步骤的 processes 文件
 
 **规则验证**：
 每个 processes 文件的"前置条件"部分应遵循以下模板验证：
 ```
-✅ 前置条件包含 meta/ 数据文件引用（如 sources.md、output-contracts.md§N）
-✅ 前置条件包含必要的 core/*.md 方法论（如 capability-graph.md）
+✅ 前置条件包含 assets/ 数据文件引用（如 sources.md、schemas.md§N）
+✅ 前置条件包含必要的 assets/{step-id}/method.md 方法论（如 capability-graph.md）
 ✅ 前置条件包含前序步骤的产出文件
 ✅ 不包含同层或后续步骤的 processes 文件引用
-✅ 不包含未被该步骤使用的 core 或 plugins 文件
+✅ 不包含未被该步骤使用的 assets 或 plugins 文件
 ```
 
 **示例**（如何在 processes 文件中声明）：
@@ -58,14 +58,14 @@
 ## 前置条件
 
 ⛔ 加载：
-- `core/capability-graph.md`（能力图谱方法论）
-- `meta/output-contracts.md`§2（本步输出格式）
+- `assets/03-capability-graph/method.md`（能力图谱方法论）
+- `assets/03-capability-graph/schemas.md`（本步输出格式）
 - `{workDir}/.meta/.raw-materials/index.json`（Step ② 产出索引）
 
 > **🔒 上下文隔离**
-> - ✅ 允许读取：`core/shared-conventions.md`、`core/capability-graph.md`、`meta/output-contracts.md`§2、`{workDir}/.meta/.raw-materials/index.json`（Step ② 产出）
-> - ❌ 禁止读取：`processes/01.md`、`processes/03~07.md`、其他 `core/*.md`、`plugins/*.md`
-> - 📌 `output-contracts.md` 只读 §2 节
+> - ✅ 允许读取：`assets/common/conventions.md`、`assets/03-capability-graph/method.md`、`assets/03-capability-graph/schemas.md`§2、`{workDir}/.meta/.raw-materials/index.json`（Step ② 产出）
+> - ❌ 禁止读取：`processes/01.md`、`processes/03~07.md`、其他 `assets/{step-id}/method.md`、`plugins/*.md`
+> - 📌 `schemas.md` 只读 §2 节
 ```
 
 **维护原则**：
@@ -74,7 +74,7 @@
 
 ### output-contracts.md 分节查阅
 
-`meta/output-contracts.md` 包含全部步骤的输出示例（§0-§7），**不要一次性全文加载**。
+`assets/{step-id}/schemas.md` 包含全部步骤的输出示例（§0-§7），**不要一次性全文加载**。
 每步执行时只查阅对应的 §N 节。如果文件较长，用 offset/limit 精确读取对应段落。
 
 ---

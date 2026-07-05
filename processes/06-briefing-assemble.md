@@ -14,14 +14,9 @@
 ## 前置条件
 
 无需加载额外方法论文件或 plugin。本步骤的 task 已内联全部指令。读取：
-- `meta/output-contracts.md`§5（本步输出格式）
+- `assets/06-briefing-assemble/schemas.md`（本步输出格式）
 - `{workDir}/.meta/capability-graph.json`（含 propositions）
 - `{workDir}/.meta/summaries/*.json`（Step ④ 产出）
-
-> **🔒 上下文隔离**
-> - ✅ 允许读取：`core/shared-conventions.md`、`meta/output-contracts.md`§5、`{workDir}/.meta/capability-graph.json`（含 propositions）、`{workDir}/.meta/summaries/*.json`（Step ④ 产出）
-> - ❌ 禁止读取：`processes/01~04.md`、`processes/06~07.md`、`core/*.md`、`plugins/*.md`
-> - 📌 `output-contracts.md` 只读 §5 节
 
 ## 输入
 
@@ -40,8 +35,8 @@
 
 ### 3. 并行 spawn（简单窗口 + 轮询跟踪）
 
-> ⚠️ 严格遵循 `core/shared-conventions.md` §简单窗口执行流程 + §并行调度规则。
-> 调度规则详见 `core/shared-conventions.md` §子 agent 调度。
+> ⚠️ 严格遵循 `assets/common/conventions.md` §简单窗口执行流程 + §并行调度规则。
+> 调度规则详见 `assets/common/conventions.md` §子 agent 调度。
 
 #### 3.1 初始化
 
@@ -51,7 +46,7 @@
 
 #### 3.2 轮询循环 + 槽位替换
 
-按 `core/shared-conventions.md` §**模式 A：简单窗口** 执行轮询循环。本步骤特有参数：
+按 `assets/common/conventions.md` §**模式 A：简单窗口** 执行轮询循环。本步骤特有参数：
 
 | 参数 | 值 |
 |------|---|

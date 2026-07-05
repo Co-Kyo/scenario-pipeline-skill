@@ -14,13 +14,9 @@
 
 ## 前置条件
 
-⛔ 加载：
+加载：
 - `{workDir}/.meta/requirement-web.json`（⓪ 产出，含命题列表 + 能力图谱雏形）
-- `meta/partition-analysis-schema.md`（分区 JSON 的结构定义）
-
-> **🔒 上下文隔离**
-> - ✅ 允许读取：`core/shared-conventions.md`、`meta/partition-analysis-schema.md`、`{workDir}/.meta/requirement-web.json`
-> - ❌ 禁止读取：`processes/02~08.md`、`core/*.md`、`plugins/*.md`
+- `assets/01-partition/schemas.md`（分区 JSON 的结构定义）
 
 ## 输入
 
@@ -92,7 +88,7 @@
 
 #### 5.1 partition-analysis.json
 
-按 `meta/partition-analysis-schema.md` 的结构生成，包含：
+按 `assets/01-partition/schemas.md` 的结构生成，包含：
 - `dag`：完整 DAG 数据（节点 + 边 + depth + component_id）
 - `components`：连通分量 + depth 分层 + 社区
 - `current_session`：当前 session 的命题列表 + scan 批次

@@ -112,16 +112,20 @@ deep research：P1、P2、P4 --no-experiment
 scenario-pipeline/
 ├── SKILL.md                    ← Agent 执行入口（触发方式 + 管道全景）
 │
-├── meta/                       ← 数据定义
-│   ├── sources.md                 T0 域名表 + 信源分级规则
-│   ├── output-contracts.md        每步输出结构 + 完整 JSON 示例
-│   └── paths.md                   路径约定表
-│
-├── core/                       ← 方法论（agent 按需加载）
-│   ├── shared-conventions.md        子 agent 调度 + 检查点 + 状态管理 + 隔离规范
-│   ├── capability-graph.md
-│   ├── strategic-highground.md
-│   └── scenario-matrix.md
+├── assets/                     ← 所有资源（schemas + method + 规则 + 模板）
+│   ├── common/                    公共资源
+│   │   ├── conventions.md             共享约定（调度/检查点/隔离/增量复用/凭据/比例）
+│   │   ├── sources.md                 T0 域名表 + 信源分级规则
+│   │   └── paths.md                   路径约定表
+│   ├── 00-brainstorm/              头脑风暴资源（schemas + 规则 + Agent 定义）
+│   ├── 01-partition/               依赖整理与分区资源
+│   ├── 02-scan/                    定向扫描资源
+│   ├── 03-capability-graph/        能力图谱资源（schemas + method）
+│   ├── 04-evaluate-pool/           评估入池资源（schemas + method）
+│   ├── 05-capability-research/     能力研究资源
+│   ├── 06-briefing-assemble/       Briefing 组装资源
+│   ├── 07-assemble/                命题组装资源
+│   └── 08-learning-ladder/         学习阶梯资源
 │
 ├── plugins/                    ← 可选插件
 │   ├── capability-research-mode.md
