@@ -1,0 +1,184 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 1000" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#DC2626"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#EA580C"/>
+    </marker>
+    <linearGradient id="grad-blue" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#2563EB;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-teal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14B8A6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#0D9488;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-purple" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <filter id="shadow-lg" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="2" dy="3" stdDeviation="5" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="700" height="1000" fill="#F8FAFC" rx="8"/>
+
+  <!-- Title -->
+  <text x="350" y="42" text-anchor="middle" font-size="20" font-weight="bold" fill="#1E293B">Step 04 · 能力图谱构建 — 架构流程图</text>
+
+  <!-- ==================== INPUTS ==================== -->
+  <!-- requirement-web.json -->
+  <rect x="60" y="70" width="230" height="52" rx="8" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="175" y="93" text-anchor="middle" font-size="12" font-weight="bold" fill="#1E40AF">requirement-web.json</text>
+  <text x="175" y="111" text-anchor="middle" font-size="10" fill="#3B82F6">capability_web + decompositions</text>
+
+  <!-- .raw-materials/index.json -->
+  <rect x="410" y="70" width="230" height="52" rx="8" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="525" y="93" text-anchor="middle" font-size="12" font-weight="bold" fill="#1E40AF">.raw-materials/index.json</text>
+  <text x="525" y="111" text-anchor="middle" font-size="10" fill="#3B82F6">URL + 元数据 + markdown 内容</text>
+
+  <!-- Arrow from inputs down -->
+  <line x1="175" y1="122" x2="175" y2="150" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="525" y1="122" x2="350" y2="150" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ==================== STEP 1: 提取能力原型 ==================== -->
+  <rect x="200" y="150" width="300" height="56" rx="8" fill="white" stroke="#8B5CF6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="175" text-anchor="middle" font-size="13" font-weight="bold" fill="#7C3AED">① 提取能力原型</text>
+  <text x="350" y="193" text-anchor="middle" font-size="10" fill="#6B7280">从 capability_web 读取能力列表 (id/name/layer/type/fanout/covers)</text>
+
+  <!-- Side panel: schemas.md -->
+  <rect x="540" y="153" width="130" height="48" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="605" y="172" text-anchor="middle" font-size="9" font-weight="bold" fill="#64748B">schemas.md</text>
+  <text x="605" y="187" text-anchor="middle" font-size="8" fill="#94A3B8">输出格式定义</text>
+  <line x1="500" y1="177" x2="540" y2="177" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Arrow down -->
+  <line x1="350" y1="206" x2="350" y2="235" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ==================== STEP 2: 两轮去重 ==================== -->
+  <rect x="200" y="235" width="300" height="56" rx="8" fill="white" stroke="#8B5CF6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="260" text-anchor="middle" font-size="13" font-weight="bold" fill="#7C3AED">② 两轮去重与合并</text>
+  <text x="350" y="278" text-anchor="middle" font-size="10" fill="#6B7280">名称+层级匹配 → 内容语义比对</text>
+
+  <!-- Side panel: method.md -->
+  <rect x="540" y="238" width="130" height="48" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="605" y="257" text-anchor="middle" font-size="9" font-weight="bold" fill="#64748B">method.md</text>
+  <text x="605" y="272" text-anchor="middle" font-size="8" fill="#94A3B8">合并/拆分判定方法</text>
+  <line x1="500" y1="263" x2="540" y2="263" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Merge trace note -->
+  <rect x="52" y="240" width="135" height="44" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1" filter="url(#shadow)"/>
+  <text x="119" y="257" text-anchor="middle" font-size="9" font-weight="bold" fill="#92400E">合并 → merge_trace</text>
+  <text x="119" y="272" text-anchor="middle" font-size="9" font-weight="bold" fill="#92400E">拆分 → split_trace</text>
+  <line x1="187" y1="262" x2="200" y2="262" stroke="#F59E0B" stroke-width="1" marker-end="url(#arrow-orange)"/>
+
+  <!-- Arrow down -->
+  <line x1="350" y1="291" x2="350" y2="320" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ==================== STEP 3: 依赖标注 ==================== -->
+  <rect x="200" y="320" width="300" height="76" rx="8" fill="white" stroke="#8B5CF6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="345" text-anchor="middle" font-size="13" font-weight="bold" fill="#7C3AED">③ 依赖标注</text>
+  <text x="350" y="363" text-anchor="middle" font-size="10" fill="#6B7280">推断依据 (按优先级)：</text>
+  <text x="215" y="379" font-size="9" fill="#7C3AED">① 层级关系  ② 内容引用  ③ covers交集</text>
+
+  <!-- Arrow down -->
+  <line x1="350" y1="396" x2="350" y2="425" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ==================== STEP 4: Qualifier注入分析 ==================== -->
+  <rect x="200" y="425" width="300" height="48" rx="8" fill="white" stroke="#8B5CF6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="447" text-anchor="middle" font-size="13" font-weight="bold" fill="#7C3AED">④ 限定词注入分析</text>
+  <text x="350" y="463" text-anchor="middle" font-size="10" fill="#6B7280">分析不同限定词向命题注入的特化能力集</text>
+
+  <!-- Arrow down -->
+  <line x1="350" y1="473" x2="350" y2="502" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ==================== STEP 5: 参考URL预查找 ==================== -->
+  <rect x="200" y="502" width="300" height="76" rx="8" fill="white" stroke="#EA580C" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="527" text-anchor="middle" font-size="13" font-weight="bold" fill="#C2410C">⑤ 参考 URL 预查找</text>
+  <text x="350" y="545" text-anchor="middle" font-size="10" fill="#6B7280">先复用 Step 03 scan 产物 → 再补搜</text>
+  <text x="350" y="563" text-anchor="middle" font-size="9" fill="#EA580C">轨道A: T0定向  |  轨道B: 自由搜索+分级</text>
+
+  <!-- Side panel: ref-sources.md -->
+  <rect x="540" y="505" width="130" height="48" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="605" y="524" text-anchor="middle" font-size="9" font-weight="bold" fill="#64748B">ref-sources.md</text>
+  <text x="605" y="539" text-anchor="middle" font-size="8" fill="#94A3B8">T0/T1/T2/T3 域名表</text>
+  <line x1="500" y1="529" x2="540" y2="529" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Arrow down -->
+  <line x1="350" y1="578" x2="350" y2="607" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ==================== STEP 6: 战略高地识别 ==================== -->
+  <rect x="200" y="607" width="300" height="48" rx="8" fill="white" stroke="#16A34A" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="629" text-anchor="middle" font-size="13" font-weight="bold" fill="#15803D">⑥ 战略高地识别</text>
+  <text x="350" y="645" text-anchor="middle" font-size="10" fill="#6B7280">strategic_value = fanout × (1 / coupling)</text>
+
+  <!-- Side panel: key metrics -->
+  <rect x="540" y="605" width="130" height="52" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="605" y="622" text-anchor="middle" font-size="9" font-weight="bold" fill="#64748B">关键指标</text>
+  <text x="605" y="637" text-anchor="middle" font-size="8" fill="#94A3B8">fanout · coupling</text>
+  <text x="605" y="651" text-anchor="middle" font-size="8" fill="#94A3B8">strategic_value</text>
+  <line x1="500" y1="631" x2="540" y2="631" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Arrow down -->
+  <line x1="350" y1="655" x2="350" y2="690" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ==================== DECISION: 战略值分级 ==================== -->
+  <polygon points="350,690 480,730 350,770 220,730" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="725" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400E">战略值分级</text>
+  <text x="350" y="742" text-anchor="middle" font-size="10" fill="#92400E">≥4.0 / 2.0-3.9 / 1.0-1.9</text>
+
+  <!-- Decision branches -->
+  <!-- Left: 一级高地 -->
+  <line x1="220" y1="730" x2="100" y2="730" stroke="#16A34A" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+  <rect x="20" y="710" width="80" height="40" rx="6" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="60" y="727" text-anchor="middle" font-size="10" font-weight="bold" fill="#15803D">一级高地</text>
+  <text x="60" y="742" text-anchor="middle" font-size="9" fill="#16A34A">≥ 4.0</text>
+
+  <!-- Right: 二级/三级 -->
+  <line x1="480" y1="730" x2="570" y2="730" stroke="#EA580C" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+  <rect x="570" y="710" width="100" height="40" rx="6" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="620" y="727" text-anchor="middle" font-size="10" font-weight="bold" fill="#C2410C">二/三级</text>
+  <text x="620" y="742" text-anchor="middle" font-size="9" fill="#EA580C">1.0 - 3.9</text>
+
+  <!-- Arrow down from decision -->
+  <line x1="350" y1="770" x2="350" y2="800" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ==================== STEP 7: 学习路径生成 ==================== -->
+  <rect x="200" y="800" width="300" height="60" rx="8" fill="white" stroke="#16A34A" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="822" text-anchor="middle" font-size="13" font-weight="bold" fill="#15803D">⑦ 学习路径生成</text>
+  <text x="350" y="840" text-anchor="middle" font-size="10" fill="#6B7280">战略高地优先 → 依赖拓扑排序 → 战略值降序</text>
+
+  <!-- Arrow down -->
+  <line x1="350" y1="860" x2="350" y2="895" stroke="#16A34A" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+  <!-- ==================== OUTPUT ==================== -->
+  <rect x="185" y="895" width="330" height="52" rx="8" fill="#CCFBF1" stroke="#14B8A6" stroke-width="1.5" filter="url(#shadow-lg)"/>
+  <text x="350" y="918" text-anchor="middle" font-size="13" font-weight="bold" fill="#0D9488">OUTPUT: capability-graph.json</text>
+  <text x="350" y="936" text-anchor="middle" font-size="10" fill="#0D9488">能力数量 · 扇出度Top3 · 战略高地 · 学习路径前5</text>
+
+  <!-- ==================== BARRIER 3 ==================== -->
+  <rect x="230" y="965" width="240" height="32" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="986" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400E">🛑 Barrier 3 检查点</text>
+
+  <!-- Arrow to barrier -->
+  <line x1="350" y1="947" x2="350" y2="965" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrow-orange)"/>
+
+  <!-- Timeout params side panel -->
+  <rect x="15" y="895" width="150" height="52" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="90" y="912" text-anchor="middle" font-size="9" font-weight="bold" fill="#64748B">超时/阈值参数</text>
+  <text x="90" y="927" text-anchor="middle" font-size="8" fill="#94A3B8">能力数 &gt;30 → overload</text>
+  <text x="90" y="940" text-anchor="middle" font-size="8" fill="#94A3B8">依赖环 → 打断+warning</text>
+  <line x1="165" y1="921" x2="185" y2="921" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="3,2"/>
+</svg>

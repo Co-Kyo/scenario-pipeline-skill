@@ -1,0 +1,185 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 850" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#DC2626"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#EA580C"/>
+    </marker>
+    <linearGradient id="grad-blue" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#2563EB;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-teal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14B8A6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#0D9488;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-purple" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <filter id="shadow-lg" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="2" dy="3" stdDeviation="5" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="700" height="850" fill="#F8FAFC" rx="8"/>
+
+  <!-- Title -->
+  <text x="350" y="42" text-anchor="middle" font-size="20" font-weight="bold" fill="#1E293B">Step 05 · 评估与入池 — 架构流程图</text>
+
+  <!-- ==================== INPUTS ==================== -->
+  <!-- requirement-web.json -->
+  <rect x="40" y="70" width="195" height="48" rx="8" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="137" y="91" text-anchor="middle" font-size="11" font-weight="bold" fill="#1E40AF">requirement-web.json</text>
+  <text x="137" y="107" text-anchor="middle" font-size="9" fill="#3B82F6">01 产出 · 命题+能力雏形</text>
+
+  <!-- capability-graph.json -->
+  <rect x="252" y="70" width="195" height="48" rx="8" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="350" y="91" text-anchor="middle" font-size="11" font-weight="bold" fill="#1E40AF">capability-graph.json</text>
+  <text x="350" y="107" text-anchor="middle" font-size="9" fill="#3B82F6">04 产出 · 能力+高地+路径</text>
+
+  <!-- .raw-materials/index.json -->
+  <rect x="465" y="70" width="195" height="48" rx="8" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="562" y="91" text-anchor="middle" font-size="11" font-weight="bold" fill="#1E40AF">.raw-materials/index.json</text>
+  <text x="562" y="107" text-anchor="middle" font-size="9" fill="#3B82F6">02 产出索引</text>
+
+  <!-- Arrows from inputs -->
+  <line x1="137" y1="118" x2="250" y2="155" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="350" y1="118" x2="350" y2="155" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <line x1="562" y1="118" x2="450" y2="155" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ==================== STEP 1: 四维打分 ==================== -->
+  <rect x="200" y="155" width="300" height="70" rx="8" fill="white" stroke="#8B5CF6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="180" text-anchor="middle" font-size="13" font-weight="bold" fill="#7C3AED">① 逐命题四维打分</text>
+  <text x="215" y="198" font-size="9" fill="#6B7280">跨栈耦合 · 文档真空 · 经验壁垒 · 时事热度</text>
+  <text x="350" y="215" text-anchor="middle" font-size="9" fill="#8B5CF6">每维度 1-3 分，总分 4-12</text>
+
+  <!-- Side panel: scoring matrix -->
+  <rect x="535" y="155" width="150" height="80" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="610" y="173" text-anchor="middle" font-size="9" font-weight="bold" fill="#64748B">四维评分矩阵</text>
+  <text x="610" y="189" text-anchor="middle" font-size="8" fill="#94A3B8">跨栈耦合  1-3</text>
+  <text x="610" y="202" text-anchor="middle" font-size="8" fill="#94A3B8">文档真空  1-3</text>
+  <text x="610" y="215" text-anchor="middle" font-size="8" fill="#94A3B8">经验壁垒  1-3</text>
+  <text x="610" y="228" text-anchor="middle" font-size="8" fill="#94A3B8">时事热度  1-3</text>
+  <line x1="500" y1="195" x2="535" y2="195" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Side panel: schemas.md + strategy-level.md -->
+  <rect x="15" y="155" width="160" height="56" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="95" y="173" text-anchor="middle" font-size="9" font-weight="bold" fill="#64748B">关键文件</text>
+  <text x="95" y="188" text-anchor="middle" font-size="8" fill="#94A3B8">schemas.md · strategy-level.md</text>
+  <text x="95" y="202" text-anchor="middle" font-size="8" fill="#94A3B8">method.md (评估矩阵方法)</text>
+  <line x1="175" y1="183" x2="200" y2="183" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Arrow down -->
+  <line x1="350" y1="225" x2="350" y2="260" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ==================== STEP 2: 年限阈值适配 ==================== -->
+  <rect x="200" y="260" width="300" height="70" rx="8" fill="white" stroke="#F59E0B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="285" text-anchor="middle" font-size="13" font-weight="bold" fill="#B45309">② 年限阈值适配</text>
+  <text x="350" y="303" text-anchor="middle" font-size="10" fill="#6B7280">根据 year_level 调整入池阈值</text>
+  <text x="350" y="320" text-anchor="middle" font-size="9" fill="#F59E0B">L1:不入池 | L2:≥6 | L3:≥5 | L4:一票入池</text>
+
+  <!-- Side panel: year levels table -->
+  <rect x="535" y="260" width="150" height="70" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="610" y="278" text-anchor="middle" font-size="9" font-weight="bold" fill="#64748B">年限阈值表</text>
+  <text x="610" y="294" text-anchor="middle" font-size="8" fill="#94A3B8">L1 通常不入池</text>
+  <text x="610" y="307" text-anchor="middle" font-size="8" fill="#94A3B8">L2 总分 ≥ 6</text>
+  <text x="610" y="320" text-anchor="middle" font-size="8" fill="#94A3B8">L3 总分 ≥ 5</text>
+  <text x="610" y="333" text-anchor="middle" font-size="8" fill="#94A3B8">L4 任维度 ≥ 2</text>
+  <line x1="500" y1="295" x2="535" y2="295" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Arrow down -->
+  <line x1="350" y1="330" x2="350" y2="365" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ==================== DECISION: 一票否决判断 ==================== -->
+  <polygon points="350,365 480,405 350,445 220,405" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="400" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400E">一票否决判断</text>
+  <text x="350" y="417" text-anchor="middle" font-size="10" fill="#92400E">任一维度 ≥ 2 at L4?</text>
+
+  <!-- Decision branches -->
+  <!-- Left: 否决 → rejected -->
+  <line x1="220" y1="405" x2="90" y2="405" stroke="#DC2626" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+  <rect x="15" y="385" width="75" height="40" rx="6" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="52" y="402" text-anchor="middle" font-size="10" font-weight="bold" fill="#B91C1C">否决</text>
+  <text x="52" y="417" text-anchor="middle" font-size="9" fill="#DC2626">rejected</text>
+
+  <!-- Right: 入池 → 继续 -->
+  <line x1="480" y1="405" x2="570" y2="405" stroke="#16A34A" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+  <rect x="570" y="385" width="80" height="40" rx="6" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="610" y="402" text-anchor="middle" font-size="10" font-weight="bold" fill="#15803D">入池</text>
+  <text x="610" y="417" text-anchor="middle" font-size="9" fill="#16A34A">继续评估</text>
+
+  <!-- Arrow down from decision -->
+  <line x1="350" y1="445" x2="350" y2="478" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ==================== STEP 3: 难度评估 ==================== -->
+  <rect x="200" y="478" width="300" height="70" rx="8" fill="white" stroke="#8B5CF6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="503" text-anchor="middle" font-size="13" font-weight="bold" fill="#7C3AED">③ 学习难度评估</text>
+  <text x="350" y="521" text-anchor="middle" font-size="10" fill="#6B7280">依赖链深度 + 耦合度 + 抽象度</text>
+  <text x="350" y="538" text-anchor="middle" font-size="9" fill="#8B5CF6">low / medium / high</text>
+
+  <!-- Side panel: difficulty grades -->
+  <rect x="535" y="478" width="150" height="70" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="610" y="496" text-anchor="middle" font-size="9" font-weight="bold" fill="#64748B">难度分级</text>
+  <text x="610" y="512" text-anchor="middle" font-size="8" fill="#16A34A">low: depth ≤ 1</text>
+  <text x="610" y="525" text-anchor="middle" font-size="8" fill="#F59E0B">medium: depth = 2</text>
+  <text x="610" y="538" text-anchor="middle" font-size="8" fill="#DC2626">high: depth ≥ 3</text>
+  <line x1="500" y1="513" x2="535" y2="513" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="3,2"/>
+
+  <!-- Arrow down -->
+  <line x1="350" y1="548" x2="350" y2="585" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ==================== STEP 4: 入池归档 ==================== -->
+  <rect x="200" y="585" width="300" height="70" rx="8" fill="white" stroke="#8B5CF6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="610" text-anchor="middle" font-size="13" font-weight="bold" fill="#7C3AED">④ 入池归档</text>
+  <text x="350" y="628" text-anchor="middle" font-size="10" fill="#6B7280">写入总览导航 + 候选池 + 更新图谱</text>
+  <text x="350" y="645" text-anchor="middle" font-size="9" fill="#8B5CF6">evaluations.json · README.md · candidates.md</text>
+
+  <!-- Arrow down to outputs -->
+  <line x1="350" y1="655" x2="350" y2="695" stroke="#16A34A" stroke-width="2" marker-end="url(#arrow-green)"/>
+
+  <!-- ==================== OUTPUTS ==================== -->
+  <!-- evaluations.json -->
+  <rect x="105" y="695" width="170" height="48" rx="8" fill="#CCFBF1" stroke="#14B8A6" stroke-width="1.5" filter="url(#shadow-lg)"/>
+  <text x="190" y="716" text-anchor="middle" font-size="11" font-weight="bold" fill="#0D9488">evaluations.json</text>
+  <text x="190" y="732" text-anchor="middle" font-size="9" fill="#0D9488">评估结果 · 优先级 · 难度</text>
+
+  <!-- README.md -->
+  <rect x="287" y="695" width="125" height="48" rx="8" fill="#CCFBF1" stroke="#14B8A6" stroke-width="1.5" filter="url(#shadow-lg)"/>
+  <text x="350" y="716" text-anchor="middle" font-size="11" font-weight="bold" fill="#0D9488">README.md</text>
+  <text x="350" y="732" text-anchor="middle" font-size="9" fill="#0D9488">命题总览导航</text>
+
+  <!-- candidates.md -->
+  <rect x="425" y="695" width="170" height="48" rx="8" fill="#CCFBF1" stroke="#14B8A6" stroke-width="1.5" filter="url(#shadow-lg)"/>
+  <text x="510" y="716" text-anchor="middle" font-size="11" font-weight="bold" fill="#0D9488">candidates.md</text>
+  <text x="510" y="732" text-anchor="middle" font-size="9" fill="#0D9488">候选命题原始存档</text>
+
+  <!-- Arrows from step 4 to outputs -->
+  <line x1="300" y1="655" x2="190" y2="695" stroke="#16A34A" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+  <line x1="350" y1="655" x2="350" y2="695" stroke="#16A34A" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+  <line x1="400" y1="655" x2="510" y2="695" stroke="#16A34A" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+
+  <!-- ==================== BARRIER 4 ==================== -->
+  <rect x="230" y="775" width="240" height="32" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="796" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400E">🛑 Barrier 4 检查点</text>
+
+  <!-- Arrow to barrier -->
+  <line x1="350" y1="743" x2="350" y2="775" stroke="#F59E0B" stroke-width="2" marker-end="url(#arrow-orange)"/>
+
+  <!-- Side note: priority_trace -->
+  <rect x="15" y="585" width="165" height="48" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1" filter="url(#shadow)"/>
+  <text x="97" y="603" text-anchor="middle" font-size="9" font-weight="bold" fill="#92400E">priority_trace</text>
+  <text x="97" y="618" text-anchor="middle" font-size="8" fill="#B45309">每个命题必须记录决策依据</text>
+  <line x1="180" y1="609" x2="200" y2="609" stroke="#F59E0B" stroke-width="1" stroke-dasharray="3,2"/>
+</svg>

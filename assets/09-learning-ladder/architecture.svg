@@ -1,0 +1,169 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 850" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#DC2626"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#EA580C"/>
+    </marker>
+    <linearGradient id="grad-blue" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#2563EB;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-teal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14B8A6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#0D9488;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-purple" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <filter id="shadow-lg" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="2" dy="3" stdDeviation="5" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="700" height="850" fill="#F8FAFC" rx="8"/>
+
+  <!-- Title -->
+  <text x="350" y="42" text-anchor="middle" font-size="20" font-weight="bold" fill="#1E293B">Step 09 · 学习阶梯 — 架构流程图</text>
+  <line x1="100" y1="55" x2="600" y2="55" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- ===== INPUT ===== -->
+  <rect x="140" y="75" width="420" height="52" rx="26" fill="url(#grad-blue)" filter="url(#shadow)"/>
+  <text x="350" y="99" text-anchor="middle" font-size="14" fill="white" font-weight="bold">📥 多源输入</text>
+  <text x="350" y="116" text-anchor="middle" font-size="11" fill="#DBEAFE">capability-graph.json + summaries/*.json + overview.md</text>
+  <line x1="350" y1="127" x2="350" y2="155" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ① FILTER ===== -->
+  <rect x="180" y="155" width="340" height="50" rx="6" fill="white" stroke="#3B82F6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="177" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E40AF">① 筛选待生成命题</text>
+  <text x="350" y="193" text-anchor="middle" font-size="10.5" fill="#64748B">已有 learning-ladder.md 的命题跳过</text>
+  <line x1="350" y1="205" x2="350" y2="235" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ② PARALLEL CONTAINER ===== -->
+  <rect x="30" y="235" width="640" height="250" rx="8" fill="#F5F3FF" stroke="#8B5CF6" stroke-width="1.5" stroke-dasharray="5,3" filter="url(#shadow)"/>
+  <text x="350" y="257" text-anchor="middle" font-size="12" font-weight="bold" fill="#6D28D9">② 并行 spawn（简单窗口 W=5 · 超时 5min · 轮询替换）</text>
+
+  <!-- Ladder Agent 1 -->
+  <rect x="55" y="275" width="180" height="90" rx="6" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="55" y="275" width="180" height="24" rx="6" fill="#EDE9FE"/>
+  <text x="145" y="292" text-anchor="middle" font-size="11" font-weight="bold" fill="#6D28D9">Ladder Agent</text>
+  <text x="145" y="314" text-anchor="middle" font-size="9" fill="#475569">ladder-01-xxx</text>
+  <text x="145" y="330" text-anchor="middle" font-size="8.5" fill="#64748B">→ learning-ladder.md</text>
+  <text x="145" y="352" text-anchor="middle" font-size="8" fill="#94A3B8">槽位 1</text>
+
+  <!-- Ladder Agent 2 -->
+  <rect x="260" y="275" width="180" height="90" rx="6" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="260" y="275" width="180" height="24" rx="6" fill="#EDE9FE"/>
+  <text x="350" y="292" text-anchor="middle" font-size="11" font-weight="bold" fill="#6D28D9">Ladder Agent</text>
+  <text x="350" y="314" text-anchor="middle" font-size="9" fill="#475569">ladder-02-xxx</text>
+  <text x="350" y="330" text-anchor="middle" font-size="8.5" fill="#64748B">→ learning-ladder.md</text>
+  <text x="350" y="352" text-anchor="middle" font-size="8" fill="#94A3B8">槽位 2</text>
+
+  <!-- Ladder Agent 3 -->
+  <rect x="465" y="275" width="180" height="90" rx="6" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="465" y="275" width="180" height="24" rx="6" fill="#EDE9FE"/>
+  <text x="555" y="292" text-anchor="middle" font-size="11" font-weight="bold" fill="#6D28D9">Ladder Agent</text>
+  <text x="555" y="314" text-anchor="middle" font-size="9" fill="#475569">ladder-03-xxx</text>
+  <text x="555" y="330" text-anchor="middle" font-size="8.5" fill="#64748B">→ learning-ladder.md</text>
+  <text x="555" y="352" text-anchor="middle" font-size="8" fill="#94A3B8">槽位 3</text>
+
+  <!-- Slot replacement flow -->
+  <rect x="55" y="380" width="590" height="30" rx="4" fill="#F1F5F9" stroke="#94A3B8" stroke-width="0.5"/>
+  <text x="350" y="400" text-anchor="middle" font-size="9" fill="#64748B">... + 槽位 4、5 · 完成 → 释放 → 从待办队列取下一个 spawn</text>
+
+  <text x="350" y="435" text-anchor="middle" font-size="8.5" fill="#6B7280">轮询间隔 15s · 单 agent 超时 5min · 失败重试 1 次 → 跳过标记 degraded</text>
+  <line x1="350" y1="445" x2="350" y2="475" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ③ AGENT INTERNAL FLOW ===== -->
+  <rect x="80" y="475" width="540" height="195" rx="6" fill="white" stroke="#14B8A6" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="80" y="475" width="540" height="28" rx="6" fill="url(#grad-teal)"/>
+  <text x="350" y="494" text-anchor="middle" font-size="12" font-weight="bold" fill="white">③ Agent 内部执行（每个 ladder agent）</text>
+
+  <!-- Step 1 -->
+  <rect x="100" y="515" width="230" height="40" rx="4" fill="#F0FDFA" stroke="#14B8A6" stroke-width="1"/>
+  <text x="215" y="533" text-anchor="middle" font-size="10" font-weight="bold" fill="#0F766E">Step 1: 提取能力子图</text>
+  <text x="215" y="548" text-anchor="middle" font-size="8.5" fill="#64748B">从依赖关系构建命题能力图</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="330" y1="535" x2="355" y2="535" stroke="#4B5563" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Step 2 -->
+  <rect x="355" y="515" width="240" height="40" rx="4" fill="#F0FDFA" stroke="#14B8A6" stroke-width="1"/>
+  <text x="475" y="533" text-anchor="middle" font-size="10" font-weight="bold" fill="#0F766E">Step 2: 拓扑排序分层</text>
+  <text x="475" y="548" text-anchor="middle" font-size="8.5" fill="#64748B">Layer 0→1→2（环依赖打断+warning）</text>
+
+  <!-- Arrow 2→3 -->
+  <line x1="475" y1="555" x2="475" y2="575" stroke="#4B5563" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Step 3 -->
+  <rect x="100" y="575" width="230" height="40" rx="4" fill="#F0FDFA" stroke="#14B8A6" stroke-width="1"/>
+  <text x="215" y="593" text-anchor="middle" font-size="10" font-weight="bold" fill="#0F766E">Step 3: 归纳 3-4 个阶段</text>
+  <text x="215" y="608" text-anchor="middle" font-size="8.5" fill="#64748B">合并相邻层 → 里程碑</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="330" y1="595" x2="355" y2="595" stroke="#4B5563" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Step 4 -->
+  <rect x="355" y="575" width="240" height="40" rx="4" fill="#F0FDFA" stroke="#14B8A6" stroke-width="1"/>
+  <text x="475" y="593" text-anchor="middle" font-size="10" font-weight="bold" fill="#0F766E">Step 4: 编排每步</text>
+  <text x="475" y="608" text-anchor="middle" font-size="8.5" fill="#64748B">做什么→看到什么→说明什么→下一步→验证</text>
+
+  <text x="350" y="640" text-anchor="middle" font-size="9" fill="#0F766E">每步结构: 动作 → 预期结果 → 知识连接 → 指向产出 → 二值验证标准</text>
+  <text x="350" y="658" text-anchor="middle" font-size="8.5" fill="#94A3B8">异常: 能力数 &gt;8 合并相似 · 阶段数 &gt;5 合并相邻</text>
+  <line x1="350" y1="670" x2="350" y2="700" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== OUTPUT ===== -->
+  <rect x="175" y="700" width="350" height="38" rx="6" fill="#F0FDFA" stroke="#14B8A6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="350" y="724" text-anchor="middle" font-size="11" fill="#0F766E">📄 {命题目录}/learning-ladder.md × M</text>
+  <line x1="350" y1="738" x2="350" y2="765" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== BARRIER 8 CHECKPOINT ===== -->
+  <rect x="160" y="765" width="380" height="42" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="785" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400E">🛑 Barrier 8 检查点（强制停顿）</text>
+  <text x="350" y="801" text-anchor="middle" font-size="9.5" fill="#B45309">展示学习阶梯摘要（完成/跳过/失败）→ 等待用户确认</text>
+
+  <!-- ===== RIGHT: KEY FILES ===== -->
+  <rect x="530" y="75" width="155" height="108" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="540" y="93" font-size="10" font-weight="bold" fill="#334155">📋 关键文件</text>
+  <text x="540" y="110" font-size="9" fill="#64748B">09-learning-ladder/schemas.md</text>
+  <text x="540" y="124" font-size="9" fill="#64748B">capability-graph.json</text>
+  <text x="540" y="138" font-size="9" fill="#64748B">summaries/*.json (Step 06)</text>
+  <text x="540" y="152" font-size="9" fill="#64748B">overview.md (Step 08)</text>
+  <text x="540" y="170" font-size="8" fill="#94A3B8">task 已内联全部指令</text>
+
+  <!-- ===== RIGHT: LAYER STRUCTURE ===== -->
+  <rect x="530" y="275" width="155" height="105" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="540" y="293" font-size="10" font-weight="bold" fill="#334155">📐 层级结构</text>
+  <text x="540" y="312" font-size="9" fill="#64748B">Layer 0: 无依赖基础</text>
+  <text x="540" y="328" font-size="9" fill="#64748B">Layer 1: 依赖 L0</text>
+  <text x="540" y="344" font-size="9" fill="#64748B">Layer 2: 依赖 L0+1</text>
+  <text x="540" y="364" font-size="8.5" fill="#94A3B8">→ 合并为 3-4 阶段</text>
+
+  <!-- ===== RIGHT: TIMEOUT ===== -->
+  <rect x="530" y="400" width="155" height="80" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="540" y="418" font-size="10" font-weight="bold" fill="#334155">⏱ 超时参数</text>
+  <text x="540" y="436" font-size="9" fill="#64748B">W = 5 命题</text>
+  <text x="540" y="452" font-size="9" fill="#64748B">超时: 5 min/agent</text>
+  <text x="540" y="468" font-size="9" fill="#64748B">重试 1 次 → degraded</text>
+
+  <!-- ===== RIGHT: MILESTONE FORMAT ===== -->
+  <rect x="530" y="575" width="155" height="100" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="540" y="593" font-size="10" font-weight="bold" fill="#334155">🎯 每步验证</text>
+  <text x="540" y="612" font-size="9" fill="#64748B">做什么（动作）</text>
+  <text x="540" y="628" font-size="9" fill="#64748B">看到什么（预期）</text>
+  <text x="540" y="644" font-size="9" fill="#64748B">说明什么（知识）</text>
+  <text x="540" y="660" font-size="9" fill="#64748B">下一步去哪</text>
+  <text x="540" y="674" font-size="8.5" fill="#94A3B8">二值验证: 做到/做不到</text>
+</svg>

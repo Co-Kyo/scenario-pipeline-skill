@@ -1,0 +1,160 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 800" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#DC2626"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#EA580C"/>
+    </marker>
+    <linearGradient id="grad-blue" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#2563EB;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-teal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14B8A6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#0D9488;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-purple" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <filter id="shadow-lg" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="2" dy="3" stdDeviation="5" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="700" height="800" fill="#F8FAFC" rx="8"/>
+
+  <!-- Title -->
+  <text x="350" y="42" text-anchor="middle" font-size="20" font-weight="bold" fill="#1E293B">Step 07 · Briefing 组装 — 架构流程图</text>
+  <line x1="100" y1="55" x2="600" y2="55" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- ===== INPUT FILES ===== -->
+  <rect x="165" y="72" width="370" height="52" rx="26" fill="url(#grad-blue)" filter="url(#shadow)"/>
+  <text x="350" y="94" text-anchor="middle" font-size="13" fill="white" font-weight="bold">📥 输入：能力图 + 能力摘要</text>
+  <text x="350" y="112" text-anchor="middle" font-size="10" fill="#DBEAFE">capability-graph.json · .meta/summaries/*.json</text>
+  <line x1="350" y1="124" x2="350" y2="152" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ① FILTER PROPOSITIONS ===== -->
+  <rect x="185" y="152" width="330" height="56" rx="6" fill="white" stroke="#3B82F6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="175" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E40AF">① 过滤待组装命题</text>
+  <text x="350" y="192" text-anchor="middle" font-size="10.5" fill="#64748B">从 capability-graph.json propositions 获取</text>
+  <line x1="350" y1="208" x2="350" y2="236" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ② INCREMENTAL CHECK ===== -->
+  <rect x="185" y="236" width="330" height="56" rx="6" fill="white" stroke="#8B5CF6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="259" text-anchor="middle" font-size="13" font-weight="bold" fill="#6D28D9">② 增量检查</text>
+  <text x="350" y="276" text-anchor="middle" font-size="10.5" fill="#64748B">briefings/{seq}-{short_name}.md 已存在 → 跳过</text>
+  <line x1="350" y1="292" x2="350" y2="320" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ③ PARALLEL SPAWN (SIMPLE WINDOW) ===== -->
+  <rect x="50" y="320" width="600" height="260" rx="8" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="5,3" filter="url(#shadow)"/>
+  <text x="350" y="342" text-anchor="middle" font-size="13" font-weight="bold" fill="#6D28D9">③ 并行 Spawn — 简单窗口（W=5, 超时 5min）</text>
+
+  <!-- Agent cards -->
+  <text x="90" y="366" font-size="10" fill="#7C3AED" font-weight="bold">待办队列 → 槽位 spawn</text>
+
+  <!-- Briefing Agent 1 -->
+  <rect x="70" y="376" width="130" height="80" rx="5" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="135" y="396" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">briefing-01-A</text>
+  <text x="135" y="412" text-anchor="middle" font-size="9" fill="#64748B">读 summaries</text>
+  <text x="135" y="426" text-anchor="middle" font-size="9" fill="#64748B">提取关键信息</text>
+  <text x="135" y="440" text-anchor="middle" font-size="9" fill="#64748B">组装 Briefing</text>
+
+  <!-- Briefing Agent 2 -->
+  <rect x="215" y="376" width="130" height="80" rx="5" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="280" y="396" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">briefing-02-B</text>
+  <text x="280" y="412" text-anchor="middle" font-size="9" fill="#64748B">读 summaries</text>
+  <text x="280" y="426" text-anchor="middle" font-size="9" fill="#64748B">提取关键信息</text>
+  <text x="280" y="440" text-anchor="middle" font-size="9" fill="#64748B">组装 Briefing</text>
+
+  <!-- Briefing Agent 3 -->
+  <rect x="360" y="376" width="130" height="80" rx="5" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="425" y="396" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">briefing-03-C</text>
+  <text x="425" y="412" text-anchor="middle" font-size="9" fill="#64748B">读 summaries</text>
+  <text x="425" y="426" text-anchor="middle" font-size="9" fill="#64748B">提取关键信息</text>
+  <text x="425" y="440" text-anchor="middle" font-size="9" fill="#64748B">组装 Briefing</text>
+
+  <!-- Briefing Agent 4 -->
+  <rect x="70" y="468" width="130" height="80" rx="5" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="135" y="488" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">briefing-04-D</text>
+  <text x="135" y="504" text-anchor="middle" font-size="9" fill="#64748B">读 summaries</text>
+  <text x="135" y="518" text-anchor="middle" font-size="9" fill="#64748B">提取关键信息</text>
+  <text x="135" y="532" text-anchor="middle" font-size="9" fill="#64748B">组装 Briefing</text>
+
+  <!-- Briefing Agent 5 -->
+  <rect x="215" y="468" width="130" height="80" rx="5" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="280" y="488" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">briefing-05-E</text>
+  <text x="280" y="504" text-anchor="middle" font-size="9" fill="#64748B">读 summaries</text>
+  <text x="280" y="518" text-anchor="middle" font-size="9" fill="#64748B">提取关键信息</text>
+  <text x="280" y="532" text-anchor="middle" font-size="9" fill="#64748B">组装 Briefing</text>
+
+  <!-- Slot replacement indicator -->
+  <rect x="360" y="468" width="230" height="80" rx="5" fill="#FFF7ED" stroke="#EA580C" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="475" y="498" text-anchor="middle" font-size="10" font-weight="bold" fill="#C2410C">槽位替换流程</text>
+  <text x="475" y="516" text-anchor="middle" font-size="9" fill="#9A3412">agent 完成 → 释放槽位</text>
+  <text x="475" y="530" text-anchor="middle" font-size="9" fill="#9A3412">→ 从队列取下一个 spawn</text>
+  <text x="475" y="544" text-anchor="middle" font-size="9" fill="#9A3412">→ 循环直到队列空</text>
+
+  <line x1="350" y1="580" x2="350" y2="608" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== OUTPUT ===== -->
+  <rect x="175" y="608" width="350" height="38" rx="6" fill="#F0FDFA" stroke="#14B8A6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="350" y="632" text-anchor="middle" font-size="11" fill="#0F766E">📄 .meta/briefings/{seq}-{short_name}.md × M</text>
+  <line x1="350" y1="646" x2="350" y2="674" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== BARRIER 6 ===== -->
+  <rect x="195" y="674" width="310" height="42" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="350" y="694" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400E">🛑 Barrier 6 检查点（强制停顿）</text>
+  <text x="350" y="710" text-anchor="middle" font-size="9.5" fill="#B45309">展示 Briefing 摘要 → 用户确认</text>
+  <line x1="350" y1="716" x2="350" y2="744" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== NEXT STEP ===== -->
+  <rect x="230" y="744" width="240" height="38" rx="19" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.5"/>
+  <text x="350" y="768" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">→ Step 08 命题组装</text>
+
+  <!-- ===== SIDE PANEL: KEY FILES ===== -->
+  <rect x="545" y="72" width="140" height="90" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="555" y="90" font-size="10" font-weight="bold" fill="#334155">📋 关键文件</text>
+  <text x="555" y="106" font-size="9" fill="#64748B">schemas.md §briefing</text>
+  <text x="555" y="120" font-size="9" fill="#64748B">capability-graph.json</text>
+  <text x="555" y="134" font-size="9" fill="#64748B">summaries/*.json</text>
+  <text x="555" y="152" font-size="8" fill="#94A3B8">前置条件：无 plugin</text>
+
+  <!-- ===== SIDE PANEL: CONTENT RATIO ===== -->
+  <rect x="545" y="180" width="140" height="110" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="555" y="198" font-size="10" font-weight="bold" fill="#334155">📊 内容比例</text>
+  <text x="555" y="216" font-size="9" fill="#64748B">开篇 10-15%</text>
+  <text x="555" y="230" font-size="9" fill="#64748B">痛点切入</text>
+  <text x="555" y="248" font-size="9" fill="#64748B">主体 70-80%</text>
+  <text x="555" y="262" font-size="9" fill="#64748B">通用工程原理</text>
+  <text x="555" y="280" font-size="9" fill="#64748B">收尾 10-15%</text>
+
+  <!-- ===== SIDE PANEL: TIMEOUT PARAMS ===== -->
+  <rect x="545" y="310" width="140" height="100" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="555" y="328" font-size="10" font-weight="bold" fill="#334155">⚙️ 调度参数</text>
+  <text x="555" y="346" font-size="9" fill="#64748B">W（窗口）= 5</text>
+  <text x="555" y="360" font-size="9" fill="#64748B">超时 = 5 分钟</text>
+  <text x="555" y="374" font-size="9" fill="#64748B">槽位替换 = ✅</text>
+  <text x="555" y="388" font-size="9" fill="#64748B">label = briefing-{seq}</text>
+  <text x="555" y="402" font-size="8" fill="#94A3B8">模式 A：简单窗口</text>
+
+  <!-- ===== SIDE PANEL: AGENT TASK ===== -->
+  <rect x="545" y="430" width="140" height="100" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="555" y="448" font-size="10" font-weight="bold" fill="#334155">🤖 Agent 任务</text>
+  <text x="555" y="466" font-size="9" fill="#64748B">① 读能力摘要 JSON</text>
+  <text x="555" y="480" font-size="9" fill="#64748B">② 提取 mechanism</text>
+  <text x="555" y="494" font-size="9" fill="#64748B">  bottlenecks, tradeoffs</text>
+  <text x="555" y="508" font-size="9" fill="#64748B">③ 按比例组装 Briefing</text>
+  <text x="555" y="522" font-size="9" fill="#64748B">④ write 到磁盘</text>
+</svg>

@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 1000" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#DC2626"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#EA580C"/>
+    </marker>
+    <linearGradient id="grad-blue" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#2563EB;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-teal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14B8A6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#0D9488;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-purple" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <filter id="shadow-lg" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="2" dy="3" stdDeviation="5" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="750" height="1000" fill="#F8FAFC" rx="8"/>
+
+  <!-- Title -->
+  <text x="375" y="42" text-anchor="middle" font-size="20" font-weight="bold" fill="#1E293B">Step 08 · 命题组装 — 架构流程图</text>
+  <line x1="100" y1="55" x2="650" y2="55" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- ===== INPUT ===== -->
+  <rect x="180" y="75" width="380" height="52" rx="26" fill="url(#grad-blue)" filter="url(#shadow)"/>
+  <text x="370" y="99" text-anchor="middle" font-size="14" fill="white" font-weight="bold">📥 来自 Step 07 的 Briefings</text>
+  <text x="370" y="116" text-anchor="middle" font-size="11" fill="#DBEAFE">briefings/*.md + capability-graph.json</text>
+  <line x1="370" y1="127" x2="370" y2="155" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ① FILTER ===== -->
+  <rect x="200" y="155" width="340" height="50" rx="6" fill="white" stroke="#3B82F6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="370" y="177" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E40AF">① 筛选待组装命题</text>
+  <text x="370" y="193" text-anchor="middle" font-size="10.5" fill="#64748B">已有全部 5 文件的命题跳过</text>
+  <line x1="370" y1="205" x2="370" y2="235" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ② 2-AGENT MODEL ===== -->
+  <rect x="160" y="235" width="420" height="50" rx="6" fill="white" stroke="#8B5CF6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="370" y="257" text-anchor="middle" font-size="13" font-weight="bold" fill="#6D28D9">② 2-agent-per-命题 模型</text>
+  <text x="370" y="273" text-anchor="middle" font-size="10.5" fill="#64748B">每命题 spawn Markdown + Experiment 两个 agent（并行）</text>
+  <line x1="370" y1="285" x2="370" y2="315" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ③ PARALLEL CONTAINER ===== -->
+  <rect x="30" y="315" width="690" height="280" rx="8" fill="#F5F3FF" stroke="#8B5CF6" stroke-width="1.5" stroke-dasharray="5,3" filter="url(#shadow)"/>
+  <text x="375" y="337" text-anchor="middle" font-size="12" font-weight="bold" fill="#6D28D9">③ 并行 spawn（简单窗口 W=5 命题 · 最多 10 agent · 超时 8min）</text>
+
+  <!-- Proposition Wrapper -->
+  <rect x="55" y="350" width="640" height="225" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1"/>
+  <text x="375" y="370" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#475569">命题 {seq}-{short_name}</text>
+
+  <!-- Markdown Agent -->
+  <rect x="80" y="385" width="290" height="170" rx="6" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="80" y="385" width="290" height="26" rx="6" fill="#EDE9FE"/>
+  <text x="225" y="403" text-anchor="middle" font-size="11" font-weight="bold" fill="#6D28D9">Markdown Agent</text>
+  <text x="225" y="423" text-anchor="middle" font-size="9" fill="#475569">asm-md-{seq}-{short_name}</text>
+  <line x1="95" y1="435" x2="355" y2="435" stroke="#E2E8F0" stroke-width="0.5"/>
+  <text x="95" y="452" font-size="9" fill="#64748B">① 链路编排 → overview.md</text>
+  <text x="95" y="468" font-size="9" fill="#64748B">② 坑点提取 → edge-cases.md</text>
+  <text x="95" y="484" font-size="9" fill="#64748B">③ 方案对比 → trade-offs.md</text>
+  <text x="95" y="500" font-size="9" fill="#64748B">④ 参考汇总 → references.md</text>
+  <text x="95" y="520" font-size="8.5" fill="#94A3B8">内容比: 开篇10-15%</text>
+  <text x="95" y="534" font-size="8.5" fill="#94A3B8">主体70-80% 收尾10-15%</text>
+  <text x="225" y="550" text-anchor="middle" font-size="8.5" fill="#6D28D9">→ 4 个 Markdown 文件</text>
+
+  <!-- Experiment Agent -->
+  <rect x="390" y="385" width="280" height="170" rx="6" fill="white" stroke="#EA580C" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="390" y="385" width="280" height="26" rx="6" fill="#FFF7ED"/>
+  <text x="530" y="403" text-anchor="middle" font-size="11" font-weight="bold" fill="#C2410C">Experiment Agent</text>
+  <text x="530" y="423" text-anchor="middle" font-size="9" fill="#475569">asm-exp-{seq}-{short_name}</text>
+  <line x1="405" y1="435" x2="655" y2="435" stroke="#E2E8F0" stroke-width="0.5"/>
+  <text x="405" y="452" font-size="9" fill="#64748B">① 选取实验代码</text>
+  <text x="405" y="468" font-size="9" fill="#64748B">② 合并为 HTML/JS</text>
+  <text x="405" y="484" font-size="9" fill="#64748B">③ 编写 README.md</text>
+  <text x="405" y="500" font-size="9" fill="#64748B">④ 保存到 experiment/</text>
+  <text x="530" y="550" text-anchor="middle" font-size="8.5" fill="#C2410C">→ experiment/ 目录</text>
+
+  <text x="375" y="585" text-anchor="middle" font-size="8.5" fill="#6B7280">槽位计数: 1 命题 = 2 槽位 · 2 agent 均结束才释放 · 部分完成标记 partial</text>
+  <line x1="375" y1="595" x2="375" y2="625" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ④ SLOT REPLACEMENT ===== -->
+  <rect x="180" y="625" width="390" height="35" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1" filter="url(#shadow)"/>
+  <text x="375" y="647" text-anchor="middle" font-size="10.5" fill="#475569">槽位替换: 完成 → 释放 2 槽位 → spawn 下一命题</text>
+  <line x1="375" y1="660" x2="375" y2="690" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== OUTPUT FILES ===== -->
+  <rect x="100" y="690" width="250" height="38" rx="6" fill="#F0FDFA" stroke="#14B8A6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="225" y="714" text-anchor="middle" font-size="10" fill="#0F766E">📄 overview + edge-cases + trade-offs + references</text>
+
+  <rect x="400" y="690" width="230" height="38" rx="6" fill="#F0FDFA" stroke="#14B8A6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="515" y="714" text-anchor="middle" font-size="10" fill="#0F766E">📄 experiment/README.md + src/</text>
+
+  <line x1="375" y1="728" x2="375" y2="758" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== BARRIER 7 CHECKPOINT ===== -->
+  <rect x="170" y="758" width="410" height="42" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="375" y="778" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400E">🛑 Barrier 7 检查点（强制停顿）</text>
+  <text x="375" y="794" text-anchor="middle" font-size="9.5" fill="#B45309">展示组装摘要（完成/跳过/失败 + 行数统计）→ 等待用户确认</text>
+
+  <!-- ===== RIGHT: KEY FILES ===== -->
+  <rect x="560" y="75" width="175" height="100" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="570" y="93" font-size="10" font-weight="bold" fill="#334155">📋 关键文件依赖</text>
+  <text x="570" y="110" font-size="9" fill="#64748B">08-assemble/schemas.md</text>
+  <text x="570" y="124" font-size="9" fill="#64748B">common/protocol-scheduling.md</text>
+  <text x="570" y="138" font-size="9" fill="#64748B">briefings/*.md (Step 07)</text>
+  <text x="570" y="152" font-size="9" fill="#64748B">capability-graph.json</text>
+  <text x="570" y="168" font-size="8" fill="#94A3B8">task 已内联全部指令</text>
+
+  <!-- ===== RIGHT: TIMEOUT ===== -->
+  <rect x="560" y="190" width="175" height="80" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="570" y="208" font-size="10" font-weight="bold" fill="#334155">⏱ 超时参数</text>
+  <text x="570" y="226" font-size="9" fill="#64748B">W = 5 命题</text>
+  <text x="570" y="242" font-size="9" fill="#64748B">最多 10 agent 并行</text>
+  <text x="570" y="258" font-size="9" fill="#64748B">超时: 8 min/agent</text>
+
+  <!-- ===== RIGHT: OUTPUT LIST ===== -->
+  <rect x="560" y="690" width="175" height="110" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="570" y="708" font-size="10" font-weight="bold" fill="#334155">📄 每命题产出</text>
+  <text x="570" y="726" font-size="9" fill="#64748B">overview.md</text>
+  <text x="570" y="740" font-size="9" fill="#64748B">edge-cases.md</text>
+  <text x="570" y="754" font-size="9" fill="#64748B">trade-offs.md</text>
+  <text x="570" y="768" font-size="9" fill="#64748B">references.md</text>
+  <text x="570" y="782" font-size="9" fill="#64748B">experiment/README.md</text>
+  <text x="570" y="796" font-size="9" fill="#64748B">experiment/src/</text>
+</svg>
