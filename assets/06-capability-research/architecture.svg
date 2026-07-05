@@ -1,0 +1,188 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 1160" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#DC2626"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#EA580C"/>
+    </marker>
+    <linearGradient id="grad-blue" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#2563EB;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-teal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14B8A6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#0D9488;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-purple" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <filter id="shadow-lg" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="2" dy="3" stdDeviation="5" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="750" height="1160" fill="#F8FAFC" rx="8"/>
+
+  <!-- Title -->
+  <text x="375" y="42" text-anchor="middle" font-size="20" font-weight="bold" fill="#1E293B">Step 06 · 能力研究 — 架构流程图</text>
+  <line x1="120" y1="55" x2="630" y2="55" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- ===== INPUT FILES ===== -->
+  <rect x="180" y="72" width="390" height="52" rx="26" fill="url(#grad-blue)" filter="url(#shadow)"/>
+  <text x="375" y="94" text-anchor="middle" font-size="13" fill="white" font-weight="bold">📥 输入：能力图 + 命题列表</text>
+  <text x="375" y="112" text-anchor="middle" font-size="10" fill="#DBEAFE">capability-graph.json · README.md · summaries/*.json</text>
+  <line x1="375" y1="124" x2="375" y2="152" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ① FILTER ===== -->
+  <rect x="200" y="152" width="350" height="56" rx="6" fill="white" stroke="#3B82F6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="375" y="175" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E40AF">① 过滤需研究的能力</text>
+  <text x="375" y="192" text-anchor="middle" font-size="10.5" fill="#64748B">覆盖待处理命题 OR 扇出度 ≥ 30%</text>
+  <line x1="375" y1="208" x2="375" y2="236" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ② INCREMENTAL CHECK ===== -->
+  <rect x="200" y="236" width="350" height="56" rx="6" fill="white" stroke="#8B5CF6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="375" y="259" text-anchor="middle" font-size="13" font-weight="bold" fill="#6D28D9">② 增量检查</text>
+  <text x="375" y="276" text-anchor="middle" font-size="10.5" fill="#64748B">capabilities/*.md 或 summaries/*.json 已存在 → 跳过</text>
+  <line x1="375" y1="292" x2="375" y2="320" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ③ GROUP BY TECH DOMAIN ===== -->
+  <rect x="200" y="320" width="350" height="56" rx="6" fill="white" stroke="#14B8A6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="375" y="343" text-anchor="middle" font-size="13" font-weight="bold" fill="#0F766E">③ 技术域分组</text>
+  <text x="375" y="360" text-anchor="middle" font-size="10.5" fill="#64748B">同层归组 + 依赖就近 · 每组上限 5 能力</text>
+  <line x1="375" y1="376" x2="375" y2="404" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ④ TOPOLOGICAL SORT ===== -->
+  <rect x="200" y="404" width="350" height="56" rx="6" fill="white" stroke="#EA580C" stroke-width="2" filter="url(#shadow)"/>
+  <text x="375" y="427" text-anchor="middle" font-size="13" font-weight="bold" fill="#C2410C">④ 依赖拓扑排序</text>
+  <text x="375" y="444" text-anchor="middle" font-size="10.5" fill="#64748B">无依赖 → 并行批次 · 有依赖 → 串行等待</text>
+  <line x1="375" y1="460" x2="375" y2="488" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ⑤ SOURCE PRE-FETCH ===== -->
+  <rect x="200" y="488" width="350" height="56" rx="6" fill="white" stroke="#F59E0B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="375" y="511" text-anchor="middle" font-size="13" font-weight="bold" fill="#92400E">⑤ 信源预查找</text>
+  <text x="375" y="528" text-anchor="middle" font-size="10.5" fill="#64748B">T0 来源 (capability graph) + 补充 T1/T2 URL</text>
+  <line x1="375" y1="544" x2="375" y2="572" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ⑥ TASK ASSEMBLY ===== -->
+  <rect x="200" y="572" width="350" height="56" rx="6" fill="white" stroke="#8B5CF6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="375" y="595" text-anchor="middle" font-size="13" font-weight="bold" fill="#6D28D9">⑥ 域 Agent 任务组装</text>
+  <text x="375" y="612" text-anchor="middle" font-size="10.5" fill="#64748B">角色 + 指令 + 信源 + 依赖文件路径 → 全内联</text>
+  <line x1="375" y1="628" x2="375" y2="656" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ⑦ PARALLEL SPAWN (DAG) ===== -->
+  <rect x="60" y="656" width="630" height="280" rx="8" fill="#F5F3FF" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="5,3" filter="url(#shadow)"/>
+  <text x="375" y="678" text-anchor="middle" font-size="13" font-weight="bold" fill="#6D28D9">⑦ 并行 Spawn — DAG 调度（W=5, 超时 15min）</text>
+
+  <!-- Batch 1: parallel agents -->
+  <text x="100" y="702" font-size="10" fill="#7C3AED" font-weight="bold">T=0 Batch 1（无跨组依赖）</text>
+  <!-- Agent A_1 -->
+  <rect x="80" y="712" width="120" height="44" rx="5" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="140" y="732" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">A_1 渲染①</text>
+  <text x="140" y="746" text-anchor="middle" font-size="8.5" fill="#64748B">W1,W2,W4,W6</text>
+  <!-- Agent B_1 -->
+  <rect x="215" y="712" width="120" height="44" rx="5" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="275" y="732" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">B_1 通信</text>
+  <text x="275" y="746" text-anchor="middle" font-size="8.5" fill="#64748B">W3,W5,W7,M2</text>
+  <!-- Agent C_1 -->
+  <rect x="350" y="712" width="120" height="44" rx="5" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="410" y="732" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">C_1 生命周期</text>
+  <text x="410" y="746" text-anchor="middle" font-size="8.5" fill="#64748B">W8,W9,M4,M5</text>
+  <!-- Agent D_1 -->
+  <rect x="485" y="712" width="120" height="44" rx="5" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="545" y="732" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">D_1 构建①</text>
+  <text x="545" y="746" text-anchor="middle" font-size="8.5" fill="#64748B">W10-W13</text>
+  <!-- Agent E_1 -->
+  <rect x="80" y="766" width="120" height="44" rx="5" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="140" y="786" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">E_1 编译①</text>
+  <text x="140" y="800" text-anchor="middle" font-size="8.5" fill="#64748B">W14-W16,M8</text>
+
+  <!-- Batch 2: dependent agents -->
+  <text x="100" y="834" font-size="10" fill="#DC2626" font-weight="bold">T≈4min Batch 2（等待上游完成）</text>
+  <!-- Agent A_2 -->
+  <rect x="200" y="844" width="110" height="44" rx="5" fill="white" stroke="#DC2626" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="255" y="864" text-anchor="middle" font-size="10" font-weight="bold" fill="#991B1B">A_2 渲染②</text>
+  <text x="255" y="878" text-anchor="middle" font-size="8.5" fill="#64748B">M1,M3</text>
+  <!-- Agent D_2 -->
+  <rect x="330" y="844" width="110" height="44" rx="5" fill="white" stroke="#DC2626" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="385" y="864" text-anchor="middle" font-size="10" font-weight="bold" fill="#991B1B">D_2 构建②</text>
+  <text x="385" y="878" text-anchor="middle" font-size="8.5" fill="#64748B">M6,M7</text>
+  <!-- Agent E_2 -->
+  <rect x="460" y="844" width="110" height="44" rx="5" fill="white" stroke="#DC2626" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="515" y="864" text-anchor="middle" font-size="10" font-weight="bold" fill="#991B1B">E_2 编译②</text>
+  <text x="515" y="878" text-anchor="middle" font-size="8.5" fill="#64748B">M9</text>
+
+  <!-- Dependency arrows: A_1 → A_2 -->
+  <line x1="140" y1="756" x2="230" y2="844" stroke="#DC2626" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-red)"/>
+  <!-- Dependency arrows: D_1 → D_2 -->
+  <line x1="545" y1="756" x2="395" y2="844" stroke="#DC2626" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-red)"/>
+  <!-- Dependency arrows: E_1 → E_2 -->
+  <line x1="140" y1="810" x2="490" y2="844" stroke="#DC2626" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-red)"/>
+
+  <line x1="375" y1="936" x2="375" y2="964" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ⑧ CROSS-AGENT COORDINATION ===== -->
+  <rect x="200" y="964" width="350" height="56" rx="6" fill="white" stroke="#14B8A6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="375" y="987" text-anchor="middle" font-size="13" font-weight="bold" fill="#0F766E">⑧ 跨 Agent 文件协调</text>
+  <text x="375" y="1004" text-anchor="middle" font-size="10.5" fill="#64748B">下游读取上游摘要 → 直接读文件，不经对话</text>
+  <line x1="375" y1="1020" x2="375" y2="1042" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== OUTPUT ===== -->
+  <rect x="155" y="1042" width="440" height="38" rx="6" fill="#F0FDFA" stroke="#14B8A6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="375" y="1066" text-anchor="middle" font-size="11" fill="#0F766E">📄 capabilities/{id}-{name}.md + .meta/summaries/{id}-{name}.json</text>
+
+  <!-- ===== BARRIER 5 ===== -->
+  <line x1="375" y1="1080" x2="375" y2="1090" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <rect x="195" y="1090" width="360" height="42" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="375" y="1110" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400E">🛑 Barrier 5 检查点</text>
+  <text x="375" y="1126" text-anchor="middle" font-size="9.5" fill="#B45309">展示摘要 → 等待用户确认</text>
+
+  <!-- ===== SIDE PANEL: KEY FILES ===== -->
+  <rect x="570" y="72" width="165" height="120" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="580" y="90" font-size="10" font-weight="bold" fill="#334155">📋 关键文件</text>
+  <text x="580" y="106" font-size="9" fill="#64748B">schemas.md §能力研究</text>
+  <text x="580" y="120" font-size="9" fill="#64748B">capability-research-mode.md</text>
+  <text x="580" y="134" font-size="9" fill="#64748B">protocol-scheduling.md</text>
+  <text x="580" y="148" font-size="9" fill="#64748B">ref-sources.md (T0 域名)</text>
+  <text x="580" y="162" font-size="9" fill="#64748B">capability-graph.json</text>
+  <text x="580" y="180" font-size="8" fill="#94A3B8">前置条件加载</text>
+
+  <!-- ===== SIDE PANEL: DAG PARAMS ===== -->
+  <rect x="570" y="210" width="165" height="110" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="580" y="228" font-size="10" font-weight="bold" fill="#334155">⚙️ DAG 调度参数</text>
+  <text x="580" y="246" font-size="9" fill="#64748B">W（窗口）= 5</text>
+  <text x="580" y="260" font-size="9" fill="#64748B">超时 = 15 分钟</text>
+  <text x="580" y="274" font-size="9" fill="#64748B">槽位替换 = ✅</text>
+  <text x="580" y="288" font-size="9" fill="#64748B">label = agent-{group_id}</text>
+  <text x="580" y="302" font-size="9" fill="#64748B">调度模式 = DAG</text>
+  <text x="580" y="316" font-size="8" fill="#94A3B8">protocol-scheduling.md §B</text>
+
+  <!-- ===== SIDE PANEL: GROUP STRATEGY ===== -->
+  <rect x="570" y="340" width="165" height="120" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="580" y="358" font-size="10" font-weight="bold" fill="#334155">📐 分组策略</text>
+  <text x="580" y="376" font-size="9" fill="#64748B">上限 CAP = 5</text>
+  <text x="580" y="390" font-size="9" fill="#64748B">同层归组 + 依赖就近</text>
+  <text x="580" y="404" font-size="9" fill="#64748B">特化能力 → 通用组</text>
+  <text x="580" y="418" font-size="9" fill="#64748B">跨组依赖 → 拓扑编排</text>
+  <text x="580" y="432" font-size="9" fill="#64748B">子组命名: {域}_1, {域}_2</text>
+  <text x="580" y="452" font-size="8" fill="#94A3B8">不足 2 个可合并</text>
+
+  <!-- ===== SIDE PANEL: COMPLETION ===== -->
+  <rect x="570" y="480" width="165" height="80" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="580" y="498" font-size="10" font-weight="bold" fill="#334155">🏁 完成判定</text>
+  <text x="580" y="516" font-size="9" fill="#64748B">✅ completed: files exist</text>
+  <text x="580" y="530" font-size="9" fill="#64748B">❌ failed: status fail</text>
+  <text x="580" y="544" font-size="9" fill="#64748B">⚠️ degraded: timeout retry</text>
+  <text x="580" y="558" font-size="8" fill="#94A3B8">→ Barrier 5 检查点</text>
+</svg>
