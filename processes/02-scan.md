@@ -1,29 +1,15 @@
 # Step ①: 广域扫描（两阶段管道）
 
-## 目的
+> **目的**：为每个命题按其 level_weight 差异化搜索信源，抓取内容并结构化提取
+> 
+> **核心流程**：
+> - Phase A：并行搜索（命题分批 → 搜索 agent → merge URL 列表）
+> - Phase B：并行提取（URL 分批 → 内容抓取 + 结构化提取）
+> - Phase C：主线程 merge（合并 partial index + 域名分级 + cross-comparison）
+> 
+> **关键产出**：`.raw-materials/` 目录（index.json + markdown 文件）
 
-基于头脑风暴产出的需求网，为每个命题按其 level_weight 差异化搜索信源，抓取内容并结构化提取，按信源质量分级，产出 `.raw-materials/` 目录（index.json + 多 markdown 文件）。
-
-## 架构
-
-```
-Phase A：并行搜索               Phase B：并行提取               Phase C：主线程 merge
-┌──────────────────────┐     ┌──────────────────────┐     ┌──────────────────────┐
-│ A0. 环境检查          │     │ agent-1: URL 批次 1  │     │ C1. 合并 partial      │
-│    └ Playwright 检查  │     │   内容抓取 + 提取     │     │     index → index.json│
-│    └ ⓩ 用户确认安装   │     │   → partial.1.json   │     │ C2. 域名分级汇总      │
-│ A1. 命题分批          │     │   + B1-M*.md         │     │ C3. cross-comparison  │
-│ A2. spawn 搜索 agent  │ ──→ │ agent-2: URL 批次 2  │ ──→ │ C4. scan_summary      │
-│    × N 并行           │     │   ...                │     │ C5. dynamic-sources   │
-│ A3. merge URL 列表    │     │ agent-N: URL 批次 N  │     │ C6. 写最终 index.json │
-│ A4. URL 分级+分批     │     │                      │     │                      │
-└──────────────────────┘     └──────────────────────┘     └──────────────────────┘
-       ↓                            ↓                            ↓
-  url-batches.json              partial results              .raw-materials/
-  (URL+tier+snippet)            + B*-M*.md                   最终产出
-```
-
-每个子阶段的统一模式：**分批 → 并行 agent → merge**。主线程只做分发和合并。
+---
 
 ## 前置条件
 

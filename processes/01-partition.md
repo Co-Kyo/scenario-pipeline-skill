@@ -1,12 +1,16 @@
 # Step ⓪b: 依赖整理与命题分区
 
-## 目的
+> **目的**：将命题列表整理为依赖图（DAG），自动识别分区点，分批执行
+> 
+> **核心流程**：
+> 1. 依赖关系确认（如有缺失则基于 capability_web 推断）
+> 2. 构建 DAG（检测环、打断循环依赖）
+> 3. 三层分区：连通分量 → 拓扑深度 → 社区发现（条件触发）
+> 4. session 分配（核心命题优先）
+> 
+> **关键产出**：`partition-analysis.json` + `execution-plan.md`
 
-将头脑风暴产出的命题列表整理为依赖图（DAG），基于图结构自动识别分区点，将命题分成多个可独立执行的 session。本次 session 执行核心分区，其余分区排期到下次。
-
-产出：
-- `{workDir}/execution-plan.md`（正式输出，向用户说明执行计划）
-- `{workDir}/.meta/partition-analysis.json`（处理数据，供 scan 消费）
+---
 
 ## 前置条件
 
