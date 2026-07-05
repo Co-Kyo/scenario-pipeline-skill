@@ -1,0 +1,186 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 1150" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#DC2626"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#EA580C"/>
+    </marker>
+    <linearGradient id="grad-purple" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8B5CF6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-teal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14B8A6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#0D9488;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <filter id="shadow-lg" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="2" dy="3" stdDeviation="5" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="820" height="1150" fill="#F8FAFC" rx="8"/>
+
+  <!-- Title -->
+  <text x="410" y="42" text-anchor="middle" font-size="20" font-weight="bold" fill="#1E293B">Step ① · 头脑风暴 — 架构流程图</text>
+  <line x1="100" y1="55" x2="720" y2="55" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- ===== INPUT ===== -->
+  <rect x="260" y="75" width="300" height="52" rx="26" fill="url(#grad-teal)" filter="url(#shadow)"/>
+  <text x="410" y="99" text-anchor="middle" font-size="14" fill="white" font-weight="bold">📥 来自 Step ⓪ 的 anchors.json</text>
+  <text x="410" y="116" text-anchor="middle" font-size="11" fill="#CCFBF1">跳过判断 = NO 时触发</text>
+  <line x1="410" y1="127" x2="410" y2="155" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ① ASSEMBLE 4 TASKS ===== -->
+  <rect x="240" y="155" width="340" height="55" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <text x="410" y="177" text-anchor="middle" font-size="13" font-weight="bold" fill="#C2410C">① 组装 4 份维度 Agent task</text>
+  <text x="410" y="195" text-anchor="middle" font-size="10.5" fill="#64748B">角色声明 + 维度任务 + 约束注入 + 骨架注入 + 写入指令</text>
+  <line x1="410" y1="210" x2="410" y2="240" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ② CREATE DIR ===== -->
+  <rect x="260" y="240" width="300" height="35" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1" filter="url(#shadow)"/>
+  <text x="410" y="262" text-anchor="middle" font-size="10.5" fill="#475569">mkdir -p {workDir}/.meta/brainstorm/</text>
+  <line x1="410" y1="275" x2="410" y2="305" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ③ PARALLEL 4 AGENTS CONTAINER ===== -->
+  <rect x="30" y="305" width="760" height="155" rx="8" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.5" stroke-dasharray="5,3" filter="url(#shadow)"/>
+  <text x="410" y="327" text-anchor="middle" font-size="12" font-weight="bold" fill="#1E40AF">③ Spawn 4 个维度 Agent（并行 · 简单窗口调度 · W=4）</text>
+
+  <!-- Agent 1: Scenario -->
+  <rect x="55" y="345" width="170" height="85" rx="6" fill="white" stroke="#3B82F6" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="55" y="345" width="170" height="24" rx="6" fill="#DBEAFE"/>
+  <text x="140" y="362" text-anchor="middle" font-size="11" font-weight="bold" fill="#1E40AF">场景 Agent</text>
+  <text x="140" y="382" text-anchor="middle" font-size="9" fill="#475569">brainstorm-scenario</text>
+  <text x="140" y="398" text-anchor="middle" font-size="8.5" fill="#64748B">dimension: "scenario"</text>
+  <text x="140" y="414" text-anchor="middle" font-size="8.5" fill="#64748B">→ scenario.json</text>
+
+  <!-- Agent 2: Technical -->
+  <rect x="230" y="345" width="170" height="85" rx="6" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="230" y="345" width="170" height="24" rx="6" fill="#EDE9FE"/>
+  <text x="315" y="362" text-anchor="middle" font-size="11" font-weight="bold" fill="#6D28D9">技术 Agent</text>
+  <text x="315" y="382" text-anchor="middle" font-size="9" fill="#475569">brainstorm-technical</text>
+  <text x="315" y="398" text-anchor="middle" font-size="8.5" fill="#64748B">dimension: "technical"</text>
+  <text x="315" y="414" text-anchor="middle" font-size="8.5" fill="#64748B">→ technical.json</text>
+
+  <!-- Agent 3: Learning -->
+  <rect x="405" y="345" width="170" height="85" rx="6" fill="white" stroke="#14B8A6" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="405" y="345" width="170" height="24" rx="6" fill="#CCFBF1"/>
+  <text x="490" y="362" text-anchor="middle" font-size="11" font-weight="bold" fill="#0F766E">学习 Agent</text>
+  <text x="490" y="382" text-anchor="middle" font-size="9" fill="#475569">brainstorm-learning</text>
+  <text x="490" y="398" text-anchor="middle" font-size="8.5" fill="#64748B">dimension: "learning"</text>
+  <text x="490" y="414" text-anchor="middle" font-size="8.5" fill="#64748B">→ learning.json</text>
+
+  <!-- Agent 4: Constraint -->
+  <rect x="580" y="345" width="170" height="85" rx="6" fill="white" stroke="#EF4444" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="580" y="345" width="170" height="24" rx="6" fill="#FEE2E2"/>
+  <text x="665" y="362" text-anchor="middle" font-size="11" font-weight="bold" fill="#B91C1C">约束 Agent</text>
+  <text x="665" y="382" text-anchor="middle" font-size="9" fill="#475569">brainstorm-constraint</text>
+  <text x="665" y="398" text-anchor="middle" font-size="8.5" fill="#64748B">dimension: "constraint"</text>
+  <text x="665" y="414" text-anchor="middle" font-size="8.5" fill="#64748B">→ constraint.json</text>
+
+  <text x="410" y="448" text-anchor="middle" font-size="8.5" fill="#6B7280">各维度输出 → {workDir}/.meta/brainstorm/{dimension}.json（轮询间隔 15s · 单 Agent 超时 3min）</text>
+  <line x1="410" y1="460" x2="410" y2="490" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ③.1 IMMEDIATE VALIDATION ===== -->
+  <rect x="225" y="490" width="370" height="40" rx="6" fill="#FEF9C3" stroke="#EAB308" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="410" y="508" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#854D0E">⚡ 即时校验（每个 Agent 完成后立刻）</text>
+  <text x="410" y="523" text-anchor="middle" font-size="9" fill="#92400E">文件存在 + JSON 合法 + dimension 字段 + entries 非空</text>
+  <line x1="410" y1="530" x2="410" y2="558" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ④ BARRIER CHECK ===== -->
+  <rect x="140" y="558" width="540" height="50" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2.5" filter="url(#shadow-lg)"/>
+  <text x="410" y="578" text-anchor="middle" font-size="13" font-weight="bold" fill="#92400E">🛑 ④ Barrier 检查（强制停顿 · 不可跳过）</text>
+  <text x="410" y="596" text-anchor="middle" font-size="10.5" fill="#B45309">4 维度完整性校验 → 决策矩阵 → 写入 barrier-1.md</text>
+  <line x1="410" y1="608" x2="410" y2="640" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ④ DECISION DIAMOND ===== -->
+  <polygon points="410,640 560,710 410,780 260,710" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="410" y="704" text-anchor="middle" font-size="11" font-weight="bold" fill="#92400E">维度完成度?</text>
+  <text x="410" y="722" text-anchor="middle" font-size="9.5" fill="#B45309">4/4 · 3/4 · 2/4 · ≤1/4</text>
+
+  <!-- Missing branch (left) -->
+  <line x1="260" y1="710" x2="110" y2="710" stroke="#DC2626" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+  <text x="175" y="702" font-size="10" fill="#DC2626" font-weight="bold">&lt;4/4 缺失</text>
+  <rect x="30" y="688" width="80" height="44" rx="6" fill="#FEE2E2" stroke="#DC2626" stroke-width="1.5"/>
+  <text x="70" y="706" text-anchor="middle" font-size="10" font-weight="bold" fill="#B91C1C">停住</text>
+  <text x="70" y="722" text-anchor="middle" font-size="8.5" fill="#991B1B">展示分析报告</text>
+  <text x="70" y="742" text-anchor="middle" font-size="8.5" fill="#991B1B">→ 等用户决策</text>
+
+  <!-- User decision loop -->
+  <line x1="70" y1="750" x2="70" y2="800" stroke="#DC2626" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-red)"/>
+  <rect x="10" y="800" width="120" height="50" rx="6" fill="#FFF7ED" stroke="#EA580C" stroke-width="1"/>
+  <text x="70" y="818" text-anchor="middle" font-size="9" font-weight="bold" fill="#C2410C">用户决策</text>
+  <text x="70" y="833" text-anchor="middle" font-size="8.5" fill="#9A3412">重试(≤2次) / 降级</text>
+
+  <!-- Loop back -->
+  <line x1="130" y1="825" x2="260" y2="825" stroke="#EA580C" stroke-width="1" stroke-dasharray="4,3"/>
+  <line x1="260" y1="825" x2="260" y2="460" stroke="#EA580C" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-orange)"/>
+  <text x="255" y="640" text-anchor="end" font-size="8" fill="#C2410C">重试→重新 spawn</text>
+
+  <!-- All complete branch (down) -->
+  <line x1="410" y1="780" x2="410" y2="830" stroke="#16A34A" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+  <text x="420" y="808" font-size="10" fill="#16A34A" font-weight="bold">4/4 完成</text>
+
+  <!-- ===== ⑤ CONVERGENCE AGENT ===== -->
+  <rect x="180" y="830" width="460" height="78" rx="6" fill="white" stroke="#8B5CF6" stroke-width="2" filter="url(#shadow-lg)"/>
+  <rect x="180" y="830" width="460" height="28" rx="6" fill="url(#grad-purple)"/>
+  <text x="410" y="850" text-anchor="middle" font-size="13" font-weight="bold" fill="white">⑤ 收敛者 Agent (brainstorm-integrator)</text>
+  <text x="410" y="870" text-anchor="middle" font-size="10.5" fill="#64748B">读取 anchors.json + 4 份维度报告</text>
+  <text x="410" y="886" text-anchor="middle" font-size="10.5" fill="#64748B">校验 → 对齐 → 收束 → 去重 → 补位 → 图谱构建</text>
+  <text x="410" y="900" text-anchor="middle" font-size="8.5" fill="#94A3B8">超时 5min · 失败触发 §6.0 降级协议（基于骨架+存活维度重建）</text>
+  <line x1="410" y1="908" x2="410" y2="940" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ⑥ WRITE OUTPUT ===== -->
+  <rect x="225" y="940" width="370" height="48" rx="6" fill="white" stroke="#14B8A6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="410" y="960" text-anchor="middle" font-size="13" font-weight="bold" fill="#0F766E">⑥ 写入 requirement-web.json</text>
+  <text x="410" y="978" text-anchor="middle" font-size="10" fill="#64748B">{workDir}/.meta/requirement-web.json</text>
+  <line x1="410" y1="988" x2="410" y2="1018" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ⑦ INJECT TO STEP ② ===== -->
+  <rect x="265" y="1018" width="290" height="38" rx="19" fill="url(#grad-teal)" filter="url(#shadow)"/>
+  <text x="410" y="1042" text-anchor="middle" font-size="12" font-weight="bold" fill="white">⑦ 注入 Step ② 扫描</text>
+
+  <!-- ===== RIGHT: KEY FILES ===== -->
+  <rect x="620" y="75" width="185" height="118" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="630" y="93" font-size="10" font-weight="bold" fill="#334155">📋 关键文件依赖</text>
+  <text x="630" y="110" font-size="9" fill="#64748B">01-brainstorm/schemas.md</text>
+  <text x="630" y="124" font-size="9" fill="#64748B">01-brainstorm/task-templates.md</text>
+  <text x="630" y="138" font-size="9" fill="#64748B">01-brainstorm/level-weight.md</text>
+  <text x="630" y="152" font-size="9" fill="#64748B">01-brainstorm/*-agent.md</text>
+  <text x="630" y="166" font-size="9" fill="#64748B">common/protocol-scheduling.md</text>
+  <text x="630" y="183" font-size="8" fill="#94A3B8">全部在 assets/01-brainstorm/</text>
+
+  <!-- ===== RIGHT: TIMEOUT ===== -->
+  <rect x="620" y="210" width="185" height="95" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="630" y="228" font-size="10" font-weight="bold" fill="#334155">⏱ 超时参数</text>
+  <text x="630" y="246" font-size="9" fill="#64748B">维度 Agent: 3 min</text>
+  <text x="630" y="262" font-size="9" fill="#64748B">收敛者 Agent: 5 min</text>
+  <text x="630" y="278" font-size="9" fill="#64748B">轮询间隔: 15 sec</text>
+  <text x="630" y="294" font-size="9" fill="#64748B">补发上限: 1 次/维度</text>
+
+  <!-- ===== RIGHT: DOWNGRADE ===== -->
+  <rect x="620" y="860" width="185" height="65" rx="6" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="712" y="878" text-anchor="middle" font-size="10" font-weight="bold" fill="#C2410C">⚠️ §6.0 降级协议</text>
+  <text x="712" y="894" text-anchor="middle" font-size="8.5" fill="#9A3412">收敛者失败时触发</text>
+  <text x="712" y="908" text-anchor="middle" font-size="8.5" fill="#9A3412">骨架+存活维度重建</text>
+  <text x="712" y="922" text-anchor="middle" font-size="8.5" fill="#9A3412">标注 degraded: true</text>
+
+  <!-- ===== RIGHT: OUTPUT FILES ===== -->
+  <line x1="550" y1="428" x2="620" y2="428" stroke="#3B82F6" stroke-width="1" stroke-dasharray="3,3"/>
+  <rect x="620" y="416" width="165" height="24" rx="4" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1"/>
+  <text x="702" y="433" text-anchor="middle" font-size="9" fill="#1E40AF">📄 {dimension}.json ×4</text>
+
+  <line x1="595" y1="964" x2="620" y2="964" stroke="#14B8A6" stroke-width="1" stroke-dasharray="3,3"/>
+  <rect x="620" y="952" width="165" height="24" rx="4" fill="#F0FDFA" stroke="#14B8A6" stroke-width="1"/>
+  <text x="702" y="969" text-anchor="middle" font-size="9" fill="#0F766E">📄 requirement-web.json</text>
+</svg>

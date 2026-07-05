@@ -1,4 +1,4 @@
-# Step ⑦: 学习阶梯
+# Step ⑨: 学习阶梯
 
 **目的**：为每个已组装的命题生成学习阶梯——从"不会"到"能讲"的渐进式引导路径
 
@@ -14,16 +14,16 @@
 ## 前置条件
 
 无需加载额外方法论文件。本步骤的 task 已内联全部指令。读取：
-- `assets/08-learning-ladder/schemas.md`（本步输出格式）
+- `assets/09-learning-ladder/schemas.md`（本步输出格式）
 - `{workDir}/.meta/capability-graph.json`（含能力依赖关系）
-- `{workDir}/.meta/summaries/*.json`（Step ④ 产出）
-- `{workDir}/{seq}-{short_name}/overview.md`（Step ⑥ 产出）
+- `{workDir}/.meta/summaries/*.json`（Step ⑥ 产出）
+- `{workDir}/{seq}-{short_name}/overview.md`（Step ⑧ 产出）
 
 ## 输入
 
 - `capability-graph.json`（前处理产出，含能力依赖关系）
-- `.meta/summaries/*.json`（Step ④ 产出）
-- `{seq}-{short_name}/overview.md` 等（Step ⑥ 产出的命题文件）
+- `.meta/summaries/*.json`（Step ⑥ 产出）
+- `{seq}-{short_name}/overview.md` 等（Step ⑧ 产出的命题文件）
 
 ## 执行步骤
 
@@ -33,8 +33,8 @@
 
 ### 2. 并行 spawn（简单窗口 + 轮询跟踪）
 
-> ⚠️ 严格遵循 `assets/common/conventions.md` §简单窗口执行流程 + §并行调度规则。
-> 调度规则详见 `assets/common/conventions.md` §子 agent 调度。
+> ⚠️ 严格遵循 `assets/common/protocol-scheduling.md` §简单窗口执行流程 + §并行调度规则。
+> 调度规则详见 `assets/common/protocol-scheduling.md` §子 agent 调度。
 
 #### 2.1 初始化
 
@@ -44,7 +44,7 @@
 
 #### 2.2 轮询循环 + 槽位替换
 
-按 `assets/common/conventions.md` §**模式 A：简单窗口** 执行轮询循环。本步骤特有参数：
+按 `assets/common/protocol-scheduling.md` §**模式 A：简单窗口** 执行轮询循环。本步骤特有参数：
 
 | 参数 | 值 |
 |------|---|
@@ -86,10 +86,10 @@
 ## 能力详情
 用 read 工具读取以下文件：
 - {workDir}/.meta/summaries/{id}-{name}.json（每个涉及能力各一份）
-- {workDir}/{seq}-{short_name}/overview.md（Step ⑥ 产出）
+- {workDir}/{seq}-{short_name}/overview.md（Step ⑧ 产出）
 
 如果某个摘要文件不存在，跳过该能力并在学习阶梯中标注"⚠️ 该能力详情缺失"。
-如果 overview.md 不存在，停止执行并输出：`❌ 命题「{proposition_name}」的 overview.md 不存在，无法生成学习阶梯。请先完成 Step ⑥。`
+如果 overview.md 不存在，停止执行并输出：`❌ 命题「{proposition_name}」的 overview.md 不存在，无法生成学习阶梯。请先完成 Step ⑧。`
 
 ## 输出路径
 {workDir}/{seq}-{short_name}/learning-ladder.md

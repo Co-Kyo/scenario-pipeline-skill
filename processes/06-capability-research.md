@@ -1,4 +1,4 @@
-# Step ④: 能力研究（多线程域分组方案）
+# Step ⑥: 能力研究（多线程域分组方案）
 
 **目的**：对每个需要研究的原子能力进行深度研究，产出能力知识库主文件 + 结构化摘要
 
@@ -16,8 +16,8 @@
 
 加载：
 - `plugins/capability-research-mode.md`（材料块格式 + 深度分级）
-- `assets/05-capability-research/schemas.md`（能力研究产出格式）
-- `assets/common/sources.md`（信源分级，T0 域名表）
+- `assets/06-capability-research/schemas.md`（能力研究产出格式）
+- `assets/common/ref-sources.md`（信源分级，T0 域名表）
 - `{workDir}/.meta/capability-graph.json`（前处理产出）
 - `{workDir}/README.md`（命题列表）
 
@@ -141,7 +141,7 @@ T=8min   A_2, D_2, E_2 完成 → 全部 25 个能力就绪
 （主文件模板 + 摘要 JSON 模板，见下方 §task-template）
 
 ## 信源规则
-- T0 域名：（从 sources.md 提取相关域名）
+- T0 域名：（从 ref-sources.md 提取相关域名）
 - T1/T2/T3 分级规则
 - 每个 URL 必须 web_fetch 验证
 
@@ -157,8 +157,8 @@ T=8min   A_2, D_2, E_2 完成 → 全部 25 个能力就绪
 
 ### 7. 并行 spawn 域 Agent（DAG 调度 + 轮询跟踪）
 
-> ⚠️ 严格遵循 `assets/common/conventions.md` §并行调度规则。
-> 调度规则详见 `assets/common/conventions.md` §子 agent 调度。
+> ⚠️ 严格遵循 `assets/common/protocol-scheduling.md` §并行调度规则。
+> 调度规则详见 `assets/common/protocol-scheduling.md` §子 agent 调度。
 > 本步骤使用 **DAG 调度**模式（子组间有跨依赖，按拓扑批次执行）。
 
 #### 7.1 第一批 spawn
@@ -172,7 +172,7 @@ T=8min   A_2, D_2, E_2 完成 → 全部 25 个能力就绪
 
 #### 7.2 轮询循环 + 后续批次
 
-按 `assets/common/conventions.md` §**模式 B：DAG 调度** 执行轮询循环。本步骤特有参数：
+按 `assets/common/protocol-scheduling.md` §**模式 B：DAG 调度** 执行轮询循环。本步骤特有参数：
 
 | 参数 | 值 |
 |------|---|
@@ -212,7 +212,7 @@ T=8min   A_2, D_2, E_2 完成 → 全部 25 个能力就绪
 
 所有域 Agent 完成后（即上一步轮询循环退出后）：
 
-🚨 **🛑 必须停顿，进入 ⓒ 检查点**。展示能力研究质量摘要（完成数/跳过数/失败数，各能力主文件行数统计），使用 `clarify` 等待用户确认后才进入 Step ⑤。
+🚨 **🛑 必须停顿，进入 ⓒ 检查点**。展示能力研究质量摘要（完成数/跳过数/失败数，各能力主文件行数统计），使用 `clarify` 等待用户确认后才进入 Step ⑦。
 
 ---
 
@@ -229,7 +229,7 @@ T0 缺失: {t0_missing}
 
 #### Step 1: 信源获取
 1. 优先使用上述预查找信源，按 Tier 优先级：T0 → T1 → T2 → T3
-2. 如全部不可达，读取 common/sources.md 的 T0 域名列表逐个搜索补充
+2. 如全部不可达，读取 common/ref-sources.md 的 T0 域名列表逐个搜索补充
 3. 禁止凭记忆生成，必须 web_fetch 验证内容
 
 #### Step 2: 内容研究

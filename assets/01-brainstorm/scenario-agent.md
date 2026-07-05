@@ -24,7 +24,7 @@
 
 ## 输出格式
 
-详见 `assets/00-brainstorm/schemas.md`§scenario
+详见 `assets/01-brainstorm/schemas.md`§scenario
 
 ## ⚠️ 文件写入
 

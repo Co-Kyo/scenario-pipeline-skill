@@ -12,13 +12,14 @@
 
 给它一个信息源（文章、博客、面试题集合），它会：
 
-1. **头脑风暴** — 自动推断经验年限，4 维度 Agent 将用户意图"揉开"成需求网（场景/技术/学习/约束），同时完成架构分词
-2. **定向扫描** — 基于需求网的命题列表和搜索关键词，精准扫描信源
-3. **能力图谱构建** — 跨命题去重合并原子能力，计算扇出度与战略高地
-4. **评估入池** — 四维评估打分，确定优先级和学习顺序
-5. **能力研究** — 并行调用多个 agent 深度研究每个原子能力
-6. **组装** — 将研究成果编排为面试场景的四象限答案
-7. **阶梯** — 生成渐进式学习路径，从"不会"到"能讲"
+1. **意图锚定** — 解析用户指令，推断经验年限，生成锚点骨架（anchors.json）
+2. **头脑风暴** — 4 维度 Agent 将用户意图"揉开"成需求网（场景/技术/学习/约束），收敛为 requirement-web.json
+3. **定向扫描** — 基于需求网的命题列表和搜索关键词，精准扫描信源
+4. **能力图谱构建** — 跨命题去重合并原子能力，计算扇出度与战略高地
+5. **评估入池** — 四维评估打分，确定优先级和学习顺序
+6. **能力研究** — 并行调用多个 agent 深度研究每个原子能力
+7. **组装** — 将研究成果编排为面试场景的四象限答案
+8. **阶梯** — 生成渐进式学习路径，从"不会"到"能讲"
 
 ```
 输入："扫描：这篇前端性能优化合集"
@@ -43,17 +44,17 @@
 ## 核心设计
 
 ```
-⓪ 头脑风暴（前置）     前处理（串行 3 步）       后处理（并行 + 检查点）
-年限自动推断             ① scan（两阶段管道）      ④ 能力研究（并行）× N
-4 维度 Agent 并行          Phase A: 串行搜索       ⓒ barrier
-↓ 裁判收敛                 Phase B: 并行提取(W=5)  ⑤ Briefing 组装（并行）× M
-requirement-web.json      Phase C: merge          ⓓ barrier
-含能力图谱+分词结构        ② capability-graph →     ⑥ 命题组装（并行）× M
-ⓩ 检查点                     能力图谱+高地           ⓕ barrier
-                           ③ evaluate-pool →       ⑦ 学习阶梯（并行）× M
-                              评估+入池              ⓖ 完成
-                           ⓐ barrier
-                           ⓑ barrier
+⓪ 意图锚定                前处理（串行 3 步）       后处理（并行 + 检查点）
+年限推断+锚点生成          ③ scan（两阶段管道）      ⑥ 能力研究（并行）× N
+① 头脑风暴                  Phase A: 串行搜索       ⓒ barrier
+  4维度Agent并行+收敛        Phase B: 并行提取(W=5)  ⑦ Briefing 组装（并行）× M
+requirement-web.json       Phase C: merge          ⓓ barrier
+含能力图谱+分词结构         ④ capability-graph →     ⑧ 命题组装（并行）× M
+ⓩ 检查点                      能力图谱+高地           ⓕ barrier
+                            ⑤ evaluate-pool →       ⑨ 学习阶梯（并行）× M
+                               评估+入池              ⓖ 完成
+                            ⓐ barrier
+                            ⓑ barrier
 ```
 
 每个阶段之间有显式 barrier + 检查点，确保上游产物完整后才进入下游。
@@ -114,10 +115,15 @@ scenario-pipeline/
 │
 ├── assets/                     ← 所有资源（schemas + method + 规则 + 模板）
 │   ├── common/                    公共资源
-│   │   ├── conventions.md             共享约定（调度/检查点/隔离/增量复用/凭据/比例）
-│   │   ├── sources.md                 T0 域名表 + 信源分级规则
-│   │   └── paths.md                   路径约定表
-│   ├── 00-brainstorm/              头脑风暴资源（schemas + 规则 + Agent 定义）
+│   │   ├── rule-isolation.md        上下文隔离（每步只读该步的文件）
+│   │   ├── protocol-checkpoint.md   检查点协议（强制停顿 + barrier 记录）
+│   │   ├── rule-reuse.md            增量复用（文件存在则跳过）
+│   │   ├── convention-trace.md      决策凭据规范（_trace 字段）
+│   │   ├── strategy-level.md        动态标准策略（策略表/level_weight/收敛者/内容比例）
+│   │   ├── protocol-scheduling.md   子 agent 调度（3 种模式/label/校验/平台适配）
+│   │   ├── ref-sources.md           T0 域名表 + 信源分级规则
+│   │   └── ref-paths.md             路径约定表
+│   ├── 01-brainstorm/              头脑风暴资源（schemas + 规则 + Agent 定义）
 │   ├── 01-partition/               依赖整理与分区资源
 │   ├── 02-scan/                    定向扫描资源
 │   ├── 03-capability-graph/        能力图谱资源（schemas + method）
@@ -132,7 +138,7 @@ scenario-pipeline/
 │   └── year-granularity.md         经验年限颗粒度规则
 │
 ├── processes/                  ← 执行文档（自包含，含示例）
-│   ├── 00-brainstorm.md           多维头脑风暴
+│   ├── 00-intent-anchor.md           多维头脑风暴
 │   ├── 01-partition.md             依赖整理与分区 + 年限自动推断 + 分词（前置阶段）
 │   ├── 02-scan.md                 定向扫描
 │   ├── 03-capability-graph.md     能力图谱构建（含战略高地识别）

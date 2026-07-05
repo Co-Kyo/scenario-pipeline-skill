@@ -1,4 +1,4 @@
-# Step ⓪b: 依赖整理与命题分区
+# Step ②: 依赖整理与命题分区
 
 **目的**：将命题列表整理为依赖图（DAG），自动识别分区点，分批执行
 
@@ -15,8 +15,8 @@
 ## 前置条件
 
 加载：
-- `{workDir}/.meta/requirement-web.json`（⓪ 产出，含命题列表 + 能力图谱雏形）
-- `assets/01-partition/schemas.md`（分区 JSON 的结构定义）
+- `{workDir}/.meta/requirement-web.json`（① 产出，含命题列表 + 能力图谱雏形）
+- `assets/02-partition/schemas.md`（分区 JSON 的结构定义）
 
 ## 输入
 
@@ -88,7 +88,7 @@
 
 #### 5.1 partition-analysis.json
 
-按 `assets/01-partition/schemas.md` 的结构生成，包含：
+按 `assets/02-partition/schemas.md` 的结构生成，包含：
 - `dag`：完整 DAG 数据（节点 + 边 + depth + component_id）
 - `components`：连通分量 + depth 分层 + 社区
 - `current_session`：当前 session 的命题列表 + scan 批次
@@ -105,7 +105,7 @@
 
 ## 检查点
 
-⚠️ **检查点 ⓧ**：写入 `{workDir}/.meta/checkpoints/barrier-1.md` 后停住等待用户确认。
+⚠️ **检查点 ⓧ**：写入 `{workDir}/.meta/checkpoints/barrier-2.md` 后停住等待用户确认。
 
 展示内容：
 - 分区结果摘要（几个 session，每个 session 几个命题）
@@ -125,4 +125,4 @@
 |------|---------|
 | `{workDir}/.meta/partition-analysis.json` | JSON 有效，包含 current_session |
 | `{workDir}/execution-plan.md` | 文件存在且非空 |
-| `{workDir}/.meta/checkpoints/barrier-1.md` | 文件存在 |
+| `{workDir}/.meta/checkpoints/barrier-2.md` | 文件存在 |

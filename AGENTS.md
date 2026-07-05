@@ -11,12 +11,17 @@ OpenCode is used to develop and maintain these Markdown/JSON files.
 | Directory | Purpose | Edit frequency |
 |-----------|---------|---------------|
 | `SKILL.md` | Skill entry point — frontmatter + pipeline overview + execution protocol | Rare |
-| `processes/00-brainstorm.md` ... `08-learning-ladder.md` | Step-by-step execution docs (the "code") | Medium |
+| `processes/00-intent-anchor.md` ... `09-learning-ladder.md` | Step-by-step execution docs (the "code") | Medium |
 | `assets/{step-id}/schemas.md` | JSON output formats for each step (§0-§7 sections) | Medium |
 | `assets/{step-id}/method.md` | Methodology definitions (algorithms, scoring, grouping) | Medium |
-| `assets/common/conventions.md` | Cross-step rules: scheduling, checkpoints, isolation, reuse | Low |
-| `assets/common/sources.md` | Domain tier table (T0/T1/T2/T3) + anti-crawl domains | Low |
-| `assets/common/paths.md` | Path conventions for all outputs | Low |
+| `assets/common/rule-isolation.md` | Context isolation: each step reads only its own files | Low |
+| `assets/common/protocol-checkpoint.md` | Checkpoint protocol: mandatory pause + barrier records | Low |
+| `assets/common/rule-reuse.md` | Incremental reuse: file-existence-based skip | Low |
+| `assets/common/convention-trace.md` | Decision credentials: _trace field naming | Low |
+| `assets/common/strategy-level.md` | Dynamic strategy table, level_weight rules, integrator def | Low |
+| `assets/common/protocol-scheduling.md` | Sub-agent scheduling (3 modes), label naming, validation | Low |
+| `assets/common/ref-sources.md` | Domain tier table (T0/T1/T2/T3) + anti-crawl domains | Low |
+| `assets/common/ref-paths.md` | Path conventions for all outputs | Low |
 | `plugins/*.md` | Optional enhancements loaded by specific steps | Low |
 | `dev/` | Human-only: design docs, observation views. **Never loaded during pipeline execution.** | — |
 
@@ -65,8 +70,8 @@ Every barrier (ⓩ ⓧ ⓐ ⓑ ⓒ ⓓ ⓕ ⓖ) must include a `clarify` call th
 ## Gotchas
 
 - **No code to run.** There's no `npm install`, `make`, `pytest`, or similar. Verification means reading the Markdown and checking internal consistency.
-- **Anti-crawl domains are hardcoded** in `assets/common/sources.md`. If a new domain needs anti-crawl handling, add it there — not in individual process files.
+- **Anti-crawl domains are hardcoded** in `assets/common/ref-sources.md`. If a new domain needs anti-crawl handling, add it there — not in individual process files.
 - **`dev/` is off-limits** for pipeline execution. It's for human developers only.
 - **SKILL.md frontmatter** (`name`, `description`, trigger words) is the skill's API surface. Changes here affect how the platform discovers and triggers the skill.
 - **Chinese content is primary.** Process files, schemas, and domain terminology are in Chinese. Keep edits consistent with the existing language.
-- **Incremental reuse** is file-existence-based. If you add a new output file to a step, document its path in `assets/common/paths.md` so the reuse logic can find it.
+- **Incremental reuse** is file-existence-based. If you add a new output file to a step, document its path in `assets/common/ref-paths.md` so the reuse logic can find it.

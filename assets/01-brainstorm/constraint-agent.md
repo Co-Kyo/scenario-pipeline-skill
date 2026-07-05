@@ -29,7 +29,7 @@
 
 ## 输出格式
 
-详见 `assets/00-brainstorm/schemas.md`§constraint
+详见 `assets/01-brainstorm/schemas.md`§constraint
 
 ## ⚠️ 文件写入
 

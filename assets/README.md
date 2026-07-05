@@ -5,36 +5,43 @@
 ```
 assets/
 ├── common/                     ← 公共资源
-│   ├── conventions.md              共享约定（调度/检查点/隔离/增量复用/凭据/比例）
-│   ├── sources.md                  T0 域名表 + 信源分级规则
-│   └── paths.md                    路径约定表
-├── 00-brainstorm/
-│   ├── schemas.md              ← JSON 格式定义（anchors + 4 维度 Agent）
+│   ├── rule-isolation.md        上下文隔离（每步只读该步的文件）
+│   ├── rule-reuse.md            增量复用（文件存在则跳过）
+│   ├── protocol-checkpoint.md   检查点协议（强制停顿 + barrier 记录）
+│   ├── protocol-scheduling.md   子 agent 调度（3 模式 + 校验 + 平台适配）
+│   ├── strategy-level.md        动态策略（级别 × 参数表）
+│   ├── convention-trace.md      决策凭据（_trace 字段）
+│   ├── ref-sources.md           信源分级表
+│   └── ref-paths.md             路径约定表
+├── 00-intent-anchor/
+│   ├── schemas.md              ← anchors.json 格式定义
 │   ├── year-rules.md           ← 年限推断规则
+│   └── skip-rules.md           ← 跳过规则
+├── 01-brainstorm/
+│   ├── schemas.md              ← JSON 格式定义（4 维度 Agent）
 │   ├── level-weight.md         ← level/role 约束规则
-│   ├── skip-rules.md           ← 跳过规则
 │   ├── task-templates.md       ← 任务模板
 │   ├── scenario-agent.md       ← 场景维度 Agent 定义
 │   ├── technical-agent.md      ← 技术维度 Agent 定义
 │   ├── learning-agent.md       ← 学习维度 Agent 定义
 │   └── constraint-agent.md     ← 约束维度 Agent 定义
-├── 01-partition/
+├── 02-partition/
 │   └── schemas.md              ← partition-analysis.json 格式
-├── 02-scan/
+├── 03-scan/
 │   └── schemas.md              ← search-batch / url-batches / partial 格式
-├── 03-capability-graph/
+├── 04-capability-graph/
 │   ├── method.md               ← 能力图谱方法论 + 战略高地识别
 │   └── schemas.md              ← capability-graph.json 格式
-├── 04-evaluate-pool/
+├── 05-evaluate-pool/
 │   ├── method.md               ← 四维评估矩阵方法论
 │   └── schemas.md              ← evaluations.json 格式
-├── 05-capability-research/
+├── 06-capability-research/
 │   └── schemas.md              ← capability 主文件 + 摘要格式
-├── 06-briefing-assemble/
+├── 07-briefing-assemble/
 │   └── schemas.md              ← briefing 格式
-├── 07-assemble/
+├── 08-assemble/
 │   └── schemas.md              ← overview/edge-cases/trade-offs/references 格式
-└── 08-learning-ladder/
+└── 09-learning-ladder/
     └── schemas.md              ← learning-ladder 格式
 ```
 
@@ -44,13 +51,13 @@ assets/
 
 ```markdown
 # 引用 schemas
-详见 `assets/00-brainstorm/schemas.md`
+详见 `assets/00-intent-anchor/schemas.md`
 
 # 引用方法论
-详见 `assets/03-capability-graph/method.md`
+详见 `assets/04-capability-graph/method.md`
 
 # 引用公共资源
-详见 `assets/common/conventions.md`
+详见 `assets/common/rule-isolation.md` / `assets/common/strategy-level.md` / `assets/common/protocol-scheduling.md`
 ```
 
 ## 文件类型说明

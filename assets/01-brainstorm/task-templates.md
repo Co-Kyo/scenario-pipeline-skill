@@ -83,7 +83,7 @@ year={year}（{year_source}），target_level={L1/L2/L3/L4}，platform={platform
 
 ## 输出格式
 
-严格按 `assets/00-brainstorm/schemas.md` 的 requirement-web.json 格式输出。
+严格按 `assets/01-brainstorm/schemas.md` 的 requirement-web.json 格式输出。
 
 注意：requirement-web.json 除了标准字段外，还必须包含：
 - context.target_level（L1/L2/L3/L4）

@@ -1,6 +1,6 @@
 # 信源分级表
 
-> 扫描阶段（02-scan）和能力图谱构建阶段（03-capability-graph）均依赖此表。
+> 扫描阶段（03-scan）和能力图谱构建阶段（04-capability-graph）均依赖此表。
 
 ## T0 内置信源
 

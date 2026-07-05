@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 920" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#EA580C"/>
+    </marker>
+    <linearGradient id="grad-blue" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#3B82F6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#2563EB;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="grad-teal" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#14B8A6;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#0D9488;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+    <filter id="shadow-lg" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="2" dy="3" stdDeviation="5" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="720" height="920" fill="#F8FAFC" rx="8"/>
+
+  <!-- Title -->
+  <text x="360" y="42" text-anchor="middle" font-size="20" font-weight="bold" fill="#1E293B">Step ⓪ · 意图锚定 — 架构流程图</text>
+  <line x1="100" y1="55" x2="620" y2="55" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- ===== INPUT ===== -->
+  <rect x="210" y="75" width="300" height="52" rx="26" fill="url(#grad-blue)" filter="url(#shadow)"/>
+  <text x="360" y="99" text-anchor="middle" font-size="14" fill="white" font-weight="bold">用户指令 (raw_input)</text>
+  <text x="360" y="116" text-anchor="middle" font-size="11" fill="#DBEAFE">--year / --platform / --depth</text>
+  <line x1="360" y1="127" x2="360" y2="155" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ① PARSE ===== -->
+  <rect x="200" y="155" width="320" height="58" rx="6" fill="white" stroke="#3B82F6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="360" y="177" text-anchor="middle" font-size="13" font-weight="bold" fill="#1E40AF">① 解析用户指令</text>
+  <text x="360" y="197" text-anchor="middle" font-size="10.5" fill="#64748B">提取 topic / constraints</text>
+  <line x1="360" y1="213" x2="360" y2="245" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ② YEAR INFERENCE ===== -->
+  <rect x="200" y="245" width="320" height="58" rx="6" fill="white" stroke="#8B5CF6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="360" y="267" text-anchor="middle" font-size="13" font-weight="bold" fill="#6D28D9">② 年限推断</text>
+  <text x="360" y="287" text-anchor="middle" font-size="10.5" fill="#64748B">显式参数 &gt; 显式数字 &gt; 隐式信号 &gt; 默认 L2</text>
+  <text x="360" y="300" text-anchor="middle" font-size="9" fill="#94A3B8">→ inferred_year + year_inference_trace</text>
+  <line x1="360" y1="303" x2="360" y2="335" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ③ LIGHT EXTRACTION ===== -->
+  <rect x="190" y="335" width="340" height="65" rx="6" fill="white" stroke="#14B8A6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="360" y="357" text-anchor="middle" font-size="13" font-weight="bold" fill="#0F766E">③ 轻量提取 → 生成共享骨架</text>
+  <text x="360" y="375" text-anchor="middle" font-size="10.5" fill="#64748B">提取锚点 (8-15 个) → anchors.json</text>
+  <text x="360" y="389" text-anchor="middle" font-size="9" fill="#94A3B8">含 provisional_level / provisional_role / strategy 元数据</text>
+  <line x1="360" y1="400" x2="360" y2="430" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== OUTPUT FILE ===== -->
+  <rect x="230" y="430" width="260" height="38" rx="6" fill="#F0FDFA" stroke="#14B8A6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="360" y="454" text-anchor="middle" font-size="11" fill="#0F766E">📄 {workDir}/.meta/brainstorm/anchors.json</text>
+  <line x1="360" y1="468" x2="360" y2="498" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ⓩ BARRIER CHECK ===== -->
+  <rect x="180" y="498" width="360" height="42" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="360" y="518" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400E">🛑 ⓩ 检查点（强制停顿）</text>
+  <text x="360" y="534" text-anchor="middle" font-size="9.5" fill="#B45309">展示骨架摘要 → 用户确认 / 修正</text>
+  <line x1="360" y1="540" x2="360" y2="570" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ROUTING DECISION ===== -->
+  <polygon points="360,570 490,640 360,710 230,640" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2" filter="url(#shadow)"/>
+  <text x="360" y="634" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#92400E">跳过判断?</text>
+  <text x="360" y="650" text-anchor="middle" font-size="9" fill="#B45309">3 条件 + 场景词拦截</text>
+
+  <!-- YES: skip to Step ② -->
+  <line x1="490" y1="640" x2="610" y2="640" stroke="#16A34A" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+  <text x="530" y="633" font-size="10" fill="#16A34A" font-weight="bold">YES</text>
+  <rect x="610" y="618" width="90" height="44" rx="22" fill="#DCFCE7" stroke="#16A34A" stroke-width="1.5"/>
+  <text x="655" y="636" text-anchor="middle" font-size="10" font-weight="bold" fill="#166534">→ Step ②</text>
+  <text x="655" y="652" text-anchor="middle" font-size="8" fill="#15803D">跳过头脑风暴</text>
+
+  <!-- NO: go to Step ① -->
+  <line x1="360" y1="710" x2="360" y2="750" stroke="#DC2626" stroke-width="1.5" marker-end="url(#arrow-orange)"/>
+  <text x="370" y="733" font-size="10" fill="#DC2626" font-weight="bold">NO</text>
+  <rect x="215" y="750" width="290" height="44" rx="22" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.5"/>
+  <text x="360" y="768" text-anchor="middle" font-size="10" font-weight="bold" fill="#C2410C">→ Step ① 头脑风暴</text>
+  <text x="360" y="784" text-anchor="middle" font-size="8" fill="#9A3412">完整多维头脑风暴路径</text>
+
+  <!-- ===== KEY FILES BOX (left) ===== -->
+  <rect x="15" y="75" width="160" height="130" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="25" y="93" font-size="10" font-weight="bold" fill="#334155">📋 关键文件依赖</text>
+  <text x="25" y="110" font-size="9" fill="#64748B">schemas.md§anchors</text>
+  <text x="25" y="124" font-size="9" fill="#64748B">year-rules.md</text>
+  <text x="25" y="138" font-size="9" fill="#64748B">skip-rules.md</text>
+  <text x="25" y="152" font-size="9" fill="#64748B">common/rule-isolation.md</text>
+  <text x="25" y="183" font-size="8" fill="#94A3B8">全部在 assets/00-intent-anchor/</text>
+
+  <!-- ===== NOTES BOX (left) ===== -->
+  <rect x="15" y="220" width="160" height="108" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="25" y="238" font-size="10" font-weight="bold" fill="#334155">📌 关键特性</text>
+  <text x="25" y="256" font-size="9" fill="#64748B">· 无 Agent 并发</text>
+  <text x="25" y="270" font-size="9" fill="#64748B">· 轻量级 · 始终执行</text>
+  <text x="25" y="284" font-size="9" fill="#64748B">· 产出 anchors.json</text>
+  <text x="25" y="298" font-size="9" fill="#64748B">· 决定是否进入 ①</text>
+  <text x="25" y="312" font-size="9" fill="#64748B">· ⓩ 检查点强制停顿</text>
+</svg>

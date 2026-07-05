@@ -33,7 +33,7 @@
    - 展望锚点（高于目标年限）→ provisional_level = target_level + 1, provisional_role = "outlook"
    - **level 与 role 的强制约束**：core → level=target_level; premise → level=target_level-1; outlook → level=target_level+1
 5. **按 role 分组**，生成 l{N}_core_ids / l{N}_premise_ids / l{N}_outlook_ids
-6. **注入策略元数据**：从 assets/common/conventions.md 的策略表中提取对应级别的标签和比例
+6. **注入策略元数据**：从 assets/common/strategy-level.md 的策略表中提取对应级别的标签和比例
 7. 写入 `{workDir}/.meta/brainstorm/anchors.json`
 
-**anchors.json 格式**：详见 `assets/00-brainstorm/schemas.md`§anchors
+**anchors.json 格式**：详见 `assets/00-intent-anchor/schemas.md`§anchors

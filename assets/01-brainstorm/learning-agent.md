@@ -26,7 +26,7 @@
 
 ## 输出格式
 
-详见 `assets/00-brainstorm/schemas.md`§learning
+详见 `assets/01-brainstorm/schemas.md`§learning
 
 ## ⚠️ 文件写入
 

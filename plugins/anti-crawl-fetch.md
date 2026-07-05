@@ -1,25 +1,25 @@
 ---
 name: anti-crawl-fetch
-description: "Step ① scan 的 web_fetch 反爬降级方案。当 web_fetch 失败（403/超时/JS渲染空白）时，用 Playwright headless Chromium 绕过反爬提取内容。触发条件：fetch_status=failed 且域名不在排除列表中。"
+description: "Step ③ scan 的 web_fetch 反爬降级方案。当 web_fetch 失败（403/超时/JS渲染空白）时，用 Playwright headless Chromium 绕过反爬提取内容。触发条件：fetch_status=failed 且域名不在排除列表中。"
 ---
 
 # 反爬降级抓取（Anti-Crawl Fallback）
 
-> 本 plugin 被 Step ① scan 按需加载。当 `web_fetch` 失败时，作为降级方案执行。
+> 本 plugin 被 Step ③ scan 按需加载。当 `web_fetch` 失败时，作为降级方案执行。
 
 ---
 
 ## 域名分类
 
-域名路由逻辑在 `processes/02-scan.md` 的抓取策略中定义。域名分类统一维护在 `assets/common/sources.md`（T0 表 + 反爬域名表）。
+域名路由逻辑在 `processes/03-scan.md` 的抓取策略中定义。域名分类统一维护在 `assets/common/ref-sources.md`（T0 表 + 反爬域名表）。
 
-本插件只负责：当 02-scan.md 判定某个 URL 需要走 Playwright 时，提供执行指令。
+本插件只负责：当 03-scan.md 判定某个 URL 需要走 Playwright 时，提供执行指令。
 
 ---
 
 ## 触发条件
 
-02-scan.md 的抓取策略判定某 URL 需要走 Playwright 时，加载本插件执行。
+03-scan.md 的抓取策略判定某 URL 需要走 Playwright 时，加载本插件执行。
 
 ---
 
@@ -228,7 +228,7 @@ curl -s -X POST 'https://api.juejin.cn/content_api/v1/article/detail' \
 
 ## 结果写回
 
-降级抓取成功后，将提取结果转换为 Step ① scan 的 material 格式：
+降级抓取成功后，将提取结果转换为 Step ③ scan 的 material 格式：
 
 ```json
 {

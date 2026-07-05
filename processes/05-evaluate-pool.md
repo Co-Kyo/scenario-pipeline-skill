@@ -1,4 +1,4 @@
-# Step ③: 评估与入池
+# Step ⑤: 评估与入池
 
 **目的**：用四维评估矩阵对每个命题打分，确定优先级和学习顺序
 
@@ -15,17 +15,17 @@
 ## 前置条件
 
 加载：
-- `assets/04-evaluate-pool/method.md`（四维评估矩阵方法论）
-- `assets/04-evaluate-pool/schemas.md`（本步输出格式）
-- `{workDir}/.meta/requirement-web.json`（⓪ 产出，含命题和能力图谱雏形）
-- `{workDir}/.meta/capability-graph.json`（② 产出，含能力、高地、学习路径）
-- `{workDir}/.meta/.raw-materials/index.json`（① 产出索引）
+- `assets/05-evaluate-pool/method.md`（四维评估矩阵方法论）
+- `assets/05-evaluate-pool/schemas.md`（本步输出格式）
+- `{workDir}/.meta/requirement-web.json`（① 产出，含命题和能力图谱雏形）
+- `{workDir}/.meta/capability-graph.json`（④ 产出，含能力、高地、学习路径）
+- `{workDir}/.meta/.raw-materials/index.json`（② 产出索引）
 
 ## 输入
 
-- `requirement-web.json`（⓪ 产出）
-- `capability-graph.json`（② 产出）
-- `.raw-materials/index.json`（① 产出索引）
+- `requirement-web.json`（① 产出）
+- `capability-graph.json`（④ 产出）
+- `.raw-materials/index.json`（② 产出索引）
 
 ## 执行步骤
 
@@ -84,7 +84,7 @@
 
 #### 4.1 写入总览导航
 
-读 `assets/04-evaluate-pool/schemas.md` 获取完整模板。按模板写入 `{workDir}/README.md`。
+读 `assets/05-evaluate-pool/schemas.md` 获取完整模板。按模板写入 `{workDir}/README.md`。
 
 模板内容包含：
 - 命题索引（来自 evaluations）
@@ -98,7 +98,7 @@
 
 #### 4.3 更新 capability-graph.json
 
-将 `highgrounds` 和 `learning_path` 字段追加到 capability-graph.json（如 ② 已写入则跳过）。
+将 `highgrounds` 和 `learning_path` 字段追加到 capability-graph.json（如 ④ 已写入则跳过）。
 
 ## 输出
 
