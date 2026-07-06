@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 900" width="1100" height="900">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 900" width="100%" height="100%">
 <defs>
 <radialGradient id="bg"><stop offset="0" stop-color="#1e2038"/><stop offset="1" stop-color="#16172b"/></radialGradient>
 <linearGradient id="sg"><stop offset="0" stop-color="#2d2f50"/><stop offset="1" stop-color="#252742"/></linearGradient>
