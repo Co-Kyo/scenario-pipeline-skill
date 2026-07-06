@@ -125,13 +125,13 @@
   <text x="410" y="838" text-anchor="middle" font-size="11.5" font-weight="bold" fill="white">⑥ 注入 Step ② 扫描</text>
 
   <!-- ===== RIGHT: KEY FILES ===== -->
-  <rect x="640" y="75" width="165" height="100" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="640" y="75" width="165" height="90" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
   <text x="650" y="93" font-size="10" font-weight="bold" fill="#334155">📋 主 agent 读取</text>
-  <text x="650" y="110" font-size="8.5" fill="#64748B">scheduling-detail.md</text>
-  <text x="650" y="124" font-size="8.5" fill="#64748B">barrier-check.md</text>
-  <text x="650" y="138" font-size="8.5" fill="#64748B">fallback-protocol.md</text>
-  <text x="650" y="152" font-size="8.5" fill="#64748B">protocol-scheduling.md</text>
-  <text x="650" y="168" font-size="7.5" fill="#94A3B8">不读 anchors.json</text>
+  <text x="650" y="110" font-size="8.5" fill="#64748B">agent-init.md</text>
+  <text x="650" y="124" font-size="8.5" fill="#64748B">scheduling-detail.md</text>
+  <text x="650" y="138" font-size="8.5" fill="#64748B">barrier-check.md</text>
+  <text x="650" y="152" font-size="8.5" fill="#64748B">fallback-protocol.md</text>
+  <text x="650" y="162" font-size="7.5" fill="#94A3B8">不读 anchors.json</text>
 
   <!-- ===== RIGHT: SUB-AGENT FILES ===== -->
   <rect x="640" y="190" width="165" height="85" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>

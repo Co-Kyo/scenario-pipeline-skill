@@ -20,6 +20,7 @@ assets/
 ├── 01-brainstorm/
 │   ├── schemas.md              ← JSON 格式定义（4 维度 Agent）
 │   ├── level-weight.md         ← level/role 约束规则
+│   ├── agent-init.md           ← 4 个维度 Agent 的初始化定义
 │   ├── scenario-agent.md       ← 场景维度 Agent 定义
 │   ├── technical-agent.md      ← 技术维度 Agent 定义
 │   ├── learning-agent.md       ← 学习维度 Agent 定义

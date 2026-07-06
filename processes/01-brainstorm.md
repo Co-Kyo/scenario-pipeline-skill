@@ -2,7 +2,7 @@
 
 **目的**：通过 4 维度 Agent 并行分析 + 收敛者校验，产出结构化需求网（requirement-web.json）
 
-**主 agent 的动作**：定义 4 个 agent → spawn → 等结果 → barrier 检查 → spawn 收敛者。主 agent 不读取 anchors.json，不组装 task 内容，不注入元数据。所有读取和加工由 sub-agent 自行完成。
+**主 agent 的动作**：按 `{{agent-init}}` 分发 4 个 Agent → spawn → 等结果 → barrier 检查 → spawn 收敛者。
 
 **关键产出**：`{workDir}/.meta/requirement-web.json`
 
@@ -10,22 +10,13 @@
 
 ## 文件引用
 
-> 主 agent 读取：`{{scheduling-detail}}`、`{{barrier-check}}`、`{{fallback-protocol}}`、`{{protocol-scheduling}}`
->
-> Sub-agent 读取：各自的 agent 定义文件 + `{{anchors}}` + `{{year-rules}}`
-
-| 变量 | 文件 | 读取者 | 说明 |
-|------|------|--------|------|
-| `{{scheduling-detail}}` | `assets/01-brainstorm/scheduling-detail.md` | 主 agent | 调度参数 + 超时 + 降级 |
-| `{{barrier-check}}` | `assets/01-brainstorm/barrier-check.md` | 主 agent | Barrier 检查项 + 决策矩阵 |
-| `{{fallback-protocol}}` | `assets/01-brainstorm/fallback-protocol.md` | 主 agent | 收敛者失败降级协议 |
-| `{{protocol-scheduling}}` | `assets/common/protocol-scheduling.md` | 主 agent | 并行调度规则 |
-| `{{anchors}}` | `{workDir}/.meta/brainstorm/anchors.json` | sub-agent | Step 00 产出 |
-| `{{scenario-agent}}` | `assets/01-brainstorm/scenario-agent.md` | sub-agent | 场景 Agent 定义 |
-| `{{technical-agent}}` | `assets/01-brainstorm/technical-agent.md` | sub-agent | 技术 Agent 定义 |
-| `{{learning-agent}}` | `assets/01-brainstorm/learning-agent.md` | sub-agent | 学习 Agent 定义 |
-| `{{constraint-agent}}` | `assets/01-brainstorm/constraint-agent.md` | sub-agent | 约束 Agent 定义 |
-| `{{year-rules}}` | `plugins/year-granularity.md` | sub-agent | 年限颗粒度规则 |
+| 变量 | 文件 | 说明 |
+|------|------|------|
+| `{{agent-init}}` | `assets/01-brainstorm/agent-init.md` | 4 个维度 Agent 的初始化定义（分发规则 + task 模板） |
+| `{{scheduling-detail}}` | `assets/01-brainstorm/scheduling-detail.md` | 调度参数 + 超时 + 降级 |
+| `{{barrier-check}}` | `assets/01-brainstorm/barrier-check.md` | Barrier 检查项 + 决策矩阵 |
+| `{{fallback-protocol}}` | `assets/01-brainstorm/fallback-protocol.md` | 收敛者失败降级协议 |
+| `{{protocol-scheduling}}` | `assets/common/protocol-scheduling.md` | 并行调度规则 |
 
 ## 输入
 
@@ -39,37 +30,11 @@
 
 `mkdir -p {workDir}/.meta/brainstorm`
 
-### 2. 定义并 spawn 4 个维度 Agent
+### 2. 分发 4 个维度 Agent
 
-4 个 Agent 同时启动。每个 Agent 的 task 只包含：
-- **角色定义文件路径**（Agent 自己读）
-- **共享骨架路径**（Agent 自己读）
-- **产出文件路径**（Agent 写入）
+按 `{{agent-init}}` 定义的分发规则，为每个 Agent 组装 task 并 spawn。
 
-| Agent | label | agent_definition_path | output_path |
-|-------|-------|----------------------|-------------|
-| 场景 | `brainstorm-scenario` | `assets/01-brainstorm/scenario-agent.md` | `{workDir}/.meta/brainstorm/scenario.json` |
-| 技术 | `brainstorm-technical` | `assets/01-brainstorm/technical-agent.md` | `{workDir}/.meta/brainstorm/technical.json` |
-| 学习 | `brainstorm-learning` | `assets/01-brainstorm/learning-agent.md` | `{workDir}/.meta/brainstorm/learning.json` |
-| 约束 | `brainstorm-constraint` | `assets/01-brainstorm/constraint-agent.md` | `{workDir}/.meta/brainstorm/constraint.json` |
-
-每个 Agent 的 task 模板：
-
-```
-你是「{topic}」的{维度}维度分析专家。
-⚠️ 你必须用 write 工具将文件写入磁盘。
-
-## 你需要读取的文件
-1. 你的角色定义：{agent_definition_path}
-2. 共享骨架：{anchors_path}
-3. 年限规则：plugins/year-granularity.md
-4. 输出格式：assets/01-brainstorm/schemas.md§{schema_section}
-
-## 写入
-用 write 工具将产出 JSON 写入 {output_path}
-```
-
-> 主 agent 从 raw_input 中提取 topic 填入模板，其余由 sub-agent 自行读取和提取。
+主 agent 从 raw_input 中提取 topic，填入 `{{agent-init}}` 中的 task 模板，然后 spawn。每个 Agent 自行读取角色定义文件 + anchors.json + 年限规则，独立完成分析。
 
 调度参数、完成判定、超时检查、降级策略详见 `{{scheduling-detail}}`。
 
@@ -85,7 +50,7 @@
 
 4 个维度 Agent 全部完成后（含补发），执行质量门禁。详见 `{{barrier-check}}`。
 
-### 5. 定义并 spawn 收敛者 Agent
+### 5. 分发收敛者 Agent
 
 **⚠️ 前置条件**：Barrier 检查通过（4/4 完成）或用户明确授权降级。
 
