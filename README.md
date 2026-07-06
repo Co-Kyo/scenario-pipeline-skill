@@ -45,16 +45,16 @@
 
 ```
 00 意图锚定                前处理（串行 3 步）       后处理（并行 + 检查点）
-年限推断+锚点生成          03 scan（两阶段管道）      06 能力研究（并行）× N
-01 头脑风暴                  Phase A: 串行搜索       Barrier 5
+年限推断+锚点生成          03 scan（三阶段管道）      06 能力研究（并行）× N
+01 头脑风暴                  Phase A: 串行搜索       Barrier 6
   4维度Agent并行+收敛        Phase B: 并行提取(W=5)  07 Briefing 组装（并行）× M
-requirement-web.json       Phase C: merge          Barrier 6
-含能力图谱+分词结构         04 capability-graph →     08 命题组装（并行）× M
-Barrier 1 检查点                      能力图谱+高地           Barrier 7
-                            05 evaluate-pool →       09 学习阶梯（并行）× M
-                               评估+入池              Barrier 8 完成
-                            Barrier 3
-                            Barrier 4
+requirement-web.json       Phase C: merge          Barrier 7
+Barrier 2                  04 capability-graph →     08 命题组装（并行）× M
+02 分区                     能力图谱+高地            Barrier 8
+partition-analysis.json    Barrier 4               09 学习阶梯（并行）× M
+execution-plan.md          05 evaluate-pool →       Barrier 9 完成
+Barrier 3                     评估+入池
+                            Barrier 5
 ```
 
 每个阶段之间有显式 barrier + 检查点，确保上游产物完整后才进入下游。
@@ -119,30 +119,36 @@ scenario-pipeline/
 │   │   ├── rule-reuse.md            增量复用（文件存在则跳过）
 │   │   ├── convention-trace.md      决策凭据规范（_trace 字段）
 │   │   ├── strategy-level.md        动态标准策略（策略表/level_weight/收敛者/内容比例）
-│   │   ├── protocol-scheduling.md   子 agent 调度（3 种模式/label/校验/平台适配）
+│   │   ├── protocol-scheduling.md   子 agent 调度（3 种模式/label/校验）
 │   │   ├── ref-sources.md           T0 域名表 + 信源分级规则
 │   │   └── ref-paths.md             路径约定表
-│   ├── 01-brainstorm/              头脑风暴资源（schemas + 规则 + Agent 定义）
-│   ├── 01-partition/               依赖整理与分区资源
-│   ├── 02-scan/                    定向扫描资源
-│   ├── 03-capability-graph/        能力图谱资源（schemas + method）
-│   ├── 04-evaluate-pool/           评估入池资源（schemas + method）
-│   ├── 05-capability-research/     能力研究资源
-│   ├── 06-briefing-assemble/       Briefing 组装资源
-│   ├── 07-assemble/                命题组装资源
-│   └── 08-learning-ladder/         学习阶梯资源
+│   ├── 00-intent-anchor/          意图锚定资源（schemas + 年限规则 + 跳过规则）
+│   ├── 01-brainstorm/             头脑风暴资源（schemas + 规则 + Agent 定义）
+│   ├── 02-partition/              依赖整理与分区资源
+│   ├── 03-scan/                   定向扫描资源
+│   ├── 04-capability-graph/       能力图谱资源（schemas + method）
+│   ├── 05-evaluate-pool/          评估入池资源（schemas + method）
+│   ├── 06-capability-research/    能力研究资源
+│   ├── 07-briefing-assemble/      Briefing 组装资源
+│   ├── 08-assemble/               命题组装资源
+│   └── 09-learning-ladder/        学习阶梯资源
 │
 ├── plugins/                    ← 可选插件
-│   ├── capability-research-mode.md
-│   └── year-granularity.md         经验年限颗粒度规则
+│   ├── anti-crawl-fetch.md        Playwright 抓取（Step 03 条件加载）
+│   ├── capability-research-mode.md 材料块格式 + 深度分级（Step 06 加载）
+│   └── year-granularity.md        经验年限颗粒度规则
 │
 ├── processes/                  ← 执行文档（自包含，含示例）
-│   ├── 00-intent-anchor.md           多维头脑风暴
-│   ├── 01-partition.md             依赖整理与分区 + 年限自动推断 + 分词（前置阶段）
-│   ├── 02-scan.md                 定向扫描
-│   ├── 03-capability-graph.md     能力图谱构建（含战略高地识别）
-│   ├── 04-evaluate-pool.md        评估与入池
-│   ├── 05 ~ 08                    后处理步骤
+│   ├── 00-intent-anchor.md        意图锚定（年限推断 + 锚点生成 + 跳过判断）
+│   ├── 01-brainstorm.md           头脑风暴（4 维度 Agent 并行 + 收敛者）
+│   ├── 02-partition.md            依赖整理与分区
+│   ├── 03-scan.md                 定向扫描（三阶段：搜索 → 提取 → 合并）
+│   ├── 04-capability-graph.md     能力图谱构建（含战略高地识别）
+│   ├── 05-evaluate-pool.md        评估与入池
+│   ├── 06-capability-research.md  能力研究（并行 × N）
+│   ├── 07-briefing-assemble.md    Briefing 组装（并行 × M）
+│   ├── 08-assemble.md             命题组装（并行 × M）
+│   └── 09-learning-ladder.md      学习阶梯（并行 × M）
 │
 └── dev/                        ← 开发与观测（人类阅读 + 审查工具）
     ├── design/                     设计原理（why）
