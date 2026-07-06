@@ -20,11 +20,14 @@ assets/
 ├── 01-brainstorm/
 │   ├── schemas.md              ← JSON 格式定义（4 维度 Agent）
 │   ├── level-weight.md         ← level/role 约束规则
-│   ├── task-templates.md       ← 任务模板
 │   ├── scenario-agent.md       ← 场景维度 Agent 定义
 │   ├── technical-agent.md      ← 技术维度 Agent 定义
 │   ├── learning-agent.md       ← 学习维度 Agent 定义
-│   └── constraint-agent.md     ← 约束维度 Agent 定义
+│   ├── constraint-agent.md     ← 约束维度 Agent 定义
+│   ├── barrier-check.md        ← Barrier 检查项 + 决策矩阵
+│   ├── scheduling-detail.md    ← 调度参数 + 超时 + 降级
+│   ├── fallback-protocol.md    ← 收敛者失败降级协议
+│   └── architecture.svg        ← 架构流程图
 ├── 02-partition/
 │   └── schemas.md              ← partition-analysis.json 格式
 ├── 03-scan/
