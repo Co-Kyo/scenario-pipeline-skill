@@ -18,19 +18,22 @@
 | `{{schemas-assemble}}` | `assets/08-assemble/schemas.md` | 本步输出格式 |
 | `{{ref-sources}}` | `assets/common/ref-sources.md` | 信源分级，T0 域名表 |
 | `{{protocol-scheduling}}` | `assets/common/protocol-scheduling.md` | 子 agent 调度规则 |
-| `{{capability-graph}}` | `{workDir}/.meta/capability-graph.json` | 含 propositions |
+| `{{pipeline-params}}` | `assets/common/pipeline-params.md` | 管线参数配置 |
+| `{{requirement-web}}` | `{workDir}/.meta/requirement-web.json` | Step 01 产出，含命题列表 |
 | `{{briefings}}` | `{workDir}/.meta/briefings/{seq}-{short_name}.md` | Step 07 产出 |
 
 ## 输入
 
+- `{{requirement-web}}`（01 产出，含 propositions）
 - `{{briefings}}`（Step 07 产出）
-- `{{capability-graph}}`（前处理产出）
 
 ## 执行步骤
 
 ### 1. 筛选待组装命题
 
-从 `{{capability-graph}}` 的 propositions 获取列表。已有以下全部文件的命题跳过：`{workDir}/{seq}-{short_name}/overview.md`、`edge-cases.md`、`trade-offs.md`、`references.md`、`experiment/README.md`。
+从 `{{requirement-web}}` 的 propositions 字段获取命题列表。已有以下全部文件的命题跳过：`{workDir}/{seq}-{short_name}/overview.md`、`edge-cases.md`、`trade-offs.md`、`references.md`、`experiment/README.md`。
+
+**如果 `{{requirement-web}}` 不存在或 propositions 为空**：停止执行并输出 `❌ requirement-web.json 缺失或命题列表为空，无法进行命题组装。请先完成 Step 01。`
 
 ### 2. 并行 spawn（简单窗口 + 轮询跟踪，2-agent-per-命题）
 

@@ -3,8 +3,8 @@
 **目的**：对每个需要研究的原子能力进行深度研究，产出能力知识库主文件 + 结构化摘要
 
 **核心流程**：
-1. 筛选待研究能力（覆盖待处理命题 or 扇出度≥30%）
-2. 技术域分组（同层归组 + 依赖就近 + 上限 5 能力/组）
+1. 筛选待研究能力（覆盖待处理命题 or 扇出度≥{{params.fanout-threshold}}，见 `{{pipeline-params}}`）
+2. 技术域分组（同层归组 + 依赖就近 + 上限 {{params.cap-group-cap}} 能力/组，见 `{{pipeline-params}}`）
 3. 依赖拓扑编排（无依赖并行 → 有依赖串行）
 4. 并行 spawn 域 Agent（DAG 调度）
 
@@ -18,9 +18,10 @@
 |------|------|------|
 | `{{plugin-research-mode}}` | `plugins/capability-research-mode.md` | 材料块格式 + 深度分级 |
 | `{{schemas-research}}` | `assets/06-capability-research/schemas.md` | 能力研究产出格式 |
+| `{{pipeline-params}}` | `assets/common/pipeline-params.md` | 管线参数配置 |
 | `{{ref-sources}}` | `assets/common/ref-sources.md` | 信源分级，T0 域名表 |
 | `{{protocol-scheduling}}` | `assets/common/protocol-scheduling.md` | DAG 调度规则 |
-| `{{capability-graph}}` | `{workDir}/.meta/capability-graph.json` | 前处理产出 |
+| `{{capability-graph}}` | `{workDir}/.meta/capability-graph.json` | 前处理产出，含能力列表 |
 | `{{readme}}` | `{workDir}/README.md` | 命题列表 |
 
 ## 输入
@@ -34,7 +35,7 @@
 
 从 `{{capability-graph}}` 中筛选：
 - 覆盖待处理命题的能力
-- 或扇出度 ≥ 30% 的能力
+- 或扇出度 ≥ {{params.fanout-threshold}} 的能力（见 `{{pipeline-params}}`）
 
 ### 2. 增量检查
 
@@ -50,7 +51,7 @@
 **分组原则**：
 - 同一技术层的能力归为一组（如所有"浏览器层"能力归入渲染域）
 - 有直接依赖关系的能力尽量归入同组
-- **每组上限 5 个能力**（不足 2 个时可与相邻子组合并）
+- **每组上限 {{params.cap-group-cap}} 个能力**（见 `{{pipeline-params}}`；不足 2 个时可与相邻子组合并）
 - 特化能力（M 系列）归入其依赖的通用能力所在组
 
 **分组算法**：
@@ -62,7 +63,7 @@
    - 优先将被依赖能力移入下游组（减少跨组依赖）
 3. 若无法消除跨组依赖 → 记录为"触发依赖"，安排执行顺序
 4. 上限拆分（关键步骤）：
-   - 检查每组能力数，上限 CAP=5
+    - 检查每组能力数，上限 CAP={{params.cap-group-cap}}（见 `{{pipeline-params}}`）
    - ≤ 5 → 保持原组
    - > 5 → 按依赖链拆分为子组：
      a. 构建组内依赖树（被依赖能力为上游）
@@ -179,7 +180,7 @@ T=8min   A_2, D_2, E_2 完成 → 全部 25 个能力就绪
 | 参数 | 值 |
 |------|---|
 | W | 5 |
-| 超时 | 15 分钟 |
+| 超时 | {{params.research-timeout}}（见 `{{pipeline-params}}`） |
 | 槽位替换 | ✅ DAG 模式：前置子组全部 completed → spawn 后续子组 |
 | label | `agent-{group_id}`（如 `agent-A_1`, `agent-B_1`） |
 | expected_files | 每个 agent：`capabilities/{id}-{name}.md` + `.meta/summaries/{id}-{name}.json`（按该子组负责的能力列表） |
@@ -260,7 +261,7 @@ T0 缺失: {t0_missing}
 3. 禁止凭记忆生成，必须 web_fetch 验证内容
 
 #### Step 2: 内容研究
-按以下结构产出能力主文件（≥2000 字）：
+按以下结构产出能力主文件（≥{{params.min-content-length}} 字，见 `{{pipeline-params}}`）：
 
 # {capability_name}
 > {description}
@@ -325,7 +326,7 @@ T0 缺失: {t0_missing}
 - [ ] 依赖拓扑已计算（批次顺序正确）
 - [ ] 每个已研究的能力有两个文件（主文件 + 摘要）
 - [ ] capabilities/README.md 已生成，包含按 tech_layer 分组的所有能力链接
-- [ ] 主文件内容 ≥ 2000 字
+- [ ] 主文件内容 ≥ {{params.min-content-length}} 字（见 `{{pipeline-params}}`）
 - [ ] 摘要 JSON 可解析
 - [ ] 参考资料中的 URL 经过 web_fetch 验证
 - [ ] 跨子组依赖的 Agent 正确读取了前置文件

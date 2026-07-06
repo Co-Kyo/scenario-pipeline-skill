@@ -9,7 +9,7 @@
 4. 信源 URL 预查找（复用 scan → 补搜）
 5. 战略高地识别 + 学习路径生成
 
-**关键产出**：`capability-graph.json`（含 highgrounds + learning_path）
+**关键产出**：`capability-graph.json` + `dependency-graph.json` + `highgrounds.json` + `learning-path.json`
 
 ---
 
@@ -19,6 +19,7 @@
 |------|------|------|
 | `{{method-capability-graph}}` | `assets/04-capability-graph/method.md` | 能力图谱 + 战略高地方法论 |
 | `{{schemas-capability-graph}}` | `assets/04-capability-graph/schemas.md` | 本步输出格式 |
+| `{{pipeline-params}}` | `assets/common/pipeline-params.md` | 管线参数配置 |
 | `{{ref-sources}}` | `assets/common/ref-sources.md` | T0 域名表，用于信源预查找 |
 | `{{requirement-web}}` | `{workDir}/.meta/requirement-web.json` | Step 01 产出，含 capability_web 和 decompositions |
 | `{{raw-materials-index}}` | `{workDir}/.meta/.raw-materials/index.json` | Step 03 产出索引，含 URL + 元数据 |
@@ -164,17 +165,23 @@ web_search "<能力名称>"
 
 ### 7. 写入
 
-按 `{{schemas-capability-graph}}` 的示例格式，构造 `capability-graph.json`。
+按 `{{schemas-capability-graph}}` 的格式，构造以下文件：
 
-顶层必须包含 `highgrounds` 和 `learning_path` 字段。
+1. **`{workDir}/.meta/capability-graph.json`** — 能力列表 + 限定词注入
+2. **`{workDir}/.meta/dependency-graph.json`** — 能力依赖关系图
+3. **`{workDir}/.meta/highgrounds.json`** — 战略高地列表
+4. **`{workDir}/.meta/learning-path.json`** — 学习路径
 
-命题数据由 05 evaluate-pool 直接读取 requirement-web.json，04 不注入 propositions 字段。
+`dependency_graph`、`highgrounds`、`learning_path` 从 capability-graph.json 拆分到独立文件，下游步骤按需读取，减少单文件耦合。
 
-写入 `{workDir}/.meta/capability-graph.json`。
+命题数据由下游步骤直接读取 requirement-web.json，04 不注入 propositions 字段。
 
 ## 输出
 
-- 文件：`{workDir}/.meta/capability-graph.json`（含 highgrounds + learning_path）
+- `{workDir}/.meta/capability-graph.json` — 能力列表 + 限定词注入
+- `{workDir}/.meta/dependency-graph.json` — 能力依赖关系图
+- `{workDir}/.meta/highgrounds.json` — 战略高地列表
+- `{workDir}/.meta/learning-path.json` — 学习路径
 - 摘要（stdout）：能力数量、扇出度 Top 3、战略高地数量、学习路径前 5、T0 缺失情况
 
 ## 校验清单
@@ -191,9 +198,10 @@ web_search "<能力名称>"
 - [ ] references 中每条 URL 包含 source 字段（"scan_reuse" 或 "supplementary_search"）
 - [ ] scan_reuse 的 URL 从对应 markdown 文件中复制了 `## 内容提取` 段落
 - [ ] t0_missing 字段存在
-- [ ] highgrounds 字段已注入（含 strategic_value）
-- [ ] learning_path 字段已注入（拓扑排序）
-- [ ] dependency_graph 和 qualifier_injection 为顶层字段
+- [ ] capability-graph.json 包含 qualifier_injection 顶层字段
+- [ ] dependency-graph.json 已写入（含全部依赖关系）
+- [ ] highgrounds.json 已写入（含 strategic_value）
+- [ ] learning-path.json 已写入（拓扑排序后）
 - [ ] JSON 格式符合 `{{schemas-capability-graph}}` §2 示例
 
 ## 异常处理

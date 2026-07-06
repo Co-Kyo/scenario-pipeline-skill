@@ -32,6 +32,9 @@
 | 能力摘要 | `{workDir}/.meta/summaries/{id}-{name}.json` |
 | Briefing | `{workDir}/.meta/briefings/{seq}-{short_name}.md` |
 | 能力图谱 | `{workDir}/.meta/capability-graph.json` |
+| 能力依赖图 | `{workDir}/.meta/dependency-graph.json` |
+| 战略高地 | `{workDir}/.meta/highgrounds.json` |
+| 学习路径 | `{workDir}/.meta/learning-path.json` |
 | 评估结果 | `{workDir}/.meta/evaluations.json` |
 | 扫描结果索引 | `{workDir}/.meta/.raw-materials/index.json` |
 | 扫描结果内容 | `{workDir}/.meta/.raw-materials/*.md` |

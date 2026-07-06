@@ -17,13 +17,14 @@
 |------|------|------|
 | `{{schemas-ladder}}` | `assets/09-learning-ladder/schemas.md` | 本步输出格式 |
 | `{{protocol-scheduling}}` | `assets/common/protocol-scheduling.md` | 子 agent 调度规则 |
-| `{{capability-graph}}` | `{workDir}/.meta/capability-graph.json` | 含能力依赖关系 |
+| `{{pipeline-params}}` | `assets/common/pipeline-params.md` | 管线参数配置 |
+| `{{dependency-graph}}` | `{workDir}/.meta/dependency-graph.json` | Step 04 产出，含能力依赖关系 |
 | `{{summaries}}` | `{workDir}/.meta/summaries/*.json` | Step 06 产出 |
 | `{{overview}}` | `{workDir}/{seq}-{short_name}/overview.md` | Step 08 产出 |
 
 ## 输入
 
-- `{{capability-graph}}`（前处理产出，含能力依赖关系）
+- `{{dependency-graph}}`（04 产出，含能力依赖关系）
 - `{{summaries}}`（Step 06 产出）
 - `{{overview}}` 等（Step 08 产出的命题文件）
 
@@ -83,7 +84,7 @@
 {capability_ids}
 
 ## 能力依赖关系
-{dependency_edges}
+{dependency_edges}（来源：`{{dependency-graph}}`）
 
 ## 能力详情
 用 read 工具读取以下文件：

@@ -18,15 +18,22 @@
 |------|------|------|
 | `{{method-evaluate}}` | `assets/05-evaluate-pool/method.md` | 四维评估矩阵方法论 |
 | `{{schemas-evaluate}}` | `assets/05-evaluate-pool/schemas.md` | 本步输出格式 |
+| `{{pipeline-params}}` | `assets/common/pipeline-params.md` | 管线参数配置 |
 | `{{requirement-web}}` | `{workDir}/.meta/requirement-web.json` | Step 01 产出，含命题和能力图谱雏形 |
-| `{{capability-graph}}` | `{workDir}/.meta/capability-graph.json` | Step 04 产出，含能力、高地、学习路径 |
+| `{{capability-graph}}` | `{workDir}/.meta/capability-graph.json` | Step 04 产出，含能力列表 |
+| `{{dependency-graph}}` | `{workDir}/.meta/dependency-graph.json` | Step 04 产出，含依赖关系 |
+| `{{highgrounds}}` | `{workDir}/.meta/highgrounds.json` | Step 04 产出，含战略高地 |
+| `{{learning-path}}` | `{workDir}/.meta/learning-path.json` | Step 04 产出，含学习路径 |
 | `{{raw-materials-index}}` | `{workDir}/.meta/.raw-materials/index.json` | Step 03 产出索引 |
 | `{{partition-analysis}}` | `{workDir}/.meta/partition-analysis.json` | Step 02 产出（条件：如存在则按 session 筛选命题） |
 
 ## 输入
 
 - `{{requirement-web}}`（01 产出）
-- `{{capability-graph}}`（04 产出）
+- `{{capability-graph}}`（04 产出，能力列表）
+- `{{dependency-graph}}`（04 产出，依赖关系）
+- `{{highgrounds}}`（04 产出，战略高地）
+- `{{learning-path}}`（04 产出，学习路径）
 - `{{raw-materials-index}}`（03 产出索引）
 - `{{partition-analysis}}`（02 产出，条件加载）
 
@@ -78,7 +85,7 @@
 对优先级为 `high` 的命题，基于原子能力评估学习掌握难度。
 
 **评估依据**：
-1. 能力依赖链深度（主要权重）：从 `{{capability-graph}}` 的 `dependency_graph` 计算 max_depth
+1. 能力依赖链深度（主要权重）：从 `{{dependency-graph}}` 的 `dependency_graph` 计算 max_depth
 2. 涉及能力数量与耦合度
 3. 概念抽象度：操作层面 < 机制层面 < 设计层面
 
@@ -97,8 +104,8 @@
 
 模板内容包含：
 - 命题索引（来自 evaluations）
-- 推荐学习顺序（来自 highgrounds + capability-graph）
-- 学习路径（来自 highgrounds）
+- 推荐学习顺序（来自 `{{highgrounds}}` + `{{learning-path}}`）
+- 学习路径（来自 `{{learning-path}}`）
 - 能力知识库索引链接
 
 #### 4.2 写入候选池
@@ -123,7 +130,7 @@
 - [ ] 入池命题包含 difficulty（low/medium/high）
 - [ ] 入池命题包含 recommended_order
 - [ ] README.md 的命题索引与 evaluations.json 一致
-- [ ] 学习路径与 `{{capability-graph}}` 的 learning_path 一致
+- [ ] 学习路径与 `{{learning-path}}` 一致
 - [ ] 如 `{{partition-analysis}}` 存在，仅 current_session 中的命题被评估
 
 ## 异常处理

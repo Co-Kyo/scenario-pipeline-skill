@@ -17,6 +17,7 @@
 | `{{barrier-check}}` | `assets/01-brainstorm/barrier-check.md` | Barrier 检查项 + 决策矩阵 |
 | `{{fallback-protocol}}` | `assets/01-brainstorm/fallback-protocol.md` | 收敛者失败降级协议 |
 | `{{protocol-scheduling}}` | `assets/common/protocol-scheduling.md` | 并行调度规则 |
+| `{{pipeline-params}}` | `assets/common/pipeline-params.md` | 管线参数配置 |
 
 ## 输入
 
@@ -42,9 +43,9 @@
 
 > ⚠️ 严格遵循 `{{protocol-scheduling}}` 的并行调度规则。
 
-- 轮询间隔 15 秒，每次间隔不做其他工作
+- 轮询间隔 {{params.poll-interval}}（见 `{{pipeline-params}}`），每次间隔不做其他工作
 - 每个 Agent 完成后即时校验（文件存在 + JSON 合法 + dimension 字段 + entries 非空）
-- 失败的 Agent 补发一次（最多补发 1 次），仍失败则标为 missing
+- 失败的 Agent 补发一次（最多补发 {{params.retry-max}} 次，见 `{{pipeline-params}}`），仍失败则标为 missing
 
 ### 4. 🛑 质量门禁（强制停顿，不可跳过）
 
@@ -57,7 +58,7 @@
 | 项 | 值 |
 |----|---|
 | label | `brainstorm-integrator` |
-| 超时 | 5 分钟 |
+| 超时 | {{params.converge-timeout}}（见 `{{pipeline-params}}`） |
 
 收敛者 Agent 的 task：
 
@@ -159,7 +160,7 @@ strategy, capability_web, qualifier_injection, 每个 proposition 附 capability
 
 | 场景 | 处理 |
 |------|------|
-| 维度 Agent 超时（>3min） | 检查输出文件是否已写入磁盘：完整则保留使用，不完整则丢弃并补发一次（最多补发 1 次），补发仍超时则标为 missing |
+| 维度 Agent 超时（>{{params.dim-timeout}}，见 `{{pipeline-params}}`） | 检查输出文件是否已写入磁盘：完整则保留使用，不完整则丢弃并补发一次（最多补发 {{params.retry-max}} 次），补发仍超时则标为 missing |
 | 4 个维度 Agent 全部超时 | 检查各维度文件：保留完整的，缺失的尝试补发，补发后仍 3+ 个缺失 → 跳过头脑风暴，Step 03 按原始指令扫描 |
-| 收敛者 Agent 超时（>5min） | 检查 requirement-web.json 是否已写入磁盘：完整则直接使用，不完整则重试一次，重试失败 → **执行 `{{fallback-protocol}}`** |
+| 收敛者 Agent 超时（>{{params.converge-timeout}}） | 检查 requirement-web.json 是否已写入磁盘：完整则直接使用，不完整则重试一次，重试失败 → **执行 `{{fallback-protocol}}`** |
 | 收敛者输出 JSON 解析失败 | 重试一次；仍失败 → **执行 `{{fallback-protocol}}`** |

@@ -18,6 +18,7 @@
 |------|------|------|
 | `{{schemas-partition}}` | `assets/02-partition/schemas.md` | 分区 JSON 的结构定义 |
 | `{{requirement-web}}` | `{workDir}/.meta/requirement-web.json` | Step 01 产出，含命题列表 + 能力图谱雏形 |
+| `{{pipeline-params}}` | `assets/common/pipeline-params.md` | 管线参数配置 |
 
 ## 输入
 
@@ -69,7 +70,7 @@
 
 #### 3.3 社区发现（条件触发）
 
-**触发条件**：某个连通分量的节点数 > 8 个（经验值，可调整）
+**触发条件**：某个连通分量的节点数 > {{params.community-threshold}} 个（见 `{{pipeline-params}}`，经验值，可调整）
 
 - 在该分量内运行 Leiden 算法
 - 基于依赖边的权重和语义相似度聚类

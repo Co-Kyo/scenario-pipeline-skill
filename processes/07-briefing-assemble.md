@@ -17,19 +17,24 @@
 |------|------|------|
 | `{{schemas-briefing}}` | `assets/07-briefing-assemble/schemas.md` | 本步输出格式 |
 | `{{protocol-scheduling}}` | `assets/common/protocol-scheduling.md` | 子 agent 调度规则 |
-| `{{capability-graph}}` | `{workDir}/.meta/capability-graph.json` | 含 propositions |
+| `{{pipeline-params}}` | `assets/common/pipeline-params.md` | 管线参数配置 |
+| `{{requirement-web}}` | `{workDir}/.meta/requirement-web.json` | Step 01 产出，含命题列表 |
+| `{{capability-graph}}` | `{workDir}/.meta/capability-graph.json` | Step 04 产出，含能力信息 |
 | `{{summaries}}` | `{workDir}/.meta/summaries/*.json` | Step 06 产出的能力摘要 |
 
 ## 输入
 
-- `{{capability-graph}}`（前处理产出，含 propositions 和 capabilities）
+- `{{requirement-web}}`（01 产出，含 propositions）
+- `{{capability-graph}}`（04 产出，含 capabilities 用于匹配）
 - `{{summaries}}`（Step 06 产出的能力摘要）
 
 ## 执行步骤
 
 ### 1. 筛选待处理命题
 
-从 `{{capability-graph}}` 的 propositions 字段获取命题列表。
+从 `{{requirement-web}}` 的 propositions 字段获取命题列表。
+
+**如果 `{{requirement-web}}` 不存在或 propositions 为空**：停止执行并输出 `❌ requirement-web.json 缺失或命题列表为空，无法进行 Briefing 组装。请先完成 Step 01。`
 
 ### 2. 增量检查
 
@@ -53,7 +58,7 @@
 | 参数 | 值 |
 |------|---|
 | W | 5 |
-| 超时 | 5 分钟 |
+| 超时 | {{params.briefing-timeout}}（见 `{{pipeline-params}}`） |
 | 槽位替换 | ✅ 简单窗口：agent 完成 → 释放槽位 → 从待办队列取下一个 spawn |
 | label | `briefing-{seq}-{short_name}` |
 | expected_files | 每个 agent：`.meta/briefings/{seq}-{short_name}.md` |
