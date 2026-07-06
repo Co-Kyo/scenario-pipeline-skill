@@ -21,14 +21,22 @@
 | `{{requirement-web}}` | `{workDir}/.meta/requirement-web.json` | Step 01 产出，含命题和能力图谱雏形 |
 | `{{capability-graph}}` | `{workDir}/.meta/capability-graph.json` | Step 04 产出，含能力、高地、学习路径 |
 | `{{raw-materials-index}}` | `{workDir}/.meta/.raw-materials/index.json` | Step 03 产出索引 |
+| `{{partition-analysis}}` | `{workDir}/.meta/partition-analysis.json` | Step 02 产出（条件：如存在则按 session 筛选命题） |
 
 ## 输入
 
 - `{{requirement-web}}`（01 产出）
 - `{{capability-graph}}`（04 产出）
 - `{{raw-materials-index}}`（03 产出索引）
+- `{{partition-analysis}}`（02 产出，条件加载）
 
 ## 执行步骤
+
+### 0. 按分区筛选命题
+
+**如果 `{{partition-analysis}}` 存在**：只处理 `current_session.proposition_ids` 中的命题。从 `{{requirement-web}}` 中筛选这些命题，跳过不在列表中的命题。
+
+如果没有 `{{partition-analysis}}`：处理 `{{requirement-web}}` 的全部命题。
 
 ### 1. 逐命题四维打分
 
@@ -116,6 +124,7 @@
 - [ ] 入池命题包含 recommended_order
 - [ ] README.md 的命题索引与 evaluations.json 一致
 - [ ] 学习路径与 `{{capability-graph}}` 的 learning_path 一致
+- [ ] 如 `{{partition-analysis}}` 存在，仅 current_session 中的命题被评估
 
 ## 异常处理
 
