@@ -4,6 +4,19 @@
 
 ---
 
+## ⛔ 禁止主 agent 读取的文件
+
+以下文件**只能由 sub-agent 读取**，主 agent 严禁 read 或加载其内容：
+
+- `assets/01-brainstorm/scenario-agent.md`
+- `assets/01-brainstorm/technical-agent.md`
+- `assets/01-brainstorm/learning-agent.md`
+- `assets/01-brainstorm/constraint-agent.md`
+- `plugins/year-granularity.md`
+- `{workDir}/.meta/brainstorm/anchors.json`
+
+主 agent 的职责仅限于：将上述文件的**路径**写入 sub-agent 的 task 中，由 sub-agent 自行读取。
+
 ## Agent 清单
 
 | Agent | label | agent_definition_path | output_path |
