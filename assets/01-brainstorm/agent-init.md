@@ -1,6 +1,8 @@
 # 维度 Agent 初始化定义
 
 > 本文件定义 4 个维度 Agent 的初始调用设定。主 agent 按此文件分发 spawn，sub-agent 自行读取对应文件完成任务。
+>
+> **注意**：收敛者 Agent 不在此文件定义范围内。收敛者的 task 直接在 `processes/01-brainstorm.md` §5 中内联定义。
 
 ---
 

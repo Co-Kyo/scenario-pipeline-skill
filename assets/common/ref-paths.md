@@ -10,7 +10,7 @@
 | 全局学习阶梯 | `{workDir}/learning-ladder.md`（可选） |
 | 能力知识库目录 | `{workDir}/capabilities/` |
 | 能力主文件 | `{workDir}/capabilities/{id}-{name}.md` |
-| 能力知识库索引 | `{workDir}/capabilities/README.md` |
+| 能力知识库索引 | `{workDir}/capabilities/README.md`（TODO：无步骤负责生产，待 Step 06 补充索引生成逻辑） |
 | 命题目录 | `{workDir}/{seq}-{short_name}/` |
 | 命题 overview | `{workDir}/{seq}-{short_name}/overview.md` |
 | 命题 edge-cases | `{workDir}/{seq}-{short_name}/edge-cases.md` |

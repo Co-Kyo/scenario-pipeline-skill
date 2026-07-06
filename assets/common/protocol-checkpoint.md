@@ -36,7 +36,7 @@
 | Barrier 2 | barrier-2.md | Step 02 完成后 | partition-analysis.json + execution-plan.md | 确认分区方案、执行计划 |
 | Barrier 3 | barrier-3.md | Step 03 完成后 | index.json + scan_summary | 确认信源质量、素材数量、分级分布 |
 | Barrier 4 | barrier-4.md | Step 04 完成后 | capability-graph.json | 确认能力图谱质量 |
-| Barrier 5 | barrier-5.md | Step 05 完成后（后处理启动前） | evaluations.json + 执行计划 | 确认命题优先级、范围、调整参数 |
+| Barrier 5 | barrier-5.md | Step 05 完成后（后处理启动前） | evaluations.json | 确认命题优先级、范围、调整参数 |
 | Barrier 6 | barrier-6.md | Step 06 完成后 | capability 文件 + summary | 审查研究质量 |
 | Barrier 7 | barrier-7.md | Step 07 完成后 | briefing 文件 | 审查素材提取完整性 |
 | Barrier 8 | barrier-8.md | Step 08 完成后 | 命题目录文件 | 审查组装质量 |

@@ -444,6 +444,7 @@ unknown 域名评估达标后写入 `{workDir}/.meta/sources/dynamic-sources.jso
 
 | 场景 | 处理 |
 |------|------|
+| Phase A 搜索结果字段缺失（domain/snippet/title 为 null） | domain 缺失 → 归入 `tier: "unknown"`；snippet 缺失 → 用 `title` 作为摘要，title 也为空则标记 `snippet: "(不可用)"`；Phase B 对无 snippet 的 URL 仍需抓取内容判断 relevance |
 | Phase A 搜索 agent 超时 | 检查 search-batch 文件是否已写入：完整则保留，不完整则重试 |
 | Phase A 搜索结果过多（>200 URL/批） | 按 Tier 优先级截断：保留 T0+T1，T2/T3 取前 50 |
 | Phase B agent 超时 | 检查 partial 文件：完整则保留，不完整则重试 |
