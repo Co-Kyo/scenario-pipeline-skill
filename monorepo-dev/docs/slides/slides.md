@@ -1,0 +1,539 @@
+---
+marp: true
+theme: skillpack-dark
+_paginate: true
+_footer: "skillpack monorepo · 完全教学"
+---
+
+<!--
+  _class: lead
+-->
+
+# skillpack monorepo 完全教学
+
+从框架入口到构建输出，看懂整条链路的每一步。
+
+---
+
+<!--
+  _class: section
+-->
+
+# ① 总览
+
+---
+
+# 项目鸟瞰
+
+```
+monorepo-dev/
+├── packages/            ← 框架代码（4 个包）
+│   ├── skillpack-types/     类型 + 纯函数
+│   ├── skillpack-common/    校验 + 拓扑排序
+│   ├── skillpack-build/     构建器 + CLI 入口
+│   └── skillpack-validate/  独立校验 CLI
+├── demos/               ← 示例（使用者视角）
+│   ├── skillpack.config.ts   配置
+│   └── skill.ts              Skill 定义
+├── dist/                ← 构建产物（gitignored）
+└── docs/                ← 文档 + 图解
+```
+
+> **记住**：框架在 `packages/`，示例在 `demos/`，产物在 `dist/`。改代码永远在前两个目录。
+
+![width:640px](../svg/01-birdseye.svg)
+
+---
+
+# 包依赖 — 四个库谁依赖谁？
+
+依赖是**单向**的，不能反向：
+
+```text
+skillpack-types  →  skillpack-common  →  skillpack-build
+                                      →  skillpack-validate
+```
+
+<div class="columns">
+  <div><strong>📐 types</strong><span>纯类型 + 纯函数，零依赖</span></div>
+  <div><strong>⚙️ common</strong><span>依赖 types，实现校验 + 拓扑排序</span></div>
+  <div><strong>🏗 build</strong><span>依赖 types + common，构建器 + CLI</span></div>
+  <div><strong>🔍 validate</strong><span>依赖 types + common，独立校验 CLI</span></div>
+</div>
+
+构造顺序由 `tsc -b` 保证：types → common → {build, validate}（并行）
+
+![width:640px](../svg/02-deps.svg)
+
+---
+
+<!--
+  _class: section
+-->
+
+# ② 入口：怎么定义一个 Skill？
+
+---
+
+# 配置 + CLI — 从文件到命令行
+
+用户只写两个文件：
+
+```typescript
+// skillpack.config.ts
+export default defineConfig({
+  skill: './skill.ts',     // 指向 Skill 定义
+  outputDir: '../dist',    // 输出目录
+});
+```
+
+然后一行命令触发全流程：
+
+```bash
+tsx packages/skillpack-build/src/bin/cli.ts build skillpack.config.ts
+```
+
+> **类比**：`createSkill` 就像 Vue 的 `createApp`，`defineConfig` 就像 Vite 的 `defineConfig`。
+
+---
+
+# CLI 内部做了 5 件事
+
+```text
+① 解析 CLI 参数 → ② 读取 config → ③ import skill.ts
+→ ④ 合并 meta → ⑤ 调用 buildPipeline()
+                                    ↓
+                         校验 → 拓扑排序 → 渲染 → 写文件
+```
+
+![width:700px](../svg/03-pipeline.svg)
+
+---
+
+<!--
+  _class: section
+-->
+
+# ③ 定义：createSkill
+
+---
+
+# createSkill — 入口
+
+整个 skill 的定义入口，只 export 一个东西：
+
+```typescript
+export const skill = createSkill({
+  name: 'tech-research',
+  title: '前端技术调研',
+  description: '针对一个前端技术主题...',
+  steps: [
+    stepParse,      // 主题解析（单 Agent）
+    stepExplore,    // 多维度探索（Batch + 收敛 + 门禁）
+    stepOrganize,   // 分类整理（两个 Agent 串行）
+    stepDeepDive,   // 深度研究（两个 Agent DAG）
+    stepReport,     // 报告生成（Map）
+  ],
+});
+```
+
+> **记住**：steps 数组里的顺序不重要——真正的顺序由 `dependsOn` 字段决定，构建时用 Kahn 算法排序。
+
+---
+
+# createSkill 的结构
+
+![width:680px](../svg/05-skill-anatomy.svg)
+
+<div class="columns">
+  <div><strong>📦 createSkill wrapper</strong><span>纯类型辅助，零运行时开销</span></div>
+  <div><strong>📋 steps 数组</strong><span>StepDefinition 对象数组，顺序由 dependsOn 决定</span></div>
+</div>
+
+---
+
+<!--
+  _class: section
+-->
+
+# ④ StepDefinition — 步骤蓝图
+
+---
+
+# StepDefinition 核心字段
+
+每个 StepDefinition 像一张"设计图纸"：
+
+```typescript
+const stepDeepDive: StepDefinition = {
+  id:          'deep-dive',          // 唯一标识，kebab-case
+  title:       '深度研究',            // 人类可读标题
+  description: '核心概念研究 → 实践模式研究',
+  dependsOn:   ['organize'],         // 前置步骤 id
+  schedule:    { /* 调度图 */ },      // 内部工作流
+  writes:      [{ path: '{workDir}/.meta/dive-concepts.json' }],
+};
+```
+
+> **核心规则**：`id` + `dependsOn` + `schedule` + `writes` 是必需的，其余按需使用。
+
+---
+
+# 可选字段：reads / barrier / reuse / degrade
+
+| 字段 | 用途 |
+|------|------|
+| `reads` | 步骤需要读取哪些文件（可标记 `required: true`） |
+| `barrier` | 检查点——执行到这步会暂停，让用户确认 |
+| `reuse` | 增量复用——如果文件已存在，跳过这步 |
+| `degrade` | 降级协议——失败后重试或降级处理 |
+| `plugins` | 条件性加载的插件 |
+
+```typescript
+degrade: { maxRetries: 2, onDegrade: 'continue' },
+barrier: { checkItems: ['核心概念发现数', ...] },
+reuse:   [{ checkFile: '{workDir}/.meta/dive-concepts.json' }],
+```
+
+---
+
+<!--
+  _class: section
+-->
+
+# ⑤ ScheduleGraph — 调度图
+
+---
+
+# 调度图 — 步骤内部的"工作流引擎"
+
+三个要素定义一个图：
+
+```typescript
+{
+  entry: 'dive-concepts',        // 从哪个节点开始
+  nodes: [
+    { kind: 'agent', id: 'dive-concepts', role: '核心概念研究员', ... },
+    { kind: 'agent', id: 'dive-patterns', role: '实践模式研究员', ... },
+  ],
+  edges: [
+    { from: 'dive-concepts', to: 'dive-patterns' },
+  ],
+}
+```
+
+> **类比**：`dependsOn` 是"步骤之间怎么串"，`schedule` 是"一个步骤内部怎么干"。
+
+---
+
+# 三种节点类型
+
+![width:700px](../svg/04-nodes.svg)
+
+<div class="columns">
+  <div><strong>🤖 Agent</strong><span>单兵——一个 Agent + 一个任务</span></div>
+  <div><strong>🌲 Batch</strong><span>组团——并行 fan-out + 收敛 + 门禁</span></div>
+  <div><strong>🔄 Map</strong><span>流水线——从数据源取条目，逐个处理</span></div>
+</div>
+
+---
+
+<!--
+  _class: section
+-->
+
+# ⑥ Agent — 单兵节点
+
+---
+
+# Agent — 最简单的形式
+
+Step 00 的例子——一个节点，没有边：
+
+```typescript
+schedule: {
+  nodes: [ agent({
+    id: 'parse',
+    label: '主题解析',
+    role: '调研框架构建者',
+    task: `分析用户输入，提取 topic 和 tech_stack...`,
+  })],
+  edges: [],
+  entry: 'parse',
+}
+```
+
+> **适用场景**：只需要给 LLM 一个独立任务，没有并行/串联需求。
+
+---
+
+<!--
+  _class: section
+-->
+
+# ⑦ Batch — 组团节点
+
+---
+
+# Batch — 并行 fan-out
+
+Step 01 的例子——3 个 Agent 同时跑：
+
+```typescript
+schedule: {
+  nodes: [
+    batch('explore-batch', '多维度并行探索', [
+      agent({ id: 'explore-docs',      role: '文档分析师', ... }),
+      agent({ id: 'explore-practice',  role: '实践分析师', ... }),
+      agent({ id: 'explore-ecosystem', role: '生态分析师', ... }),
+    ]),
+  ],
+}
+```
+
+> **效果**：3 个 Agent 互不依赖，完全并行。
+
+---
+
+# Batch — 收敛（Converge）
+
+所有分支完成后，用一个 Agent 合并结果：
+
+```typescript
+batch('explore-batch', '多维度并行探索', [...], {
+  converge: agent({
+    id: 'explore-converge',
+    role: '收敛者',
+    task: '合并三个维度的输出...',
+  }),
+})
+```
+
+> **类比**：就像小组讨论——每个人独立调研，然后一个人汇总。
+
+---
+
+# Batch — 门禁（Gate）
+
+质量门禁：满足条件才放行
+
+```typescript
+batch('explore-batch', '多维度并行探索', [...], {
+  converge: agent({ id: 'explore-converge', ... }),
+  gate: {
+    rule: '3 agents completed or at most 1 degraded',
+    onPass: 'converge',     // 通过 → 启动收敛
+    onFail: 'degrade',      // 不通过 → 降级
+  },
+})
+```
+
+> **关键点**：`gate` 是可选守卫——控制"什么质量水平才能继续"。
+
+---
+
+<!--
+  _class: section
+-->
+
+# ⑧ Map — 流水线节点
+
+---
+
+# Map — 滚动窗口
+
+Step 04 的例子——数据驱动，逐个处理：
+
+```typescript
+schedule: {
+  nodes: [
+    mapWork(
+      'report-map',
+      '章节报告生成',
+      '{workDir}/.meta/organized.json#categories',  // 数据源
+      agent({ id: 'report-worker', role: '报告撰写员', ... }),
+      3  // 最大并发槽位
+    ),
+  ],
+}
+```
+
+> **工作原理**：从 `organized.json` 里取出 `categories` 数组，对每个 category 启动一个 Agent，最多 3 个同时跑。
+
+---
+
+<!--
+  _class: section
+-->
+
+# ⑨ 三种节点组合模式
+
+---
+
+# 4 种常见组合
+
+| 模式 | 组成 | 适用场景 |
+|------|------|----------|
+| **串行链** | Agent → edge → Agent | 前后有依赖的两个任务 |
+| **扇出 + 收敛** | Batch + converge | 多维度调研后汇总 |
+| **滚动窗口** | Map | 数据驱动批量处理 |
+| **带门禁批量** | Batch + converge + gate | 需要质量把关的并行任务 |
+
+> **建议**：写 skill 时优先用 Agent 组合 + 边，不够用了再上 Batch / Map。
+
+---
+
+<!--
+  _class: section
+-->
+
+# ⑩ 高级调度能力
+
+---
+
+# 边 + 条件路由
+
+边不只是"谁先谁后"，还可以带条件：
+
+```typescript
+edges: [
+  { from: 'dive-concepts', to: 'dive-patterns' },
+  { from: 'quality-check', to: 'continue', condition: 'pass >= 80%' },
+  { from: 'quality-check', to: 'retry',    condition: 'pass < 80%' },
+]
+```
+
+> **效果**：同一个节点可以根据输出走不同的下游路径——就像 `if/else`。
+
+---
+
+# 生命周期钩子
+
+三种钩子控制步骤执行行为：
+
+<div class="columns">
+  <div><strong>🚧 Barrier</strong><span>检查点。执行到这里暂停，向用户展示结果并等待确认。适合需要人工介入的关键步骤。</span></div>
+  <div><strong>♻️ Reuse</strong><span>增量复用。检查文件是否已存在，存在则跳过整个步骤。</span></div>
+  <div><strong>📉 Degrade</strong><span>降级协议。失败后重试（maxRetries），或标记降级继续（onDegrade）。</span></div>
+</div>
+
+---
+
+<!--
+  _class: section
+-->
+
+# ⑪ 构建流水线 — 三阶段
+
+---
+
+# Phase 1 — 校验（Validate）
+
+三步检查，任何一步出错就停止：
+
+```text
+① validateStep(step)
+   检查每个步骤字段是否完整
+   - id / title / description 非空
+   - schedule 有节点且 entry 存在
+   - writes 非空
+   - barrier 有 clarifyPrompt
+
+② validateDependencyRefs(steps)
+   检查 dependsOn 指向的 step id 是否真实存在
+
+③ validateBarrierContinuity(steps)
+   检查 barrier 连续性——最后一个 barrier 之前必须都有 barrier
+```
+
+---
+
+# Phase 2 — 拓扑排序（Resolve）
+
+核心算法：**Kahn 算法**
+
+```text
+① 找到所有"没有前置依赖"的步骤（入度为 0）→ 排在最前面
+② 它们排完后，检查哪些步骤的依赖已全部排完 → 再排它们
+③ 重复直到所有步骤排完
+④ 如果还有步骤没排但已经没有入度为 0 的了 → 循环依赖错误
+```
+
+排序完为每个步骤分配 `seq` 编号（00, 01, 02...）：
+
+```text
+00: topic-parse        // 无依赖 → 最先
+01: multi-dim-explore  // 依赖 topic-parse
+02: organize           // 依赖 multi-dim-explore
+03: deep-dive          // 依赖 organize
+04: report             // 依赖 deep-dive → 最后
+```
+
+---
+
+# Phase 3 — 渲染（Render）
+
+每个步骤 → Markdown 文件：
+
+```text
+renderStep(step)
+  └─ 遍历 schedule 图
+      ├─ Agent 节点 → Agent 渲染器
+      ├─ Batch 节点 → Batch 渲染器
+      └─ Map 节点  → Map 渲染器
+  └─ 写入 dist/processes/{seq}-{id}.md
+
+renderSkillMd(pipeline, meta)
+  └─ 生成 dist/SKILL.md
+```
+
+> **产出**：每个步骤一个 Markdown 文件 + 一个总览 SKILL.md。
+
+---
+
+<!--
+  _class: section
+-->
+
+# ⑫ 开发循环
+
+---
+
+# 三种开发场景
+
+| 场景 | 命令 | 反馈速度 |
+|------|------|----------|
+| **A — 改框架代码** | `npm run build` → `npm run demo` | 慢（需编译框架包） |
+| **B — 改 Skill 定义** | `npm run demo` | 最快（零构建，tsx 直接加载） |
+| **C — 全量重建** | `npm run clean` → `npm run build` → `npm run demo` | 最慢（从头编译） |
+
+> **日常最常用的是 Loop B**：改 `demos/skill.ts` → `npm run demo`，秒级反馈。
+
+---
+
+# 命令速查
+
+| 命令 | 实际执行 | 什么时候用 |
+|------|----------|-----------|
+| `npm run build` | `tsc -b` | 改完 `packages/*/src/` 后 |
+| `npm run demo` | tsx CLI → buildPipeline → dist/ | 查看构建结果 |
+| `npm run typecheck` | `tsc -b --noEmit` | 快速检查类型错误 |
+| `npm run clean` | rm -rf packages/*/dist dist | 重建前清理 |
+
+![width:640px](../svg/06-dev-loop.svg)
+
+---
+
+<!--
+  _class: lead
+-->
+
+# 你学会了什么
+
+1. **项目结构** — packages / demos / dist 三层
+2. **定义 Skill** — createSkill → StepDefinition
+3. **调度图** — Agent / Batch / Map 三种节点 + 边
+4. **构建流水线** — 校验 → 排序 → 渲染
+5. **开发循环** — 三种场景对应不同命令
+
+下一步：打开 `demos/skill.ts`，看看实际的 5 个步骤是怎么写的。

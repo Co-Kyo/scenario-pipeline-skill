@@ -1,0 +1,13 @@
+{
+  "name": "skillpack-slides",
+  "private": true,
+  "description": "skillpack monorepo 教学幻灯片",
+  "scripts": {
+    "dev": "marp -I . -s -p --theme theme.css",
+    "build": "marp slides.md --html --theme theme.css -o index.html",
+    "pdf": "marp slides.md --pdf --theme theme.css"
+  },
+  "devDependencies": {
+    "@marp-team/marp-cli": "^4.4.1"
+  }
+}

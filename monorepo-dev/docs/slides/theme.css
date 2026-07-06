@@ -1,0 +1,174 @@
+/* @theme skillpack-dark */@import 'default';
+
+section {
+  background: #0c0c1a;
+  color: #e0e0f0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  line-height: 1.8;
+  padding: 48px 56px;
+  font-size: 20px;
+}
+
+h1 {
+  font-size: 42px;
+  font-weight: 800;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #0ea5e9, #6366f1, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+h2 {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  color: #e0e0f0;
+}
+
+h3 {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #c0c0e0;
+}
+
+p { margin-bottom: 12px; }
+ul { padding-left: 24px; }
+li { margin-bottom: 4px; }
+
+a { color: #6366f1; text-decoration: none; }
+
+strong { color: #fff; }
+em { color: #9090b8; }
+
+code {
+  background: #111122;
+  color: #c0c0e0;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  font-size: 0.85em;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+pre {
+  background: #111122 !important;
+  border: 1px solid #2a2a50;
+  border-radius: 8px;
+  padding: 14px 16px !important;
+  font-size: 16px !important;
+  line-height: 1.6;
+  overflow-x: auto;
+}
+pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+blockquote {
+  border-left: 3px solid #f59e0b;
+  background: #181830;
+  border-radius: 0 8px 8px 0;
+  padding: 12px 18px;
+  margin: 16px 0;
+  color: #9090b8;
+  font-size: 0.9em;
+}
+blockquote strong { color: #f59e0b; display: block; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 2px; }
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 0.8em;
+}
+th {
+  text-align: left;
+  padding: 8px 12px;
+  background: #222244;
+  border-bottom: 1px solid #2a2a50;
+  color: #9090b8;
+  font-weight: 600;
+  font-size: 0.75em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+td {
+  padding: 8px 12px;
+  border-bottom: 1px solid #2a2a50;
+  vertical-align: top;
+}
+tr:hover td { background: #181830; }
+
+img { border-radius: 10px; }
+
+/* ── Lead slide ── */
+.lead h1 {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+.lead p {
+  font-size: 22px;
+  color: #9090b8;
+  max-width: 80%;
+}
+
+/* ── Section header ── */
+.section h1 {
+  font-size: 38px;
+  text-align: center;
+  margin-top: 120px;
+}
+
+/* ── Two column ── */
+.columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 14px 0;
+}
+.columns div {
+  background: #181830;
+  border: 1px solid #2a2a50;
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.columns div strong {
+  display: block;
+  font-size: 0.7em;
+  margin-bottom: 3px;
+}
+.columns div span {
+  font-size: 0.65em;
+  color: #9090b8;
+  line-height: 1.5;
+}
+
+/* ── Takeaway box ── */
+.takeaway {
+  background: linear-gradient(135deg, #181830, #222244);
+  border: 1px solid #6366f1;
+  border-radius: 10px;
+  padding: 14px 20px;
+  margin-top: 16px;
+  font-size: 0.8em;
+}
+.takeaway strong {
+  display: block;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #6366f1;
+  margin-bottom: 4px;
+}
+.takeaway ul { padding-left: 18px; }
+.takeaway li { margin-bottom: 2px; color: #9090b8; }
+
+/* ── Footer ── */
+footer {
+  color: #9090b8;
+  font-size: 0.6em;
+  text-align: center;
+  padding-top: 20px;
+}
