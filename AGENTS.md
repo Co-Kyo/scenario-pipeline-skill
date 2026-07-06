@@ -59,13 +59,13 @@ Each `assets/{step-id}/schemas.md` contains output formats for **all steps** in 
 
 Plugins (`plugins/*.md`) are only loaded when a step's preconditions explicitly reference them. Don't add plugin references to steps that don't need them. Current plugins:
 
-- `capability-research-mode.md` — loaded by Step 04 (capability research)
-- `anti-crawl-fetch.md` — loaded by Step 01 scan when Playwright is needed
+- `capability-research-mode.md` — loaded by Step 06 (capability research)
+- `anti-crawl-fetch.md` — loaded by Step 03 scan when Playwright is needed
 - `year-granularity.md` — loaded by Steps 01/05 when `--year` is specified
 
 ### 5. Checkpoints are mandatory stops
 
-Every barrier (Barrier 0 Barrier 1 Barrier 2 Barrier 3 Barrier 4 Barrier 5 Barrier 6 Barrier 7 Barrier 8) must include a `clarify` call that pauses execution. If you edit a process file, ensure the checkpoint flow is preserved.
+Every barrier (Barrier 0 Barrier 1 Barrier 2 Barrier 3 Barrier 4 Barrier 5 Barrier 6 Barrier 7 Barrier 8 Barrier 9) must include a `clarify` call that pauses execution. If you edit a process file, ensure the checkpoint flow is preserved.
 
 ## Gotchas
 
