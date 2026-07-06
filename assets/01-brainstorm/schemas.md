@@ -345,7 +345,6 @@
   "explicit_constraints": {
     "year": "L2",
     "year_source": "inferred: 用户原文含'3-5年'",
-    "platform": "web",
     "tech_stack": ["webpack", "vite"]
   },
   "inferred_constraints": [],

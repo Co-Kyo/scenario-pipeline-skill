@@ -99,7 +99,6 @@ deep research：P1、P2、P4 --no-experiment
 | 参数 | 说明 |
 |------|------|
 | `--depth=shallow\|normal\|deep` | 研究深度 |
-| `--platform=web\|miniapp\|rn\|all` | 目标平台 |
 | `--no-experiment` | 跳过实验生成 |
 | `--batch=pending` | 批量处理候选池（跳过检查点） |
 | `--year=L1\|L2\|L3\|L4` | 经验年限（可省略，系统自动从自然语言推断） |
