@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 600" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3B82F6"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8B5CF6"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="820" height="600" fill="#F8FAFC" rx="8"/>
+
+  <text x="410" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#1E293B">Step 07 · 文件依赖图</text>
+  <text x="410" y="54" text-anchor="middle" font-size="11" fill="#64748B">主 agent 与 Briefing Agent 的读取边界</text>
+  <line x1="80" y1="65" x2="740" y2="65" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- ===== TOP: MAIN AGENT FILES (green) ===== -->
+  <rect x="180" y="85" width="460" height="115" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="410" y="105" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">主 Agent 读取的文件</text>
+
+  <rect x="200" y="115" width="135" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="267" y="130" text-anchor="middle" font-size="9" fill="#166534">schemas.md</text>
+
+  <rect x="345" y="115" width="165" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="427" y="130" text-anchor="middle" font-size="9" fill="#166534">protocol-scheduling.md</text>
+
+  <rect x="520" y="115" width="110" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="575" y="130" text-anchor="middle" font-size="9" fill="#166534">ref-paths.md</text>
+
+  <rect x="270" y="145" width="280" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="410" y="160" text-anchor="middle" font-size="9" fill="#166534">capability-graph.json（筛选命题用）</text>
+
+  <!-- Divider -->
+  <line x1="100" y1="215" x2="720" y2="215" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="410" y="230" text-anchor="middle" font-size="9" fill="#94A3B8">— 读取边界 — 主 agent 不跨越此线 —</text>
+
+  <!-- ===== BOTTOM: SUB-AGENT FILES (blue) ===== -->
+  <rect x="100" y="250" width="620" height="165" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="410" y="270" text-anchor="middle" font-size="11" font-weight="bold" fill="#1E40AF">Briefing Agent 读取的文件</text>
+
+  <!-- capability-graph.json -->
+  <rect x="150" y="285" width="240" height="30" rx="4" fill="white" stroke="#93C5FD" stroke-width="1.5"/>
+  <text x="270" y="305" text-anchor="middle" font-size="10" font-weight="bold" fill="#1E40AF">capability-graph.json（命题详情）</text>
+
+  <!-- summaries/*.json -->
+  <rect x="430" y="285" width="240" height="30" rx="4" fill="white" stroke="#93C5FD" stroke-width="1.5"/>
+  <text x="550" y="305" text-anchor="middle" font-size="10" font-weight="bold" fill="#1E40AF">summaries/*.json（能力摘要）</text>
+
+  <!-- schemas.md protocol-scheduling.md ref-paths.md -->
+  <rect x="150" y="325" width="130" height="22" rx="4" fill="white" stroke="#93C5FD" stroke-width="1"/>
+  <text x="215" y="340" text-anchor="middle" font-size="8.5" fill="#1E40AF">schemas.md</text>
+
+  <rect x="295" y="325" width="145" height="22" rx="4" fill="white" stroke="#93C5FD" stroke-width="1"/>
+  <text x="367" y="340" text-anchor="middle" font-size="8.5" fill="#1E40AF">protocol-scheduling.md</text>
+
+  <rect x="455" y="325" width="110" height="22" rx="4" fill="white" stroke="#93C5FD" stroke-width="1"/>
+  <text x="510" y="340" text-anchor="middle" font-size="8.5" fill="#1E40AF">ref-paths.md</text>
+
+  <!-- Briefing output note -->
+  <rect x="200" y="357" width="420" height="45" rx="4" fill="white" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="410" y="375" text-anchor="middle" font-size="9" fill="#1E40AF">产出：briefings/{seq}-{short_name}.md</text>
+  <text x="410" y="392" text-anchor="middle" font-size="8.5" fill="#64748B">每份包含：mechanism / bottlenecks / tradeoffs / open questions / 参考资料</text>
+
+  <!-- ===== BOTTOM: AGENT BOXES ===== -->
+  <rect x="80" y="440" width="195" height="60" rx="6" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="177" y="463" text-anchor="middle" font-size="10" font-weight="bold" fill="#1E40AF">Briefing Agent 1</text>
+  <text x="177" y="481" text-anchor="middle" font-size="8.5" fill="#475569">读：capability-graph + summaries</text>
+  <text x="177" y="493" text-anchor="middle" font-size="8.5" fill="#475569">写：01-briefing-xxx.md</text>
+
+  <rect x="312" y="440" width="195" height="60" rx="6" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="409" y="463" text-anchor="middle" font-size="10" font-weight="bold" fill="#1E40AF">Briefing Agent 2</text>
+  <text x="409" y="481" text-anchor="middle" font-size="8.5" fill="#475569">读：capability-graph + summaries</text>
+  <text x="409" y="493" text-anchor="middle" font-size="8.5" fill="#475569">写：02-briefing-yyy.md</text>
+
+  <rect x="545" y="440" width="195" height="60" rx="6" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="642" y="463" text-anchor="middle" font-size="10" font-weight="bold" fill="#1E40AF">… 更多 Agent</text>
+  <text x="642" y="481" text-anchor="middle" font-size="8.5" fill="#475569">简单窗口 W=5</text>
+  <text x="642" y="493" text-anchor="middle" font-size="8.5" fill="#475569">轮询替换槽位</text>
+
+  <!-- Legend -->
+  <rect x="100" y="525" width="620" height="55" rx="6" fill="#FFF7ED" stroke="#FDBA74" stroke-width="1"/>
+  <text x="110" y="545" font-size="10" font-weight="bold" fill="#9A3412">边界规则</text>
+  <text x="110" y="563" font-size="9" fill="#9A3412">主 agent 只读绿框文件（schemas/调度/筛选命题），不读蓝框文件（能力摘要/命题详情）</text>
+  <text x="110" y="575" font-size="9" fill="#9A3412">Briefing Agent 自主读取能力摘要和命题详情，主 agent 只传递路径和任务指令</text>
+</svg>

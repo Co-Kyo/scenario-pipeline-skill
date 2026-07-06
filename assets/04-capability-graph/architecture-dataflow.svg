@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 700" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3B82F6"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8B5CF6"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="820" height="700" fill="#F8FAFC" rx="8"/>
+
+  <text x="410" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#1E293B">Step 04 · 能力图谱构建数据流</text>
+  <text x="410" y="54" text-anchor="middle" font-size="11" fill="#64748B">输入文件 → 6 步处理 → 产出 capability-graph.json</text>
+  <line x1="80" y1="65" x2="740" y2="65" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- ===== ROW 1: Input → Extract → Dedup → Annotate ===== -->
+
+  <!-- Input box -->
+  <rect x="20" y="95" width="150" height="110" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="95" y="115" text-anchor="middle" font-size="11" font-weight="bold" fill="#334155">📂 输入文件</text>
+  <rect x="30" y="125" width="130" height="28" rx="4" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1"/>
+  <text x="95" y="143" text-anchor="middle" font-size="9" fill="#1E40AF" font-weight="bold">requirement-web.json</text>
+  <text x="95" y="160" text-anchor="middle" font-size="8" fill="#3B82F6">capability_web + decompositions</text>
+  <rect x="30" y="165" width="130" height="26" rx="4" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1"/>
+  <text x="95" y="183" text-anchor="middle" font-size="9" fill="#1E40AF" font-weight="bold">raw-materials</text>
+  <text x="95" y="195" text-anchor="middle" font-size="8" fill="#3B82F6">index.json + *.md</text>
+
+  <!-- Arrow: Input → Extract -->
+  <line x1="170" y1="150" x2="205" y2="150" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Extract -->
+  <rect x="210" y="120" width="130" height="60" rx="6" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="210" y="120" width="130" height="22" rx="6" fill="#EDE9FE"/>
+  <text x="275" y="136" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">① 提取能力雏形</text>
+  <text x="275" y="155" text-anchor="middle" font-size="8.5" fill="#6B7280">读取 capability_web</text>
+  <text x="275" y="168" text-anchor="middle" font-size="8" fill="#94A3B8">id/name/layer/fanout</text>
+
+  <line x1="340" y1="150" x2="375" y2="150" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Dedup -->
+  <rect x="380" y="120" width="130" height="60" rx="6" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="380" y="120" width="130" height="22" rx="6" fill="#EDE9FE"/>
+  <text x="445" y="136" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">② 去重与合并</text>
+  <text x="445" y="155" text-anchor="middle" font-size="8.5" fill="#6B7280">名称+层级匹配</text>
+  <text x="445" y="168" text-anchor="middle" font-size="8" fill="#94A3B8">→ 内容语义比对</text>
+
+  <line x1="510" y1="150" x2="545" y2="150" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Annotate -->
+  <rect x="550" y="120" width="130" height="60" rx="6" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="550" y="120" width="130" height="22" rx="6" fill="#EDE9FE"/>
+  <text x="615" y="136" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">③ 标注依赖关系</text>
+  <text x="615" y="155" text-anchor="middle" font-size="8.5" fill="#6B7280">层级→引用→covers</text>
+  <text x="615" y="168" text-anchor="middle" font-size="8" fill="#94A3B8">按优先级推断</text>
+
+  <!-- Arrow down: Annotate → Qualifier -->
+  <line x1="615" y1="180" x2="615" y2="230" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== ROW 2: Qualifier → URL prefetch → Strategic → Output ===== -->
+
+  <!-- Qualifier -->
+  <rect x="550" y="235" width="130" height="60" rx="6" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="550" y="235" width="130" height="22" rx="6" fill="#EDE9FE"/>
+  <text x="615" y="251" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">④ 限定词注入分析</text>
+  <text x="615" y="270" text-anchor="middle" font-size="8.5" fill="#6B7280">分析限定词注入的</text>
+  <text x="615" y="283" text-anchor="middle" font-size="8" fill="#94A3B8">特化能力集</text>
+
+  <!-- Arrow left: Qualifier → URL prefetch -->
+  <line x1="550" y1="265" x2="515" y2="265" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- URL prefetch -->
+  <rect x="380" y="235" width="130" height="60" rx="6" fill="white" stroke="#EA580C" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="380" y="235" width="130" height="22" rx="6" fill="#FFF7ED"/>
+  <text x="445" y="251" text-anchor="middle" font-size="10" font-weight="bold" fill="#C2410C">⑤ URL 预查找</text>
+  <text x="445" y="270" text-anchor="middle" font-size="8.5" fill="#6B7280">复用Step03→补搜</text>
+  <text x="445" y="283" text-anchor="middle" font-size="8" fill="#94A3B8">T0/T1/T2/T3 分级</text>
+
+  <!-- Arrow left: URL prefetch → Strategic -->
+  <line x1="380" y1="265" x2="345" y2="265" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Strategic -->
+  <rect x="210" y="235" width="130" height="60" rx="6" fill="white" stroke="#14B8A6" stroke-width="1.5" filter="url(#shadow)"/>
+  <rect x="210" y="235" width="130" height="22" rx="6" fill="#CCFBF1"/>
+  <text x="275" y="251" text-anchor="middle" font-size="10" font-weight="bold" fill="#0F766E">⑥ 战略高地识别</text>
+  <text x="275" y="270" text-anchor="middle" font-size="8.5" fill="#6B7280">strategic_value</text>
+  <text x="275" y="283" text-anchor="middle" font-size="8" fill="#94A3B8">fanout × (1/coupling)</text>
+
+  <!-- Arrow left: Strategic → Output -->
+  <line x1="210" y1="265" x2="175" y2="265" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Output -->
+  <rect x="20" y="225" width="150" height="80" rx="6" fill="#CCFBF1" stroke="#14B8A6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="95" y="252" text-anchor="middle" font-size="11" font-weight="bold" fill="#0D9488">📄 输出</text>
+  <rect x="30" y="262" width="130" height="30" rx="4" fill="white" stroke="#14B8A6" stroke-width="1"/>
+  <text x="95" y="278" text-anchor="middle" font-size="9" font-weight="bold" fill="#0F766E">capability-graph.json</text>
+  <text x="95" y="296" text-anchor="middle" font-size="8" fill="#0D9488">能力·依赖·URL·高地·路径</text>
+
+  <!-- ===== BOTTOM: KEY PRINCIPLE ===== -->
+  <rect x="60" y="400" width="700" height="60" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="410" y="422" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">核心原则</text>
+  <text x="410" y="440" text-anchor="middle" font-size="10" fill="#475569">单 Agent 依次读取输入文件 → 6 步变换 → 写入 capability-graph.json</text>
+  <text x="410" y="454" text-anchor="middle" font-size="9" fill="#64748B">全部文件在当前上下文自主读取，无 sub-agent 分发</text>
+</svg>

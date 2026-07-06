@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 600" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3B82F6"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8B5CF6"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="820" height="600" fill="#F8FAFC" rx="8"/>
+
+  <text x="410" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#1E293B">Step 04 · 文件依赖图</text>
+  <text x="410" y="54" text-anchor="middle" font-size="11" fill="#64748B">单 Agent — 读取 5 个文件，写入 1 个产出</text>
+  <line x1="80" y1="65" x2="740" y2="65" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- ===== TOP: Agent reads (method + schemas + ref-sources) ===== -->
+  <rect x="160" y="85" width="500" height="115" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="410" y="105" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">Agent 读取的方法 / 格式 / 规则文件</text>
+
+  <rect x="180" y="118" width="140" height="28" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="250" y="136" text-anchor="middle" font-size="9" fill="#166534">method.md</text>
+
+  <rect x="340" y="118" width="140" height="28" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="410" y="136" text-anchor="middle" font-size="9" fill="#166534">schemas.md</text>
+
+  <rect x="500" y="118" width="140" height="28" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="570" y="136" text-anchor="middle" font-size="9" fill="#166534">ref-sources.md</text>
+
+  <rect x="260" y="156" width="300" height="28" rx="4" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.5" stroke-dasharray="4,2"/>
+  <text x="410" y="174" text-anchor="middle" font-size="8.5" fill="#15803D">三个方法文件定义处理逻辑、输出格式、URL域名分级</text>
+
+  <!-- Dashed divider -->
+  <line x1="100" y1="215" x2="720" y2="215" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="410" y="230" text-anchor="middle" font-size="9" fill="#94A3B8">— 读取边界 — 以下为跨步骤输入文件 —</text>
+
+  <!-- ===== BOTTOM: Cross-step input files ===== -->
+  <rect x="160" y="250" width="500" height="130" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="410" y="270" text-anchor="middle" font-size="11" font-weight="bold" fill="#1E40AF">跨步骤输入文件</text>
+
+  <!-- requirement-web.json -->
+  <rect x="230" y="285" width="360" height="32" rx="4" fill="white" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="410" y="306" text-anchor="middle" font-size="10" font-weight="bold" fill="#1E40AF">requirement-web.json（Step 01 产出）</text>
+
+  <!-- raw-materials -->
+  <rect x="230" y="327" width="360" height="32" rx="4" fill="white" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="410" y="348" text-anchor="middle" font-size="10" font-weight="bold" fill="#1E40AF">raw-materials index.json + *.md（Step 03 产出）</text>
+
+  <!-- Agent box -->
+  <rect x="310" y="400" width="200" height="55" rx="8" fill="white" stroke="#8B5CF6" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="310" y="400" width="200" height="24" rx="8" fill="#EDE9FE"/>
+  <text x="410" y="417" text-anchor="middle" font-size="11" font-weight="bold" fill="#6D28D9">单 Agent</text>
+  <text x="410" y="440" text-anchor="middle" font-size="9" fill="#475569">读 5 文件 → 执行 6 步 → 产出 1 JSON</text>
+
+  <!-- Legend -->
+  <rect x="100" y="480" width="620" height="50" rx="6" fill="#FFF7ED" stroke="#FDBA74" stroke-width="1"/>
+  <text x="110" y="500" font-size="10" font-weight="bold" fill="#9A3412">边界规则</text>
+  <text x="110" y="518" font-size="9" fill="#9A3412">Agent 只读绿框方法文件 + 蓝框跨步骤输入。不读其他步骤的 agent 定义 / 调度文件 / 格式文件。</text>
+</svg>

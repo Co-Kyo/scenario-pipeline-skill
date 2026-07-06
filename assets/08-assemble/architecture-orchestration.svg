@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 750" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3B82F6"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8B5CF6"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="600" height="750" fill="#F8FAFC" rx="8"/>
+
+  <!-- Title -->
+  <text x="300" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#1E293B">Step 08 · 主 Agent 编排流程</text>
+  <text x="300" y="54" text-anchor="middle" font-size="11" fill="#64748B">只看主 agent 做了什么，不关心 sub-agent 内部</text>
+  <line x1="80" y1="65" x2="520" y2="65" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- Step 1: 筛选 -->
+  <rect x="180" y="85" width="240" height="40" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <text x="300" y="110" text-anchor="middle" font-size="12" font-weight="bold" fill="#C2410C">① 筛选待组装命题</text>
+  <line x1="300" y1="125" x2="300" y2="150" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 2: 2-agent-per-proposition -->
+  <rect x="130" y="150" width="340" height="95" rx="6" fill="white" stroke="#3B82F6" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="130" y="150" width="340" height="24" rx="6" fill="#DBEAFE"/>
+  <text x="300" y="167" text-anchor="middle" font-size="12" font-weight="bold" fill="#1E40AF">② 2-agent-per-命题 并行 spawn</text>
+
+  <!-- Proposition box -->
+  <rect x="145" y="182" width="310" height="55" rx="4" fill="#F8FAFC" stroke="#93C5FD" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="300" y="196" text-anchor="middle" font-size="9" fill="#6B7280">命题 {seq}-{short_name}</text>
+
+  <!-- Markdown agent -->
+  <rect x="155" y="204" width="140" height="26" rx="4" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1"/>
+  <text x="225" y="221" text-anchor="middle" font-size="9" font-weight="bold" fill="#6D28D9">Markdown Agent</text>
+
+  <!-- Experiment agent -->
+  <rect x="305" y="204" width="140" height="26" rx="4" fill="#FFF7ED" stroke="#EA580C" stroke-width="1"/>
+  <text x="375" y="221" text-anchor="middle" font-size="9" font-weight="bold" fill="#C2410C">Experiment Agent</text>
+
+  <line x1="300" y1="245" x2="300" y2="275" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 3: 轮询 -->
+  <rect x="180" y="275" width="240" height="35" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1" filter="url(#shadow)"/>
+  <text x="300" y="297" text-anchor="middle" font-size="11" fill="#475569">③ 轮询（W=5 命题 · 超时 8min）</text>
+  <line x1="300" y1="310" x2="300" y2="340" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 4: 槽位替换 -->
+  <rect x="145" y="340" width="310" height="45" rx="6" fill="white" stroke="#8B5CF6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="300" y="358" text-anchor="middle" font-size="11" font-weight="bold" fill="#6D28D9">④ 槽位替换</text>
+  <text x="300" y="374" text-anchor="middle" font-size="9.5" fill="#475569">1 命题 = 2 槽位 · 2 agent 均结束才释放</text>
+  <line x1="300" y1="385" x2="300" y2="415" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 5: 完成判定 -->
+  <rect x="145" y="415" width="310" height="50" rx="6" fill="white" stroke="#14B8A6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="300" y="435" text-anchor="middle" font-size="12" font-weight="bold" fill="#0F766E">⑤ 完成判定</text>
+  <text x="300" y="452" text-anchor="middle" font-size="9.5" fill="#475569">completed（2/2）· partial（1/2）· failed（0/2）</text>
+  <line x1="300" y1="465" x2="300" y2="495" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Barrier 8 -->
+  <rect x="130" y="495" width="340" height="50" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="300" y="516" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400E">🛑 Barrier 8 检查点（强制停顿）</text>
+  <text x="300" y="534" text-anchor="middle" font-size="10" fill="#B45309">展示组装摘要 → 等待用户确认</text>
+  <line x1="300" y1="545" x2="300" y2="575" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Output / injection -->
+  <rect x="155" y="575" width="290" height="40" rx="6" fill="white" stroke="#14B8A6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="300" y="595" text-anchor="middle" font-size="12" font-weight="bold" fill="#0F766E">⑥ 注入 Step 09 学习阶梯</text>
+  <text x="300" y="610" text-anchor="middle" font-size="9" fill="#64748B">携带组装摘要进入下一阶段</text>
+
+  <!-- Right side: what main agent reads -->
+  <rect x="435" y="85" width="150" height="108" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="445" y="103" font-size="10" font-weight="bold" fill="#334155">主 agent 读取</text>
+  <text x="445" y="120" font-size="8.5" fill="#64748B">08-assemble/schemas.md</text>
+  <text x="445" y="134" font-size="8.5" fill="#64748B">ref-sources.md</text>
+  <text x="445" y="148" font-size="8.5" fill="#64748B">protocol-scheduling.md</text>
+  <text x="445" y="162" font-size="8.5" fill="#64748B">capability-graph.json</text>
+  <text x="445" y="176" font-size="8.5" fill="#64748B">briefings/*.md</text>
+  <text x="445" y="190" font-size="7.5" fill="#94A3B8">读路径不读内容</text>
+
+  <!-- Right side: what main agent does NOT read -->
+  <rect x="435" y="210" width="150" height="60" rx="6" fill="#FEF2F2" stroke="#FECACA" stroke-width="1" filter="url(#shadow)"/>
+  <text x="445" y="228" font-size="9.5" font-weight="bold" fill="#DC2626">⛔ 禁止读取</text>
+  <text x="445" y="244" font-size="8" fill="#991B1B">briefings/*.md 内容</text>
+  <text x="445" y="256" font-size="8" fill="#991B1B">由 sub-agent 自主读取</text>
+
+  <!-- Bottom: note -->
+  <rect x="60" y="660" width="480" height="60" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="300" y="680" text-anchor="middle" font-size="10" font-weight="bold" fill="#166534">主 agent 只做编排：筛选 → 2-agent-per-命题 spawn → 轮询 → 槽位替换 → 判定 → barrier</text>
+  <text x="300" y="698" text-anchor="middle" font-size="9" fill="#15803D">每命题 2 agent（Markdown + Experiment）并行无依赖，2 agent 均完成才释放槽位</text>
+  <text x="300" y="712" text-anchor="middle" font-size="8.5" fill="#166534">主 agent 不读 sub-agent 产出内容，只检查文件是否存在</text>
+</svg>

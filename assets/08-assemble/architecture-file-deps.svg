@@ -1,0 +1,85 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 600" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3B82F6"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8B5CF6"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="820" height="600" fill="#F8FAFC" rx="8"/>
+
+  <text x="410" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#1E293B">Step 08 · 文件依赖图</text>
+  <text x="410" y="54" text-anchor="middle" font-size="11" fill="#64748B">谁读哪个文件 — 主 agent 与 sub-agent 的读取边界</text>
+  <line x1="80" y1="65" x2="740" y2="65" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- ===== GREEN ZONE: MAIN AGENT FILES (top) ===== -->
+  <rect x="220" y="85" width="380" height="115" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="410" y="105" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">主 Agent 读取的文件</text>
+
+  <rect x="235" y="115" width="170" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="320" y="130" text-anchor="middle" font-size="9" fill="#166534">08-assemble/schemas.md</text>
+
+  <rect x="415" y="115" width="170" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="500" y="130" text-anchor="middle" font-size="9" fill="#166534">common/ref-sources.md</text>
+
+  <rect x="235" y="142" width="170" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="320" y="157" text-anchor="middle" font-size="9" fill="#166534">common/protocol-scheduling.md</text>
+
+  <rect x="415" y="142" width="170" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="500" y="157" text-anchor="middle" font-size="9" fill="#166534">capability-graph.json</text>
+
+  <rect x="235" y="169" width="350" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="410" y="184" text-anchor="middle" font-size="9" fill="#166534">briefings/*.md（仅读取路径，不读内容）</text>
+
+  <!-- Divider -->
+  <line x1="100" y1="215" x2="720" y2="215" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="410" y="230" text-anchor="middle" font-size="9" fill="#94A3B8">— 读取边界 — 主 agent 不跨越此线 —</text>
+
+  <!-- ===== BLUE ZONE: SUB-AGENT FILES (bottom) ===== -->
+  <rect x="160" y="250" width="500" height="180" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="410" y="270" text-anchor="middle" font-size="11" font-weight="bold" fill="#1E40AF">Sub-Agent 读取的文件</text>
+
+  <!-- Shared files -->
+  <rect x="250" y="282" width="320" height="30" rx="4" fill="white" stroke="#93C5FD" stroke-width="1.5"/>
+  <text x="410" y="302" text-anchor="middle" font-size="10" font-weight="bold" fill="#1E40AF">briefings/*.md（Markdown + Experiment 共享）</text>
+
+  <rect x="250" y="320" width="320" height="22" rx="4" fill="white" stroke="#93C5FD" stroke-width="1"/>
+  <text x="410" y="335" text-anchor="middle" font-size="9" fill="#1E40AF">capability-graph.json（含 propositions 定义）</text>
+
+  <!-- Experiment-only -->
+  <rect x="300" y="352" width="220" height="22" rx="4" fill="white" stroke="#EA580C" stroke-width="1"/>
+  <text x="410" y="367" text-anchor="middle" font-size="9" fill="#C2410C">ref-sources.md（Experiment 无 code 时搜索补充）</text>
+
+  <!-- Agent-Specific -->
+  <rect x="250" y="384" width="320" height="35" rx="4" fill="white" stroke="#8B5CF6" stroke-width="1.5"/>
+  <text x="410" y="400" text-anchor="middle" font-size="9" fill="#6D28D9">Markdown Agent: briefings → overview/edge-cases/trade-offs/references</text>
+  <text x="410" y="414" text-anchor="middle" font-size="9" fill="#C2410C">Experiment Agent: briefings + ref-sources → experiment/README.md + src/</text>
+
+  <!-- ===== BOTTOM: AGENT SUMMARY BOXES ===== -->
+  <rect x="55" y="455" width="330" height="55" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+  <text x="220" y="478" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">Markdown Agent</text>
+  <text x="220" y="496" text-anchor="middle" font-size="8.5" fill="#475569">asm-md-{seq}-{short_name}</text>
+  <text x="220" y="506" text-anchor="middle" font-size="8.5" fill="#475569">读 briefings → 4 文件: overview/edge-cases/trade-offs/references</text>
+
+  <rect x="435" y="455" width="330" height="55" rx="6" fill="#FFF7ED" stroke="#EA580C" stroke-width="1.5"/>
+  <text x="600" y="478" text-anchor="middle" font-size="10" font-weight="bold" fill="#C2410C">Experiment Agent</text>
+  <text x="600" y="496" text-anchor="middle" font-size="8.5" fill="#475569">asm-exp-{seq}-{short_name}</text>
+  <text x="600" y="506" text-anchor="middle" font-size="8.5" fill="#475569">读 briefings + ref-sources → experiment/README.md + src/</text>
+
+  <!-- Legend / Principle -->
+  <rect x="100" y="530" width="620" height="50" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="110" y="550" font-size="10" font-weight="bold" fill="#166534">边界规则</text>
+  <text x="110" y="568" font-size="9" fill="#166534">主 agent 只读绿框文件（schemas/ref-sources/protocol-scheduling/路径），不读蓝框文件的内容</text>
+  <text x="110" y="578" font-size="9" fill="#166534">briefings 内容由 sub-agent 自主读取，主 agent 只传递路径；ref-sources 仅 Experiment 在无 code 时读取</text>
+</svg>

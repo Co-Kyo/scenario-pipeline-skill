@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 750" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="600" height="750" fill="#F8FAFC" rx="8"/>
+
+  <!-- Title -->
+  <text x="300" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#1E293B">Step 02 · 依赖整理与命题分区编排流程</text>
+  <text x="300" y="54" text-anchor="middle" font-size="11" fill="#64748B">单 Agent 串行流程 — 依赖确认 → DAG → 分区 → 分配 → 写入</text>
+  <line x1="80" y1="65" x2="520" y2="65" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- Step 1 -->
+  <rect x="160" y="85" width="280" height="45" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <text x="300" y="105" text-anchor="middle" font-size="12" font-weight="bold" fill="#C2410C">① 依赖关系确认</text>
+  <text x="300" y="122" text-anchor="middle" font-size="9.5" fill="#475569">从 requirement-web.json 推断依赖</text>
+  <line x1="300" y1="130" x2="300" y2="155" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 2 -->
+  <rect x="140" y="155" width="320" height="55" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <text x="300" y="175" text-anchor="middle" font-size="12" font-weight="bold" fill="#C2410C">② DAG 构建</text>
+  <text x="300" y="193" text-anchor="middle" font-size="9.5" fill="#475569">检测循环依赖 → 断环处理</text>
+  <text x="300" y="206" text-anchor="middle" font-size="8.5" fill="#94A3B8">拓扑排序 · 生成有向无环图</text>
+  <line x1="300" y1="210" x2="300" y2="235" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 3 -->
+  <rect x="120" y="235" width="360" height="65" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <text x="300" y="255" text-anchor="middle" font-size="12" font-weight="bold" fill="#C2410C">③ 三层分区</text>
+  <text x="300" y="274" text-anchor="middle" font-size="9.5" fill="#475569">连通分量 → 拓扑深度 → 社区发现（条件执行）</text>
+  <text x="300" y="290" text-anchor="middle" font-size="9" fill="#94A3B8">社区发现仅在规模超过阈值时触发</text>
+  <line x1="300" y1="300" x2="300" y2="325" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 4 -->
+  <rect x="140" y="325" width="320" height="55" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <text x="300" y="345" text-anchor="middle" font-size="12" font-weight="bold" fill="#C2410C">④ Session 分配</text>
+  <text x="300" y="363" text-anchor="middle" font-size="9.5" fill="#475569">Core-First 策略分配 session</text>
+  <text x="300" y="376" text-anchor="middle" font-size="8.5" fill="#94A3B8">高扇出节点优先 · 跨 partition 依赖标记</text>
+  <line x1="300" y1="380" x2="300" y2="410" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 5 -->
+  <rect x="140" y="410" width="320" height="50" rx="6" fill="white" stroke="#14B8A6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="300" y="432" text-anchor="middle" font-size="12" font-weight="bold" fill="#0F766E">⑤ 写入输出文件</text>
+  <text x="300" y="450" text-anchor="middle" font-size="9" fill="#64748B">partition-analysis.json + execution-plan.md</text>
+  <line x1="300" y1="460" x2="300" y2="490" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Barrier 2 -->
+  <rect x="130" y="490" width="340" height="50" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="300" y="512" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400E">🛑 Barrier 2 检查点</text>
+  <text x="300" y="530" text-anchor="middle" font-size="10" fill="#B45309">展示分区结果，调用 clarify 等待用户确认</text>
+
+  <!-- Right side: what main agent reads -->
+  <rect x="430" y="85" width="155" height="90" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="440" y="103" font-size="10" font-weight="bold" fill="#334155">主 Agent 读取</text>
+  <text x="440" y="122" font-size="8.5" fill="#64748B">schemas.md</text>
+  <text x="440" y="140" font-size="8.5" fill="#64748B">requirement-web.json</text>
+  <text x="440" y="162" font-size="7.5" fill="#94A3B8">跨步骤读取</text>
+
+  <!-- Bottom: note -->
+  <rect x="60" y="665" width="480" height="60" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="300" y="685" text-anchor="middle" font-size="10" font-weight="bold" fill="#166534">单 Agent 串行完成依赖整理与分区，无需 Sub-Agent</text>
+  <text x="300" y="703" text-anchor="middle" font-size="9" fill="#15803D">Barrier 2 是必经检查点，确认后注入 Step 03 浏览</text>
+  <text x="300" y="716" text-anchor="middle" font-size="9" fill="#15803D">三层分区条件触发，社区发现按需执行</text>
+</svg>

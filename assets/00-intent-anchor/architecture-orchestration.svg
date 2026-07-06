@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 750" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="600" height="750" fill="#F8FAFC" rx="8"/>
+
+  <!-- Title -->
+  <text x="300" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#1E293B">Step 00 · 意图锚定编排流程</text>
+  <text x="300" y="54" text-anchor="middle" font-size="11" fill="#64748B">单 Agent 串行流程 — 接收输入 → 推断 → 跳判 → 生成骨架</text>
+  <line x1="80" y1="65" x2="520" y2="65" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- Step 1 -->
+  <rect x="160" y="85" width="280" height="45" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <text x="300" y="105" text-anchor="middle" font-size="12" font-weight="bold" fill="#C2410C">① 轻量提取</text>
+  <text x="300" y="122" text-anchor="middle" font-size="9.5" fill="#475569">从 raw_input 提取 topic + tech_stack</text>
+  <line x1="300" y1="130" x2="300" y2="155" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 2 -->
+  <rect x="160" y="155" width="280" height="45" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <text x="300" y="175" text-anchor="middle" font-size="12" font-weight="bold" fill="#C2410C">② 年限判定</text>
+  <text x="300" y="192" text-anchor="middle" font-size="9.5" fill="#475569">推算 target_level — 读取 year-rules.md</text>
+  <line x1="300" y1="200" x2="300" y2="225" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 3 -->
+  <rect x="140" y="225" width="320" height="55" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <text x="300" y="245" text-anchor="middle" font-size="12" font-weight="bold" fill="#C2410C">③ 跳过判断</text>
+  <text x="300" y="262" text-anchor="middle" font-size="9.5" fill="#475569">根据 skip-rules.md 决定跳过 Step 01 或进入</text>
+  <text x="300" y="275" text-anchor="middle" font-size="8.5" fill="#94A3B8">跳过 → 注入空骨架 · 进入 → 时序编排</text>
+  <line x1="300" y1="280" x2="300" y2="310" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 4 -->
+  <rect x="130" y="310" width="340" height="55" rx="6" fill="white" stroke="#14B8A6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="300" y="330" text-anchor="middle" font-size="12" font-weight="bold" fill="#0F766E">④ 生成骨架 · 写入 anchors.json</text>
+  <text x="300" y="348" text-anchor="middle" font-size="9.5" fill="#475569">提取 8-15 个锚点 → 分配角色 → 注入策略</text>
+  <text x="300" y="362" text-anchor="middle" font-size="9" fill="#64748B">读取 strategy-level.md + schemas.md§anchors</text>
+  <line x1="300" y1="365" x2="300" y2="395" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Output path note -->
+  <rect x="170" y="395" width="260" height="30" rx="4" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="300" y="415" text-anchor="middle" font-size="9" fill="#166534">{workDir}/.meta/brainstorm/anchors.json</text>
+  <line x1="300" y1="425" x2="300" y2="455" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Barrier 0 -->
+  <rect x="130" y="455" width="340" height="55" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="300" y="477" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400E">🛑 Barrier 0 检查点</text>
+  <text x="300" y="495" text-anchor="middle" font-size="10" fill="#B45309">展示骨架摘要，调用 clarify 等待用户确认</text>
+  <text x="300" y="507" text-anchor="middle" font-size="9" fill="#B45309">确认 → 继续 Step 01 · 修改 → 重试</text>
+
+  <!-- Right side: what main agent reads -->
+  <rect x="430" y="85" width="155" height="130" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="440" y="103" font-size="10" font-weight="bold" fill="#334155">主 Agent 读取</text>
+  <text x="440" y="120" font-size="8.5" fill="#64748B">schemas.md§anchors</text>
+  <text x="440" y="138" font-size="8.5" fill="#64748B">year-rules.md</text>
+  <text x="440" y="156" font-size="8.5" fill="#64748B">skip-rules.md</text>
+  <text x="440" y="174" font-size="8.5" fill="#64748B">strategy-level.md</text>
+  <text x="440" y="196" font-size="7.5" fill="#94A3B8">不读 sub-agent 文件</text>
+
+  <!-- Bottom: note -->
+  <rect x="60" y="665" width="480" height="60" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="300" y="685" text-anchor="middle" font-size="10" font-weight="bold" fill="#166534">单 Agent 串行完成所有步骤，无需 Sub-Agent</text>
+  <text x="300" y="703" text-anchor="middle" font-size="9" fill="#15803D">Barrier 0 是必经检查点，强制停等用户确认后才继续</text>
+  <text x="300" y="716" text-anchor="middle" font-size="9" fill="#15803D">跳过判断直接影响 Step 01 是否执行</text>
+</svg>

@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 600" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3B82F6"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8B5CF6"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="820" height="600" fill="#F8FAFC" rx="8"/>
+
+  <text x="410" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#1E293B">Step 00 · 文件依赖图</text>
+  <text x="410" y="54" text-anchor="middle" font-size="11" fill="#64748B">单 Agent 读取哪些文件 — 读取边界</text>
+  <line x1="80" y1="65" x2="740" y2="65" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- ===== CENTER: FILES ===== -->
+  <rect x="250" y="85" width="320" height="150" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="410" y="105" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">Agent 读取的文件</text>
+
+  <rect x="270" y="118" width="135" height="26" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="337" y="135" text-anchor="middle" font-size="9" fill="#166534">schemas.md§anchors</text>
+
+  <rect x="415" y="118" width="135" height="26" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="482" y="135" text-anchor="middle" font-size="9" fill="#166534">year-rules.md</text>
+
+  <rect x="270" y="154" width="135" height="26" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="337" y="171" text-anchor="middle" font-size="9" fill="#166534">skip-rules.md</text>
+
+  <rect x="415" y="154" width="135" height="26" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="482" y="171" text-anchor="middle" font-size="9" fill="#166534">strategy-level.md</text>
+
+  <line x1="100" y1="260" x2="720" y2="260" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="410" y="275" text-anchor="middle" font-size="9" fill="#94A3B8">— 读取边界 — Agent 不跨越此线 —</text>
+
+  <rect x="300" y="300" width="220" height="70" rx="6" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="410" y="328" text-anchor="middle" font-size="11" font-weight="bold" fill="#1E40AF">意图锚定 Agent</text>
+  <text x="410" y="348" text-anchor="middle" font-size="9" fill="#475569">串行执行 4 阶段 · 无 Sub-Agent</text>
+  <text x="410" y="360" text-anchor="middle" font-size="8" fill="#64748B">输出: anchors.json</text>
+
+  <line x1="410" y1="235" x2="410" y2="300" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="100" y="500" width="620" height="70" rx="6" fill="#FFF7ED" stroke="#FDBA74" stroke-width="1"/>
+  <text x="110" y="520" font-size="10" font-weight="bold" fill="#9A3412">边界规则</text>
+  <text x="110" y="540" font-size="9" fill="#9A3412">Agent 只读绿框中列出的 4 个文件，不读取任何 Sub-Agent 定义文件</text>
+  <text x="110" y="556" font-size="9" fill="#9A3412">anchors.json 是唯一输出，由 Stage ④ 生成后写入</text>
+  <text x="110" y="568" font-size="9" fill="#9A3412">Barrier 0 在写入后触发，暂停等待用户确认骨架</text>
+</svg>

@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 750" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3B82F6"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8B5CF6"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="600" height="750" fill="#F8FAFC" rx="8"/>
+
+  <!-- Title -->
+  <text x="300" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#1E293B">Step 06 · 主 Agent 编排流程</text>
+  <text x="300" y="54" text-anchor="middle" font-size="11" fill="#64748B">只看主 agent 做了什么，不关心 sub-agent 内部</text>
+  <line x1="80" y1="65" x2="520" y2="65" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- Step 1 -->
+  <rect x="155" y="85" width="290" height="38" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <text x="300" y="104" text-anchor="middle" font-size="11" font-weight="bold" fill="#C2410C">① 筛选待研究能力</text>
+  <text x="300" y="117" text-anchor="middle" font-size="8.5" fill="#9A3412">覆盖待处理命题 or 扇出度≥30%</text>
+  <line x1="300" y1="123" x2="300" y2="140" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 2 -->
+  <rect x="155" y="140" width="290" height="38" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="155" y="140" width="290" height="24" rx="6" fill="#FFF7ED"/>
+  <text x="300" y="158" text-anchor="middle" font-size="11" font-weight="bold" fill="#C2410C">② 增量检查（已存在则跳过）</text>
+  <text x="300" y="186" text-anchor="middle" font-size="8.5" fill="#475569">文件存在性检测，避免重复研究</text>
+  <line x1="300" y1="178" x2="300" y2="195" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 3 -->
+  <rect x="130" y="195" width="340" height="55" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="130" y="195" width="340" height="24" rx="6" fill="#FFF7ED"/>
+  <text x="300" y="213" text-anchor="middle" font-size="11" font-weight="bold" fill="#C2410C">③ 技术域分组</text>
+  <text x="300" y="234" text-anchor="middle" font-size="9" fill="#475569">同层归组 + 依赖就近 + CAP=5能力/组</text>
+  <line x1="300" y1="250" x2="300" y2="267" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 4 -->
+  <rect x="130" y="267" width="340" height="55" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="130" y="267" width="340" height="24" rx="6" fill="#FFF7ED"/>
+  <text x="300" y="285" text-anchor="middle" font-size="11" font-weight="bold" fill="#C2410C">④ 依赖拓扑编排</text>
+  <text x="300" y="306" text-anchor="middle" font-size="9" fill="#475569">无依赖并行 → 有依赖串行，确定DAG批次</text>
+  <line x1="300" y1="322" x2="300" y2="339" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 5 -->
+  <rect x="155" y="339" width="290" height="38" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="155" y="339" width="290" height="24" rx="6" fill="#FFF7ED"/>
+  <text x="300" y="357" text-anchor="middle" font-size="11" font-weight="bold" fill="#C2410C">⑤ 信源预查找</text>
+  <text x="300" y="385" text-anchor="middle" font-size="8.5" fill="#475569">从capability-graph取T0 URL</text>
+  <line x1="300" y1="377" x2="300" y2="394" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 6: spawn DAG agents -->
+  <rect x="100" y="394" width="400" height="85" rx="6" fill="white" stroke="#3B82F6" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="100" y="394" width="400" height="26" rx="6" fill="#DBEAFE"/>
+  <text x="300" y="413" text-anchor="middle" font-size="11" font-weight="bold" fill="#1E40AF">⑥ 并行spawn域Agent（DAG调度模式）</text>
+  <text x="300" y="435" text-anchor="middle" font-size="8.5" fill="#475569">第一批: 无依赖组 → 轮询 → 后续批次: 依赖组</text>
+  <text x="300" y="449" text-anchor="middle" font-size="8.5" fill="#475569">W=5 · label=agent-{group_id} · 超时15min</text>
+  <text x="300" y="463" text-anchor="middle" font-size="8" fill="#94A3B8">跨Agent依赖的文件协调</text>
+  <line x1="300" y1="479" x2="300" y2="498" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Barrier -->
+  <rect x="130" y="498" width="340" height="45" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="300" y="519" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400E">🛑 Barrier 6（强制停顿）</text>
+  <text x="300" y="536" text-anchor="middle" font-size="9" fill="#B45309">全部完成→继续 · 未完成→停住等用户决策</text>
+
+  <!-- Right side: what main agent reads -->
+  <rect x="420" y="85" width="165" height="130" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="430" y="103" font-size="9.5" font-weight="bold" fill="#334155">主 agent 读取</text>
+  <text x="430" y="120" font-size="8" fill="#64748B">capability-research-mode.md</text>
+  <text x="430" y="134" font-size="8" fill="#64748B">schemas.md§06</text>
+  <text x="430" y="148" font-size="8" fill="#64748B">ref-sources.md</text>
+  <text x="430" y="162" font-size="8" fill="#64748B">protocol-scheduling.md</text>
+  <text x="430" y="176" font-size="8" fill="#64748B">README.md</text>
+  <text x="430" y="192" font-size="7" fill="#94A3B8">不读 capability-graph.json</text>
+
+  <!-- Right side: what main agent does NOT read -->
+  <rect x="420" y="228" width="165" height="95" rx="6" fill="#FEF2F2" stroke="#FECACA" stroke-width="1" filter="url(#shadow)"/>
+  <text x="430" y="246" font-size="9" font-weight="bold" fill="#DC2626">⛔ 禁止读取</text>
+  <text x="430" y="262" font-size="7.5" fill="#991B1B">capability-graph.json</text>
+  <text x="430" y="274" font-size="7.5" fill="#991B1B">capabilities/*.md</text>
+  <text x="430" y="286" font-size="7.5" fill="#991B1B">.meta/summaries/*.json</text>
+  <text x="430" y="298" font-size="7.5" fill="#991B1B">依赖摘要文件</text>
+
+  <!-- Bottom note -->
+  <rect x="60" y="565" width="480" height="55" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="300" y="585" text-anchor="middle" font-size="10" font-weight="bold" fill="#166534">主 agent 只做编排：筛选 → 分组 → 编排 → spawn（DAG调度） → barrier</text>
+  <text x="300" y="601" text-anchor="middle" font-size="9" fill="#15803D">域 agent 自主完成研究工作，读取依赖摘要并产出能力文件</text>
+  <text x="300" y="615" text-anchor="middle" font-size="8" fill="#15803D">跨Agent依赖通过共享 summaries/*.json 实现文件协调</text>
+</svg>

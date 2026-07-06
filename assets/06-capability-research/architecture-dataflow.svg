@@ -1,0 +1,152 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 700" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3B82F6"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8B5CF6"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="820" height="700" fill="#F8FAFC" rx="8"/>
+
+  <text x="410" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#1E293B">Step 06 · Sub-Agent 数据流</text>
+  <text x="410" y="54" text-anchor="middle" font-size="11" fill="#64748B">域 agent 读什么 → 做什么 → 产出什么（DAG 调度模式）</text>
+  <line x1="80" y1="65" x2="740" y2="65" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- ===== LEFT: INPUT FILES ===== -->
+  <rect x="25" y="85" width="145" height="200" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="35" y="103" font-size="10" font-weight="bold" fill="#334155">📂 输入文件</text>
+  <text x="35" y="122" font-size="8.5" fill="#64748B">capability-graph.json</text>
+  <text x="35" y="138" font-size="8.5" fill="#64748B">schemas.md§06</text>
+  <text x="35" y="154" font-size="8.5" fill="#64748B">ref-sources.md</text>
+  <text x="35" y="170" font-size="8.5" fill="#64748B">protocol-scheduling.md</text>
+  <text x="35" y="186" font-size="8.5" fill="#64748B">capability-research-mode.md</text>
+  <text x="35" y="202" font-size="8.5" fill="#64748B">README.md</text>
+  <text x="35" y="222" font-size="8" fill="#94A3B8">全部由域 agent 自主读取</text>
+
+  <!-- Arrows from input to DAG area -->
+  <line x1="170" y1="130" x2="195" y2="135" stroke="#4B5563" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="170" y1="160" x2="195" y2="195" stroke="#4B5563" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <!-- ===== DAG LEVEL 0 HEADER ===== -->
+  <rect x="195" y="85" width="430" height="22" rx="4" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1"/>
+  <text x="410" y="101" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">DAG Level 0 · 并行（无跨组依赖）</text>
+
+  <!-- Agent A_1 -->
+  <rect x="195" y="115" width="138" height="55" rx="5" fill="white" stroke="#3B82F6" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="195" y="115" width="138" height="20" rx="5" fill="#DBEAFE"/>
+  <text x="264" y="129" text-anchor="middle" font-size="9" font-weight="bold" fill="#1E40AF">A₁ 渲染与引擎①</text>
+  <text x="264" y="150" text-anchor="middle" font-size="7.5" fill="#475569">读: capability-graph.json</text>
+  <text x="264" y="163" text-anchor="middle" font-size="7.5" fill="#475569">写: A1-能力.md + 摘要.json</text>
+
+  <!-- Agent B_1 -->
+  <rect x="343" y="115" width="138" height="55" rx="5" fill="white" stroke="#3B82F6" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="343" y="115" width="138" height="20" rx="5" fill="#DBEAFE"/>
+  <text x="412" y="129" text-anchor="middle" font-size="9" font-weight="bold" fill="#1E40AF">B₁ 通信与数据</text>
+  <text x="412" y="150" text-anchor="middle" font-size="7.5" fill="#475569">读: capability-graph.json</text>
+  <text x="412" y="163" text-anchor="middle" font-size="7.5" fill="#475569">写: B1-能力.md + 摘要.json</text>
+
+  <!-- Agent C_1 -->
+  <rect x="491" y="115" width="138" height="55" rx="5" fill="white" stroke="#3B82F6" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="491" y="115" width="138" height="20" rx="5" fill="#DBEAFE"/>
+  <text x="560" y="129" text-anchor="middle" font-size="9" font-weight="bold" fill="#1E40AF">C₁ 状态管理</text>
+  <text x="560" y="150" text-anchor="middle" font-size="7.5" fill="#475569">读: capability-graph.json</text>
+  <text x="560" y="163" text-anchor="middle" font-size="7.5" fill="#475569">写: C1-能力.md + 摘要.json</text>
+
+  <!-- Agent D_1 -->
+  <rect x="269" y="180" width="138" height="55" rx="5" fill="white" stroke="#3B82F6" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="269" y="180" width="138" height="20" rx="5" fill="#DBEAFE"/>
+  <text x="338" y="194" text-anchor="middle" font-size="9" font-weight="bold" fill="#1E40AF">D₁ 性能优化①</text>
+  <text x="338" y="215" text-anchor="middle" font-size="7.5" fill="#475569">读: capability-graph.json</text>
+  <text x="338" y="228" text-anchor="middle" font-size="7.5" fill="#475569">写: D1-能力.md + 摘要.json</text>
+
+  <!-- Agent E_1 -->
+  <rect x="417" y="180" width="138" height="55" rx="5" fill="white" stroke="#3B82F6" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="417" y="180" width="138" height="20" rx="5" fill="#DBEAFE"/>
+  <text x="486" y="194" text-anchor="middle" font-size="9" font-weight="bold" fill="#1E40AF">E₁ 构建工具①</text>
+  <text x="486" y="215" text-anchor="middle" font-size="7.5" fill="#475569">读: capability-graph.json</text>
+  <text x="486" y="228" text-anchor="middle" font-size="7.5" fill="#475569">写: E1-能力.md + 摘要.json</text>
+
+  <!-- Sync note -->
+  <text x="410" y="262" text-anchor="middle" font-size="9" fill="#8B5CF6" font-weight="bold">↓ 等待全部完成 → 同步依赖摘要</text>
+  <line x1="410" y1="267" x2="410" y2="280" stroke="#8B5CF6" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- ===== DAG LEVEL 1 HEADER ===== -->
+  <rect x="195" y="280" width="430" height="22" rx="4" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1"/>
+  <text x="410" y="296" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">DAG Level 1 · 串行（依赖上游摘要）</text>
+
+  <!-- Agent A_2 -->
+  <rect x="195" y="310" width="138" height="55" rx="5" fill="white" stroke="#8B5CF6" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="195" y="310" width="138" height="20" rx="5" fill="#EDE9FE"/>
+  <text x="264" y="324" text-anchor="middle" font-size="9" font-weight="bold" fill="#6D28D9">A₂ 渲染与引擎②</text>
+  <text x="264" y="345" text-anchor="middle" font-size="7.5" fill="#475569">读: A₁ 摘要 · capability-graph</text>
+  <text x="264" y="358" text-anchor="middle" font-size="7.5" fill="#475569">写: A2-能力.md + 摘要.json</text>
+
+  <!-- Agent D_2 -->
+  <rect x="343" y="310" width="138" height="55" rx="5" fill="white" stroke="#8B5CF6" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="343" y="310" width="138" height="20" rx="5" fill="#EDE9FE"/>
+  <text x="412" y="324" text-anchor="middle" font-size="9" font-weight="bold" fill="#6D28D9">D₂ 性能优化②</text>
+  <text x="412" y="345" text-anchor="middle" font-size="7.5" fill="#475569">读: D₁ 摘要 · capability-graph</text>
+  <text x="412" y="358" text-anchor="middle" font-size="7.5" fill="#475569">写: D2-能力.md + 摘要.json</text>
+
+  <!-- Agent E_2 -->
+  <rect x="491" y="310" width="138" height="55" rx="5" fill="white" stroke="#8B5CF6" stroke-width="1" filter="url(#shadow)"/>
+  <rect x="491" y="310" width="138" height="20" rx="5" fill="#EDE9FE"/>
+  <text x="560" y="324" text-anchor="middle" font-size="9" font-weight="bold" fill="#6D28D9">E₂ 构建工具②</text>
+  <text x="560" y="345" text-anchor="middle" font-size="7.5" fill="#475569">读: E₁ 摘要 · capability-graph</text>
+  <text x="560" y="358" text-anchor="middle" font-size="7.5" fill="#475569">写: E2-能力.md + 摘要.json</text>
+
+  <!-- Dependency arrows Level 0 → Level 1 -->
+  <line x1="264" y1="170" x2="264" y2="310" stroke="#EF4444" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <line x1="338" y1="235" x2="402" y2="310" stroke="#EF4444" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+  <line x1="486" y1="235" x2="549" y2="310" stroke="#EF4444" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+
+  <!-- ===== RIGHT: OUTPUT FILES ===== -->
+  <rect x="650" y="85" width="150" height="285" rx="6" fill="white" stroke="#14B8A6" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="660" y="103" font-size="10" font-weight="bold" fill="#0F766E">📄 输出文件</text>
+  <line x1="660" y1="110" x2="790" y2="110" stroke="#CBD5E1" stroke-width="0.5"/>
+  <text x="660" y="128" font-size="8.5" fill="#0F766E" font-weight="bold">capabilities/</text>
+  <text x="660" y="143" font-size="7.5" fill="#64748B">{id}-{name}.md</text>
+  <text x="660" y="165" font-size="8.5" fill="#0F766E" font-weight="bold">.meta/summaries/</text>
+  <text x="660" y="180" font-size="7.5" fill="#64748B">{id}-{name}.json</text>
+  <line x1="660" y1="195" x2="790" y2="195" stroke="#CBD5E1" stroke-width="0.5"/>
+  <text x="660" y="215" font-size="8" fill="#94A3B8">由各域 agent 自主写入</text>
+  <text x="660" y="230" font-size="8" fill="#94A3B8">Level 1 agent 读取</text>
+  <text x="660" y="244" font-size="8" fill="#94A3B8">上游摘要文件</text>
+  <text x="660" y="264" font-size="8" fill="#94A3B8" font-weight="bold">协调机制：</text>
+  <text x="660" y="278" font-size="7.5" fill="#94A3B8">读文件 · 不经对话</text>
+  <text x="660" y="292" font-size="7.5" fill="#94A3B8">存于{schema_path}</text>
+  <text x="660" y="306" font-size="7.5" fill="#94A3B8">约定路径直接读取</text>
+
+  <!-- Arrows from agents → output -->
+  <line x1="333" y1="142" x2="650" y2="142" stroke="#14B8A6" stroke-width="0.8" stroke-dasharray="3,3" marker-end="url(#arrow)"/>
+  <line x1="481" y1="142" x2="650" y2="150" stroke="#14B8A6" stroke-width="0.8" stroke-dasharray="3,3" marker-end="url(#arrow)"/>
+  <line x1="555" y1="207" x2="650" y2="175" stroke="#14B8A6" stroke-width="0.8" stroke-dasharray="3,3" marker-end="url(#arrow)"/>
+  <line x1="333" y1="337" x2="650" y2="337" stroke="#14B8A6" stroke-width="0.8" stroke-dasharray="3,3" marker-end="url(#arrow)"/>
+
+  <!-- ===== BOTTOM: KEY PRINCIPLE ===== -->
+  <rect x="60" y="440" width="700" height="80" rx="6" fill="#EFF6FF" stroke="#3B82F6" stroke-width="1"/>
+  <text x="410" y="462" text-anchor="middle" font-size="11" font-weight="bold" fill="#1E40AF">DAG 调度核心机制</text>
+  <text x="410" y="480" text-anchor="middle" font-size="9.5" fill="#475569">Level 0 agent 并行研究（无依赖） → 产出能力文件 + 摘要 → 下游 agent 读取摘要</text>
+  <text x="410" y="496" text-anchor="middle" font-size="9.5" fill="#475569">Level 1 agent 串行研究（依赖上游） → 读取上游摘要后开始自己的研究工作</text>
+  <text x="410" y="512" text-anchor="middle" font-size="8.5" fill="#64748B">所有 agent 共享 capability-graph.json · 跨Agent协调通过文件系统而非对话</text>
+
+  <!-- Legend -->
+  <rect x="200" y="540" width="420" height="30" rx="6" fill="#F8FAFC" stroke="#CBD5E1" stroke-width="1"/>
+  <rect x="210" y="548" width="12" height="12" rx="2" fill="#DBEAFE"/>
+  <text x="226" y="559" font-size="8.5" fill="#475569">Level 0（并行无依赖）</text>
+  <rect x="370" y="548" width="12" height="12" rx="2" fill="#EDE9FE"/>
+  <text x="386" y="559" font-size="8.5" fill="#475569">Level 1（串行有依赖）</text>
+  <line x1="510" y1="554" x2="528" y2="554" stroke="#EF4444" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="532" y="559" font-size="8.5" fill="#475569">依赖关系</text>
+</svg>

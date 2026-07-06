@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 600" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#3B82F6"/>
+    </marker>
+    <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8B5CF6"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="820" height="600" fill="#F8FAFC" rx="8"/>
+
+  <text x="410" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#1E293B">Step 03 · 文件依赖图</text>
+  <text x="410" y="54" text-anchor="middle" font-size="11" fill="#64748B">谁读哪个文件 — 主 agent 与 sub-agent 的读取边界</text>
+  <line x1="80" y1="65" x2="740" y2="65" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- ===== CENTER: FILES ===== -->
+
+  <!-- Main agent files (top - green zone) -->
+  <rect x="230" y="85" width="360" height="115" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="410" y="105" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">主 Agent 读取的文件</text>
+
+  <rect x="245" y="115" width="155" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="322" y="130" text-anchor="middle" font-size="8.5" fill="#166534">protocol-scheduling.md</text>
+
+  <rect x="410" y="115" width="165" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="492" y="130" text-anchor="middle" font-size="8.5" fill="#166534">ref-sources.md</text>
+
+  <rect x="245" y="142" width="155" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="322" y="157" text-anchor="middle" font-size="8.5" fill="#166534">strategy-level.md</text>
+
+  <rect x="410" y="142" width="165" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="492" y="157" text-anchor="middle" font-size="8.5" fill="#166534">requirement-web.json *</text>
+
+  <rect x="280" y="169" width="260" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="410" y="184" text-anchor="middle" font-size="8.5" fill="#166534">partition-analysis.json *</text>
+
+  <text x="410" y="195" text-anchor="middle" font-size="7.5" fill="#94A3B8">* 可选文件（Step 01/02 产出，不存在则降级）</text>
+
+  <!-- Divider -->
+  <line x1="100" y1="215" x2="720" y2="215" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="410" y="230" text-anchor="middle" font-size="9" fill="#94A3B8">— 读取边界 — 主 agent 不跨越此线 —</text>
+
+  <!-- Sub-agent files (bottom - blue zone) -->
+  <rect x="130" y="250" width="560" height="195" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="410" y="270" text-anchor="middle" font-size="11" font-weight="bold" fill="#1E40AF">Sub-Agent 读取 / 写入的文件</text>
+
+  <!-- Schema (shared) -->
+  <rect x="280" y="282" width="260" height="28" rx="4" fill="white" stroke="#93C5FD" stroke-width="1.5"/>
+  <text x="410" y="300" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#1E40AF">schemas.md§03-scan（所有 sub-agent 使用）</text>
+
+  <!-- Phase A agent files -->
+  <rect x="150" y="322" width="160" height="26" rx="4" fill="white" stroke="#3B82F6" stroke-width="1"/>
+  <text x="230" y="340" text-anchor="middle" font-size="8.5" fill="#1E40AF">search-batch.*.json ← 搜索 Agent 写</text>
+
+  <rect x="320" y="322" width="160" height="26" rx="4" fill="white" stroke="#F97316" stroke-width="1"/>
+  <text x="400" y="340" text-anchor="middle" font-size="8.5" fill="#C2410C">url-batches.json ← 主线程写</text>
+
+  <rect x="490" y="322" width="180" height="26" rx="4" fill="white" stroke="#F97316" stroke-width="1"/>
+  <text x="580" y="340" text-anchor="middle" font-size="8.5" fill="#C2410C">url-batch.*.json ← 主线程分批</text>
+
+  <!-- Phase B agent files -->
+  <rect x="210" y="358" width="180" height="26" rx="4" fill="white" stroke="#8B5CF6" stroke-width="1"/>
+  <text x="300" y="376" text-anchor="middle" font-size="8.5" fill="#6D28D9">partial.*.json ← 提取 Agent 写</text>
+
+  <rect x="400" y="358" width="180" height="26" rx="4" fill="white" stroke="#8B5CF6" stroke-width="1"/>
+  <text x="490" y="376" text-anchor="middle" font-size="8.5" fill="#6D28D9">B{batch_id}-M*·md ← 提取 Agent 写</text>
+
+  <!-- Plugin -->
+  <rect x="280" y="394" width="260" height="26" rx="4" fill="white" stroke="#F59E0B" stroke-width="1"/>
+  <text x="410" y="412" text-anchor="middle" font-size="8.5" fill="#92400E">anti-crawl-fetch.md（插件 · 提取 Agent 条件加载）</text>
+
+  <!-- Final output -->
+  <rect x="230" y="430" width="360" height="10" rx="0" fill="none"/>
+  <text x="410" y="440" text-anchor="middle" font-size="9" font-weight="bold" fill="#0F766E">↓ 主线程 Phase C 写入：index.json + cross-comparison.md + dynamic-sources.json</text>
+
+  <!-- ===== BOTTOM: AGENT BOXES ===== -->
+  <!-- Search agent -->
+  <rect x="55" y="465" width="340" height="55" rx="6" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="225" y="488" text-anchor="middle" font-size="10" font-weight="bold" fill="#1E40AF">搜索 Agent（Phase A）</text>
+  <text x="225" y="506" text-anchor="middle" font-size="8.5" fill="#475569">读：task（主线程内联，含 T0/反爬/excluded）</text>
+  <text x="225" y="516" text-anchor="middle" font-size="8.5" fill="#475569">写：search-batch.{batch_id}.json</text>
+
+  <!-- Extract agent -->
+  <rect x="425" y="465" width="340" height="55" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+  <text x="595" y="488" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">提取 Agent（Phase B）</text>
+  <text x="595" y="506" text-anchor="middle" font-size="8.5" fill="#475569">读：url-batch.{batch_id}.json + anti-crawl-fetch.md（条件）</text>
+  <text x="595" y="516" text-anchor="middle" font-size="8.5" fill="#475569">写：partial.{batch_id}.json + B{batch_id}-M*·md</text>
+
+  <!-- Legend -->
+  <rect x="100" y="535" width="620" height="50" rx="6" fill="#FFF7ED" stroke="#FDBA74" stroke-width="1"/>
+  <text x="110" y="553" font-size="10" font-weight="bold" fill="#9A3412">边界规则</text>
+  <text x="110" y="570" font-size="9" fill="#9A3412">主 agent 只读绿框文件（调度/信源/策略），不读蓝框文件（search-batch/url-batch/partial/素材）</text>
+  <text x="110" y="582" font-size="9" fill="#9A3412">蓝/橙/紫框文件由 sub-agent 自主读写 · 反爬插件仅由提取 agent 条件加载</text>
+</svg>

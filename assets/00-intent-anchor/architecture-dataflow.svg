@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 700" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="820" height="700" fill="#F8FAFC" rx="8"/>
+
+  <text x="410" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#1E293B">Step 00 · 意图锚定数据流</text>
+  <text x="410" y="54" text-anchor="middle" font-size="11" fill="#64748B">单 Agent 读什么 → 做什么 → 产出什么</text>
+  <line x1="80" y1="65" x2="740" y2="65" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- ===== LEFT: INPUT FILES ===== -->
+  <rect x="30" y="85" width="140" height="170" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="40" y="103" font-size="10" font-weight="bold" fill="#334155">📂 输入文件</text>
+  <text x="40" y="122" font-size="9" fill="#64748B">schemas.md§anchors</text>
+  <text x="40" y="140" font-size="9" fill="#64748B">year-rules.md</text>
+  <text x="40" y="158" font-size="9" fill="#64748B">skip-rules.md</text>
+  <text x="40" y="176" font-size="9" fill="#64748B">strategy-level.md</text>
+  <text x="40" y="200" font-size="8" fill="#94A3B8">由 Agent 按需读取</text>
+
+  <line x1="170" y1="175" x2="240" y2="175" stroke="#4B5563" stroke-width="1" stroke-dasharray="3,3"/>
+  <text x="205" y="170" text-anchor="middle" font-size="8" fill="#94A3B8">读取</text>
+
+  <!-- ===== CENTER: PIPELINE ===== -->
+  <!-- Box 1: Extract -->
+  <rect x="240" y="85" width="300" height="50" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <text x="390" y="108" text-anchor="middle" font-size="12" font-weight="bold" fill="#C2410C">阶段① 轻量提取</text>
+  <text x="390" y="126" text-anchor="middle" font-size="9.5" fill="#475569">从 raw_input 解析 topic + tech_stack</text>
+  <line x1="390" y1="135" x2="390" y2="160" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Box 2: Year -->
+  <rect x="240" y="160" width="300" height="50" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <text x="390" y="183" text-anchor="middle" font-size="12" font-weight="bold" fill="#C2410C">阶段② 年限判定</text>
+  <text x="390" y="201" text-anchor="middle" font-size="9.5" fill="#475569">匹配 year-rules.md 推算 target_level</text>
+  <line x1="390" y1="210" x2="390" y2="235" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Box 3: Skip -->
+  <rect x="240" y="235" width="300" height="55" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <text x="390" y="258" text-anchor="middle" font-size="12" font-weight="bold" fill="#C2410C">阶段③ 跳过判断</text>
+  <text x="390" y="276" text-anchor="middle" font-size="9.5" fill="#475569">根据 skip-rules.md 决策流程方向</text>
+  <text x="390" y="288" text-anchor="middle" font-size="8" fill="#94A3B8">跳过 → 注入空 · 继续 → Step 01</text>
+  <line x1="390" y1="290" x2="390" y2="315" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Box 4: Generate -->
+  <rect x="240" y="315" width="300" height="55" rx="6" fill="white" stroke="#14B8A6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="390" y="338" text-anchor="middle" font-size="12" font-weight="bold" fill="#0F766E">阶段④ 骨架生成 · 写入</text>
+  <text x="390" y="356" text-anchor="middle" font-size="9.5" fill="#475569">提取 8-15 锚点 → 角色分配 → 策略注入</text>
+  <text x="390" y="368" text-anchor="middle" font-size="8.5" fill="#64748B">读取 strategy-level.md + schemas.md§anchors</text>
+
+  <!-- ===== RIGHT: OUTPUT ===== -->
+  <line x1="540" y1="342" x2="600" y2="342" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <rect x="600" y="315" width="190" height="55" rx="6" fill="white" stroke="#14B8A6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="695" y="338" text-anchor="middle" font-size="11" font-weight="bold" fill="#0F766E">📄 anchors.json</text>
+  <text x="695" y="356" text-anchor="middle" font-size="9" fill="#64748B">{workDir}/.meta/brainstorm/</text>
+  <text x="695" y="368" text-anchor="middle" font-size="9" fill="#64748B">anchors.json</text>
+
+  <!-- ===== BOTTOM: PRINCIPLE ===== -->
+  <rect x="60" y="610" width="700" height="60" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="410" y="634" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">核心原则</text>
+  <text x="410" y="652" text-anchor="middle" font-size="10" fill="#475569">Agent 按顺序串行执行 4 个阶段，每个阶段读取对应规则文件</text>
+  <text x="410" y="666" text-anchor="middle" font-size="9" fill="#64748B">无 Sub-Agent · 无并行 · 无收敛器</text>
+</svg>
