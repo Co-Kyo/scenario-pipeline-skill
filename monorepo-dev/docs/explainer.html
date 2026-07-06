@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>skillpack monorepo-dev 架构解说</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0f0f1a;
+  --surface: #1a1b2e;
+  --surface2: #222440;
+  --border: #334155;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --accent: #6366f1;
+  --accent2: #0ea5e9;
+  --green: #10b981;
+  --amber: #f59e0b;
+  --rose: #f43f5e;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Sidebar ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 260px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  padding: 32px 20px;
+  overflow-y: auto;
+  z-index: 100;
+}
+nav h1 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 4px;
+}
+nav .subtitle {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+nav a {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 6px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 13px;
+  transition: all .15s;
+  margin-bottom: 2px;
+}
+nav a:hover, nav a.active {
+  background: var(--surface2);
+  color: #fff;
+}
+nav a .num {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  text-align: center;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-right: 8px;
+  color: #fff;
+}
+.num-1 { background: var(--accent2); }
+.num-2 { background: #2563eb; }
+.num-3 { background: var(--accent); }
+.num-4 { background: #8b5cf6; }
+.num-5 { background: var(--green); }
+.num-6 { background: var(--amber); }
+
+/* ── Main ── */
+main {
+  margin-left: 260px;
+  flex: 1;
+  padding: 48px 56px 80px;
+  max-width: 1100px;
+}
+
+/* ── Hero ── */
+.hero {
+  margin-bottom: 56px;
+  padding-bottom: 40px;
+  border-bottom: 1px solid var(--border);
+}
+.hero h2 {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--accent2), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.hero p {
+  color: var(--muted);
+  font-size: 16px;
+  max-width: 640px;
+}
+
+/* ── Section ── */
+section { margin-bottom: 72px; }
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.section-header .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+.section-header h3 {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* ── Boss note ── */
+.boss-note {
+  background: var(--surface);
+  border-left: 3px solid var(--amber);
+  border-radius: 0 8px 8px 0;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+.boss-note .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--amber);
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.boss-note p {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ── SVG container ── */
+.svg-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  overflow-x: auto;
+}
+.svg-wrap svg, .svg-wrap img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── Section desc ── */
+.section-desc {
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.section-desc .item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+.section-desc .item strong {
+  display: block;
+  color: #fff;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+.section-desc .item span {
+  font-size: 12px;
+}
+
+/* ── Footer ── */
+footer {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  nav { display: none; }
+  main { margin-left: 0; padding: 24px 20px; }
+  .section-desc { grid-template-columns: 1fr; }
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<nav>
+  <h1>skillpack</h1>
+  <div class="subtitle">monorepo-dev 架构解说</div>
+  <a href="#sec1" class="active"><span class="num num-1">1</span>全局鸟瞰</a>
+  <a href="#sec2"><span class="num num-2">2</span>包依赖拓扑</a>
+  <a href="#sec3"><span class="num num-3">3</span>构建流水线</a>
+  <a href="#sec4"><span class="num num-4">4</span>节点类型参考</a>
+  <a href="#sec5"><span class="num num-5">5</span>技能定义解剖</a>
+  <a href="#sec6"><span class="num num-6">6</span>开发者循环</a>
+</nav>
+
+<main>
+
+<div class="hero">
+  <h2>🔧 skillpack monorepo</h2>
+  <p>一套用于定义和构建 LLM Markdown Skill 管线的开发框架。<br>
+  本文档以 6 张结构图完整讲述 monorepo-dev 的架构、数据流、类型系统和开发操作。</p>
+</div>
+
+<section id="sec1">
+  <div class="section-header">
+    <span class="badge" style="background:#0ea5e9">1</span>
+    <h3>全局鸟瞰 — 项目物理结构</h3>
+  </div>
+  <div class="boss-note">
+    <div class="label">给老板的话</div>
+    <p>这张图是你应该记住的"地图"。整个 monorepo 只有 18 个源文件，分三层：框架库（packages/）、示例项目（demos/）、构建产物（dist/）。你不需要记每个文件，只需要知道"改框架去 packages/，改技能去 demos/，看结果去 dist/"。</p>
+  </div>
+  <div class="svg-wrap">
+    <img src="svg/01-birdseye.svg" alt="全局鸟瞰图">
+  </div>
+  <div class="section-desc">
+    <div class="item"><strong>📦 Framework Layer</strong><span>4 个 skillpack 包，单向依赖链：types → common → {build, validate}</span></div>
+    <div class="item"><strong>🎯 Demo Layer</strong><span>skillpack.config.ts（配置） + skill.ts（技能定义），通过 import 链接</span></div>
+    <div class="item"><strong>📄 Output Layer</strong><span>dist/SKILL.md + processes/ 5 个步骤文件，全量由 buildPipeline 生成</span></div>
+    <div class="item"><strong>🔗 跨层连接</strong><span>config import { defineConfig } from build; CLI 读取 config + skill → buildPipeline → 输出到 dist</span></div>
+  </div>
+</section>
+
+<section id="sec2">
+  <div class="section-header">
+    <span class="badge" style="background:#2563eb">2</span>
+    <h3>包依赖拓扑 — 谁依赖谁</h3>
+  </div>
+  <div class="boss-note">
+    <div class="label">给老板的话</div>
+    <p>这是项目的"承重墙"。tsconfig 的 project references 保证了构建顺序总是 types → common → build+validate。npm workspaces 让每个包互相可见。记住：types 是基石，common 是逻辑核心，build/validate 是消费者。绝对不允许反向依赖。</p>
+  </div>
+  <div class="svg-wrap">
+    <img src="svg/02-deps.svg" alt="依赖拓扑图">
+  </div>
+  <div class="section-desc">
+    <div class="item"><strong>tsconfig project references</strong><span>tsc -b 按引用拓扑依次构建，只重建变更的包</span></div>
+    <div class="item"><strong>npm workspace deps</strong><span>每个 package.json 声明 workspace: * 依赖，npm 自动 hoist</span></div>
+    <div class="item"><strong>构建顺序</strong><span>Phase 1: types → Phase 2: common → Phase 3: build + validate（并行）</span></div>
+    <div class="item"><strong>demo 特殊</strong><span>demos/ 不在 tsconfig references 中，通过 tsx 运行时加载 .ts 源文件</span></div>
+  </div>
+</section>
+
+<section id="sec3">
+  <div class="section-header">
+    <span class="badge" style="background:#6366f1">3</span>
+    <h3>构建流水线 — 输入到输出的完整路径</h3>
+  </div>
+  <div class="boss-note">
+    <div class="label">给老板的话</div>
+    <p>这是整个 skillpack 的"发动机"。从 skillpack.config.ts 声明配置 → CLI 动态加载 → buildPipeline 三阶段处理（校验→拓扑排序→渲染）→ 最终写入磁盘。三次校验确保不会产出错误文件，Kahn 排序保证步骤永远按正确的依赖顺序执行。</p>
+  </div>
+  <div class="svg-wrap">
+    <img src="svg/03-pipeline.svg" alt="构建流水线图">
+  </div>
+  <div class="section-desc">
+    <div class="item"><strong>📥 输入层</strong><span>skillpack.config.ts（配置） + skill.ts（技能定义），通过 CLI 动态 import 加载</span></div>
+    <div class="item"><strong>🖥 CLI 层</strong><span>cli.ts 解析参数 → 读取 config → 解析 skill 路径 → 合并 meta → 调用 buildPipeline</span></div>
+    <div class="item"><strong>✅ 校验阶段</strong><span>3 步：validateStep（字段完整性）→ validateDependencyRefs（引用完整性）→ validateBarrierContinuity（屏障连续性）</span></div>
+    <div class="item"><strong>🔢 解析阶段</strong><span>Kahn 拓扑排序 → 分配 seq（00-04）→ 解析 {{stepSeq}}/{{stepId}} 构建变量</span></div>
+    <div class="item"><strong>🎨 渲染阶段</strong><span>renderStep × N → processes/{seq}-{id}.md + renderSkillMd → SKILL.md</span></div>
+    <div class="item"><strong>📁 输出层</strong><span>dist/ 目录下 6 个文件：1 个 SKILL.md + 5 个步骤文件</span></div>
+  </div>
+</section>
+
+<section id="sec4">
+  <div class="section-header">
+    <span class="badge" style="background:#8b5cf6">4</span>
+    <h3>节点类型参考 — 三种调度原语</h3>
+  </div>
+  <div class="boss-note">
+    <div class="label">给老板的话</div>
+    <p>调度是 skill 的核心复杂度。我们只暴露 3 种节点：Agent（单兵）、Batch（组团并行）、Map（流水线）。用这 3 种原语 + 有向边，你可以组合出任意调度模式。这张图就是你的"API 速查表"——写 skill.ts 时对照着看。</p>
+  </div>
+  <div class="svg-wrap">
+    <img src="svg/04-nodes.svg" alt="节点类型参考图">
+  </div>
+  <div class="section-desc">
+    <div class="item"><strong>🤖 AgentWork</strong><span>单 Agent 节点：id、label、role、task、timeout。用于独立任务</span></div>
+    <div class="item"><strong>🌲 BatchWork</strong><span>扇出并行：branches[]（WC） + converge（可选收敛者） + gate（可选质量门禁）</span></div>
+    <div class="item"><strong>🔄 MapWork</strong><span>滚动窗口：itemFrom 数据源 + worker 每条目执行 + maxConcurrency 并发槽位</span></div>
+    <div class="item"><strong>🧩 组合模式</strong><span>串行链（agent→edge→agent）、扇出+收敛、滚动窗口、带门禁的批量</span></div>
+  </div>
+</section>
+
+<section id="sec5">
+  <div class="section-header">
+    <span class="badge" style="background:#10b981">5</span>
+    <h3>技能定义解剖 — createSkill 内部结构</h3>
+  </div>
+  <div class="boss-note">
+    <div class="label">给老板的话</div>
+    <p>这张图是你写 skill.ts 时的"参考图纸"。createSkill 包裹整个定义，StepDefinition 是每一步的蓝本。注意每个字段的 required/optional 标记——id/dependsOn/schedule/writes 是必须的，barrier/reuse/degrade 是按需的生命周期钩子。红色标注的就是最常见的错误来源。</p>
+  </div>
+  <div class="svg-wrap">
+    <img src="svg/05-skill-anatomy.svg" alt="技能定义解剖图">
+  </div>
+  <div class="section-desc">
+    <div class="item"><strong>📦 createSkill 包裹</strong><span>单 export：{ name, title, description, steps[] }，和 Vue 3 createApp 同构</span></div>
+    <div class="item"><strong>📋 StepDefinition</strong><span>11 个字段：id(必) / title(必) / description(必) / dependsOn(必) / schedule(必) / reads / writes / barrier / reuse / degrade / plugins</span></div>
+    <div class="item"><strong>🗺 ScheduleGraph</strong><span>每个步骤内部的调度子图：node[] + edges[] + entry，LangGraph 风格</span></div>
+    <div class="item"><strong>🔔 Lifecycle hooks</strong><span>barrier = 检查点 / reuse = 文件级增量跳过 / degrade = 失败降级</span></div>
+  </div>
+</section>
+
+<section id="sec6">
+  <div class="section-header">
+    <span class="badge" style="background:#f59e0b">6</span>
+    <h3>开发者循环 — 三种工作模式</h3>
+  </div>
+  <div class="boss-note">
+    <div class="label">给老板的话</div>
+    <p>这张图教你"如何在这个项目里干活"。有三种场景，对应三个不同长度的循环：改框架（最慢，需 rebuild）、改 skill（最快，零构建）、全量重建（最干净）。日常 90% 的工作在 Loop B 里——你只需改 skill.ts 然后 npm run demo，秒级反馈。</p>
+  </div>
+  <div class="svg-wrap">
+    <img src="svg/06-dev-loop.svg" alt="开发者循环图">
+  </div>
+  <div class="section-desc">
+    <div class="item"><strong>🛠 Loop A: 框架开发</strong><span>改 packages/*/src → npm run build → npm run demo → 验证 dist/</span></div>
+    <div class="item"><strong>⚡ Loop B: Skill 开发</strong><span>改 demos/skill.ts → npm run demo（零构建！tsx 直接加载 .ts）→ 验证</span></div>
+    <div class="item"><strong>🧹 Loop C: 全量重建</strong><span>npm run clean → npm run build → npm run demo → 从头到尾完整验证</span></div>
+    <div class="item"><strong>📜 命令速查</strong><span>build（tsc -b）/ demo（CLI → config → skill → buildPipeline）/ typecheck（tsc -b --noEmit）/ clean（清所有产物）</span></div>
+  </div>
+</section>
+
+<footer>
+  <p>monorepo-dev &mdash; skillpack framework &mdash; 18 source files &mdash; 4 packages &mdash; 1 demo</p>
+</footer>
+
+</main>
+
+<script>
+// Active nav highlight on scroll
+const links = document.querySelectorAll('nav a');
+const sections = document.querySelectorAll('section');
+
+function updateNav() {
+  let current = '';
+  sections.forEach(sec => {
+    const top = sec.getBoundingClientRect().top;
+    if (top < window.innerHeight * 0.4) {
+      current = sec.id;
+    }
+  });
+  links.forEach(a => {
+    a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+  });
+}
+
+window.addEventListener('scroll', updateNav);
+window.addEventListener('load', updateNav);
+</script>
+
+</body>
+</html>
