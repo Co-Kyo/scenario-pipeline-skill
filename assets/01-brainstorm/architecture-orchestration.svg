@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 750" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#16A34A"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="600" height="750" fill="#F8FAFC" rx="8"/>
+
+  <!-- Title -->
+  <text x="300" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#1E293B">Step 01 · 主 Agent 编排流程</text>
+  <text x="300" y="54" text-anchor="middle" font-size="11" fill="#64748B">只看主 agent 做了什么，不关心 sub-agent 内部</text>
+  <line x1="80" y1="65" x2="520" y2="65" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- Step 1 -->
+  <rect x="180" y="85" width="240" height="40" rx="6" fill="white" stroke="#F97316" stroke-width="2" filter="url(#shadow)"/>
+  <text x="300" y="110" text-anchor="middle" font-size="12" font-weight="bold" fill="#C2410C">① mkdir -p {workDir}/.meta/brainstorm/</text>
+  <line x1="300" y1="125" x2="300" y2="150" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 2: Spawn 4 -->
+  <rect x="130" y="150" width="340" height="70" rx="6" fill="white" stroke="#3B82F6" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="130" y="150" width="340" height="24" rx="6" fill="#DBEAFE"/>
+  <text x="300" y="167" text-anchor="middle" font-size="12" font-weight="bold" fill="#1E40AF">② 定义 4 个 Agent → 并行 spawn</text>
+  <text x="300" y="190" text-anchor="middle" font-size="10" fill="#475569">读 agent-init.md 获取分发规则</text>
+  <text x="300" y="206" text-anchor="middle" font-size="10" fill="#475569">从 raw_input 提取 topic，填入 task 模板</text>
+  <text x="300" y="216" text-anchor="middle" font-size="9" fill="#94A3B8">只分发路径，不读取 sub-agent 文件</text>
+  <line x1="300" y1="220" x2="300" y2="250" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Wait box -->
+  <rect x="180" y="250" width="240" height="35" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1" filter="url(#shadow)"/>
+  <text x="300" y="272" text-anchor="middle" font-size="11" fill="#475569">③ 等待（轮询 15s · 超时 3min）</text>
+  <line x1="300" y1="285" x2="300" y2="315" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Barrier -->
+  <rect x="130" y="315" width="340" height="50" rx="6" fill="#FEF3C7" stroke="#F59E0B" stroke-width="2.5" filter="url(#shadow)"/>
+  <text x="300" y="336" text-anchor="middle" font-size="12" font-weight="bold" fill="#92400E">🛑 ④ Barrier 检查（强制停顿）</text>
+  <text x="300" y="354" text-anchor="middle" font-size="10" fill="#B45309">4/4 → 继续 · &lt;4/4 → 停住等用户决策</text>
+  <line x1="300" y1="365" x2="300" y2="395" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Spawn converger -->
+  <rect x="130" y="395" width="340" height="65" rx="6" fill="white" stroke="#8B5CF6" stroke-width="2" filter="url(#shadow)"/>
+  <rect x="130" y="395" width="340" height="24" rx="6" fill="#EDE9FE"/>
+  <text x="300" y="412" text-anchor="middle" font-size="12" font-weight="bold" fill="#6D28D9">⑤ spawn 收敛者 Agent</text>
+  <text x="300" y="434" text-anchor="middle" font-size="10" fill="#475569">label: brainstorm-integrator · 超时 5min</text>
+  <text x="300" y="450" text-anchor="middle" font-size="10" fill="#475569">分发 6 个文件路径 + 任务指令</text>
+  <line x1="300" y1="460" x2="300" y2="490" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Wait converger -->
+  <rect x="180" y="490" width="240" height="35" rx="6" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1" filter="url(#shadow)"/>
+  <text x="300" y="512" text-anchor="middle" font-size="11" fill="#475569">⑥ 等待（超时 5min · 失败触发降级）</text>
+  <line x1="300" y1="525" x2="300" y2="555" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Output -->
+  <rect x="155" y="555" width="290" height="45" rx="6" fill="white" stroke="#14B8A6" stroke-width="2" filter="url(#shadow)"/>
+  <text x="300" y="575" text-anchor="middle" font-size="12" font-weight="bold" fill="#0F766E">⑦ 写入 requirement-web.json</text>
+  <text x="300" y="592" text-anchor="middle" font-size="9.5" fill="#64748B">{workDir}/.meta/requirement-web.json</text>
+  <line x1="300" y1="600" x2="300" y2="630" stroke="#4B5563" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Inject -->
+  <rect x="180" y="630" width="240" height="35" rx="17" fill="#14B8A6" filter="url(#shadow)"/>
+  <text x="300" y="652" text-anchor="middle" font-size="11.5" font-weight="bold" fill="white">⑧ 注入 Step ② 扫描</text>
+
+  <!-- Right side: what main agent reads -->
+  <rect x="430" y="85" width="155" height="108" rx="6" fill="white" stroke="#E2E8F0" stroke-width="1" filter="url(#shadow)"/>
+  <text x="440" y="103" font-size="10" font-weight="bold" fill="#334155">主 agent 读取</text>
+  <text x="440" y="120" font-size="8.5" fill="#64748B">agent-init.md</text>
+  <text x="440" y="134" font-size="8.5" fill="#64748B">scheduling-detail.md</text>
+  <text x="440" y="148" font-size="8.5" fill="#64748B">barrier-check.md</text>
+  <text x="440" y="162" font-size="8.5" fill="#64748B">fallback-protocol.md</text>
+  <text x="440" y="176" font-size="8.5" fill="#64748B">protocol-scheduling.md</text>
+  <text x="440" y="190" font-size="7.5" fill="#94A3B8">不读 anchors.json</text>
+
+  <!-- Right side: what main agent does NOT read -->
+  <rect x="430" y="210" width="155" height="78" rx="6" fill="#FEF2F2" stroke="#FECACA" stroke-width="1" filter="url(#shadow)"/>
+  <text x="440" y="228" font-size="9.5" font-weight="bold" fill="#DC2626">⛔ 禁止读取</text>
+  <text x="440" y="244" font-size="8" fill="#991B1B">scenario-agent.md</text>
+  <text x="440" y="256" font-size="8" fill="#991B1B">technical-agent.md</text>
+  <text x="440" y="268" font-size="8" fill="#991B1B">learning-agent.md</text>
+  <text x="440" y="280" font-size="8" fill="#991B1B">constraint-agent.md</text>
+
+  <!-- Bottom: note -->
+  <rect x="60" y="680" width="480" height="45" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1"/>
+  <text x="300" y="698" text-anchor="middle" font-size="10" font-weight="bold" fill="#166534">主 agent 只做编排：定义 → spawn → 等 → barrier → spawn → 等 → 产出</text>
+  <text x="300" y="714" text-anchor="middle" font-size="9" fill="#15803D">所有分析工作由 sub-agent 自主完成</text>
+</svg>

@@ -28,7 +28,10 @@ assets/
 │   ├── barrier-check.md        ← Barrier 检查项 + 决策矩阵
 │   ├── scheduling-detail.md    ← 调度参数 + 超时 + 降级
 │   ├── fallback-protocol.md    ← 收敛者失败降级协议
-│   └── architecture.svg        ← 架构流程图
+│   ├── architecture.svg        ← 架构流程图（完整）
+│   ├── architecture-orchestration.svg ← 主 agent 编排流程
+│   ├── architecture-dataflow.svg      ← Sub-agent 数据流
+│   └── architecture-file-deps.svg     ← 文件依赖图
 ├── 02-partition/
 │   └── schemas.md              ← partition-analysis.json 格式
 ├── 03-scan/

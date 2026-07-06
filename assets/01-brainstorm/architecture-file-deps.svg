@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 600" font-family="Microsoft YaHei, PingFang SC, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4B5563"/>
+    </marker>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="120%">
+      <feDropShadow dx="1" dy="2" stdDeviation="3" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+
+  <rect width="820" height="600" fill="#F8FAFC" rx="8"/>
+
+  <text x="410" y="36" text-anchor="middle" font-size="18" font-weight="bold" fill="#1E293B">Step 01 · 文件依赖图</text>
+  <text x="410" y="54" text-anchor="middle" font-size="11" fill="#64748B">谁读哪个文件 — 主 agent 与 sub-agent 的读取边界</text>
+  <line x1="80" y1="65" x2="740" y2="65" stroke="#CBD5E1" stroke-width="1"/>
+
+  <!-- ===== CENTER: FILES ===== -->
+  <!-- Main agent files (top) -->
+  <rect x="280" y="85" width="260" height="115" rx="6" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="410" y="105" text-anchor="middle" font-size="11" font-weight="bold" fill="#166534">主 Agent 读取的文件</text>
+
+  <rect x="295" y="115" width="115" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="352" y="130" text-anchor="middle" font-size="9" fill="#166534">agent-init.md</text>
+
+  <rect x="415" y="115" width="115" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="472" y="130" text-anchor="middle" font-size="9" fill="#166534">scheduling-detail.md</text>
+
+  <rect x="295" y="142" width="115" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="352" y="157" text-anchor="middle" font-size="9" fill="#166534">barrier-check.md</text>
+
+  <rect x="415" y="142" width="115" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="472" y="157" text-anchor="middle" font-size="9" fill="#166534">fallback-protocol.md</text>
+
+  <rect x="295" y="169" width="235" height="22" rx="4" fill="white" stroke="#86EFAC" stroke-width="1"/>
+  <text x="412" y="184" text-anchor="middle" font-size="9" fill="#166534">protocol-scheduling.md</text>
+
+  <!-- Divider -->
+  <line x1="100" y1="215" x2="720" y2="215" stroke="#CBD5E1" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="410" y="230" text-anchor="middle" font-size="9" fill="#94A3B8">— 读取边界 — 主 agent 不跨越此线 —</text>
+
+  <!-- Sub-agent files (bottom) -->
+  <rect x="160" y="250" width="500" height="180" rx="6" fill="#EFF6FF" stroke="#93C5FD" stroke-width="1.5" filter="url(#shadow)"/>
+  <text x="410" y="270" text-anchor="middle" font-size="11" font-weight="bold" fill="#1E40AF">Sub-Agent 读取的文件</text>
+
+  <!-- anchors.json (shared) -->
+  <rect x="310" y="282" width="200" height="30" rx="4" fill="white" stroke="#93C5FD" stroke-width="1.5"/>
+  <text x="410" y="302" text-anchor="middle" font-size="10" font-weight="bold" fill="#1E40AF">anchors.json（4 个 Agent 共享）</text>
+
+  <!-- Agent definition files -->
+  <rect x="175" y="322" width="110" height="22" rx="4" fill="white" stroke="#3B82F6" stroke-width="1"/>
+  <text x="230" y="337" text-anchor="middle" font-size="8.5" fill="#1E40AF">scenario-agent.md</text>
+
+  <rect x="295" y="322" width="110" height="22" rx="4" fill="white" stroke="#8B5CF6" stroke-width="1"/>
+  <text x="350" y="337" text-anchor="middle" font-size="8.5" fill="#6D28D9">technical-agent.md</text>
+
+  <rect x="415" y="322" width="110" height="22" rx="4" fill="white" stroke="#14B8A6" stroke-width="1"/>
+  <text x="470" y="337" text-anchor="middle" font-size="8.5" fill="#0F766E">learning-agent.md</text>
+
+  <rect x="535" y="322" width="110" height="22" rx="4" fill="white" stroke="#EF4444" stroke-width="1"/>
+  <text x="590" y="337" text-anchor="middle" font-size="8.5" fill="#B91C1C">constraint-agent.md</text>
+
+  <!-- Other sub-agent files -->
+  <rect x="230" y="354" width="145" height="22" rx="4" fill="white" stroke="#93C5FD" stroke-width="1"/>
+  <text x="302" y="369" text-anchor="middle" font-size="8.5" fill="#1E40AF">year-granularity.md</text>
+
+  <rect x="390" y="354" width="195" height="22" rx="4" fill="white" stroke="#93C5FD" stroke-width="1"/>
+  <text x="487" y="369" text-anchor="middle" font-size="8.5" fill="#1E40AF">schemas.md§scenario/technical/learning/constraint</text>
+
+  <!-- Converger files -->
+  <rect x="200" y="386" width="420" height="30" rx="4" fill="white" stroke="#8B5CF6" stroke-width="1.5"/>
+  <text x="410" y="406" text-anchor="middle" font-size="9" fill="#6D28D9">收敛者：读 4 份 {dimension}.json + anchors.json + schemas.md§requirement-web</text>
+
+  <!-- ===== BOTTOM: 4 AGENT BOXES ===== -->
+  <rect x="55" y="455" width="160" height="55" rx="6" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+  <text x="135" y="478" text-anchor="middle" font-size="10" font-weight="bold" fill="#1E40AF">场景 Agent</text>
+  <text x="135" y="496" text-anchor="middle" font-size="8.5" fill="#475569">scenario-agent.md</text>
+  <text x="135" y="506" text-anchor="middle" font-size="8.5" fill="#475569">+ anchors.json</text>
+
+  <rect x="225" y="455" width="160" height="55" rx="6" fill="#EDE9FE" stroke="#8B5CF6" stroke-width="1.5"/>
+  <text x="305" y="478" text-anchor="middle" font-size="10" font-weight="bold" fill="#6D28D9">技术 Agent</text>
+  <text x="305" y="496" text-anchor="middle" font-size="8.5" fill="#475569">technical-agent.md</text>
+  <text x="305" y="506" text-anchor="middle" font-size="8.5" fill="#475569">+ anchors.json</text>
+
+  <rect x="395" y="455" width="160" height="55" rx="6" fill="#CCFBF1" stroke="#14B8A6" stroke-width="1.5"/>
+  <text x="475" y="478" text-anchor="middle" font-size="10" font-weight="bold" fill="#0F766E">学习 Agent</text>
+  <text x="475" y="496" text-anchor="middle" font-size="8.5" fill="#475569">learning-agent.md</text>
+  <text x="475" y="506" text-anchor="middle" font-size="8.5" fill="#475569">+ anchors.json</text>
+
+  <rect x="565" y="455" width="160" height="55" rx="6" fill="#FEE2E2" stroke="#EF4444" stroke-width="1.5"/>
+  <text x="645" y="478" text-anchor="middle" font-size="10" font-weight="bold" fill="#B91C1C">约束 Agent</text>
+  <text x="645" y="496" text-anchor="middle" font-size="8.5" fill="#475569">constraint-agent.md</text>
+  <text x="645" y="506" text-anchor="middle" font-size="8.5" fill="#475569">+ anchors.json</text>
+
+  <!-- Legend -->
+  <rect x="100" y="530" width="620" height="50" rx="6" fill="#FFF7ED" stroke="#FDBA74" stroke-width="1"/>
+  <text x="110" y="550" font-size="10" font-weight="bold" fill="#9A3412">边界规则</text>
+  <text x="110" y="568" font-size="9" fill="#9A3412">主 agent 只读绿框文件（调度/barrier/降级），不读蓝框文件（agent 定义/骨架/年限规则）</text>
+  <text x="110" y="578" font-size="9" fill="#9A3412">蓝框文件由 sub-agent 自主读取，主 agent 只传递路径</text>
+</svg>
