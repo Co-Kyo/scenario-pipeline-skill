@@ -34,7 +34,7 @@
 当存在缺失维度时，主 agent 必须输出以下分析：
 
 ```
-🛑 barrier-1: 维度完整性检查
+🛑 维度完整性质量门禁
 
 ✅ 已完成:{completed_list}
 ❌ 缺失:{missing_list}
@@ -56,10 +56,10 @@
 
 ## 写入检查点记录
 
-将分析结果写入 `{workDir}/.meta/checkpoints/barrier-1.md`：
+将分析结果写入 `{workDir}/.meta/checkpoints/dimension-gate.md`：
 
 ```markdown
-# barrier-1: 维度完整性检查
+# 维度完整性质量门禁
 
 - 时间:{ISO 时间戳}
 - 维度完成状态:{summary}

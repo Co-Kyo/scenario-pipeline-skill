@@ -4,8 +4,6 @@
 
 将零散的技术文章、面试题、博客内容系统性地转化为结构化的深度研究产物：命题研究、原子能力知识库、以及面向学习者的渐进式阶梯引导。
 
-> **第一次接触？** 从 [`dev/pipeline-view/00-overview.md`](dev/pipeline-view/00-overview.md) 开始，5 分钟了解完整管道设计。
-
 ---
 
 ## 它做什么
@@ -150,10 +148,7 @@ scenario-pipeline/
 │   ├── 08-assemble.md             命题组装（并行 × M）
 │   └── 09-learning-ladder.md      学习阶梯（并行 × M）
 │
-└── dev/                        ← 开发与观测（人类阅读 + 审查工具）
-    ├── design/                     设计原理（why）
-    ├── pipeline-view/              管道观测视角
-    └── tools/                      开发工具
+
 ```
 
 ---

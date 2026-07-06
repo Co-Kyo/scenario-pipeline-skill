@@ -23,7 +23,6 @@ OpenCode is used to develop and maintain these Markdown/JSON files.
 | `assets/common/ref-sources.md` | Domain tier table (T0/T1/T2/T3) + anti-crawl domains | Low |
 | `assets/common/ref-paths.md` | Path conventions for all outputs | Low |
 | `plugins/*.md` | Optional enhancements loaded by specific steps | Low |
-| `dev/` | Human-only: design docs, observation views. **Never loaded during pipeline execution.** | — |
 
 ## How Files Connect
 
@@ -50,7 +49,7 @@ Each `assets/{step-id}/schemas.md` contains output formats for **all steps** in 
 
 ### 3. Naming conventions are enforced downstream
 
-- Capability IDs: prefix + number (`A1`=generic, `V1`=Vue, `R1`=React, `W1`=Webpack, `VI1`=Vite)
+- Capability IDs: prefix + number (`A1`=generic, `V1`=Vue, `R1`=React, `W1`=Webpack, `VI1`=Vite, `M1`=Specialized)
 - Topic seq numbers: two digits starting at `01` (`01-长列表渲染/`)
 - Output paths: `{workDir}/{seq}-{short_name}/` for topics, `{workDir}/capabilities/` for capabilities
 - Agent labels: `brainstorm-{dimension}`, `search-{batch_id}`, `extract-{batch_id}`, `agent-{group_id}`, etc.
@@ -71,7 +70,6 @@ Every barrier (Barrier 0 Barrier 1 Barrier 2 Barrier 3 Barrier 4 Barrier 5 Barri
 
 - **No code to run.** There's no `npm install`, `make`, `pytest`, or similar. Verification means reading the Markdown and checking internal consistency.
 - **Anti-crawl domains are hardcoded** in `assets/common/ref-sources.md`. If a new domain needs anti-crawl handling, add it there — not in individual process files.
-- **`dev/` is off-limits** for pipeline execution. It's for human developers only.
 - **SKILL.md frontmatter** (`name`, `description`, trigger words) is the skill's API surface. Changes here affect how the platform discovers and triggers the skill.
 - **Chinese content is primary.** Process files, schemas, and domain terminology are in Chinese. Keep edits consistent with the existing language.
 - **Incremental reuse** is file-existence-based. If you add a new output file to a step, document its path in `assets/common/ref-paths.md` so the reuse logic can find it.

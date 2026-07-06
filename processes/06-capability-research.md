@@ -212,9 +212,34 @@ T=8min   A_2, D_2, E_2 完成 → 全部 25 个能力就绪
 
 ### 9. 等待全部完成
 
-所有域 Agent 完成后（即上一步轮询循环退出后）：
+所有域 Agent 完成后（即上一步轮询循环退出后）。
 
-🚨 **🛑 必须停顿，进入 Barrier 6 检查点**。展示能力研究质量摘要（完成数/跳过数/失败数，各能力主文件行数统计），使用 `clarify` 等待用户确认后才进入 Step 07。
+### 10. 生成能力知识库索引
+
+遍历 `{workDir}/capabilities/` 目录，读取所有 `{id}-{name}.md` 文件，生成能力知识库入口索引。
+
+**跳过条件**：`{workDir}/capabilities/README.md` 已存在 → 跳过。
+
+**索引内容**（写入 `{workDir}/capabilities/README.md`）：
+
+```markdown
+# 能力知识库
+
+> 按技术层分组列出所有已完成研究的原子能力。共 N 个能力。
+
+## {tech_layer_1}
+- [{id_1}-{name_1}]({id_1}-{name_1}.md)
+- ...
+
+## {tech_layer_2}
+- ...
+```
+
+**生成方式**：主 agent 读取每个摘要 JSON（`{workDir}/.meta/summaries/{id}-{name}.json`），按 `tech_layer` 字段分组，拼接为 Markdown 列表后写入。
+
+### 11. 🛑 Barrier 6 检查点（强制停顿，不可跳过）
+
+展示能力研究质量摘要（完成数/跳过数/失败数，各能力主文件行数统计），使用 `clarify` 等待用户确认后才进入 Step 07。
 
 ---
 
@@ -291,6 +316,7 @@ T0 缺失: {t0_missing}
 
 - `{workDir}/capabilities/{id}-{name}.md` × N
 - `{workDir}/.meta/summaries/{id}-{name}.json` × N
+- `{workDir}/capabilities/README.md` — 能力知识库索引
 
 ## 校验清单
 
@@ -298,6 +324,7 @@ T0 缺失: {t0_missing}
 - [ ] **每个子组能力数 ≤ 5**（上限约束）
 - [ ] 依赖拓扑已计算（批次顺序正确）
 - [ ] 每个已研究的能力有两个文件（主文件 + 摘要）
+- [ ] capabilities/README.md 已生成，包含按 tech_layer 分组的所有能力链接
 - [ ] 主文件内容 ≥ 2000 字
 - [ ] 摘要 JSON 可解析
 - [ ] 参考资料中的 URL 经过 web_fetch 验证

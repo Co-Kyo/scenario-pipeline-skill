@@ -111,7 +111,7 @@ Step 3: 关键字段匹配检查
 
 **超时重试**：超时的任务重试一次。仍失败则标记 degraded，不阻塞其他任务。
 
-**Step 09 特殊处理**：1 个命题 = 2 个 agent（Markdown + Experiment），两者独立可并行。
+**Step 08 特殊处理**：1 个命题 = 2 个 agent（Markdown + Experiment），两者独立可并行。
 - 槽位计数：1 个命题占 2 个槽位
 - 部分完成：Markdown failed 但 Experiment completed → 标记 partial，不影响另一个
 

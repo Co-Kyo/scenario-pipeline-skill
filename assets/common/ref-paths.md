@@ -10,7 +10,7 @@
 | 全局学习阶梯 | `{workDir}/learning-ladder.md`（可选） |
 | 能力知识库目录 | `{workDir}/capabilities/` |
 | 能力主文件 | `{workDir}/capabilities/{id}-{name}.md` |
-| 能力知识库索引 | `{workDir}/capabilities/README.md`（TODO：无步骤负责生产，待 Step 06 补充索引生成逻辑） |
+| 能力知识库索引 | `{workDir}/capabilities/README.md` |
 | 命题目录 | `{workDir}/{seq}-{short_name}/` |
 | 命题 overview | `{workDir}/{seq}-{short_name}/overview.md` |
 | 命题 edge-cases | `{workDir}/{seq}-{short_name}/edge-cases.md` |
@@ -45,5 +45,5 @@
 
 - **命题序号**：两位数字，从 01 开始（`01`, `02`, `03`...）
 - **命题简称**：中文，取命题冒号前的部分（`长列表渲染`、`首屏白屏`）
-- **能力 ID**：前缀 + 数字（`A1`=通用, `V1`=Vue, `R1`=React, `W1`=Webpack, `VI1`=Vite）
+- **能力 ID**：前缀 + 数字（`A1`=通用, `V1`=Vue, `R1`=React, `W1`=Webpack, `VI1`=Vite, `M1`=特化能力）
 - **能力名称**：中文，和 capability-graph.json 中的 `name` 字段一致

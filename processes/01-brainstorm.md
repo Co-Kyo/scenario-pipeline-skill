@@ -2,7 +2,7 @@
 
 **目的**：通过 4 维度 Agent 并行分析 + 收敛者校验，产出结构化需求网（requirement-web.json）
 
-**主 agent 的动作**：按 `{{agent-init}}` 分发 4 个 Agent → spawn → 等结果 → barrier 检查 → spawn 收敛者。
+**主 agent 的动作**：按 `{{agent-init}}` 分发 4 个 Agent → spawn → 等结果 → 质量门禁 → spawn 收敛者。
 
 **关键产出**：`{workDir}/.meta/requirement-web.json`
 
@@ -46,13 +46,13 @@
 - 每个 Agent 完成后即时校验（文件存在 + JSON 合法 + dimension 字段 + entries 非空）
 - 失败的 Agent 补发一次（最多补发 1 次），仍失败则标为 missing
 
-### 4. 🛑 Barrier 检查（强制停顿，不可跳过）
+### 4. 🛑 质量门禁（强制停顿，不可跳过）
 
 4 个维度 Agent 全部完成后（含补发），执行质量门禁。详见 `{{barrier-check}}`。
 
 ### 5. 分发收敛者 Agent
 
-**⚠️ 前置条件**：Barrier 检查通过（4/4 完成）或用户明确授权降级。
+**⚠️ 前置条件**：质量门禁通过（4/4 完成）或用户明确授权降级。
 
 | 项 | 值 |
 |----|---|
@@ -106,7 +106,25 @@ strategy, capability_web, qualifier_injection, 每个 proposition 附 capability
 - `strategy`：从 anchors.json 继承的策略元数据
 - `level_weight`：每个 proposition 携带 level_weight（level + role + reason）
 
-### 7. 注入 Step 03
+### 7. 🛑 Barrier 1 检查点（强制停顿，不可跳过）
+
+收敛者产出 `requirement-web.json` 后，执行 Barrier 1 检查点。
+
+**展示摘要**（stdout）：
+- 域上下文
+- 年限推断结果（year_source + year_inference_trace）
+- 命题列表（数量 + 每个命题的 depth/search_priority）
+- 能力数量统计
+- 依赖关系数
+- 排除项
+
+**用户确认**：使用 `clarify` 等待用户确认 requirement-web.json 内容。
+- ✅ 通过 → 继续执行 Step 03
+- 🔄 拒绝 → 回退调整（修改 anchors.json 或重新 spawn 收敛者）
+
+**写入记录**：`{workDir}/.meta/checkpoints/barrier-1.md`
+
+### 8. 注入 Step 03
 
 将 `requirement-web.json` 作为 Step 03 的附加输入。Step 03 在执行时读取以下数据：
 - 从 requirement-web 中读取 `propositions` 列表，为每个命题执行定向搜索
