@@ -13,27 +13,27 @@
 
 ---
 
-## 前置条件
+## 文件引用
 
-加载：
-- `assets/04-capability-graph/method.md`（能力图谱方法论）
-- `assets/04-capability-graph/method.md`（战略高地方法论）
-- `assets/04-capability-graph/schemas.md`（本步输出格式）
-- `assets/common/ref-sources.md`（T0 域名表，用于信源预查找）
-- `{workDir}/.meta/requirement-web.json`（01 产出，含 capability_web 和 decompositions）
-- `{workDir}/.meta/.raw-materials/index.json`（02 产出索引，含 URL + 元数据）
-- `{workDir}/.meta/.raw-materials/*.md`（02 产出内容文件，按需读取）
+| 变量 | 文件 | 说明 |
+|------|------|------|
+| `{{method-capability-graph}}` | `assets/04-capability-graph/method.md` | 能力图谱 + 战略高地方法论 |
+| `{{schemas-capability-graph}}` | `assets/04-capability-graph/schemas.md` | 本步输出格式 |
+| `{{ref-sources}}` | `assets/common/ref-sources.md` | T0 域名表，用于信源预查找 |
+| `{{requirement-web}}` | `{workDir}/.meta/requirement-web.json` | Step 01 产出，含 capability_web 和 decompositions |
+| `{{raw-materials-index}}` | `{workDir}/.meta/.raw-materials/index.json` | Step 03 产出索引，含 URL + 元数据 |
+| `{{raw-materials-content}}` | `{workDir}/.meta/.raw-materials/*.md` | Step 03 产出内容文件，按需读取 |
 
 ## 输入
 
-- `requirement-web.json`（01 产出，含 capability_web + decompositions）
-- `.raw-materials/index.json`（02 产出索引）+ 对应 markdown 内容文件
+- `{{requirement-web}}`（01 产出，含 capability_web + decompositions）
+- `{{raw-materials-index}}`（03 产出索引）+ 对应 markdown 内容文件
 
 ## 执行步骤
 
-### 1. 从 requirement-web 提取能力雏形
+### 1. 从 `{{requirement-web}}` 提取能力雏形
 
-从 `requirement-web.json` 的 `capability_web` 字段读取头脑风暴阶段产出的能力列表。每个能力已有：id、name、layer、type、depends_on、fanout、covers。
+从 `{{requirement-web}}` 的 `capability_web` 字段读取头脑风暴阶段产出的能力列表。每个能力已有：id、name、layer、type、depends_on、fanout、covers。
 
 同时从 `decompositions`（嵌在各 proposition 中）读取分词结构（qualifier、generic_core、specialization、content_weight）。
 
@@ -85,7 +85,7 @@
 
 #### 5.1 从 02 结果复用
 
-读取 `.raw-materials/index.json`，按以下逻辑匹配：
+读取 `{{raw-materials-index}}`，按以下逻辑匹配：
 
 1. 该能力的 `covers` 字段 → 找到关联的命题 ID
 2. 用命题 ID 匹配 `index.json` 中 `materials[].from_proposition` → 获取该命题下的所有材料
@@ -107,7 +107,7 @@
 
 #### 5.2 补搜（仅对 02 未覆盖的能力）
 
-如果某个能力在 02 的 `.raw-materials/index.json` 中没有匹配到任何材料，执行补搜：
+如果某个能力在 03 的 `{{raw-materials-index}}` 中没有匹配到任何材料，执行补搜：
 
 **轨道 A — T0 定向**：
 ```
@@ -119,7 +119,7 @@ web_search "<能力名称> site:<域名>"
 ```
 web_search "<能力名称>"
 ```
-提取域名，与 `assets/common/ref-sources.md` T0 表比对分级。unknown 域名 web_fetch 评估。
+提取域名，与 `{{ref-sources}}` T0 表比对分级。unknown 域名 web_fetch 评估。
 
 **质量校验**：
 - 每个写入 JSON 的 URL 都必须 web_fetch 验证过
@@ -164,7 +164,7 @@ web_search "<能力名称>"
 
 ### 7. 写入
 
-按 `assets/04-capability-graph/schemas.md` 的示例格式，构造 `capability-graph.json`。
+按 `{{schemas-capability-graph}}` 的示例格式，构造 `capability-graph.json`。
 
 顶层必须包含 `highgrounds` 和 `learning_path` 字段。
 
@@ -195,7 +195,7 @@ web_search "<能力名称>"
 - [ ] highgrounds 字段已注入（含 strategic_value）
 - [ ] learning_path 字段已注入（拓扑排序）
 - [ ] dependency_graph 和 qualifier_injection 为顶层字段
-- [ ] JSON 格式符合 output-contracts.md §2 示例
+- [ ] JSON 格式符合 `{{schemas-capability-graph}}` §2 示例
 
 ## 异常处理
 

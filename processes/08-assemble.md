@@ -11,28 +11,31 @@
 
 ---
 
-## 前置条件
+## 文件引用
 
-无需加载额外方法论文件。本步骤的 task 已内联全部指令。读取：
-- `assets/08-assemble/schemas.md`（本步输出格式）
-- `{workDir}/.meta/capability-graph.json`（含 propositions）
-- `{workDir}/.meta/briefings/{seq}-{short_name}.md`（Step 07 产出）
+| 变量 | 文件 | 说明 |
+|------|------|------|
+| `{{schemas-assemble}}` | `assets/08-assemble/schemas.md` | 本步输出格式 |
+| `{{ref-sources}}` | `assets/common/ref-sources.md` | 信源分级，T0 域名表 |
+| `{{protocol-scheduling}}` | `assets/common/protocol-scheduling.md` | 子 agent 调度规则 |
+| `{{capability-graph}}` | `{workDir}/.meta/capability-graph.json` | 含 propositions |
+| `{{briefings}}` | `{workDir}/.meta/briefings/{seq}-{short_name}.md` | Step 07 产出 |
 
 ## 输入
 
-- `.meta/briefings/{seq}-{short_name}.md`（Step 07 产出）
-- `capability-graph.json`（前处理产出）
+- `{{briefings}}`（Step 07 产出）
+- `{{capability-graph}}`（前处理产出）
 
 ## 执行步骤
 
 ### 1. 筛选待组装命题
 
-从 capability-graph.json 的 propositions 获取列表。已有以下全部文件的命题跳过：`{workDir}/{seq}-{short_name}/overview.md`、`edge-cases.md`、`trade-offs.md`、`references.md`、`experiment/README.md`。
+从 `{{capability-graph}}` 的 propositions 获取列表。已有以下全部文件的命题跳过：`{workDir}/{seq}-{short_name}/overview.md`、`edge-cases.md`、`trade-offs.md`、`references.md`、`experiment/README.md`。
 
 ### 2. 并行 spawn（简单窗口 + 轮询跟踪，2-agent-per-命题）
 
-> ⚠️ 严格遵循 `assets/common/protocol-scheduling.md` §简单窗口执行流程 + §并行调度规则。
-> 调度规则详见 `assets/common/protocol-scheduling.md` §子 agent 调度。
+> ⚠️ 严格遵循 `{{protocol-scheduling}}` §简单窗口执行流程 + §并行调度规则。
+> 调度规则详见 `{{protocol-scheduling}}` §子 agent 调度。
 
 **步骤特有：2-agent-per-命题**
 - 每个命题 spawn 2 个 agent（Markdown + Experiment），两者无相互依赖，可并行
@@ -50,7 +53,7 @@
 
 #### 2.2 轮询循环 + 槽位替换
 
-按 `assets/common/protocol-scheduling.md` §**模式 A：简单窗口** 执行轮询循环。本步骤特有参数：
+按 `{{protocol-scheduling}}` §**模式 A：简单窗口** 执行轮询循环。本步骤特有参数：
 
 | 参数 | 值 |
 |------|---|
@@ -181,7 +184,7 @@
 
 如果文件不存在（read 返回错误），停止执行并输出：`❌ 命题「{proposition_name}」的 Briefing 文件不存在，无法组装实验。请先完成 Step 07。`
 
-如 Briefing 中无 experiment_code 字段或字段为空，按 common/ref-sources.md 的 T0 域名列表搜索补充，禁止凭记忆生成代码。
+如 Briefing 中无 experiment_code 字段或字段为空，按 `{{ref-sources}}` 的 T0 域名列表搜索补充，禁止凭记忆生成代码。
 
 ## 输出目录
 {workDir}/{seq}-{short_name}/experiment/

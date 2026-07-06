@@ -3,7 +3,7 @@
 **目的**：为每个待处理命题组装 Briefing——从能力摘要中提取关键信息，供后续命题组装使用
 
 **核心流程**：
-1. 筛选待处理命题（从 capability-graph.json 获取）
+1. 筛选待处理命题（从 `{{capability-graph}}` 获取）
 2. 增量检查（已存在则跳过）
 3. 并行 spawn（简单窗口 W=5，轮询替换）
 
@@ -11,23 +11,25 @@
 
 ---
 
-## 前置条件
+## 文件引用
 
-无需加载额外方法论文件或 plugin。本步骤的 task 已内联全部指令。读取：
-- `assets/07-briefing-assemble/schemas.md`（本步输出格式）
-- `{workDir}/.meta/capability-graph.json`（含 propositions）
-- `{workDir}/.meta/summaries/*.json`（Step 06 产出）
+| 变量 | 文件 | 说明 |
+|------|------|------|
+| `{{schemas-briefing}}` | `assets/07-briefing-assemble/schemas.md` | 本步输出格式 |
+| `{{protocol-scheduling}}` | `assets/common/protocol-scheduling.md` | 子 agent 调度规则 |
+| `{{capability-graph}}` | `{workDir}/.meta/capability-graph.json` | 含 propositions |
+| `{{summaries}}` | `{workDir}/.meta/summaries/*.json` | Step 06 产出的能力摘要 |
 
 ## 输入
 
-- `capability-graph.json`（前处理产出，含 propositions 和 capabilities）
-- `.meta/summaries/*.json`（Step 06 产出的能力摘要）
+- `{{capability-graph}}`（前处理产出，含 propositions 和 capabilities）
+- `{{summaries}}`（Step 06 产出的能力摘要）
 
 ## 执行步骤
 
 ### 1. 筛选待处理命题
 
-从 capability-graph.json 的 propositions 字段获取命题列表。
+从 `{{capability-graph}}` 的 propositions 字段获取命题列表。
 
 ### 2. 增量检查
 
@@ -35,8 +37,8 @@
 
 ### 3. 并行 spawn（简单窗口 + 轮询跟踪）
 
-> ⚠️ 严格遵循 `assets/common/protocol-scheduling.md` §简单窗口执行流程 + §并行调度规则。
-> 调度规则详见 `assets/common/protocol-scheduling.md` §子 agent 调度。
+> ⚠️ 严格遵循 `{{protocol-scheduling}}` §简单窗口执行流程 + §并行调度规则。
+> 调度规则详见 `{{protocol-scheduling}}` §子 agent 调度。
 
 #### 3.1 初始化
 
@@ -46,7 +48,7 @@
 
 #### 3.2 轮询循环 + 槽位替换
 
-按 `assets/common/protocol-scheduling.md` §**模式 A：简单窗口** 执行轮询循环。本步骤特有参数：
+按 `{{protocol-scheduling}}` §**模式 A：简单窗口** 执行轮询循环。本步骤特有参数：
 
 | 参数 | 值 |
 |------|---|

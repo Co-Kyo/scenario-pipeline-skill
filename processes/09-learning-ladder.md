@@ -11,19 +11,21 @@
 
 ---
 
-## 前置条件
+## 文件引用
 
-无需加载额外方法论文件。本步骤的 task 已内联全部指令。读取：
-- `assets/09-learning-ladder/schemas.md`（本步输出格式）
-- `{workDir}/.meta/capability-graph.json`（含能力依赖关系）
-- `{workDir}/.meta/summaries/*.json`（Step 06 产出）
-- `{workDir}/{seq}-{short_name}/overview.md`（Step 08 产出）
+| 变量 | 文件 | 说明 |
+|------|------|------|
+| `{{schemas-ladder}}` | `assets/09-learning-ladder/schemas.md` | 本步输出格式 |
+| `{{protocol-scheduling}}` | `assets/common/protocol-scheduling.md` | 子 agent 调度规则 |
+| `{{capability-graph}}` | `{workDir}/.meta/capability-graph.json` | 含能力依赖关系 |
+| `{{summaries}}` | `{workDir}/.meta/summaries/*.json` | Step 06 产出 |
+| `{{overview}}` | `{workDir}/{seq}-{short_name}/overview.md` | Step 08 产出 |
 
 ## 输入
 
-- `capability-graph.json`（前处理产出，含能力依赖关系）
-- `.meta/summaries/*.json`（Step 06 产出）
-- `{seq}-{short_name}/overview.md` 等（Step 08 产出的命题文件）
+- `{{capability-graph}}`（前处理产出，含能力依赖关系）
+- `{{summaries}}`（Step 06 产出）
+- `{{overview}}` 等（Step 08 产出的命题文件）
 
 ## 执行步骤
 
@@ -33,8 +35,8 @@
 
 ### 2. 并行 spawn（简单窗口 + 轮询跟踪）
 
-> ⚠️ 严格遵循 `assets/common/protocol-scheduling.md` §简单窗口执行流程 + §并行调度规则。
-> 调度规则详见 `assets/common/protocol-scheduling.md` §子 agent 调度。
+> ⚠️ 严格遵循 `{{protocol-scheduling}}` §简单窗口执行流程 + §并行调度规则。
+> 调度规则详见 `{{protocol-scheduling}}` §子 agent 调度。
 
 #### 2.1 初始化
 
@@ -44,7 +46,7 @@
 
 #### 2.2 轮询循环 + 槽位替换
 
-按 `assets/common/protocol-scheduling.md` §**模式 A：简单窗口** 执行轮询循环。本步骤特有参数：
+按 `{{protocol-scheduling}}` §**模式 A：简单窗口** 执行轮询循环。本步骤特有参数：
 
 | 参数 | 值 |
 |------|---|

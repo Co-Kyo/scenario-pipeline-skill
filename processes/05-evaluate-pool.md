@@ -12,20 +12,21 @@
 
 ---
 
-## 前置条件
+## 文件引用
 
-加载：
-- `assets/05-evaluate-pool/method.md`（四维评估矩阵方法论）
-- `assets/05-evaluate-pool/schemas.md`（本步输出格式）
-- `{workDir}/.meta/requirement-web.json`（01 产出，含命题和能力图谱雏形）
-- `{workDir}/.meta/capability-graph.json`（04 产出，含能力、高地、学习路径）
-- `{workDir}/.meta/.raw-materials/index.json`（02 产出索引）
+| 变量 | 文件 | 说明 |
+|------|------|------|
+| `{{method-evaluate}}` | `assets/05-evaluate-pool/method.md` | 四维评估矩阵方法论 |
+| `{{schemas-evaluate}}` | `assets/05-evaluate-pool/schemas.md` | 本步输出格式 |
+| `{{requirement-web}}` | `{workDir}/.meta/requirement-web.json` | Step 01 产出，含命题和能力图谱雏形 |
+| `{{capability-graph}}` | `{workDir}/.meta/capability-graph.json` | Step 04 产出，含能力、高地、学习路径 |
+| `{{raw-materials-index}}` | `{workDir}/.meta/.raw-materials/index.json` | Step 03 产出索引 |
 
 ## 输入
 
-- `requirement-web.json`（01 产出）
-- `capability-graph.json`（04 产出）
-- `.raw-materials/index.json`（02 产出索引）
+- `{{requirement-web}}`（01 产出）
+- `{{capability-graph}}`（04 产出）
+- `{{raw-materials-index}}`（03 产出索引）
 
 ## 执行步骤
 
@@ -41,14 +42,14 @@
 | 时事热度 | 近期出现频率是否上升？ | 高频面试题 | 偶尔出现 | 冷门 |
 
 **打分校准规则**：
-1. **跨栈耦合**：参考 `capability-graph.json` 中该命题涉及能力的技术层数量
+1. **跨栈耦合**：参考 `{{capability-graph}}` 中该命题涉及能力的技术层数量
 2. **文档真空**：以 Google 搜索结果为客观依据
 3. **经验壁垒**：必须锚定具体场景规模
 4. **防虚高兜底**：若 4 个维度均为 2 分及以上，必须重新审视
 
 ### 2. 年限阈值适配
 
-根据 `requirement-web.json` 的 `context.year_level` 调整入池阈值：
+根据 `{{requirement-web}}` 的 `context.year_level` 调整入池阈值：
 
 | 年限 | 入池阈值 | 说明 |
 |------|---------|------|
@@ -69,7 +70,7 @@
 对优先级为 `high` 的命题，基于原子能力评估学习掌握难度。
 
 **评估依据**：
-1. 能力依赖链深度（主要权重）：从 `capability-graph.json` 的 `dependency_graph` 计算 max_depth
+1. 能力依赖链深度（主要权重）：从 `{{capability-graph}}` 的 `dependency_graph` 计算 max_depth
 2. 涉及能力数量与耦合度
 3. 概念抽象度：操作层面 < 机制层面 < 设计层面
 
@@ -84,7 +85,7 @@
 
 #### 4.1 写入总览导航
 
-读 `assets/05-evaluate-pool/schemas.md` 获取完整模板。按模板写入 `{workDir}/README.md`。
+读 `{{schemas-evaluate}}` 获取完整模板。按模板写入 `{workDir}/README.md`。
 
 模板内容包含：
 - 命题索引（来自 evaluations）
@@ -118,7 +119,7 @@
 - [ ] 入池命题包含 difficulty（low/medium/high）
 - [ ] 入池命题包含 recommended_order
 - [ ] README.md 的命题索引与 evaluations.json 一致
-- [ ] 学习路径与 capability-graph.json 的 learning_path 一致
+- [ ] 学习路径与 `{{capability-graph}}` 的 learning_path 一致
 
 ## 异常处理
 

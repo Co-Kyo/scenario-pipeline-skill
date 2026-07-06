@@ -12,17 +12,18 @@
 
 ---
 
-## 前置条件
+## 文件引用
 
-加载：
-- `{workDir}/.meta/requirement-web.json`（01 产出，含命题列表 + 能力图谱雏形）
-- `assets/02-partition/schemas.md`（分区 JSON 的结构定义）
+| 变量 | 文件 | 说明 |
+|------|------|------|
+| `{{schemas-partition}}` | `assets/02-partition/schemas.md` | 分区 JSON 的结构定义 |
+| `{{requirement-web}}` | `{workDir}/.meta/requirement-web.json` | Step 01 产出，含命题列表 + 能力图谱雏形 |
 
 ## 输入
 
-- `requirement-web.json` 中的 `propositions[]`（命题列表）
-- `requirement-web.json` 中的 `dependencies[]`（命题间依赖关系，如已存在）
-- `requirement-web.json` 中的 `capability_web`（能力图谱雏形，用于辅助判断依赖）
+- `{{requirement-web}}` 中的 `propositions[]`（命题列表）
+- `{{requirement-web}}` 中的 `dependencies[]`（命题间依赖关系，如已存在）
+- `{{requirement-web}}` 中的 `capability_web`（能力图谱雏形，用于辅助判断依赖）
 
 ---
 
@@ -30,7 +31,7 @@
 
 ### 1. 依赖关系确认
 
-读取 `requirement-web.json`：
+读取 `{{requirement-web}}`：
 
 **如果 `dependencies[]` 已存在**（头脑风暴收敛者已整理依赖）：
 - 直接使用，跳到步骤 2
@@ -42,7 +43,7 @@
   - `enables`：A 的掌握使 B 更容易理解
   - `related`：A 和 B 有相关性但无严格先后
   - `extends`：B 是 A 的进阶变体
-- 将依赖写入 `requirement-web.json` 的 `dependencies[]` 字段
+- 将依赖写入 `{{requirement-web}}` 的 `dependencies[]` 字段
 
 ### 2. 构建 DAG
 
@@ -88,7 +89,7 @@
 
 #### 5.1 partition-analysis.json
 
-按 `assets/02-partition/schemas.md` 的结构生成，包含：
+按 `{{schemas-partition}}` 的结构生成，包含：
 - `dag`：完整 DAG 数据（节点 + 边 + depth + component_id）
 - `components`：连通分量 + depth 分层 + 社区
 - `current_session`：当前 session 的命题列表 + scan 批次

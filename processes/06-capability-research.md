@@ -12,25 +12,27 @@
 
 ---
 
-## 前置条件
+## 文件引用
 
-加载：
-- `plugins/capability-research-mode.md`（材料块格式 + 深度分级）
-- `assets/06-capability-research/schemas.md`（能力研究产出格式）
-- `assets/common/ref-sources.md`（信源分级，T0 域名表）
-- `{workDir}/.meta/capability-graph.json`（前处理产出）
-- `{workDir}/README.md`（命题列表）
+| 变量 | 文件 | 说明 |
+|------|------|------|
+| `{{plugin-research-mode}}` | `plugins/capability-research-mode.md` | 材料块格式 + 深度分级 |
+| `{{schemas-research}}` | `assets/06-capability-research/schemas.md` | 能力研究产出格式 |
+| `{{ref-sources}}` | `assets/common/ref-sources.md` | 信源分级，T0 域名表 |
+| `{{protocol-scheduling}}` | `assets/common/protocol-scheduling.md` | DAG 调度规则 |
+| `{{capability-graph}}` | `{workDir}/.meta/capability-graph.json` | 前处理产出 |
+| `{{readme}}` | `{workDir}/README.md` | 命题列表 |
 
 ## 输入
 
-- `capability-graph.json`（前处理产出）
-- `README.md`（命题列表，用于筛选哪些能力需要研究）
+- `{{capability-graph}}`（前处理产出）
+- `{{readme}}`（命题列表，用于筛选哪些能力需要研究）
 
 ## 执行步骤
 
 ### 1. 筛选待研究能力
 
-从 capability-graph.json 中筛选：
+从 `{{capability-graph}}` 中筛选：
 - 覆盖待处理命题的能力
 - 或扇出度 ≥ 30% 的能力
 
@@ -54,7 +56,7 @@
 **分组算法**：
 
 ```
-1. 按 capability-graph.json 的 layer 字段初步分组（域聚合）
+1. 按 `{{capability-graph}}` 的 layer 字段初步分组（域聚合）
 2. 检查组间依赖：
    - 若 A 组的能力依赖 B 组的能力 → 跨组依赖
    - 优先将被依赖能力移入下游组（减少跨组依赖）
@@ -114,7 +116,7 @@ T=8min   A_2, D_2, E_2 完成 → 全部 25 个能力就绪
 ### 5. 信源预查找
 
 为每个待研究能力准备 T1/T2 URL：
-- 根据能力名称确定 T0 来源（从 capability-graph.json 的 references.t0 读取）
+- 根据能力名称确定 T0 来源（从 `{{capability-graph}}` 的 references.t0 读取）
 - 补充 T1/T2 来源（大厂博客、优质社区）
 
 ### 6. 域 Agent 任务组装
@@ -157,8 +159,8 @@ T=8min   A_2, D_2, E_2 完成 → 全部 25 个能力就绪
 
 ### 7. 并行 spawn 域 Agent（DAG 调度 + 轮询跟踪）
 
-> ⚠️ 严格遵循 `assets/common/protocol-scheduling.md` §并行调度规则。
-> 调度规则详见 `assets/common/protocol-scheduling.md` §子 agent 调度。
+> ⚠️ 严格遵循 `{{protocol-scheduling}}` §并行调度规则。
+> 调度规则详见 `{{protocol-scheduling}}` §子 agent 调度。
 > 本步骤使用 **DAG 调度**模式（子组间有跨依赖，按拓扑批次执行）。
 
 #### 7.1 第一批 spawn
@@ -172,7 +174,7 @@ T=8min   A_2, D_2, E_2 完成 → 全部 25 个能力就绪
 
 #### 7.2 轮询循环 + 后续批次
 
-按 `assets/common/protocol-scheduling.md` §**模式 B：DAG 调度** 执行轮询循环。本步骤特有参数：
+按 `{{protocol-scheduling}}` §**模式 B：DAG 调度** 执行轮询循环。本步骤特有参数：
 
 | 参数 | 值 |
 |------|---|
@@ -229,7 +231,7 @@ T0 缺失: {t0_missing}
 
 #### Step 1: 信源获取
 1. 优先使用上述预查找信源，按 Tier 优先级：T0 → T1 → T2 → T3
-2. 如全部不可达，读取 common/ref-sources.md 的 T0 域名列表逐个搜索补充
+2. 如全部不可达，读取 `{{ref-sources}}` 的 T0 域名列表逐个搜索补充
 3. 禁止凭记忆生成，必须 web_fetch 验证内容
 
 #### Step 2: 内容研究
