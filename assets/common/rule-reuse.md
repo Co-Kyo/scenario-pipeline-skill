@@ -9,4 +9,4 @@
 | Briefing 已存在 | `.meta/briefings/{seq}-{short_name}.md` 存在 | 跳过该 Briefing |
 | 命题文件已存在 | `{seq}-{short_name}/overview.md` 存在 | 跳过该命题组装 |
 | 学习阶梯已存在 | `{seq}-{short_name}/learning-ladder.md` 存在 | 跳过该阶梯生成 |
-| 看板已存在 | `dashboard-v2.html` 存在 | 跳过看板生成 |
+

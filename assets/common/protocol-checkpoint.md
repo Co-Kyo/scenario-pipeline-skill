@@ -41,7 +41,6 @@
 | Barrier 7 | barrier-7.md | Step 07 完成后 | briefing 文件 | 审查素材提取完整性 |
 | Barrier 8 | barrier-8.md | Step 08 完成后 | 命题目录文件 | 审查组装质量 |
 | Barrier 9 | barrier-9.md | Step 09 完成后 | learning-ladder.md | 确认最终产出 |
-| Barrier 10 | barrier-10.md | Step 10 完成后 | dashboard-v2.html | 确认看板交付 |
 
 ## 跳过条件
 

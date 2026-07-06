@@ -23,7 +23,7 @@
 | 07 Briefing 组装 | 滚动窗口 | 1 个命题 = 1 个 agent | 完成一个补一个，不超过 W |
 | 08 命题组装 | 滚动窗口 | 1 个命题 = 2 个 agent（md + exp） | 两者独立并行，1 命题占 2 个槽位 |
 | 09 学习阶梯 | 滚动窗口 | 1 个命题 = 1 个 agent | 完成一个补一个，不超过 W |
-| 10 看板生成 | 主线程串行 | — | 主 agent 直接调用 scripts/build-dashboard-v2.js，不 spawn 子 agent |
+
 
 ## Label 命名规范
 
@@ -38,7 +38,6 @@
 | 08 命题组装·Markdown | `asm-md-{seq}-{short_name}` | `asm-md-01-长列表渲染` |
 | 08 命题组装·Experiment | `asm-exp-{seq}-{short_name}` | `asm-exp-01-长列表渲染` |
 | 09 学习阶梯 | `ladder-{seq}-{short_name}` | `ladder-01-长列表渲染` |
-| 10 看板生成 | — | 主线程执行，无 label |
 
 ## 完成判定规则
 
