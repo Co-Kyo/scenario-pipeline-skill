@@ -80,7 +80,7 @@
 
 #### 2.5 退出
 
-所有命题 completed/failed/partial/degraded → 统计结果，进入 Barrier 7 检查点
+所有命题 completed/failed/partial/degraded → 统计结果，进入 Barrier 8 检查点
 
 **Markdown 组装 agent** — 负责 overview / edge-cases / trade-offs / references
 
@@ -218,7 +218,7 @@
 
 所有命题 agent 完成后：
 
-🚨 **🛑 必须停顿，进入 Barrier 7 检查点**。展示命题组装摘要（完成数/跳过数/失败数，各命题文件行数统计），使用 `clarify` 等待用户确认后才进入 Step 09。
+🚨 **🛑 必须停顿，进入 Barrier 8 检查点**。展示命题组装摘要（完成数/跳过数/失败数，各命题文件行数统计），使用 `clarify` 等待用户确认后才进入 Step 09。
 
 ## 输出
 

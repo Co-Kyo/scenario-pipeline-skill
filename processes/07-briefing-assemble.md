@@ -147,7 +147,7 @@
 
 所有 Briefing agent 完成后：
 
-🚨 **🛑 必须停顿，进入 Barrier 6 检查点**。展示 Briefing 组装摘要（完成数/跳过数/失败数），使用 `clarify` 等待用户确认后才进入 Step 08。
+🚨 **🛑 必须停顿，进入 Barrier 7 检查点**。展示 Briefing 组装摘要（完成数/跳过数/失败数），使用 `clarify` 等待用户确认后才进入 Step 08。
 
 ## 输出
 
