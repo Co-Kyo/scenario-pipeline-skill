@@ -1,70 +1,108 @@
 # Agent 任务模板
 
-## 年限约束注入块（所有 Agent 共享）
+> **核心原则**：主 agent 不读取 agent 定义文件，只分发文件路径。Sub-agent 自己读取所需的文件。
 
-在每个 Agent 的 task 中注入以下约束块：
+---
 
-```
-## 经验年限约束
-- 推断年限:{target_level}({year_desc})
-- 命题粒度要求:{粒度描述}
-- 命题命名模式:{命名模式}
-- 入池阈值:{阈值}
-- 深度要求:{深度调整}
-- 排除范围:{排除项}
-```
+## 维度 Agent 任务模板（场景/技术/学习/约束通用）
 
-注入内容来源：`plugins/year-granularity.md` 对应阶梯的定义。
-
-## 共享骨架注入块（所有 Agent 共享）
-
-在每个 Agent 的 task 中注入以下层次骨架块（内容来自 anchors.json）：
+主 agent 组装 task 时，将以下模板中的变量替换后内联到 sub-agent 的 task 中。Sub-agent 收到 task 后，自行读取所需文件。
 
 ```
-## 共享层次骨架（主 agent 已按 {target_level} 核心预组织）
+你是「{proposition_name}」的{dimension_name}维度分析专家。
 
-### {core_label}（占 {core_ratio}，你的主要工作区域）
-{core_anchors 格式化列表，每项含 id/name/description/reasoning}
+⚠️ 你必须用 write 工具将文件写入磁盘，不要只输出到对话中。
 
-### {premise_label}（占 {premise_ratio}）
-{premise_anchors 格式化列表}
+## 你需要读取的文件
 
-### {outlook_label}（占 {outlook_ratio}）
-{outlook_anchors 格式化列表}
+用 read 工具依次读取以下文件：
+
+1. **你的角色定义**：`{agent_definition_path}`
+   - 定义了你的身份、任务、具体要求、输出格式
+
+2. **经验年限规则**：`{year_rules_path}`
+   - 定义了年限阶梯映射和颗粒度要求
+
+3. **共享骨架**：`{anchors_path}`
+   - Step 00 产出的锚点列表，是你的核心输入
+
+4. **输出格式**：`{schemas_path}§{schema_section}`
+   - 定义了你产出 JSON 的结构
+
+## 已解析的约束（主 agent 注入，无需读取文件）
+
+- target_level: {target_level}
+- year_inference_trace: {year_inference_trace}
+- strategy: {strategy_summary}
+- core_label: {core_label}（占 {core_ratio}）
+- premise_label: {premise_label}（占 {premise_ratio}）
+- outlook_label: {outlook_label}（占 {outlook_ratio}）
 
 ## 你的工作流
-1. **检阅{core_label}**：理解核心锚点的定义和 reasoning，形成你的行动内核
-2. **完善{core_label}**：围绕核心锚点展开你的维度分析（{dimension_specific_instruction}）
-3. **向下扩展**：检查{premise_label}中是否有遗漏，补充必要的 premise 条目
-4. **向上扩展**：检查{outlook_label}中是否有遗漏，补充必要的 outlook 条目
-5. **自检比例**：确认你的输出中 core 占 {core_ratio}，premise 占 {premise_ratio}，outlook 占 {outlook_ratio}
-6. **自检 level_weight**：确认每个条目的 level 与 role 关系正确（见 level-weight.md）
-7. **报告完成**
+
+1. 读取上述 4 个文件
+2. 从共享骨架中理解核心锚点（{core_label}）的定义和 reasoning
+3. 从你的角色定义中理解本维度的加工要求
+4. 按年限规则过滤不符合目标年限的内容
+5. 围绕核心锚点展开你的维度分析
+6. 向下检查 {premise_label} 是否有遗漏，向上检查 {outlook_label}
+7. 自检比例：core 占 {core_ratio}，premise 占 {premise_ratio}，outlook 占 {outlook_ratio}
+8. 自检 level_weight：确认每个条目的 level 与 role 关系正确
+9. 用 write 工具将产出 JSON 写入 `{output_path}`
 ```
+
+### 主 agent 组装时填充的变量
+
+| 变量 | 来源 | 说明 |
+|------|------|------|
+| `{proposition_name}` | `{{anchors}}` 的 topic | 主题名称 |
+| `{dimension_name}` | 固定值 | 场景/技术/学习/约束 |
+| `{agent_definition_path}` | assets 文件路径 | 如 `assets/01-brainstorm/scenario-agent.md` |
+| `{year_rules_path}` | `plugins/year-granularity.md` | 年限规则 |
+| `{anchors_path}` | `{workDir}/.meta/brainstorm/anchors.json` | 共享骨架 |
+| `{schemas_path}` | `assets/01-brainstorm/schemas.md` | 输出格式 |
+| `{schema_section}` | 固定值 | §scenario / §technical / §learning / §constraint |
+| `{target_level}` | `{{anchors}}` 的 target_level | L1/L2/L3/L4 |
+| `{year_inference_trace}` | `{{anchors}}` 的 year_inference_trace | 推断依据 |
+| `{strategy_summary}` | `{{anchors}}` 的 strategy | 策略元数据摘要 |
+| `{core_label}` | `{{anchors}}` 的 strategy.core_label | 核心标签 |
+| `{core_ratio}` | `{{anchors}}` 的 strategy.ratios.core | 核心占比 |
+| `{premise_label}` | `{{anchors}}` 的 strategy.premise_label | 基础标签 |
+| `{premise_ratio}` | `{{anchors}}` 的 strategy.ratios.premise | 基础占比 |
+| `{outlook_label}` | `{{anchors}}` 的 strategy.outlook_label | 展望标签 |
+| `{outlook_ratio}` | `{{anchors}}` 的 strategy.ratios.outlook | 展望占比 |
+| `{output_path}` | 固定路径 | `{workDir}/.meta/brainstorm/{dimension}.json` |
+
+### 主 agent 不做的事
+
+- ❌ 不读取 `scenario-agent.md` / `technical-agent.md` / `learning-agent.md` / `constraint-agent.md`
+- ❌ 不读取 `plugins/year-granularity.md`
+- ❌ 不读取 `schemas.md`
+- ❌ 不将上述文件内容内联到 task 中
+
+---
 
 ## 收敛者任务模板
 
 ```
 你是头脑风暴的收敛者（Integrator）。你收到了 4 个维度 Agent 的输出和一份共享骨架，需要执行校验、对齐、收束、去重、补位，最终产出 requirement-web.json。
 
-## 用户原始指令
-{raw_input}
+## 你需要读取的文件
 
-## 已解析约束
-year={year}（{year_source}），target_level={L1/L2/L3/L4}，platform={platform}，depth={depth}
+用 read 工具依次读取以下文件：
 
-## 策略元数据
-{strategy 对象，从 anchors.json 中提取}
+1. **共享骨架**：`{anchors_path}`
+2. **场景维度报告**：`{workDir}/.meta/brainstorm/scenario.json`（entries 命名：scenarios）
+3. **技术维度报告**：`{workDir}/.meta/brainstorm/technical.json`（entries 命名：capabilities）
+4. **学习维度报告**：`{workDir}/.meta/brainstorm/learning.json`（entries 命名：learning_path）
+5. **约束维度报告**：`{workDir}/.meta/brainstorm/constraint.json`（entries 命名：constraints）
+6. **输出格式**：`{schemas_path}`§requirement-web
 
-## 共享骨架
-`{workDir}/.meta/brainstorm/anchors.json`（使用 read 工具读取）
+## 已解析约束（主 agent 注入）
 
-## 4 份维度报告（文件路径，使用 read 工具逐个读取）
-
-- 场景维度：`{workDir}/.meta/brainstorm/scenario.json`（entries 命名：scenarios）
-- 技术维度：`{workDir}/.meta/brainstorm/technical.json`（entries 命名：capabilities）
-- 学习维度：`{workDir}/.meta/brainstorm/learning.json`（entries 命名：learning_path）
-- 约束维度：`{workDir}/.meta/brainstorm/constraint.json`（entries 命名：constraints）
+- raw_input: {raw_input}
+- year={year}（{year_source}），target_level={target_level}，platform={platform}，depth={depth}
+- strategy: {strategy_summary}
 
 ## 你的任务
 
@@ -83,7 +121,7 @@ year={year}（{year_source}），target_level={L1/L2/L3/L4}，platform={platform
 
 ## 输出格式
 
-严格按 `assets/01-brainstorm/schemas.md` 的 requirement-web.json 格式输出。
+严格按 `{schemas_path}`§requirement-web 格式输出。
 
 注意：requirement-web.json 除了标准字段外，还必须包含：
 - context.target_level（L1/L2/L3/L4）
@@ -94,3 +132,13 @@ year={year}（{year_source}），target_level={L1/L2/L3/L4}，platform={platform
 - qualifier_injection（限定词注入映射）
 - 每个 proposition 附带 capability_ids 和 level_weight
 ```
+
+### 收敛者 task 中的变量
+
+| 变量 | 来源 |
+|------|------|
+| `{anchors_path}` | `{workDir}/.meta/brainstorm/anchors.json` |
+| `{schemas_path}` | `assets/01-brainstorm/schemas.md` |
+| `{raw_input}` | 用户原文 |
+| `{year}`, `{year_source}`, `{target_level}`, `{platform}`, `{depth}` | 从 `{{anchors}}` 提取 |
+| `{strategy_summary}` | 从 `{{anchors}}` 提取 |

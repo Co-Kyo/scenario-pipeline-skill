@@ -3,9 +3,9 @@
 **目的**：基于共享骨架，通过 4 维度 Agent 并行分析 + 收敛者校验，产出结构化需求网（requirement-web.json）
 
 **核心流程**：
-1. 读取共享骨架（anchors.json）
-2. 为 4 个维度 Agent 各自组装 task（角色 + 约束 + 骨架 + 写入指令）
-3. 并行 spawn 4 个维度 Agent，各自从自己的维度加工骨架
+1. 读取共享骨架（anchors.json），提取元数据
+2. 分发路径：为 4 个维度 Agent 组装 task（元数据注入 + 文件路径分发，不读取 agent 定义文件）
+3. 并行 spawn 4 个维度 Agent，各自读取自己的角色定义 + 骨架，从自己的维度加工
 4. 即时校验 + 降级策略
 5. 🛑 Barrier 检查（强制停顿）
 6. Spawn 收敛者 Agent，汇总 4 份产出为 requirement-web.json
@@ -17,20 +17,25 @@
 
 ## 文件引用
 
-| 变量 | 文件 | 说明 |
-|------|------|------|
-| `{{schemas-brainstorm}}` | `assets/01-brainstorm/schemas.md` | JSON 格式定义 |
-| `{{level-weight}}` | `assets/01-brainstorm/level-weight.md` | level/role 约束 |
-| `{{task-templates}}` | `assets/01-brainstorm/task-templates.md` | 年限约束注入块 + 共享骨架注入块 + 收敛者任务模板 |
-| `{{scenario-agent}}` | `assets/01-brainstorm/scenario-agent.md` | 场景 Agent 定义 |
-| `{{technical-agent}}` | `assets/01-brainstorm/technical-agent.md` | 技术 Agent 定义 |
-| `{{learning-agent}}` | `assets/01-brainstorm/learning-agent.md` | 学习 Agent 定义 |
-| `{{constraint-agent}}` | `assets/01-brainstorm/constraint-agent.md` | 约束 Agent 定义 |
-| `{{scheduling-detail}}` | `assets/01-brainstorm/scheduling-detail.md` | 调度参数 + 超时检查 + 降级策略 |
-| `{{barrier-check}}` | `assets/01-brainstorm/barrier-check.md` | Barrier 检查项 + 决策矩阵 + 重试规则 |
-| `{{fallback-protocol}}` | `assets/01-brainstorm/fallback-protocol.md` | 收敛者失败时的降级转换协议 |
-| `{{protocol-scheduling}}` | `assets/common/protocol-scheduling.md` | 子 agent 调度规则 |
-| `{{anchors}}` | `{workDir}/.meta/brainstorm/anchors.json` | Step 00 产出的共享骨架 |
+> 主 agent 读取的文件：`{{schemas-brainstorm}}`、`{{level-weight}}`、`{{task-templates}}`、`{{scheduling-detail}}`、`{{barrier-check}}`、`{{fallback-protocol}}`、`{{protocol-scheduling}}`、`{{anchors}}`
+>
+> Sub-agent 读取的文件（主 agent 只分发路径，不读取内容）：`{{scenario-agent}}`、`{{technical-agent}}`、`{{learning-agent}}`、`{{constraint-agent}}`、`{{year-rules}}`、`{{schemas-brainstorm}}`、`{{anchors}}`
+
+| 变量 | 文件 | 读取者 | 说明 |
+|------|------|--------|------|
+| `{{schemas-brainstorm}}` | `assets/01-brainstorm/schemas.md` | 主 agent + sub-agent | JSON 格式定义 |
+| `{{level-weight}}` | `assets/01-brainstorm/level-weight.md` | 主 agent | level/role 约束 |
+| `{{task-templates}}` | `assets/01-brainstorm/task-templates.md` | 主 agent | task 组装模板（维度 Agent + 收敛者） |
+| `{{scheduling-detail}}` | `assets/01-brainstorm/scheduling-detail.md` | 主 agent | 调度参数 + 超时检查 + 降级策略 |
+| `{{barrier-check}}` | `assets/01-brainstorm/barrier-check.md` | 主 agent | Barrier 检查项 + 决策矩阵 + 重试规则 |
+| `{{fallback-protocol}}` | `assets/01-brainstorm/fallback-protocol.md` | 主 agent | 收敛者失败时的降级转换协议 |
+| `{{protocol-scheduling}}` | `assets/common/protocol-scheduling.md` | 主 agent | 子 agent 调度规则 |
+| `{{anchors}}` | `{workDir}/.meta/brainstorm/anchors.json` | 主 agent + sub-agent | Step 00 产出的共享骨架 |
+| `{{scenario-agent}}` | `assets/01-brainstorm/scenario-agent.md` | sub-agent | 场景 Agent 定义 |
+| `{{technical-agent}}` | `assets/01-brainstorm/technical-agent.md` | sub-agent | 技术 Agent 定义 |
+| `{{learning-agent}}` | `assets/01-brainstorm/learning-agent.md` | sub-agent | 学习 Agent 定义 |
+| `{{constraint-agent}}` | `assets/01-brainstorm/constraint-agent.md` | sub-agent | 约束 Agent 定义 |
+| `{{year-rules}}` | `plugins/year-granularity.md` | sub-agent | 年限颗粒度规则 |
 
 ## 输入
 
@@ -43,55 +48,30 @@
 
 ### 1. 读取共享骨架
 
-读取 `{{anchors}}`，提取以下数据供后续组装 task 使用：
+读取 `{{anchors}}`，提取以下元数据供组装 task 时注入：
 - `target_level`：目标经验年限（L1/L2/L3/L4）
 - `strategy`：策略元数据（core_label / premise_label / outlook_label / ratios）
-- `anchors[]`：8-15 个锚点，每个含 id / name / provisional_level / provisional_role / description / reasoning
-- 按 role 分组的锚点 ID 列表：`l{N}_core_ids` / `l{N}_premise_ids` / `l{N}_outlook_ids`
+- `year_inference_trace`：年限推断依据
+
+> **主 agent 不读取 agent 定义文件**（scenario-agent.md 等），只读 anchors.json 一次，提取元数据后分发路径。
 
 ### 2. 为 4 个维度 Agent 组装 task
 
-每个 Agent 的 task 由五部分拼接，全部内联到 task 中，不依赖 agent 读外部文件：
+按 `{{task-templates}}` §维度 Agent 任务模板 组装。每个 task 只包含：
+- **文件路径**（sub-agent 自己读）：agent 定义 + 年限规则 + 共享骨架 + 输出格式
+- **元数据**（主 agent 注入）：target_level / strategy / role 标签和占比
+- **工作流指引**（固定模板）
 
-| 拼接块 | 内容 | 来源 |
-|--------|------|------|
-| 角色声明 | Agent 的身份和能力定位 | `{{scenario-agent}}` / `{{technical-agent}}` / `{{learning-agent}}` / `{{constraint-agent}}` |
-| 维度任务 | 本维度的具体加工要求 | 同上 |
-| 约束注入 | 年限颗粒度、入池阈值、深度要求 | `{{task-templates}}` §年限约束注入块 |
-| 骨架注入 | 按 role 分组的锚点列表 + 工作流指引 | `{{anchors}}` 的内容，按 `{{task-templates}}` §共享骨架注入块 格式化 |
-| 写入指令 | 产出文件路径 | 固定路径 |
+主 agent **不读取、不内联** agent 定义文件和年限规则文件的内容。
 
-#### 1.1 场景 Agent
+#### 4 个 Agent 的路径分发
 
-- **角色**：资深前端面试官和技术场景分析师
-- **加工方向**：从"这个知识点会被怎样考"的角度，展开 anchors 中的每个锚点，列出面试/实战场景（≥5 个），按年限过滤深度，标注频率
-- **产出**：`{workDir}/.meta/brainstorm/scenario.json`
-
-详见 `{{scenario-agent}}`
-
-#### 1.2 技术 Agent
-
-- **角色**：技术专家，擅长拆解技术能力、识别依赖关系
-- **加工方向**：从"这个主题涉及哪些技术能力"的角度，将 anchors 中的锚点拆解为原子能力点，标注通用/特化、依赖关系、fanout，按年限过滤，补充遗漏层的能力
-- **产出**：`{workDir}/.meta/brainstorm/technical.json`
-
-详见 `{{technical-agent}}`
-
-#### 1.3 学习 Agent
-
-- **角色**：前端教育者，擅长设计渐进式学习路径
-- **加工方向**：从"从不会到会应该学什么"的角度，基于 anchors 中的锚点构建学习路径，标注战略高地、分支路径、验证标准
-- **产出**：`{workDir}/.meta/brainstorm/learning.json`
-
-详见 `{{learning-agent}}`
-
-#### 1.4 约束 Agent
-
-- **角色**：需求分析专家，擅长识别隐含约束和边界条件
-- **加工方向**：从"哪些该包含、哪些该排除"的角度，基于 anchors 中的锚点提取显式/隐式约束，明确排除项，标注 level_weight 和 anchor_ref
-- **产出**：`{workDir}/.meta/brainstorm/constraint.json`
-
-详见 `{{constraint-agent}}`
+| Agent | agent_definition_path | output_path |
+|-------|----------------------|-------------|
+| 场景 | `assets/01-brainstorm/scenario-agent.md` | `{workDir}/.meta/brainstorm/scenario.json` |
+| 技术 | `assets/01-brainstorm/technical-agent.md` | `{workDir}/.meta/brainstorm/technical.json` |
+| 学习 | `assets/01-brainstorm/learning-agent.md` | `{workDir}/.meta/brainstorm/learning.json` |
+| 约束 | `assets/01-brainstorm/constraint-agent.md` | `{workDir}/.meta/brainstorm/constraint.json` |
 
 #### level_weight 打标规则
 
