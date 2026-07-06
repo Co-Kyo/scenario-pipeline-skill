@@ -97,10 +97,6 @@
 
 将原始候选数据写入 `{workDir}/.meta/candidates.md`（pipeline 内部存档）。
 
-#### 4.3 更新 capability-graph.json
-
-将 `highgrounds` 和 `learning_path` 字段追加到 capability-graph.json（如 04 已写入则跳过）。
-
 ## 输出
 
 ⚠️ 本步骤产出 3 个文件，必须全部写入磁盘：
