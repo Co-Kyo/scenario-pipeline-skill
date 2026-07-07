@@ -1,0 +1,14 @@
+{
+  "name": "skillpack-demo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "skillpack-types": "*",
+    "skillpack-common": "*",
+    "skillpack-build": "*"
+  },
+  "devDependencies": {
+    "tsx": "^4.16.0"
+  }
+}

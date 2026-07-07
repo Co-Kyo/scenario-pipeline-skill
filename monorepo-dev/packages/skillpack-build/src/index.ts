@@ -9,12 +9,17 @@ import type {
   StepDefinition,
   ResolvedStep,
   ResolvedPipeline,
-  ScheduleGraph,
-  WorkNode,
-  AgentWork,
-  BatchWork,
-  MapWork,
+  ControlNode,
+  TaskNode,
+  SeqNode,
+  ParallelNode,
+  MapNode,
+  BranchNode,
+  LoopNode,
+  TaskDef,
   PipelineDefinition,
+  PipelineState,
+  PipelineStateManager,
 } from 'skillpack-types';
 import {
   resolveStepOrder,
@@ -50,126 +55,89 @@ export function defineConfig(config: SkillpackConfig): SkillpackConfig {
 // Graph-based Markdown renderer
 // ---------------------------------------------------------------
 
-function renderAgentNode(node: AgentWork, depth: number): string {
+/** 递归渲染 ControlNode 树 */
+function renderControlTree(node: ControlNode, depth: number): string {
   const indent = '  '.repeat(depth);
-  let md = `${indent}- Agent：\`${node.label}\` — ${node.role}\n`;
-  if (node.timeout) md += `${indent}  超时：${node.timeout} min\n`;
-  md += `${indent}  Task：\n\`\`\`\n${node.task.slice(0, 250)}${node.task.length > 250 ? '...' : ''}\n\`\`\`\n`;
-  return md;
-}
 
-function renderBatchNode(node: BatchWork, depth: number): string {
-  const indent = '  '.repeat(depth);
-  let md = `${indent}批量并行 — ${node.label}\n`;
-  md += `${indent}分支数：${node.branches.length}\n\n`;
-
-  for (let i = 0; i < node.branches.length; i++) {
-    const branch = node.branches[i];
-    md += `${indent}分支 ${i + 1}：`;
-    if (branch.kind === 'agent') {
-      md += `\`${branch.label}\` — ${branch.role}\n`;
-      if (branch.timeout) md += `${indent}  超时：${branch.timeout} min\n`;
+  switch (node.kind) {
+    case 'task': {
+      const t = node.task;
+      let md = `${indent}- Task：\`${t.label}\` [${t.type}]\n`;
+      if (t.timeout) md += `${indent}  超时：${t.timeout} min\n`;
+      if (t.tools && t.tools.length > 0) {
+        md += `${indent}  工具：${t.tools.join(', ')}\n`;
+      }
+      md += `${indent}  Body：\n\`\`\`\n${t.body.slice(0, 250)}${t.body.length > 250 ? '...' : ''}\n\`\`\`\n`;
+      return md;
+    }
+    case 'seq': {
+      let md = `${indent}▸ 顺序执行：${node.label}（${node.nodes.length} 步）\n\n`;
+      for (let i = 0; i < node.nodes.length; i++) {
+        md += `${indent}  第 ${i + 1} 步：\n`;
+        md += renderControlTree(node.nodes[i], depth + 2);
+        md += '\n';
+      }
+      return md;
+    }
+    case 'parallel': {
+      let md = `${indent}▤ 并行分支：${node.label}（${node.branches.length} 条分支）\n\n`;
+      for (let i = 0; i < node.branches.length; i++) {
+        md += `${indent}  分支 ${i + 1}：\n`;
+        md += renderControlTree(node.branches[i], depth + 2);
+        md += '\n';
+      }
+      if (node.gate) {
+        md += `${indent}  🛑 质量门禁\n`;
+        md += `${indent}    - 规则：${node.gate.rule}\n`;
+        md += `${indent}    - 通过 → ${node.gate.onPass === 'converge' ? '启动收敛者' : '跳过'}\n`;
+        md += `${indent}    - 失败 → ${node.gate.onFail === 'halt' ? '停止' : '降级继续'}\n`;
+      }
+      if (node.converge) {
+        md += `${indent}  收敛者：\`${node.converge.label}\` [${node.converge.type}]\n`;
+        md += `${indent}    超时：${node.converge.timeout ?? 5} min\n`;
+        md += `${indent}    Body：\n\`\`\`\n${node.converge.body.slice(0, 250)}${node.converge.body.length > 250 ? '...' : ''}\n\`\`\`\n`;
+      }
+      return md;
+    }
+    case 'map': {
+      const slotNote = node.slotOccupancy && node.slotOccupancy > 1
+        ? `（每个条目占 ${node.slotOccupancy} 个槽位）`
+        : '';
+      let md = `${indent}▦ 滚动窗口：${node.label}\n`;
+      md += `${indent}  - 最大并发：${node.maxConcurrency} ${slotNote}\n`;
+      md += `${indent}  - 数据来源：${node.items}\n\n`;
+      md += `${indent}  Worker：\n`;
+      md += renderControlTree(node.worker, depth + 2);
+      md += '\n';
+      if (node.reduce) {
+        md += `${indent}  Reduce：\`${node.reduce.label}\` [${node.reduce.type}]\n`;
+        md += `${indent}    超时：${node.reduce.timeout ?? 5} min\n`;
+        md += `${indent}    Body：\n\`\`\`\n${node.reduce.body.slice(0, 250)}${node.reduce.body.length > 250 ? '...' : ''}\n\`\`\`\n`;
+      }
+      return md;
+    }
+    case 'branch': {
+      let md = `${indent}◇ 条件分支：${node.label}\n`;
+      md += `${indent}  条件：${node.condition}\n\n`;
+      md += `${indent}  Then：\n`;
+      md += renderControlTree(node.then, depth + 2);
+      md += '\n';
+      if (node.else) {
+        md += `${indent}  Else：\n`;
+        md += renderControlTree(node.else, depth + 2);
+        md += '\n';
+      }
+      return md;
+    }
+    case 'loop': {
+      let md = `${indent}↻ 循环：${node.label}\n`;
+      md += `${indent}  终止条件：${node.until}\n`;
+      if (node.maxIterations) md += `${indent}  最大迭代：${node.maxIterations}\n`;
+      md += `\n${indent}  循环体：\n`;
+      md += renderControlTree(node.body, depth + 2);
+      return md;
     }
   }
-
-  if (node.gate) {
-    md += `\n${indent}🛑 质量门禁\n`;
-    md += `${indent}- 规则：${node.gate.rule}\n`;
-    md += `${indent}- 通过 → ${node.gate.onPass === 'converge' ? '启动收敛者' : '跳过'}\n`;
-    md += `${indent}- 失败 → ${node.gate.onFail === 'halt' ? '停止' : '降级继续'}\n`;
-  }
-
-  if (node.converge) {
-    md += `\n${indent}收敛者：\`${node.converge.label}\` — ${node.converge.role}\n`;
-    md += `${indent}超时：${node.converge.timeout ?? 5} min\n`;
-    md += `${indent}Task：\n\`\`\`\n${node.converge.task.slice(0, 250)}${node.converge.task.length > 250 ? '...' : ''}\n\`\`\`\n`;
-  }
-
-  return md;
-}
-
-function renderMapNode(node: MapWork, depth: number): string {
-  const indent = '  '.repeat(depth);
-  const slotNote = node.slotOccupancy && node.slotOccupancy > 1
-    ? `（每个条目占 ${node.slotOccupancy} 个槽位）`
-    : '';
-  let md = `${indent}滚动窗口 — ${node.label}\n`;
-  md += `${indent}- 最大并发槽位：${node.maxConcurrency} ${slotNote}\n`;
-  md += `${indent}- 数据来源：${node.itemFrom}\n\n`;
-
-  if (node.worker.kind === 'agent') {
-    md += `${indent}Worker：\`${node.worker.label}\` — ${node.worker.role}\n`;
-    if (node.worker.timeout) md += `${indent}超时：${node.worker.timeout} min\n`;
-    md += `${indent}Task 模板：\n\`\`\`\n${node.worker.task.slice(0, 250)}${node.worker.task.length > 250 ? '...' : ''}\n\`\`\`\n`;
-  }
-
-  return md;
-}
-
-/** 递归渲染 schedule 图 */
-function renderGraph(graph: ScheduleGraph): string {
-  let md = `### 调度图\n\n`;
-  md += `入口节点：\`${graph.entry}\`\n`;
-  md += `节点数：${graph.nodes.length}，边数：${graph.edges.length}\n\n`;
-
-  // 按拓扑顺序渲染（从 entry 开始，沿 edges 行走）
-  const visited = new Set<string>();
-  const order: WorkNode[] = [];
-
-  function dfs(nodeId: string) {
-    if (visited.has(nodeId)) return;
-    visited.add(nodeId);
-    const node = graph.nodes.find(n => n.id === nodeId);
-    if (!node) return;
-
-    // 先渲染子节点
-    if (node.kind === 'batch') {
-      for (const b of node.branches) dfs(b.id);
-    }
-    if (node.kind === 'map' && node.worker) {
-      dfs(node.worker.id);
-    }
-
-    order.push(node);
-
-    // 沿边遍历
-    for (const e of graph.edges) {
-      if (e.from === nodeId) dfs(e.to);
-    }
-  }
-
-  dfs(graph.entry);
-
-  for (const node of order) {
-    md += `\n---\n\n`;
-    switch (node.kind) {
-      case 'agent':
-        md += `**${node.label}**（单 Agent）\n\n`;
-        md += renderAgentNode(node, 0);
-        break;
-      case 'batch':
-        md += `**${node.label}**（批量并行）\n\n`;
-        md += renderBatchNode(node, 0);
-        break;
-      case 'map':
-        md += `**${node.label}**（滚动窗口 / Map）\n\n`;
-        md += renderMapNode(node, 0);
-        break;
-    }
-  }
-
-  // 条件路由
-  const conditionalEdges = graph.edges.filter(e => e.condition);
-  if (conditionalEdges.length > 0) {
-    md += `\n---\n\n**条件路由：**\n\n`;
-    md += `| 来源 | 目标 | 条件 |\n`;
-    md += `|------|------|------|\n`;
-    for (const e of conditionalEdges) {
-      md += `| \`${e.from}\` | \`${e.to}\` | ${e.condition} |\n`;
-    }
-  }
-
-  return md;
 }
 
 // ---------------------------------------------------------------
@@ -220,9 +188,9 @@ export function renderStep(step: ResolvedStep): string {
   md += `\n## 依赖\n\n`;
   md += `前置步骤：${step.dependsOn.length > 0 ? step.dependsOn.map(d => `\`${d}\``).join(', ') : '无'}\n`;
 
-  // Schedule (graph-based)
+  // 调度策略（ControlNode tree）
   md += `\n## 调度策略\n\n`;
-  md += renderGraph(step.schedule);
+  md += renderControlTree(step.graph, 0);
 
   // Incremental reuse
   if (step.reuse && step.reuse.length > 0) {
@@ -314,6 +282,17 @@ export function renderSkillMd(
   md += `\n---\n`;
   md += `*Generated by skillpack-build v0.1.0*`;
 
+  return md;
+}
+
+export function renderPipelineState(state: PipelineState): string {
+  let md = '## 管道状态\n\n';
+  md += '| 步骤 | 状态 | 重试次数 |\n';
+  md += '|------|------|---------|\n';
+  for (const [stepId, stepState] of Object.entries(state.steps)) {
+    const icon = stepState.status === 'completed' ? '✅' : stepState.status === 'failed' ? '❌' : stepState.status === 'running' ? '🔄' : '⏳';
+    md += '| ' + stepId + ' | ' + icon + ' ' + stepState.status + ' | ' + stepState.runAttempt + ' |\n';
+  }
   return md;
 }
 

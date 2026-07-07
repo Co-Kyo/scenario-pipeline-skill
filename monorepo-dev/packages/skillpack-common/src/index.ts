@@ -3,18 +3,26 @@
 // ============================================================
 
 import type {
-  ScheduleGraph,
-  WorkNode,
-  EdgeDef,
-  AgentWork,
-  BatchWork,
-  MapWork,
+  ControlNode,
+  TaskNode,
+  SeqNode,
+  ParallelNode,
+  MapNode,
+  BranchNode,
+  LoopNode,
+  TaskDef,
   BarrierDef,
   StepDefinition,
   FileRef,
   ResolvedStep,
   ResolvedPipeline,
+  PipelineState,
+  PipelineStateManager,
+  StepState,
+  StepStatus,
 } from 'skillpack-types';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 // ---------------------------------------------------------------
 // Template resolution
@@ -57,6 +65,79 @@ export interface ValidationError {
   message: string;
 }
 
+/** Recursively validate a ControlNode tree */
+function validateControlNode(
+  node: ControlNode,
+  path: string,
+  errors: ValidationError[],
+  stepId: string,
+): void {
+  if (!node || typeof node !== 'object') {
+    errors.push({ stepId, field: path, message: 'Invalid node: must be an object' });
+    return;
+  }
+  if (!node.kind || !['task', 'seq', 'parallel', 'map', 'branch', 'loop'].includes(node.kind)) {
+    errors.push({ stepId, field: `${path}.kind`, message: `Invalid or missing kind: "${(node as any).kind}"` });
+    return;
+  }
+
+  switch (node.kind) {
+    case 'task':
+      if (!node.task) {
+        errors.push({ stepId, field: `${path}.task`, message: 'Task node must have a task property' });
+      } else {
+        if (!node.task.id) errors.push({ stepId, field: `${path}.task.id`, message: 'TaskDef id is required' });
+        if (!node.task.label) errors.push({ stepId, field: `${path}.task.label`, message: 'TaskDef label is required' });
+        if (!node.task.type) errors.push({ stepId, field: `${path}.task.type`, message: 'TaskDef type is required' });
+        if (!node.task.body) errors.push({ stepId, field: `${path}.task.body`, message: 'TaskDef body is required' });
+      }
+      break;
+    case 'seq':
+      if (!node.id) errors.push({ stepId, field: `${path}.id`, message: 'SeqNode id is required' });
+      if (!node.nodes || !Array.isArray(node.nodes)) {
+        errors.push({ stepId, field: `${path}.nodes`, message: 'SeqNode must have a nodes array' });
+      } else {
+        node.nodes.forEach((child, i) => validateControlNode(child, `${path}.nodes[${i}]`, errors, stepId));
+      }
+      break;
+    case 'parallel':
+      if (!node.id) errors.push({ stepId, field: `${path}.id`, message: 'ParallelNode id is required' });
+      if (!node.branches || !Array.isArray(node.branches)) {
+        errors.push({ stepId, field: `${path}.branches`, message: 'ParallelNode must have a branches array' });
+      } else {
+        node.branches.forEach((child, i) => validateControlNode(child, `${path}.branches[${i}]`, errors, stepId));
+      }
+      break;
+    case 'map':
+      if (!node.id) errors.push({ stepId, field: `${path}.id`, message: 'MapNode id is required' });
+      if (!node.worker) {
+        errors.push({ stepId, field: `${path}.worker`, message: 'MapNode must have a worker node' });
+      } else {
+        validateControlNode(node.worker, `${path}.worker`, errors, stepId);
+      }
+      break;
+    case 'branch':
+      if (!node.id) errors.push({ stepId, field: `${path}.id`, message: 'BranchNode id is required' });
+      if (!node.condition) errors.push({ stepId, field: `${path}.condition`, message: 'BranchNode must have a condition' });
+      if (!node.then) {
+        errors.push({ stepId, field: `${path}.then`, message: 'BranchNode must have a then node' });
+      } else {
+        validateControlNode(node.then, `${path}.then`, errors, stepId);
+      }
+      if (node.else) validateControlNode(node.else, `${path}.else`, errors, stepId);
+      break;
+    case 'loop':
+      if (!node.id) errors.push({ stepId, field: `${path}.id`, message: 'LoopNode id is required' });
+      if (!node.until) errors.push({ stepId, field: `${path}.until`, message: 'LoopNode must have an until condition' });
+      if (!node.body) {
+        errors.push({ stepId, field: `${path}.body`, message: 'LoopNode must have a body node' });
+      } else {
+        validateControlNode(node.body, `${path}.body`, errors, stepId);
+      }
+      break;
+  }
+}
+
 export function validateStep(step: StepDefinition): ValidationError[] {
   const errors: ValidationError[] = [];
 
@@ -70,31 +151,10 @@ export function validateStep(step: StepDefinition): ValidationError[] {
     errors.push({ stepId: step.id, field: 'description', message: 'Description is required' });
   }
 
-  if (!step.schedule) {
-    errors.push({ stepId: step.id, field: 'schedule', message: 'Schedule graph is required' });
+  if (!step.graph) {
+    errors.push({ stepId: step.id, field: 'graph', message: 'Control tree graph is required' });
   } else {
-    if (!step.schedule.nodes || step.schedule.nodes.length === 0) {
-      errors.push({ stepId: step.id, field: 'schedule.nodes', message: 'At least one node required' });
-    }
-    if (!step.schedule.entry) {
-      errors.push({ stepId: step.id, field: 'schedule.entry', message: 'Entry node id required' });
-    }
-    // Validate entry node exists
-    const nodeIds = new Set(step.schedule.nodes.map(n => n.id));
-    if (step.schedule.entry && !nodeIds.has(step.schedule.entry)) {
-      errors.push({ stepId: step.id, field: 'schedule.entry', message: `Entry "${step.schedule.entry}" not found in nodes` });
-    }
-    // Validate edges reference existing nodes
-    if (step.schedule.edges) {
-      for (const e of step.schedule.edges) {
-        if (!nodeIds.has(e.from)) {
-          errors.push({ stepId: step.id, field: 'schedule.edges', message: `Edge from "${e.from}" — node not found` });
-        }
-        if (!nodeIds.has(e.to)) {
-          errors.push({ stepId: step.id, field: 'schedule.edges', message: `Edge to "${e.to}" — node not found` });
-        }
-      }
-    }
+    validateControlNode(step.graph, 'graph', errors, step.id);
   }
 
   if (!step.writes || step.writes.length === 0) {
@@ -210,70 +270,91 @@ export function resolveStepOrder(steps: StepDefinition[]): ResolvedPipeline {
 }
 
 // ---------------------------------------------------------------
-// Graph walker（替代旧的 mode-based 策略函数）
+// ControlNode tree walker（替代旧的扁平 graph + edges 遍历）
 // ---------------------------------------------------------------
 
-/** 遍历调度图，对每个节点执行回调 */
+/** 递归遍历 ControlNode 树，对每个节点执行回调 */
 export function walkGraph(
-  graph: ScheduleGraph,
-  visit: (node: WorkNode, depth: number) => void,
+  graph: ControlNode,
+  visit: (node: ControlNode, depth: number) => void,
 ): void {
-  const visited = new Set<string>();
-
-  function dfs(nodeId: string, depth: number) {
-    if (visited.has(nodeId)) return;
-    visited.add(nodeId);
-
-    const node = graph.nodes.find(n => n.id === nodeId);
-    if (!node) return;
-
-    visit(node, depth);
-
-    // Recurse into children
-    if (node.kind === 'batch') {
-      for (const branch of node.branches) {
-        if (!visited.has(branch.id)) dfs(branch.id, depth + 1);
-      }
-    }
-    if (node.kind === 'map') {
-      if (!visited.has(node.worker.id)) dfs(node.worker.id, depth + 1);
-    }
-
-    // Follow edges
-    for (const e of graph.edges) {
-      if (e.from === nodeId) dfs(e.to, depth + 1);
+  function recurse(node: ControlNode, depth: number): void {
+    switch (node.kind) {
+      case 'task':
+        visit(node, depth);
+        break;
+      case 'seq':
+        visit(node, depth);
+        for (const child of node.nodes) {
+          recurse(child, depth + 1);
+        }
+        break;
+      case 'parallel':
+        visit(node, depth);
+        for (const branch of node.branches) {
+          recurse(branch, depth + 1);
+        }
+        if (node.converge) {
+          visit({ kind: 'task', task: node.converge }, depth + 1);
+        }
+        break;
+      case 'map':
+        visit(node, depth);
+        recurse(node.worker, depth + 1);
+        if (node.reduce) {
+          visit({ kind: 'task', task: node.reduce }, depth + 1);
+        }
+        break;
+      case 'branch':
+        visit(node, depth);
+        recurse(node.then, depth + 1);
+        if (node.else) recurse(node.else, depth + 1);
+        break;
+      case 'loop':
+        visit(node, depth);
+        recurse(node.body, depth + 1);
+        break;
     }
   }
-
-  dfs(graph.entry, 0);
+  recurse(graph, 0);
 }
 
-/** 获取图中所有 agent 节点的扁平列表 */
-export function collectAgents(graph: ScheduleGraph): AgentWork[] {
-  const agents: AgentWork[] = [];
+/** 获取 ControlNode 树中所有叶子任务的扁平列表 */
+export function collectTasks(graph: ControlNode): TaskDef[] {
+  const tasks: TaskDef[] = [];
   walkGraph(graph, (node) => {
-    if (node.kind === 'agent') agents.push(node);
-    if (node.kind === 'batch' && node.converge) agents.push(node.converge);
+    if (node.kind === 'task') {
+      tasks.push(node.task);
+    }
   });
-  return agents;
+  return tasks;
 }
 
-/** 描述图的拓扑结构（用于预览） */
-export function describeGraph(graph: ScheduleGraph): string {
+/** 描述 ControlNode 树的拓扑结构（用于预览） */
+export function describeControlTree(graph: ControlNode): string {
   const lines: string[] = [];
   walkGraph(graph, (node, depth) => {
     const indent = '  '.repeat(depth);
     switch (node.kind) {
-      case 'agent':
-        lines.push(`${indent}▪ ${node.label} [agent]`);
+      case 'task':
+        lines.push(`${indent}▪ ${node.task.label} [${node.task.type}]`);
         break;
-      case 'batch':
-        lines.push(`${indent}▤ ${node.label} [batch: ${node.branches.length} branches]`);
+      case 'seq':
+        lines.push(`${indent}▸ ${node.label} [seq: ${node.nodes.length} nodes]`);
+        break;
+      case 'parallel':
+        lines.push(`${indent}▤ ${node.label} [parallel: ${node.branches.length} branches]`);
         if (node.converge) lines.push(`${indent}  ↳ converge: ${node.converge.label}`);
-        if (node.gate) lines.push(`${indent}  ↳ gate: ${node.gate.rule}`);
         break;
       case 'map':
         lines.push(`${indent}▦ ${node.label} [map: max ${node.maxConcurrency} concurrent]`);
+        if (node.reduce) lines.push(`${indent}  ↳ reduce: ${node.reduce.label}`);
+        break;
+      case 'branch':
+        lines.push(`${indent}◇ ${node.label} [branch: ${node.condition}]`);
+        break;
+      case 'loop':
+        lines.push(`${indent}↻ ${node.label} [loop: until ${node.until}]`);
         break;
     }
   });
@@ -284,54 +365,60 @@ export function describeGraph(graph: ScheduleGraph): string {
 // 运行时执行函数（stub — 平台适配时实现）
 // ---------------------------------------------------------------
 
-export async function executeGraph(
-  graph: ScheduleGraph,
+export async function executeControlTree(
+  graph: ControlNode,
   context: { workDir: string; topic: string },
+  state?: { pipelineState?: PipelineState; stepId?: string; manager?: PipelineStateManager },
 ): Promise<void> {
-  console.log(`[executeGraph] Entry: ${graph.entry}`);
-  console.log(`[executeGraph] Nodes: ${graph.nodes.length}, Edges: ${graph.edges.length}`);
-
-  // BFS topological execution
-  const inDegree = new Map<string, number>();
-  const adj = new Map<string, string[]>();
-  for (const node of graph.nodes) {
-    inDegree.set(node.id, 0);
-    adj.set(node.id, []);
+  if (state?.manager && state?.stepId && state?.pipelineState) {
+    const updated = state.manager.markStep(state.pipelineState, state.stepId, 'running');
+    state.manager.save(updated);
   }
-  for (const e of graph.edges) {
-    adj.get(e.from)?.push(e.to);
-    inDegree.set(e.to, (inDegree.get(e.to) ?? 0) + 1);
-  }
-
-  const queue: string[] = [];
-  for (const node of graph.nodes) {
-    if ((inDegree.get(node.id) ?? 0) === 0) queue.push(node.id);
-  }
-
-  while (queue.length > 0) {
-    const nodeId = queue.shift()!;
-    const node = graph.nodes.find(n => n.id === nodeId);
-    if (!node) continue;
-
-    console.log(`  ▶ ${node.label} [${node.kind}]`);
-
-    if (node.kind === 'agent') {
-      console.log(`    agent: ${node.role}`);
-    } else if (node.kind === 'batch') {
-      console.log(`    spawning ${node.branches.length} branches...`);
-      for (const branch of node.branches) {
-        console.log(`      - ${branch.label}`);
-      }
-      if (node.converge) console.log(`    converge: ${node.converge.label}`);
-    } else if (node.kind === 'map') {
-      console.log(`    mapping: max ${node.maxConcurrency} concurrent`);
+  async function exec(node: ControlNode, depth: number): Promise<void> {
+    const indent = '  '.repeat(depth);
+    switch (node.kind) {
+      case 'task':
+        console.log(`${indent}▶ ${node.task.label} [${node.task.type}]`);
+        console.log(`${indent}   body: ${node.task.body.substring(0, 80)}...`);
+        break;
+      case 'seq':
+        console.log(`${indent}▸ Sequence: ${node.label}`);
+        for (const child of node.nodes) {
+          await exec(child, depth + 1);
+        }
+        break;
+      case 'parallel':
+        console.log(`${indent}▤ Parallel: ${node.label} (${node.branches.length} branches)`);
+        for (const branch of node.branches) {
+          await exec(branch, depth + 1);
+        }
+        if (node.converge) {
+          console.log(`${indent}  ↳ converge: ${node.converge.label}`);
+        }
+        break;
+      case 'map':
+        console.log(`${indent}▦ Map: ${node.label} (maxConcurrency: ${node.maxConcurrency}, items: ${node.items})`);
+        await exec(node.worker, depth + 1);
+        if (node.reduce) {
+          console.log(`${indent}  ↳ reduce: ${node.reduce.label}`);
+        }
+        break;
+      case 'branch':
+        console.log(`${indent}◇ Branch: ${node.label} (condition: ${node.condition})`);
+        await exec(node.then, depth + 1);
+        if (node.else) await exec(node.else, depth + 1);
+        break;
+      case 'loop':
+        console.log(`${indent}↻ Loop: ${node.label} (until: ${node.until})`);
+        await exec(node.body, depth + 1);
+        break;
     }
+  }
+  await exec(graph, 0);
 
-    for (const neighbor of adj.get(nodeId) ?? []) {
-      const newDegree = (inDegree.get(neighbor) ?? 1) - 1;
-      inDegree.set(neighbor, newDegree);
-      if (newDegree === 0) queue.push(neighbor);
-    }
+  if (state?.manager && state?.stepId && state?.pipelineState) {
+    const updated = state.manager.markStep(state.pipelineState, state.stepId, 'completed');
+    state.manager.save(updated);
   }
 }
 
@@ -346,3 +433,58 @@ export async function executeBarrier(
   console.log(`(non-interactive mode → continuing)\n`);
   return 'continue';
 }
+
+// ---------------------------------------------------------------
+// Default PipelineStateManager implementation
+// ---------------------------------------------------------------
+
+export const defaultStateManager: PipelineStateManager = {
+  load(pipelineName: string): PipelineState | null {
+    try {
+      const statePath = path.join(process.cwd(), '.skillpack-state.json');
+      if (fs.existsSync(statePath)) {
+        return JSON.parse(fs.readFileSync(statePath, 'utf-8'));
+      }
+    } catch {}
+    return null;
+  },
+
+  save(state: PipelineState): void {
+    const statePath = path.join(process.cwd(), '.skillpack-state.json');
+    state.updatedAt = new Date().toISOString();
+    fs.writeFileSync(statePath, JSON.stringify(state, null, 2), 'utf-8');
+  },
+
+  init(pipelineName: string, steps: string[]): PipelineState {
+    const state: PipelineState = {
+      pipelineName,
+      version: '1.0',
+      updatedAt: new Date().toISOString(),
+      steps: {},
+    };
+    for (const stepId of steps) {
+      state.steps[stepId] = { status: 'pending', outputs: [], runAttempt: 0 };
+    }
+    return state;
+  },
+
+  markStep(state: PipelineState, stepId: string, status: StepStatus, outputs?: string[], error?: string): PipelineState {
+    if (!state.steps[stepId]) {
+      state.steps[stepId] = { status, outputs: outputs || [], runAttempt: 0 };
+    }
+    state.steps[stepId].status = status;
+    state.steps[stepId].runAttempt++;
+    if (outputs) state.steps[stepId].outputs = outputs;
+    if (error) state.steps[stepId].error = error;
+    if (status === 'running') state.steps[stepId].startedAt = new Date().toISOString();
+    if (status === 'completed' || status === 'failed') state.steps[stepId].completedAt = new Date().toISOString();
+    return state;
+  },
+
+  getResumePoint(state: PipelineState): string | null {
+    for (const [stepId, stepState] of Object.entries(state.steps)) {
+      if (stepState.status !== 'completed') return stepId;
+    }
+    return null;
+  },
+};

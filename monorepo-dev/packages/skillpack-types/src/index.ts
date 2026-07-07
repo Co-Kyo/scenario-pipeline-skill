@@ -1,123 +1,107 @@
 // ============================================================
-// skillpack-types — Core primitives for defining LLM skill pipelines
+// skillpack-types v2 — Control-flow tree primitives for LLM skill pipelines
 //
-// 设计哲学（类比 LangGraph）：
-//   - 用户的 schedule 是一个有向图（nodes + edges），不是封闭枚举
-//   - skillpack 提供 AgentWork / BatchWork / MapWork 三种节点类型
-//   - 辅助函数 agent() / batch() / mapWork() / edge() 是语法糖
-//   - 用户可以自由构造任意图结构，skillpack 不做模式限制
+// 设计哲学:
+//   - 递归树替代扁平图+边，表达力更强
+//   - 控制流（seq/parallel/map/branch/loop）与执行体类型（agent/script/human/subflow）分离
+//   - 叶子节点统一使用 TaskDef + type 鉴别器
 // ============================================================
 
 // ---------------------------------------------------------------
-// Schedule — 开放的图结构
+// Schema 引用
 // ---------------------------------------------------------------
 
-/** 调度图：由节点和边构成的有向图 */
-export interface ScheduleGraph {
-  nodes: WorkNode[];
-  edges: EdgeDef[];
-  /** 入口节点 id */
-  entry: string;
-}
-
-/** 边定义 */
-export interface EdgeDef {
-  from: string;
-  to: string;
-  /** 可选的条件表达式（条件路由） */
-  condition?: string;
+export interface SchemaRef {
+  $ref: string;
 }
 
 // ---------------------------------------------------------------
-// 节点类型（用户可扩展）
+// 重试策略
 // ---------------------------------------------------------------
 
-export type WorkNode = AgentWork | BatchWork | MapWork;
+export interface RetryPolicy {
+  maxRetries: number;
+  backoff: 'fixed' | 'exponential' | 'linear';
+  delayMs: number;
+}
 
-/** 单个 Agent 节点 */
-export interface AgentWork {
-  kind: 'agent';
+// ---------------------------------------------------------------
+// 任务定义（叶子节点）
+// ---------------------------------------------------------------
+
+export interface TaskDef {
   id: string;
   label: string;
-  role: string;
-  task: string;
-  reads?: string[];
+  type: 'agent' | 'script' | 'human' | 'subflow';
+  body: string;
+  input?: SchemaRef;
+  output?: SchemaRef;
+  tools?: string[];
   timeout?: number;
-  retryCount?: number;
+  retry?: RetryPolicy;
 }
 
-/** 批量并行节点（扇出 + 可选收敛） */
-export interface BatchWork {
-  kind: 'batch';
+// ---------------------------------------------------------------
+// 控制节点联合类型
+// ---------------------------------------------------------------
+
+export type ControlNode = TaskNode | SeqNode | ParallelNode | MapNode | BranchNode | LoopNode;
+
+export interface TaskNode {
+  kind: 'task';
+  task: TaskDef;
+}
+
+export interface SeqNode {
+  kind: 'seq';
   id: string;
   label: string;
-  branches: WorkNode[];
-  converge?: AgentWork;
-  gate?: QualityGateDef;
+  nodes: ControlNode[];
 }
 
-/** Map 节点（对每个条目执行同一 worker） */
-export interface MapWork {
+export interface ParallelNode {
+  kind: 'parallel';
+  id: string;
+  label: string;
+  branches: ControlNode[];
+  converge?: TaskDef;
+  gate?: QualityGate;
+}
+
+export interface MapNode {
   kind: 'map';
   id: string;
   label: string;
-  /** 数据来源路径 */
-  itemFrom: string;
-  /** 对每个条目执行的 worker 子图 */
-  worker: WorkNode;
-  /** 最大并发数 */
+  items: string;
+  worker: ControlNode;
   maxConcurrency: number;
-  /** 每个条目占用的槽位数（如 1 命题 = 2 agent 则 slotOccupancy=2） */
   slotOccupancy?: number;
+  reduce?: TaskDef;
+}
+
+export interface BranchNode {
+  kind: 'branch';
+  id: string;
+  label: string;
+  condition: string;
+  then: ControlNode;
+  else?: ControlNode;
+}
+
+export interface LoopNode {
+  kind: 'loop';
+  id: string;
+  label: string;
+  until: string;
+  body: ControlNode;
+  maxIterations?: number;
 }
 
 // ---------------------------------------------------------------
-// 辅助函数（LangGraph 风格的 builder）
+// 质量门
 // ---------------------------------------------------------------
 
-/** 创建一个 Agent 节点 */
-export function agent(config: Omit<AgentWork, 'kind'>): AgentWork {
-  return { kind: 'agent', ...config };
-}
-
-/** 创建一个批量并行节点 */
-export function batch(
-  id: string,
-  label: string,
-  branches: WorkNode[],
-  config?: { converge?: AgentWork; gate?: QualityGateDef },
-): BatchWork {
-  return {
-    kind: 'batch',
-    id,
-    label,
-    branches,
-    converge: config?.converge,
-    gate: config?.gate,
-  };
-}
-
-/** 创建一个 Map 节点（类似 rollingWindow） */
-export function mapWork(
-  id: string,
-  label: string,
-  itemFrom: string,
-  worker: WorkNode,
-  maxConcurrency: number = 5,
-): MapWork {
-  return { kind: 'map', id, label, itemFrom, worker, maxConcurrency };
-}
-
-/** 创建一条边 */
-export function edge(from: string, to: string, condition?: string): EdgeDef {
-  return { from, to, condition };
-}
-
-// ---------------------------------------------------------------
-// Agent 定义（子节点 Agent 的公共结构）
-// ---------------------------------------------------------------
-
-export interface QualityGateDef {
+export interface QualityGate {
   rule: string;
   onPass: 'converge' | 'skip';
   onFail: 'degrade' | 'halt' | 'userChoice';
@@ -136,7 +120,7 @@ export interface FileRef {
 }
 
 // ---------------------------------------------------------------
-// Barrier（检查点）
+// 检查点
 // ---------------------------------------------------------------
 
 export interface BarrierDef {
@@ -163,7 +147,7 @@ export interface DegradeProtocol {
 }
 
 // ---------------------------------------------------------------
-// Step 定义
+// Step 定义（v2: schedule → graph）
 // ---------------------------------------------------------------
 
 export interface StepDefinition {
@@ -171,8 +155,8 @@ export interface StepDefinition {
   title: string;
   description: string;
   dependsOn: string[];
-  /** 调度图 — 用户自由构造，不限于预定义模式 */
-  schedule: ScheduleGraph;
+  /** 控制流树 — 递归结构替代扁平图 */
+  graph: ControlNode;
   reads: FileRef[];
   writes: FileRef[];
   barrier?: BarrierDef;
@@ -182,10 +166,9 @@ export interface StepDefinition {
 }
 
 // ---------------------------------------------------------------
-// Skill 定义（Vue 3 createApp 类比）
+// Skill 定义
 // ---------------------------------------------------------------
 
-/** Skill 定义 — 用户通过 createSkill() 生成 */
 export interface SkillDefinition {
   name: string;
   title: string;
@@ -193,7 +176,6 @@ export interface SkillDefinition {
   steps: StepDefinition[];
 }
 
-/** 创建 Skill 定义（纯类型辅助，返回传入的对象） */
 export function createSkill(config: SkillDefinition): SkillDefinition {
   return config;
 }
@@ -242,4 +224,151 @@ export interface ResolvedPipeline {
   description: string;
   steps: ResolvedStep[];
   stepOrder: Record<string, number>;
+}
+
+// ---------------------------------------------------------------
+// v2 构建辅助函数
+// ---------------------------------------------------------------
+
+export function task(config: TaskDef): TaskNode {
+  return { kind: 'task', task: config };
+}
+
+export function seq(id: string, label: string, nodes: ControlNode[]): SeqNode {
+  return { kind: 'seq', id, label, nodes };
+}
+
+export function parallel(
+  id: string,
+  label: string,
+  branches: ControlNode[],
+  config?: { converge?: TaskDef; gate?: QualityGate },
+): ParallelNode {
+  return {
+    kind: 'parallel',
+    id,
+    label,
+    branches,
+    converge: config?.converge,
+    gate: config?.gate,
+  };
+}
+
+export function mapNode(
+  id: string,
+  label: string,
+  items: string,
+  worker: ControlNode,
+  maxConcurrency: number = 5,
+  reduce?: TaskDef,
+): MapNode {
+  return { kind: 'map', id, label, items, worker, maxConcurrency, reduce };
+}
+
+export function branch(
+  id: string,
+  label: string,
+  condition: string,
+  then: ControlNode,
+  elseNode?: ControlNode,
+): BranchNode {
+  return { kind: 'branch', id, label, condition, then, else: elseNode };
+}
+
+export function loop(
+  id: string,
+  label: string,
+  until: string,
+  body: ControlNode,
+  maxIterations?: number,
+): LoopNode {
+  return { kind: 'loop', id, label, until, body, maxIterations };
+}
+
+// ---------------------------------------------------------------
+// Pipeline State — 管道级状态机
+// ---------------------------------------------------------------
+
+export type StepStatus = 'pending' | 'running' | 'completed' | 'failed' | 'skipped';
+
+export interface StepState {
+  status: StepStatus;
+  startedAt?: string;
+  completedAt?: string;
+  outputs: string[];
+  error?: string;
+  runAttempt: number;
+}
+
+export interface PipelineState {
+  pipelineName: string;
+  version: string;
+  startedAt?: string;
+  updatedAt: string;
+  steps: Record<string, StepState>;
+}
+
+export interface PipelineStateManager {
+  load(pipelineName: string): PipelineState | null;
+  save(state: PipelineState): void;
+  init(pipelineName: string, steps: string[]): PipelineState;
+  markStep(state: PipelineState, stepId: string, status: StepStatus, outputs?: string[], error?: string): PipelineState;
+  getResumePoint(state: PipelineState): string | null;
+}
+
+// ---------------------------------------------------------------
+// CheckpointDef — 统一检查点（Phase 3 替换 ReuseRule + BarrierDef）
+// ---------------------------------------------------------------
+
+export interface CheckpointDef {
+  id?: string;
+  check: {
+    mode: 'file-exists' | 'step-status' | 'llm-judge' | 'user-confirm';
+    path?: string;
+    prompt?: string;
+    checkItems?: string[];
+  };
+  onPass: 'continue' | 'skip';
+  onFail: 'halt' | 'retry' | 'degrade' | 'userChoice';
+  maxRetries?: number;
+}
+
+// ---------------------------------------------------------------
+// v1 弃用存根 — 提供迁移提示
+// ---------------------------------------------------------------
+
+/**
+ * @deprecated v2 不再使用扁平边。改用 seq() 或 branch() 表达控制流。
+ */
+export function edge(_from?: string, _to?: string, _condition?: string): never {
+  throw new Error(
+    '[skillpack-types v2] edge() 已移除。使用 seq() 或 branch() 替代扁平边。',
+  );
+}
+
+/**
+ * @deprecated v2 使用 task({ type: "agent", ... }) 替代 agent()。
+ */
+export function agent(_config?: never): never {
+  throw new Error(
+    '[skillpack-types v2] agent() 已移除。使用 task({ type: "agent", ... }) 替代。',
+  );
+}
+
+/**
+ * @deprecated v2 使用 parallel() 替代 batch()。
+ */
+export function batch(_id?: string, _label?: string, _branches?: never[], _config?: never): never {
+  throw new Error(
+    '[skillpack-types v2] batch() 已移除。使用 parallel() 替代。',
+  );
+}
+
+/**
+ * @deprecated v2 使用 mapNode() 替代 mapWork()。
+ */
+export function mapWork(_id?: string, _label?: string, _itemFrom?: string, _worker?: never, _maxConcurrency?: number): never {
+  throw new Error(
+    '[skillpack-types v2] mapWork() 已移除。使用 mapNode() 替代。',
+  );
 }

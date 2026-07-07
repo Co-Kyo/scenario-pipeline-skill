@@ -27,7 +27,7 @@ _footer: "skillpack monorepo · 完全教学"
 
 ```
 monorepo-dev/
-├── packages/            ← 框架代码（4 个包）
+├── packages/            ← 框架代码（4 个包，validate 可选，后续将合并入 build）
 │   ├── skillpack-types/     类型 + 纯函数
 │   ├── skillpack-common/    校验 + 拓扑排序
 │   ├── skillpack-build/     构建器 + CLI 入口
@@ -58,7 +58,7 @@ skillpack-types  →  skillpack-common  →  skillpack-build
   <div><strong>📐 types</strong><span>纯类型 + 纯函数，零依赖</span></div>
   <div><strong>⚙️ common</strong><span>依赖 types，实现校验 + 拓扑排序</span></div>
   <div><strong>🏗 build</strong><span>依赖 types + common，构建器 + CLI</span></div>
-  <div><strong>🔍 validate</strong><span>依赖 types + common，独立校验 CLI</span></div>
+  <div><strong>🔍 validate</strong><span>依赖 types + common，独立校验 CLI（可选，后续合并入 build）</span></div>
 </div>
 
 构造顺序由 `tsc -b` 保证：types → common → {build, validate}（并行）
@@ -128,11 +128,11 @@ export const skill = createSkill({
   title: '前端技术调研',
   description: '针对一个前端技术主题...',
   steps: [
-    stepParse,      // 主题解析（单 Agent）
-    stepExplore,    // 多维度探索（Batch + 收敛 + 门禁）
-    stepOrganize,   // 分类整理（两个 Agent 串行）
-    stepDeepDive,   // 深度研究（两个 Agent DAG）
-    stepReport,     // 报告生成（Map）
+    stepParse,      // 主题解析（单 Task）
+    stepExplore,    // 多维度探索（Parallel + 收敛 + 门禁）
+    stepOrganize,   // 分类整理（两个 Task 顺序执行）
+    stepDeepDive,   // 深度研究（两个 Task 串行）
+    stepReport,     // 报告生成（MapNode）
   ],
 });
 ```
@@ -170,12 +170,15 @@ const stepDeepDive: StepDefinition = {
   title:       '深度研究',            // 人类可读标题
   description: '核心概念研究 → 实践模式研究',
   dependsOn:   ['organize'],         // 前置步骤 id
-  schedule:    { /* 调度图 */ },      // 内部工作流
+  graph: seq('deep-dive-seq', '深度研究', [
+      task({ id: 'concepts', type: 'agent', body: '...' }),
+      task({ id: 'patterns', type: 'agent', body: '...' }),
+  ]),    // 控制流树（递归节点，替代 v1 的扁平图+边）
   writes:      [{ path: '{workDir}/.meta/dive-concepts.json' }],
 };
 ```
 
-> **核心规则**：`id` + `dependsOn` + `schedule` + `writes` 是必需的，其余按需使用。
+> **核心规则**：`id` + `dependsOn` + `graph` + `writes` 是必需的，其余按需使用。
 
 ---
 
@@ -201,40 +204,64 @@ reuse:   [{ checkFile: '{workDir}/.meta/dive-concepts.json' }],
   _class: section
 -->
 
-# ⑤ ScheduleGraph — 调度图
+# ⑤ 控制流树 — ControlNode
 
 ---
 
-# 调度图 — 步骤内部的"工作流引擎"
+# 控制流树 — 取代扁平图+边
 
-三个要素定义一个图：
+v2 用一棵**递归树**表达步骤内部的工作流。没有扁平节点列表，没有边，没有 entry：
 
 ```typescript
-{
-  entry: 'dive-concepts',        // 从哪个节点开始
-  nodes: [
-    { kind: 'agent', id: 'dive-concepts', role: '核心概念研究员', ... },
-    { kind: 'agent', id: 'dive-patterns', role: '实践模式研究员', ... },
-  ],
-  edges: [
-    { from: 'dive-concepts', to: 'dive-patterns' },
-  ],
+// v1（扁平图）
+schedule: {
+  entry: 'dive-concepts',
+  nodes: [{ kind: 'agent', id: 'dive-concepts', ... }],
+  edges: [{ from: 'dive-concepts', to: 'dive-patterns' }],
 }
+
+// v2（递归树）
+graph: seq('deep-dive-seq', '深度研究', [
+  task({ id: 'dive-concepts', type: 'agent', ... }),
+  task({ id: 'dive-patterns', type: 'agent', ... }),
+])
 ```
 
-> **类比**：`dependsOn` 是"步骤之间怎么串"，`schedule` 是"一个步骤内部怎么干"。
+> **核心变化**：`seq()` 隐式表达了顺序，无需再写 `edges` + `entry`。
 
 ---
 
-# 三种节点类型
+# 六种节点类型
 
-![width:700px](../svg/04-nodes.svg)
+每个节点都有一个 `kind` 属性，构成递归树：
 
-<div class="columns">
-  <div><strong>🤖 Agent</strong><span>单兵——一个 Agent + 一个任务</span></div>
-  <div><strong>🌲 Batch</strong><span>组团——并行 fan-out + 收敛 + 门禁</span></div>
-  <div><strong>🔄 Map</strong><span>流水线——从数据源取条目，逐个处理</span></div>
-</div>
+| 节点 | 工厂函数 | 含义 |
+|------|----------|------|
+| `task` | `task()` | 原子任务——Agent / Script / Human / Subflow |
+| `seq` | `seq()` | 顺序执行——子节点依次运行 |
+| `parallel` | `parallel()` | 并行分支——子节点并发执行，可选收敛 + 门禁 |
+| `map` | `mapNode()` | 滚动窗口——从数据源取条目，逐条 worker 处理 |
+| `branch` | `branch()` | 条件分支——满足条件走 then，否则走 else |
+| `loop` | `loop()` | 循环——重复执行 body 直到条件满足 |
+
+---
+
+# 树形结构示例
+
+```typescript
+parallel('research', '研究流程', [
+  seq('explore', '探索阶段', [
+    task({ id: 'parse',    type: 'agent', ... }),
+    task({ id: 'search',   type: 'agent', ... }),
+  ]),
+  branch('check', '质量检查', 'pass >= 80%',
+    task({ id: 'publish', type: 'agent', ... }),
+    task({ id: 'retry',   type: 'agent', ... }),
+  ),
+])
+```
+
+> **类比**：就像 JSON 的嵌套结构——每个节点可以包含子节点，形成一棵树。
 
 ---
 
@@ -242,84 +269,79 @@ reuse:   [{ checkFile: '{workDir}/.meta/dive-concepts.json' }],
   _class: section
 -->
 
-# ⑥ Agent — 单兵节点
+# ⑥ Task — 原子任务节点
 
 ---
 
-# Agent — 最简单的形式
+# Task — 最基础的构建块
 
-Step 00 的例子——一个节点，没有边：
+Step 00 的例子——一个独立的原子任务：
 
 ```typescript
-schedule: {
-  nodes: [ agent({
-    id: 'parse',
-    label: '主题解析',
-    role: '调研框架构建者',
-    task: `分析用户输入，提取 topic 和 tech_stack...`,
-  })],
-  edges: [],
-  entry: 'parse',
-}
-```
-
-> **适用场景**：只需要给 LLM 一个独立任务，没有并行/串联需求。
-
----
-
-<!--
-  _class: section
--->
-
-# ⑦ Batch — 组团节点
-
----
-
-# Batch — 并行 fan-out
-
-Step 01 的例子——3 个 Agent 同时跑：
-
-```typescript
-schedule: {
-  nodes: [
-    batch('explore-batch', '多维度并行探索', [
-      agent({ id: 'explore-docs',      role: '文档分析师', ... }),
-      agent({ id: 'explore-practice',  role: '实践分析师', ... }),
-      agent({ id: 'explore-ecosystem', role: '生态分析师', ... }),
-    ]),
-  ],
-}
-```
-
-> **效果**：3 个 Agent 互不依赖，完全并行。
-
----
-
-# Batch — 收敛（Converge）
-
-所有分支完成后，用一个 Agent 合并结果：
-
-```typescript
-batch('explore-batch', '多维度并行探索', [...], {
-  converge: agent({
-    id: 'explore-converge',
-    role: '收敛者',
-    task: '合并三个维度的输出...',
-  }),
+graph: task({
+  id: 'parse',
+  label: '主题解析',
+  type: 'agent',
+  body: `你是调研框架构建者。分析用户输入，提取 topic 和 tech_stack...`,
 })
 ```
 
-> **类比**：就像小组讨论——每个人独立调研，然后一个人汇总。
+> **适用场景**：只需要给 LLM 一个独立任务，没有并行/串联需求。
+>
+> **注意**：`task()` 返回 `{ kind: 'task', task: TaskDef }`，`type` 可填 `agent`、`script`、`human`、`subflow`。
 
 ---
 
-# Batch — 门禁（Gate）
+<!--
+  _class: section
+-->
+
+# ⑦ Parallel — 并行分支
+
+---
+
+# Parallel — 并行 fan-out
+
+Step 01 的例子——3 个 Task 同时跑：
+
+```typescript
+graph: parallel('explore-batch', '多维度并行探索', [
+  task({ id: 'explore-docs',      type: 'agent', body: '你是文档分析师...' }),
+  task({ id: 'explore-practice',  type: 'agent', body: '你是实践分析师...' }),
+  task({ id: 'explore-ecosystem', type: 'agent', body: '你是生态分析师...' }),
+])
+```
+
+> **效果**：3 个 Agent 互不依赖，完全并行。`parallel()` 自动管理并发，不需要显式 edges。
+
+---
+
+# Parallel — 收敛（Converge）
+
+所有分支完成后，用一个 TaskDef 合并结果：
+
+```typescript
+parallel('explore-batch', '多维度并行探索', [...], {
+  converge: {
+    id: 'explore-converge',
+    label: 'explore-integrator',
+    type: 'agent',
+    body: '合并三个维度的输出...',
+  },
+})
+```
+
+> **注意**：`converge` 是 `TaskDef` 对象，不是 `task()` 调用——`task()` 返回的是 `TaskNode`（带 `{ kind: 'task' }` 包装）。
+
+---
+
+# Parallel — 门禁（Gate）
 
 质量门禁：满足条件才放行
 
 ```typescript
-batch('explore-batch', '多维度并行探索', [...], {
-  converge: agent({ id: 'explore-converge', ... }),
+parallel('explore-batch', '多维度并行探索', [...], {
+  converge: { id: 'explore-converge', type: 'agent', ... },
   gate: {
     rule: '3 agents completed or at most 1 degraded',
     onPass: 'converge',     // 通过 → 启动收敛
@@ -336,29 +358,37 @@ batch('explore-batch', '多维度并行探索', [...], {
   _class: section
 -->
 
-# ⑧ Map — 流水线节点
+# ⑧ Map — 滚动窗口
 
 ---
 
-# Map — 滚动窗口
+# Map — 数据驱动批量处理
 
-Step 04 的例子——数据驱动，逐个处理：
+Step 04 的例子——对数据源的每条目执行同一个 worker：
 
 ```typescript
-schedule: {
-  nodes: [
-    mapWork(
-      'report-map',
-      '章节报告生成',
-      '{workDir}/.meta/organized.json#categories',  // 数据源
-      agent({ id: 'report-worker', role: '报告撰写员', ... }),
-      3  // 最大并发槽位
-    ),
-  ],
-}
+graph: mapNode(
+  'report-map',
+  '章节报告生成',
+  '{workDir}/.meta/organized.json#categories',  // 数据源
+  task({ id: 'report-worker', type: 'agent', body: '撰写报告章节...' }),
+  3,  // 最大并发槽位
+  { id: 'reduce-step', type: 'agent', label: 'Reduce Report',
+    body: 'Combine all chapter reports into a final document' },  // 可选 reduce
+)
 ```
 
-> **工作原理**：从 `organized.json` 里取出 `categories` 数组，对每个 category 启动一个 Agent，最多 3 个同时跑。
+> **工作原理**：从 `organized.json` 里取出 `categories` 数组，对每个 category 启动一个 Agent，最多 3 个同时跑。可选的 `reduce` 参数在所有 worker 完成后执行。
+
+---
+
+# Map vs Parallel 对比
+
+| 维度 | Parallel | Map |
+|------|----------|-----|
+| 分支数 | 固定，手动列出 | 动态，由数据源决定 |
+| 子结构 | 每个分支可以不同 | 所有条目共用同一 worker |
+| 典型场景 | 多维度调研 | 批量报告生成 |
 
 ---
 
@@ -366,20 +396,23 @@ schedule: {
   _class: section
 -->
 
-# ⑨ 三种节点组合模式
+# ⑨ 六种节点组合模式
 
 ---
 
-# 4 种常见组合
+# 常见组合模式
 
 | 模式 | 组成 | 适用场景 |
 |------|------|----------|
-| **串行链** | Agent → edge → Agent | 前后有依赖的两个任务 |
-| **扇出 + 收敛** | Batch + converge | 多维度调研后汇总 |
-| **滚动窗口** | Map | 数据驱动批量处理 |
-| **带门禁批量** | Batch + converge + gate | 需要质量把关的并行任务 |
+| **原子任务** | `task()` | 单个独立任务 |
+| **顺序执行** | `seq()` 包裹多个 `task()` | 前后有依赖的多个步骤 |
+| **并行 fan-out** | `parallel()` + 收敛 | 多维度调研后汇总 |
+| **带门禁并行** | `parallel()` + converge + gate | 需要质量把关的并行任务 |
+| **滚动窗口** | `mapNode()` | 数据驱动批量处理 |
+| **条件分支** | `branch()` | 根据条件走不同路径 |
+| **循环** | `loop()` | 反复执行直到条件满足 |
 
-> **建议**：写 skill 时优先用 Agent 组合 + 边，不够用了再上 Batch / Map。
+> **建议**：用树形嵌套组合节点——`seq(parallel([...]), task(...), branch(...))`。不需要再考虑扁平边和 entry。
 
 ---
 
@@ -387,34 +420,49 @@ schedule: {
   _class: section
 -->
 
-# ⑩ 高级调度能力
+# ⑩ 条件·循环·生命周期钩子
 
 ---
 
-# 边 + 条件路由
+# Branch — 条件分支
 
-边不只是"谁先谁后"，还可以带条件：
+v2 用 `branch()` 表达条件逻辑，替代了 v1 的条件边：
 
 ```typescript
-edges: [
-  { from: 'dive-concepts', to: 'dive-patterns' },
-  { from: 'quality-check', to: 'continue', condition: 'pass >= 80%' },
-  { from: 'quality-check', to: 'retry',    condition: 'pass < 80%' },
-]
+graph: branch('quality', '质量检查', 'pass >= 80%',
+  task({ id: 'continue', type: 'agent', body: '发布报告...' }),
+  task({ id: 'retry',    type: 'agent', body: '修正并重试...' }),
+)
 ```
 
-> **效果**：同一个节点可以根据输出走不同的下游路径——就像 `if/else`。
+> **效果**：根据运行时的结果判断走 then 还是 else——真正的 `if/else` 语义。
+
+---
+
+# Loop — 循环
+
+`loop()` 用于反复执行直到条件满足：
+
+```typescript
+graph: loop('review-loop', '审校循环', 'all issues resolved',
+  task({ id: 'review', type: 'agent', body: '检查并修复问题...' }),
+  5,  // 最大迭代次数
+)
+```
+
+> **注意**：`maxIterations` 是安全阀，防止无限循环。
 
 ---
 
 # 生命周期钩子
 
-三种钩子控制步骤执行行为：
+四种机制控制步骤执行行为：
 
 <div class="columns">
   <div><strong>🚧 Barrier</strong><span>检查点。执行到这里暂停，向用户展示结果并等待确认。适合需要人工介入的关键步骤。</span></div>
   <div><strong>♻️ Reuse</strong><span>增量复用。检查文件是否已存在，存在则跳过整个步骤。</span></div>
   <div><strong>📉 Degrade</strong><span>降级协议。失败后重试（maxRetries），或标记降级继续（onDegrade）。</span></div>
+  <div><strong>📌 CheckpointDef</strong><span>统一检查点（Phase 3 新增）。融合 file-exists、step-status、llm-judge、user-confirm 四种模式。</span></div>
 </div>
 
 ---
@@ -435,7 +483,7 @@ edges: [
 ① validateStep(step)
    检查每个步骤字段是否完整
    - id / title / description 非空
-   - schedule 有节点且 entry 存在
+   - graph 非空且为合法 ControlNode
    - writes 非空
    - barrier 有 clarifyPrompt
 
@@ -477,10 +525,13 @@ edges: [
 
 ```text
 renderStep(step)
-  └─ 遍历 schedule 图
-      ├─ Agent 节点 → Agent 渲染器
-      ├─ Batch 节点 → Batch 渲染器
-      └─ Map 节点  → Map 渲染器
+  └─ renderControlTree(step.graph, 0)  // 递归遍历 ControlNode 树
+      ├─ kind === 'task'     → Task 渲染
+      ├─ kind === 'seq'      → 顺序块渲染
+      ├─ kind === 'parallel' → 并行块渲染
+      ├─ kind === 'map'      → Map 渲染
+      ├─ kind === 'branch'   → 分支渲染
+      └─ kind === 'loop'     → 循环渲染
   └─ 写入 dist/processes/{seq}-{id}.md
 
 renderSkillMd(pipeline, meta)
@@ -532,7 +583,7 @@ renderSkillMd(pipeline, meta)
 
 1. **项目结构** — packages / demos / dist 三层
 2. **定义 Skill** — createSkill → StepDefinition
-3. **调度图** — Agent / Batch / Map 三种节点 + 边
+3. **控制流树** — Task / Seq / Parallel / Map / Branch / Loop 六种节点
 4. **构建流水线** — 校验 → 排序 → 渲染
 5. **开发循环** — 三种场景对应不同命令
 

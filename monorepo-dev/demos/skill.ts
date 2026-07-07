@@ -1,29 +1,15 @@
 // ============================================================
-// tech-research — 极简完整 skill 示例（LangGraph 风格 API）
+// tech-research — 极简完整 skill 示例（v2 ControlNode tree API）
 //
-// 覆盖 3 种节点类型：
-//   agent()   — 单 Agent 节点
-//   batch()   — 批量并行（扇出 + 可选收敛 + 质量门禁）
-//   mapWork() — Map 节点（滚动窗口，对每条目执行同一 worker）
-//
-// 用户自由组合节点 + 边，skillpack 不做模式限制
+// 覆盖 4 种控制流节点：
+//   task()     — 单 Agent 任务
+//   seq()      — 顺序执行
+//   parallel() — 并行分支（扇出 + 可选收敛 + 质量门禁）
+//   mapNode()  — Map 节点（滚动窗口，对每条目执行同一 worker）
 // ============================================================
 
-import type { StepDefinition, ScheduleGraph, WorkNode } from 'skillpack-types';
-import { agent, batch, mapWork, edge, createSkill } from 'skillpack-types';
-
-// ---------------------------------------------------------------
-// 辅助函数：构造单 Agent 的调度图
-// ---------------------------------------------------------------
-function singleAgentStep(agentDef: {
-  id: string; label: string; role: string; task: string; timeout?: number;
-}): ScheduleGraph {
-  return {
-    nodes: [agent(agentDef)],
-    edges: [],
-    entry: agentDef.id,
-  };
-}
+import type { StepDefinition } from 'skillpack-types';
+import { task, seq, parallel, mapNode, createSkill } from 'skillpack-types';
 
 // ---------------------------------------------------------------
 // Step 00: 主题解析
@@ -33,11 +19,11 @@ const stepParse: StepDefinition = {
   title: '主题解析',
   description: '解析调研主题，生成调研框架（research-brief.json），确定研究范围和深度',
   dependsOn: [],
-  schedule: singleAgentStep({
+  graph: task({
     id: 'parse',
     label: '主题解析',
-    role: '调研框架构建者',
-    task: `解析用户输入的调研主题，提取：
+    type: 'agent',
+    body: `你是调研框架构建者。解析用户输入的调研主题，提取：
 - 核心技术关键词
 - 研究维度（概念/实践/生态）
 - 推荐深度级别
@@ -66,52 +52,42 @@ const stepExplore: StepDefinition = {
   title: '多维度探索',
   description: '3 个维度 Agent 并行探索（文档、实践、生态）+ 收敛者整合',
   dependsOn: ['topic-parse'],
-  schedule: {
-    nodes: [
-      batch('explore-batch', '多维度并行探索', [
-        agent({
-          id: 'explore-docs',
-          label: 'explore-docs',
-          role: '文档分析师',
-          reads: ['research-brief.json'],
-          task: `你是文档分析师。阅读 research-brief.json，搜索官方文档和规范。产出 {workDir}/.meta/docs-findings.json`,
-          timeout: 5,
-        }),
-        agent({
-          id: 'explore-practice',
-          label: 'explore-practice',
-          role: '实践分析师',
-          reads: ['research-brief.json'],
-          task: `你是实践分析师。阅读 research-brief.json，搜索最佳实践和常见陷阱。产出 {workDir}/.meta/practice-findings.json`,
-          timeout: 5,
-        }),
-        agent({
-          id: 'explore-ecosystem',
-          label: 'explore-ecosystem',
-          role: '生态分析师',
-          reads: ['research-brief.json'],
-          task: `你是生态分析师。阅读 research-brief.json，调研工具链和社区生态。产出 {workDir}/.meta/ecosystem-findings.json`,
-          timeout: 5,
-        }),
-      ], {
-        converge: agent({
-          id: 'explore-converge',
-          label: 'explore-integrator',
-          role: '收敛者 — 合并三个维度发现',
-          reads: ['docs-findings.json', 'practice-findings.json', 'ecosystem-findings.json'],
-          task: `合并三个维度的发现：去重、交叉校验、分级。产出 {workDir}/.meta/consolidated-findings.json`,
-          timeout: 5,
-        }),
-        gate: {
-          rule: '3 agents completed or at most 1 degraded',
-          onPass: 'converge',
-          onFail: 'degrade',
-        },
-      }),
-    ],
-    edges: [],
-    entry: 'explore-batch',
-  },
+  graph: parallel('explore-batch', '多维度并行探索', [
+    task({
+      id: 'explore-docs',
+      label: 'explore-docs',
+      type: 'agent',
+      body: `你是文档分析师。阅读 research-brief.json，搜索官方文档和规范。产出 {workDir}/.meta/docs-findings.json`,
+      timeout: 5,
+    }),
+    task({
+      id: 'explore-practice',
+      label: 'explore-practice',
+      type: 'agent',
+      body: `你是实践分析师。阅读 research-brief.json，搜索最佳实践和常见陷阱。产出 {workDir}/.meta/practice-findings.json`,
+      timeout: 5,
+    }),
+    task({
+      id: 'explore-ecosystem',
+      label: 'explore-ecosystem',
+      type: 'agent',
+      body: `你是生态分析师。阅读 research-brief.json，调研工具链和社区生态。产出 {workDir}/.meta/ecosystem-findings.json`,
+      timeout: 5,
+    }),
+  ], {
+    converge: {
+      id: 'explore-converge',
+      label: 'explore-integrator',
+      type: 'agent',
+      body: `合并三个维度的发现：去重、交叉校验、分级。产出 {workDir}/.meta/consolidated-findings.json`,
+      timeout: 5,
+    },
+    gate: {
+      rule: '3 agents completed or at most 1 degraded',
+      onPass: 'converge',
+      onFail: 'degrade',
+    },
+  }),
   reads: [
     { path: '{workDir}/.meta/research-brief.json', description: '调研框架', required: true },
   ],
@@ -134,40 +110,32 @@ const stepOrganize: StepDefinition = {
   title: '分类整理',
   description: '两阶段整理：先归类，再排优先级',
   dependsOn: ['multi-dim-explore'],
-  schedule: {
-    nodes: [
-      agent({
-        id: 'organize-categorize',
-        label: 'organize-categorize',
-        role: '分类员 — 按技术领域归类发现',
-        reads: ['consolidated-findings.json'],
-        task: `按技术领域归类发现：
+  graph: seq('organize-seq', '两阶段整理', [
+    task({
+      id: 'organize-categorize',
+      label: 'organize-categorize',
+      type: 'agent',
+      body: `按技术领域归类发现：
 - 基础概念 → "foundations"
 - 工具/框架 → "tools"
 - 模式/实践 → "patterns"
 - 性能/优化 → "performance"
 
 产出 {workDir}/.meta/categorized.json`,
-        timeout: 3,
-      }),
-      agent({
-        id: 'organize-prioritize',
-        label: 'organize-prioritize',
-        role: '排序员 — 按学习路径排优先级',
-        reads: ['categorized.json'],
-        task: `对每类内容按学习路径排序：
+      timeout: 3,
+    }),
+    task({
+      id: 'organize-prioritize',
+      label: 'organize-prioritize',
+      type: 'agent',
+      body: `对每类内容按学习路径排序：
 - 前置知识在前，进阶在后
 - 常见场景在前，边缘场景在后
 
 产出 {workDir}/.meta/organized.json`,
-        timeout: 3,
-      }),
-    ],
-    edges: [
-      edge('organize-categorize', 'organize-prioritize'),
-    ],
-    entry: 'organize-categorize',
-  },
+      timeout: 3,
+    }),
+  ]),
   reads: [
     { path: '{workDir}/.meta/consolidated-findings.json', description: '整合发现', required: true },
   ],
@@ -183,47 +151,39 @@ const stepOrganize: StepDefinition = {
 };
 
 // ---------------------------------------------------------------
-// Step 03: 深度研究（DAG — 概念组 → 模式组）
+// Step 03: 深度研究（顺序 — 概念组 → 模式组）
 // ---------------------------------------------------------------
 const stepDeepDive: StepDefinition = {
   id: 'deep-dive',
   title: '深度研究',
   description: '核心概念研究 → 实践模式研究（后者依赖前者）',
   dependsOn: ['organize'],
-  schedule: {
-    nodes: [
-      agent({
-        id: 'dive-concepts',
-        label: 'dive-concepts',
-        role: '核心概念研究员',
-        reads: ['organized.json'],
-        task: `深入研究 foundations 类的每条发现：
+  graph: seq('deep-dive-seq', '深度研究', [
+    task({
+      id: 'dive-concepts',
+      label: 'dive-concepts',
+      type: 'agent',
+      body: `你是核心概念研究员。深入研究 foundations 类的每条发现：
 1. 查找权威资料
 2. 解释原理和设计决策
 3. 指出常见误解
 
 产出 {workDir}/.meta/dive-concepts.json`,
-        timeout: 5,
-      }),
-      agent({
-        id: 'dive-patterns',
-        label: 'dive-patterns',
-        role: '实践模式研究员',
-        reads: ['organized.json', 'dive-concepts.json'],
-        task: `深入研究 patterns 类的每条发现：
+      timeout: 5,
+    }),
+    task({
+      id: 'dive-patterns',
+      label: 'dive-patterns',
+      type: 'agent',
+      body: `你是实践模式研究员。深入研究 patterns 类的每条发现：
 1. 基于核心概念分析模式原理
 2. 给出代码示例
 3. 对比不同方案的权衡
 
 产出 {workDir}/.meta/dive-patterns.json`,
-        timeout: 5,
-      }),
-    ],
-    edges: [
-      edge('dive-concepts', 'dive-patterns'),
-    ],
-    entry: 'dive-concepts',
-  },
+      timeout: 5,
+    }),
+  ]),
   reads: [
     { path: '{workDir}/.meta/organized.json', description: '整理结果', required: true },
   ],
@@ -251,15 +211,12 @@ const stepReport: StepDefinition = {
   title: '报告生成',
   description: '按章节逐个生成研究报告',
   dependsOn: ['deep-dive'],
-  schedule: {
-    nodes: [
-      mapWork('report-map', '章节报告生成', '{workDir}/.meta/organized.json#categories',
-        agent({
-          id: 'report-worker',
-          label: 'report-{chapter}',
-          role: '报告撰写员',
-          reads: ['dive-concepts.json', 'dive-patterns.json'],
-          task: `撰写报告章节 {chapter}。
+  graph: mapNode('report-map', '章节报告生成', '{workDir}/.meta/organized.json#categories',
+    task({
+      id: 'report-worker',
+      label: 'report-{chapter}',
+      type: 'agent',
+      body: `撰写报告章节 {chapter}。
 
 基于深度研究成果：
 1. 概述该章节内容
@@ -268,14 +225,10 @@ const stepReport: StepDefinition = {
 4. 标注争议和待确认点
 
 产出 {workDir}/.meta/report/{chapter}.md`,
-          timeout: 5,
-        }),
-        3,
-      ),
-    ],
-    edges: [],
-    entry: 'report-map',
-  },
+      timeout: 5,
+    }),
+    3,
+  ),
   reads: [
     { path: '{workDir}/.meta/dive-concepts.json', description: '核心概念研究', required: true },
     { path: '{workDir}/.meta/dive-patterns.json', description: '实践模式研究', required: true },
