@@ -106,7 +106,7 @@ jobs:
 
           - `SKILL.md` is the skill entry point.
           - `processes/` contains the step Markdown files.
-          - The source repository lives on `main`.
+          - The source repository lives on `dev`.
           EOF
           git add .
           if git diff --cached --quiet; then

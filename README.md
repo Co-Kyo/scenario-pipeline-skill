@@ -42,7 +42,7 @@ dist/sp-skill/
 - 组装 `SKILL.md`、`processes/`、`assets/`、`plugins/`。
 - 生成 `sp-skill-<tag>.zip`，可直接导入为 Markdown skill。
 - 同时生成 `source.zip` 并创建 GitHub Release。
-- `release` 分支保存可直接导入的生成 Markdown；`main` 分支保存源码。
+- `release` 分支保存可直接导入的生成 Markdown；`dev` 分支保存源码（`main` 已退役）。
 
 默认分支建议设置为 `release`，这样 GitHub 下载和 web agent 分析默认看到的是 Markdown 产物，而不是源码。
 
