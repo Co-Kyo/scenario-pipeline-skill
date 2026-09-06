@@ -24,7 +24,7 @@ export const scan = step('scan', '广域扫描')
     'topic',
     '--year / --source 可选约束',
     refOf('requirementWeb').path,
-    '可选 {workDir}/.meta/partition-analysis.json',
+    refOf('partitionAnalysis').path,
   )
   .outputs(refOf('scanIndex').path, refOf('scanMaterials').path)
   .detail(scanRules.detail())

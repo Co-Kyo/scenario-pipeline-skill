@@ -4,7 +4,7 @@ import type { SourceRef } from 'skillnomad';
  * **产物实体声明（8.16 产物路径投射 · 业务顶层）**
  *
  * 产物路径模型是从学习模型中投射出来的（老板裁定）——实体 = 业务顶层**已有领域概念**，
- * 只登记不发明（R2 红线）。26 条 runtime 产物归入 8 组概念：
+ * 只登记不发明（R2 红线）。27 条 runtime 产物归入 8 组概念：
  * intent / brainstorm / partition / scan / capability / evaluation / ladder + 机制产物。
  *
  * **kind**：
@@ -35,7 +35,7 @@ export const entities: Record<string, ProductEntity> = {
   requirementWeb: { concept: 'brainstorm', artifact: '{workDir}/.meta/requirement-web.json', kind: 'learning', description: '需求网', schema: 'assets/01-brainstorm/schemas.md' },
 
   // ── partition（content/partition.ts）──────────────────────
-  partitionAnalysis: { concept: 'partition', artifact: '{workDir}/.meta/partition-analysis.json', kind: 'learning', description: '分区分析' },
+  partitionAnalysis: { concept: 'partition', artifact: '{workDir}/.meta/partition-analysis.json', kind: 'learning', description: '分区分析', schema: 'assets/02-partition/schemas.md' },
   dependencyGraph: { concept: 'partition', artifact: '{workDir}/.meta/dependency-graph.json', kind: 'learning', description: '依赖图' },
   executionPlan: { concept: 'partition', artifact: '{workDir}/execution-plan.md', kind: 'mechanism', description: '执行计划' },
 
@@ -60,7 +60,7 @@ export const entities: Record<string, ProductEntity> = {
   experiment: { concept: 'capability', artifact: '{workDir}/{seq}-{short_name}/experiment/README.md', kind: 'learning', description: 'Experiment' },
 
   // ── evaluation（content/evaluation.ts）────────────────────
-  evaluations: { concept: 'evaluation', artifact: '{workDir}/.meta/evaluations.json', kind: 'learning', description: '评估结果' },
+  evaluations: { concept: 'evaluation', artifact: '{workDir}/.meta/evaluations.json', kind: 'learning', description: '评估结果', schema: 'assets/05-evaluate-pool/schemas.md' },
 
   // ── ladder（domain/ladder.ts）─────────────────────────────
   ladder: { concept: 'ladder', artifact: '{workDir}/{seq}-{short_name}/learning-ladder.md', kind: 'learning', description: '学习阶梯' },

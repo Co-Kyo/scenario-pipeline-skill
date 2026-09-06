@@ -10,23 +10,21 @@
 
 以下文件**只能由 sub-agent 读取**，主 agent 严禁 read 或加载其内容：
 
-- `assets/01-brainstorm/scenario-agent.md`
-- `assets/01-brainstorm/technical-agent.md`
-- `assets/01-brainstorm/learning-agent.md`
-- `assets/01-brainstorm/constraint-agent.md`
 - `plugins/year-granularity.md`
 - `{workDir}/.meta/brainstorm/anchors.json`
 
 主 agent 的职责仅限于：将上述文件的**路径**写入 sub-agent 的 task 中，由 sub-agent 自行读取。
 
+> 维度角色定义变更（D32 W2）：4×维度 agent 静态文件（`scenario-agent.md`/`technical-agent.md`/`learning-agent.md`/`constraint-agent.md`）已删除，维度任务由 `src/domain/content/brainstorm.ts` 内联工厂唯一定义（`scenarioTask()`/`technicalTask()`/`learningTask()`/`constraintTask()`），经 `src/steps/brainstorm.ts` 的 `.taskTemplate()` 装配；主 agent 不再向 sub-agent 分发外部角色文件。
+
 ## Agent 清单
 
 | Agent | label | agent_definition_path | output_path |
 |-------|-------|----------------------|-------------|
-| 场景 | `brainstorm-scenario` | `assets/01-brainstorm/scenario-agent.md` | `{workDir}/.meta/brainstorm/scenario.json` |
-| 技术 | `brainstorm-technical` | `assets/01-brainstorm/technical-agent.md` | `{workDir}/.meta/brainstorm/technical.json` |
-| 学习 | `brainstorm-learning` | `assets/01-brainstorm/learning-agent.md` | `{workDir}/.meta/brainstorm/learning.json` |
-| 约束 | `brainstorm-constraint` | `assets/01-brainstorm/constraint-agent.md` | `{workDir}/.meta/brainstorm/constraint.json` |
+| 场景 | `brainstorm-scenario` | 内联：`brainstormRules.scenarioTask()`（`src/domain/content/brainstorm.ts:64-70`） | `{workDir}/.meta/brainstorm/scenario.json` |
+| 技术 | `brainstorm-technical` | 内联：`brainstormRules.technicalTask()`（`src/domain/content/brainstorm.ts:72-78`） | `{workDir}/.meta/brainstorm/technical.json` |
+| 学习 | `brainstorm-learning` | 内联：`brainstormRules.learningTask()`（`src/domain/content/brainstorm.ts:80-86`） | `{workDir}/.meta/brainstorm/learning.json` |
+| 约束 | `brainstorm-constraint` | 内联：`brainstormRules.constraintTask()`（`src/domain/content/brainstorm.ts:88-94`） | `{workDir}/.meta/brainstorm/constraint.json` |
 
 ## Sub-agent 自主读取的文件
 
@@ -46,7 +44,7 @@
 ⚠️ 你必须用 write 工具将文件写入磁盘。
 
 ## 你需要读取的文件
-1. 你的角色定义：{agent_definition_path}
+1. 你的角色定义：见步骤 taskTemplate 内联任务（`agent_definition_path` 列）
 2. 共享骨架：{anchors_path}
 3. 年限规则：plugins/year-granularity.md
 4. 输出格式：assets/01-brainstorm/schemas.md§{schema_section}

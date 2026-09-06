@@ -2,7 +2,7 @@ import { step } from 'skillnomad';
 import { doAction } from '../actions.js';
 import * as evaluation from '../domain/content/evaluation.js';
 import { modules } from '../contracts.js';
-import { refOf } from '../domain/entities.js';
+import { refOf, schemaRef } from '../domain/entities.js';
 import { barrier } from '../policies.js';
 import { fail, verify } from '../verify.js';
 
@@ -10,7 +10,7 @@ export const evaluatePool = step('evaluate-pool', '评估入池')
   .target('生成按年限阈值入池的评估结果与推荐顺序')
   .summary('四维评估矩阵打分，确定优先级和学习顺序')
   .dependsOn('capability-graph')
-  .reads(refOf('capabilityGraph'), refOf('dependencyGraph'), { ...modules.evaluationMethod, as: 'method' })
+  .reads(refOf('capabilityGraph'), refOf('dependencyGraph'), { ...modules.evaluationMethod, as: 'method' }, { ...schemaRef('evaluations'), as: 'schema' })
   .writes(refOf('evaluations'), refOf('readme'), refOf('candidates'))
   .inputs(refOf('capabilityGraph').path, refOf('dependencyGraph').path)
   .outputs(refOf('evaluations').path, refOf('readme').path, refOf('candidates').path)

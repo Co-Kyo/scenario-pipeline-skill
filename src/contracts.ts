@@ -25,6 +25,7 @@ export const modules = {
   yearRules: { path: 'assets/00-intent-anchor/year-rules.md', description: '年限推断规则', required: true },
   skipRules: { path: 'assets/00-intent-anchor/skip-rules.md', description: '跳过判断规则', required: true },
   evaluationMethod: { path: 'assets/05-evaluate-pool/method.md', description: '评估方法论（投影）', required: true },
+  capabilityMethod: { path: 'assets/04-capability-graph/method.md', description: '能力图谱提取方法论', required: true },
   antiCrawlFetch: { path: 'plugins/anti-crawl-fetch.md', description: 'Playwright 抓取', required: false },
 } satisfies Record<string, SourceRef>;
 
@@ -52,4 +53,5 @@ export const contracts: SourceContract[] = [
   { id: 'year-rules', kind: 'policy', path: 'assets/00-intent-anchor/year-rules.md', description: '年限推断规则', scope: 'step', step: 'intent-anchor' },
   { id: 'skip-rules', kind: 'policy', path: 'assets/00-intent-anchor/skip-rules.md', description: '跳过判断规则', scope: 'step', step: 'intent-anchor' },
   { id: 'evaluation-method', kind: 'method', path: 'assets/05-evaluate-pool/method.md', description: '评估方法论', scope: 'step', step: 'evaluate-pool' },
-];
+  { id: 'capability-method', kind: 'method', path: 'assets/04-capability-graph/method.md', description: '能力图谱提取方法论', scope: 'step', step: 'capability-graph' },
+];

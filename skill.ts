@@ -46,7 +46,7 @@ const model: SkillSourceModel = {
     phases: phaseDefs,
     initStepId: 'initialize',
     // 8.13/8.14 下沉：调度策略为 skill 级全局口径，步骤不再各自登记（消除横切散布）。
-    // 数值来源：protocol-scheduling.md(并发 W=5) / subagent-budget.md(窗口预算/输入压缩) / pipeline-params.md(w)。
+    // 数值来源（散文引用，非注册消费；D32 W5）：protocol-scheduling.md(并发 W=5) / subagent-budget.md(窗口预算/输入压缩) / pipeline-params.md(w)。三值已下沉为下方字面量，步骤零引用是 8.13/8.14 故意设计。
     schedulingPolicy: {
       concurrencyLimit: 5,
       windowBudget: {

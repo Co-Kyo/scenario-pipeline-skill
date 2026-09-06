@@ -47,11 +47,11 @@ test('B4:role/level 约束在两份资产中同义存在(漂移锁)', () => {
   assert.ok(sr.includes('level=target_level-1'), 'skip-rules 缺 premise 约束');
 });
 
-test('B5:reason_type 枚举在两份资产中一致(漂移锁)', () => {
-  const ca = readFileSync(repoRoot + 'assets/01-brainstorm/constraint-agent.md', 'utf-8');
+test('B5:reason_type 枚举在 schemas 正本中齐全(漂移锁)', () => {
+  // D32 W2：constraint-agent.md 已删（死文件，运行时零消费），本锁只留活文件一端；
+  // 内联工厂 constraintTask() 的 REASON_TYPES 内插由 brainstorm.test.ts 字面量断言覆盖。
   const sch = readFileSync(repoRoot + 'assets/01-brainstorm/schemas.md', 'utf-8');
   for (const r of REASON_TYPES) {
-    assert.ok(ca.includes(r), `constraint-agent 缺 ${r}`);
     assert.ok(sch.includes(r), `schemas 缺 ${r}`);
   }
 });
@@ -83,6 +83,24 @@ test('initialize:workDir 命名规则单一出处', () => {
 test('shared:片段与原文逐字一致(供 prompts.ts 双写收敛)', () => {
   assert.equal(RATIO_CLAUSE, '内容比例：通用高地 <= 70%，场景化/特化内容 >= 30%。');
   assert.equal(SCENARIO_MINIMUM, '至少 3 个场景化输入、3 个边界、3 个验证点。');
+});
+
+test('C2-A:04 method.md 阈值与能力域正本一致(漂移锁，D32 W4)', () => {
+  // D32 W4 接回 04 method 的前置锁（R2 F-4 条件）：阈值漂移即红，接 reads 前先锁。
+  const text = readFileSync(repoRoot + 'assets/04-capability-graph/method.md', 'utf-8');
+  assert.ok(text.includes('≥ 4.0'), '一级高地阈值未对齐正本（HIGHGROUND_THRESHOLDS.tier1Min）');
+  assert.ok(text.includes('2.0 - 3.9'), '二级高地阈值未对齐正本（tier2Range）');
+  assert.ok(text.includes('1.0 - 1.9'), '三级营地阈值未对齐正本（tier3Range）');
+  assert.ok(text.includes('扇出'), '扇出度概念缺失');
+});
+
+test('D32-W5:调度三值下沉字面量锁（补锁 3，散文引用不断）', () => {
+  // D32 W5 修法 R2 F-5：三 md 为散文引用（非注册消费），锁字面量不断引用链。
+  const src = readFileSync(repoRoot + 'skill.ts', 'utf-8');
+  assert.ok(src.includes('concurrencyLimit: 5'), 'W=5 下沉字面量丢失（protocol-scheduling/pipeline-params w=5）');
+  assert.ok(src.includes('maxWindowSize: 4'), '窗口 4 下沉字面量丢失（subagent-budget）');
+  assert.ok(src.includes('inputChunkTokens: 6000'), '输入 6K 下沉字面量丢失（subagent-budget）');
+  assert.ok(src.includes('itemSummaryTokens: 500'), '摘要 500 下沉字面量丢失（subagent-budget）');
 });
 
 test('B2-A:method.md 投影与评估域正本一致(漂移锁)', () => {
