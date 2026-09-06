@@ -85,6 +85,7 @@ scan
 | 类型 | 文件 | 说明 |
 |------|------|------|
 | 读取 | `{workDir}/.meta/requirement-web.json` | 需求网 |
+| 读取 | `assets/02-partition/schemas.md` | 分区分析 格式契约 |
 | 产出 | `{workDir}/.meta/partition-analysis.json` | 分区分析 |
 | 产出 | `{workDir}/execution-plan.md` | 执行计划 |
 

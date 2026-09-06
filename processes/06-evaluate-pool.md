@@ -84,6 +84,7 @@ L4：任一维度 >= 2 即入池。
 | 读取 | `{workDir}/.meta/capability-graph.json` | 能力图谱 |
 | 读取 | `{workDir}/.meta/dependency-graph.json` | 依赖图 |
 | 读取 | `assets/05-evaluate-pool/method.md` | 评估方法论（投影） |
+| 读取 | `assets/05-evaluate-pool/schemas.md` | 评估结果 格式契约 |
 | 产出 | `{workDir}/.meta/evaluations.json` | 评估结果 |
 | 产出 | `{workDir}/README.md` | 命题总览 |
 | 产出 | `{workDir}/.meta/candidates.md` | 候选池 |

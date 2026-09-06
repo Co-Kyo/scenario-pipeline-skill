@@ -87,6 +87,7 @@ strategic_value = fanout.count x (1 / coupling)。
 |------|------|------|
 | 读取 | `{workDir}/.meta/requirement-web.json` | 需求网 |
 | 读取 | `{workDir}/.meta/.raw-materials/index.json` | 素材索引 |
+| 读取 | `assets/04-capability-graph/method.md` | 能力图谱提取方法论 |
 | 产出 | `{workDir}/.meta/capability-graph.json` | 能力图谱 |
 | 产出 | `{workDir}/.meta/dependency-graph.json` | 依赖图 |
 | 产出 | `{workDir}/.meta/highgrounds.json` | 战略高地 |

@@ -10,7 +10,7 @@
 - topic
 - --year / --source 可选约束
 - {workDir}/.meta/requirement-web.json
-- 可选 {workDir}/.meta/partition-analysis.json
+- {workDir}/.meta/partition-analysis.json
 
 ## 输出
 
