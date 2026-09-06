@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.4.3（D32 源码结构审计处置：守卫先行+逐个处置，零行为变化）
+
+- **守卫先行（W1）**：新增 `src/assets-guard.test.ts` 孤儿扫描守卫（20 项快照：18 零引用＋2 仅测试引用；新增零引用即红、处置同步更新快照；`ALLOW_ZERO` 显式确认）。
+- **删 6（W2）**：删 `assets/01-brainstorm/` 4×agent＋level-weight＋scheduling-detail 死文件；`agent-init.md` 联动改内联（禁读清单改段落＋清单表 4 行改内联定义）；B5 改单端锁（只留 schemas 活文件一端）。
+- **接回 3（W4）**：`02-partition`/`05-evaluate-pool` schemas 挂实体 schema＋reads（verify 现有已够）；`04-capability-graph/method.md` 双表新增 method 条（9→10）＋reads `as:'method'`＋C2-A 漂移锁前置。
+- **补锁 3（W5）**：`skill.ts:49` 注释改散文引用（非注册消费）＋D32-W5 三值字面量锁；`scan.ts:27` 改 `refOf('partitionAnalysis').path`；`entities.ts:7` 头注 26→27。
+- 验收：typecheck 零报错 · 52/52 全绿 · verify:product 4/4 · build 15 文件；产物行为零变化（删死文件不进产物，agent-init 改后渲染可审）。
+- 依据：`slides/32-源码结构审计/`（ADR-32-1/2/3 locked，用户拍板 D-A）。
+
 ## v1.4.2（空更新：验证 release 分支常规迭代流程）
 
 - 无源码/依赖变更，仅版本号 1.4.1 → 1.4.2，用于触发 Release 工作流，验证 #3 合入的常规迭代更新
