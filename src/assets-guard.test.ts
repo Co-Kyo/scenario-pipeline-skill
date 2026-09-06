@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // D32 孤儿扫描守卫（W1）：锁"不扩大"，不锁"清零"。
 // 口径（T1 矩阵 + R2 a 伪代码）：生产引用 = 非测试 src/**/*.ts + skill.ts +
@@ -12,7 +13,7 @@ import { join, relative, sep } from 'node:path';
 // 均另行标注）。处置时同步更新 ALLOW_ZERO（删 6→减 6，接回 3→转生产；
 // 新增合法资产时显式确认，R1 #7）。
 
-const repoRoot = new URL('..', import.meta.url).pathname;
+const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 const assetsDir = join(repoRoot, 'assets');
 
 const ALLOW_ZERO = new Set([
