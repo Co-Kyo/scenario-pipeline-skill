@@ -71,11 +71,12 @@ export const brainstorm = step('brainstorm', '头脑风暴')
       '请确认头脑风暴收敛后的需求网。',
     ),
   )
-  // P2 decision 示例值（专案24）：以下 metrics/selection/risks/barrier_summary 均为
+  // P2 decision 示例值（专案24/D33）：以下 metrics/selection/risks/barrier_summary 均为
   // **某次真实历史运行的示例取值**（命题 10、L2、排除项 20），非运行时计算值。
-  // 读产物者请注意：执行时以实际运行数据为准；框架 `SourceDecisionSummary`
-  // 暂无"示例/运行时填充"的类型表达，待框架补（见 skillnomad 侧）后加 `isExample: true`。
+  // `isExample: true` 为机器可读边界（语义见 `SourceDecisionSummary.isExample`）；
+  // "（示例）"字样保留作降级兼容（deprecated，移除待渲染层统一处理后的下版）。
   .decision({
+    isExample: true,
     gateType: 'human_gate',
     title: '需求网确认（示例值）',
     confirm: '确认需求网',

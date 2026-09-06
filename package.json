@@ -11,7 +11,9 @@
     "prepare": "git config core.hooksPath scripts/git-hooks"
   },
   "dependencies": {
-    "skillnomad": "0.1.1"
+    "skillnomad": "0.1.3",
+    "skillnomad-common": "0.1.3",
+    "skillnomad-types": "0.1.3"
   },
   "devDependencies": {
     "@types/node": "^26.1.0",
