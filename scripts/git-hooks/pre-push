@@ -16,9 +16,9 @@ if [ "$should_check" = "0" ]; then
   exit 0
 fi
 
-echo "[pre-push] dev 分支强制门：typecheck + test + verify:product + build …"
+echo "[pre-push] dev 分支强制门：typecheck + test + build + verify:product …"
 npm run typecheck || { echo "[pre-push] ❌ typecheck 红，拒绝 push dev"; exit 1; }
 npm test || { echo "[pre-push] ❌ test 红，拒绝 push dev"; exit 1; }
-npm run verify:product || { echo "[pre-push] ❌ verify:product 红，拒绝 push dev"; exit 1; }
 npm run build || { echo "[pre-push] ❌ build 红，拒绝 push dev"; exit 1; }
+npm run verify:product || { echo "[pre-push] ❌ verify:product 红，拒绝 push dev"; exit 1; }
 echo "[pre-push] ✅ 全绿，放行 push dev"
