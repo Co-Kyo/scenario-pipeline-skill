@@ -10,6 +10,7 @@ import { capabilityOverflowText, highgroundSection } from './capability.js';
 import { detail as evaluationDetail, thresholdSection } from './evaluation.js';
 import { initializeDetail, WORKDIR_NAMING } from './initialize.js';
 import { RATIO_CLAUSE, SCENARIO_MINIMUM } from './shared.js';
+import { SCHEDULING_POLICY } from '../scheduling.js';
 
 // 仓库根(src/domain/content/ 上三级)
 const repoRoot = fileURLToPath(new URL('../../../', import.meta.url));
@@ -96,11 +97,22 @@ test('C2-A:04 method.md 阈值与能力域正本一致(漂移锁，D32 W4)', () 
 
 test('D32-W5:调度三值下沉字面量锁（补锁 3，散文引用不断）', () => {
   // D32 W5 修法 R2 F-5：三 md 为散文引用（非注册消费），锁字面量不断引用链。
-  const src = readFileSync(repoRoot + 'skill.ts', 'utf-8');
-  assert.ok(src.includes('concurrencyLimit: 5'), 'W=5 下沉字面量丢失（protocol-scheduling/pipeline-params w=5）');
-  assert.ok(src.includes('maxWindowSize: 4'), '窗口 4 下沉字面量丢失（subagent-budget）');
-  assert.ok(src.includes('inputChunkTokens: 6000'), '输入 6K 下沉字面量丢失（subagent-budget）');
-  assert.ok(src.includes('itemSummaryTokens: 500'), '摘要 500 下沉字面量丢失（subagent-budget）');
+  // D35 W4 首刀升级不断旧断言（过渡期双锁，R2 F-10）：旧字面量锁保留，新生成断言见 D35-W4。
+  // 旧断言读 skill.ts 字面量；首刀后 skill.ts 改透传 scheduling.ts 实例（值同源），故改读实例值。
+  assert.equal(SCHEDULING_POLICY.concurrencyLimit, 5);
+  assert.equal(SCHEDULING_POLICY.windowBudget?.maxWindowSize, 4);
+  assert.equal(SCHEDULING_POLICY.windowBudget?.inputChunkTokens, 6000);
+  assert.equal(SCHEDULING_POLICY.windowBudget?.itemSummaryTokens, 500);
+});
+
+test('D35-W4:调度实例与框架同源（生成关系锁；改 W 即产物变）', async () => {
+  // 首刀生成锁：实例透传框架 SCHEDULING；scan 节由渲染派生；改框架即产物变（G1 生成断言）。
+  const { SCHEDULING } = await import('skillnomad');
+  const { SCHEDULING_POLICY, SCAN_BINDING, scanSchedulingSection } = await import('../scheduling.js');
+  assert.equal(SCHEDULING_POLICY.concurrencyLimit, SCHEDULING.concurrencyLimit);
+  assert.equal(SCHEDULING_POLICY.windowBudget?.maxWindowSize, SCHEDULING.windowBudget.maxWindowSize);
+  assert.equal(SCAN_BINDING.limitW, SCHEDULING.concurrencyLimit);
+  assert.ok(scanSchedulingSection().includes('### scan（滚动窗口）'));
 });
 
 test('B2-A:method.md 投影与评估域正本一致(漂移锁)', () => {

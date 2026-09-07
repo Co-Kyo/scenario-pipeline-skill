@@ -3,6 +3,7 @@ import { doAction } from '../actions.js';
 import { modules } from '../contracts.js';
 import { refOf, schemaRef } from '../domain/entities.js';
 import * as scanRules from '../domain/content/scan.js';
+import { scanSchedulingSection } from '../domain/scheduling.js';
 import { barrier } from '../policies.js';
 import { fail, verify } from '../verify.js';
 
@@ -33,6 +34,7 @@ export const scan = step('scan', '广域扫描')
   .section('Phase B 执行细节', scanRules.phaseBSection())
   .section('Phase C 执行细节', scanRules.phaseCSection())
   .section('检查点', scanRules.checkpointSection())
+  .section('调度绑定', scanSchedulingSection())
   .section('输出 Schema', scanRules.outputSchema())
   // 8.5 迁移：contractRefs 收拢进 reads + as:'contract'，本方法已从 beta.4 类型删除。
   .taskTemplate(

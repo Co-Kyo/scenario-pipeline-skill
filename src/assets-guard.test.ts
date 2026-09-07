@@ -27,15 +27,15 @@ const ALLOW_ZERO = new Set([
   // D32 W4 已接回转生产：'assets/04-capability-graph/method.md'
   'assets/04-capability-graph/schemas.md', // 仅测试引用（fragment 正本），非生产引用
   // D32 W4 已接回转生产：'assets/05-evaluate-pool/schemas.md'
-  'assets/common/convention-trace.md',
+  // D35 W0 已删：'assets/common/convention-trace.md'
   'assets/common/decision-summary.schema.json',
-  'assets/common/pipeline-params.md',
+  // D35 W4 首刀迁出即删：'assets/common/pipeline-params.md'
   'assets/common/protocol-checkpoint.md',
-  'assets/common/protocol-scheduling.md',
-  'assets/common/ref-paths.md',
+  // D35 W4 首刀迁出即删：'assets/common/protocol-scheduling.md'
+  // D35 W0 已删：'assets/common/ref-paths.md'
   'assets/common/rule-isolation.md',
   'assets/common/rule-reuse.md',
-  'assets/common/subagent-budget.md',
+  // D35 W4 首刀迁出即删：'assets/common/subagent-budget.md'
   'assets/README.md', // 文档本身，不进产物渲染
 ]);
 

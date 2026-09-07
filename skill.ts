@@ -1,6 +1,7 @@
 import type { SkillSourceModel } from 'skillnomad';
 import { createSkillFromModel } from 'skillnomad';
 import { contracts } from './src/contracts.js';
+import { SCHEDULING_POLICY } from './src/domain/scheduling.js';
 import { policies } from './src/policies.js';
 import { steps } from './src/steps/index.js';
 
@@ -46,21 +47,9 @@ const model: SkillSourceModel = {
     phases: phaseDefs,
     initStepId: 'initialize',
     // 8.13/8.14 下沉：调度策略为 skill 级全局口径，步骤不再各自登记（消除横切散布）。
-    // 数值来源（散文引用，非注册消费；D32 W5）：protocol-scheduling.md(并发 W=5) / subagent-budget.md(窗口预算/输入压缩) / pipeline-params.md(w)。三值已下沉为下方字面量，步骤零引用是 8.13/8.14 故意设计。
-    schedulingPolicy: {
-      concurrencyLimit: 5,
-      windowBudget: {
-        maxWindowSize: 4,
-        inputChunkTokens: 6000,
-        itemSummaryTokens: 500,
-      },
-      batchPolicy: {
-        mode: 'rolling_window',
-        maxBatchSize: 3,
-        slotOccupancy: 1,
-      },
-      note: '各步骤具体调度模式（批量并行/滚动窗口/拓扑分批）见 process 的「调度策略」章节；本字段为 skill 级全局口径（W=5）。',
-    },
+    // D35 W4 首刀：唯一事实源切框架 SCHEDULING（本字段透传，改 W 只改框架一处）；
+    // 旧三 md（protocol-scheduling/subagent-budget/pipeline-params）已迁出即删，备份照做。
+    schedulingPolicy: SCHEDULING_POLICY,
   },
   contracts,
   policies,
