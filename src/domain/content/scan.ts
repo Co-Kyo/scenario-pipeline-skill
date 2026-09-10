@@ -194,7 +194,10 @@ export function searchTask(): string {
 读取命题搜索计划，逐条执行搜索，取 max_results 条结果。
 记录 url/title/snippet/domain，按 T0/反爬/unknown 分级。
 过滤 excluded_keywords 命中项。
-写入 search-batch.{batch_id}.json。`;
+写入 search-batch.{batch_id}.json。
+
+判据：条数按档取（精确5／窄滤10／宽发现15，上限25，E8）；字段以可打开可定位为准（W1 命题先行，W2 粒度跟原计划走）。
+参照 Search 调用纸 fetchFull／citeFull（mdlego docs/search-call-sheet.md 完整版一节）。`;
 }
 
 export function extractTask(): string {
