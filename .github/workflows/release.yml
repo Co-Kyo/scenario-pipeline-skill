@@ -93,6 +93,23 @@ jobs:
           cd release/sp-skill
           python3 -m zipfile -c "../sp-skill-${RELEASE_TAG}.zip" .
 
+      - name: Diff product against previous release
+        if: steps.version-gate.outputs.should_release == 'true'
+        run: |
+          set -euo pipefail
+          # 机械面：产物变没变、变了多少，客观记录（不靠人记）。归属由 CHANGELOG 版本节承担。
+          git fetch origin release:refs/remotes/origin/release || true
+          rm -rf /tmp/prev-release && mkdir -p /tmp/prev-release
+          if git rev-parse --verify refs/remotes/origin/release >/dev/null 2>&1; then
+            git archive refs/remotes/origin/release | tar -x -C /tmp/prev-release
+            PREV_LABEL="release 分支 @ $(git rev-parse --short refs/remotes/origin/release)"
+          else
+            PREV_LABEL="（无上一版：首次发布）"
+          fi
+          node scripts/release-diff.mjs /tmp/prev-release release/sp-skill \
+            --prev "$PREV_LABEL" --now "tag ${RELEASE_TAG}" --ignore README.md > release/RELEASE-DIFF.md
+          cat release/RELEASE-DIFF.md >> "$GITHUB_STEP_SUMMARY"
+
       - name: Update release branch
         if: steps.version-gate.outputs.should_release == 'true'
         run: |
@@ -138,12 +155,31 @@ jobs:
         run: |
           git archive --format=zip -o release/source.zip "$RELEASE_TAG"
 
+      - name: Extract release notes from CHANGELOG
+        if: steps.version-gate.outputs.should_release == 'true'
+        run: |
+          set -euo pipefail
+          # 语义面：Release 正文＝CHANGELOG 对应版本节（单真相源：发版只改 CHANGELOG）。
+          # 版本节要写清"产物变化 × 归属"；缺节即失败——顶部的 产物变更清单 是它的机械输入。
+          VERSION="${RELEASE_TAG#v}"
+          awk -v ver="## v$VERSION" '
+            $0 ~ /^## / { in_sec = ($0 ~ ver) }
+            in_sec { print }
+          ' CHANGELOG.md | awk '/^## / && ++c > 1 { exit } { print }' > release/RELEASE-NOTES.md
+          if ! grep -q . release/RELEASE-NOTES.md; then
+            echo "CHANGELOG 缺少 ${RELEASE_TAG} 对应版本节（## v${VERSION}）" >&2
+            echo "提示：把 CHANGELOG 里的累积节（如 post-vX.Y.Z）改名为 ## v${VERSION} 并写清产物变化×归属" >&2
+            exit 1
+          fi
+
       - name: Create GitHub Release
         if: steps.version-gate.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
+          body_path: release/RELEASE-NOTES.md
           files: |
             release/source.zip
             release/sp-skill-*.zip
+            release/RELEASE-DIFF.md
           generate_release_notes: true

@@ -2,15 +2,21 @@
 
 ## post-v1.4.3（累积待发：markrefs 接入 · 调度绑定 · body 判据 · decision 示例语义）
 
-> 状态：**未打 tag**（v1.4.3 之后累积在 `dev` 上的全部内容）。下次发版时把本节改名为目标版本号。
+> 状态：**未打 tag**（v1.4.3 之后累积在 `dev` 上的全部内容）。下次发版时把本节改名为目标版本号 `## vX.Y.Z`——Release 正文取该节，缺节则发布失败。
 
-**产物变化（对比 release 分支 v1.4.3，逐字核对）**
+**产物变化（对比 release 分支 v1.4.3；机械清单由 Release 工作流生成，随 Release 附件 `RELEASE-DIFF.md` 发布）**
 
 | 产物文件 | 变化 | 来源 |
 |---|---|---|
-| `SKILL.md` | 零变化 | — |
-| `processes/02-brainstorm.md` | 8 行：decision 示例值标注（题注「示例值」、`metrics（示例）`、`【示例】` 前缀） | D33-W5（`680299e`） |
-| `processes/04-scan.md` | 12 行：新增「调度绑定」节（滚动窗口：任务单元／并发／校验／重试）＋ search 任务尾「判据／参照」两句 | D35-W4（`8f53209`）／D40-R2（`1f4137c`） |
+| `SKILL.md` | 无变化 | — |
+| `processes/02-brainstorm.md` | +5 / −3：decision 示例值标注（题注「示例值」、`metrics（示例）`、`【示例】` 前缀） | D33-W5（`680299e`） |
+| `processes/04-scan.md` | +12：新增「调度绑定」节（滚动窗口：任务单元／并发／校验／重试）＋ search 任务尾「判据／参照」两句 | D35-W4（`8f53209`）／D40-R2（`1f4137c`） |
+| `assets/README.md` | +3 / −2 | D35-W4（`8f53209`） |
+| `assets/common/` 下 5 个 md | **删除**：`convention-trace`／`pipeline-params`／`protocol-scheduling`／`ref-paths`／`subagent-budget`——已下沉为框架渲染的调度节，零引用后删 | D35-W4（`8f53209`） |
+| `assets/common/decision-summary.schema.json` | +542 / −542：**纯缩进**（4 空格标准化；去空白后逐字相同） | 工程（`b2572b0`） |
+| `VERSION_LINEAGE.json` | 血缘由构建生成（每次发布必变） | Release 工作流 |
+
+合计 47 个文件：删除 5 · 修改 5 · 无变化 37（内容文件实质变化 4 个）。
 
 **护栏与工程改动（不进产物，产物零变化）**
 
