@@ -1,8 +1,8 @@
 # Changelog
 
-## post-v1.4.3（累积待发：markrefs 接入 · 调度绑定 · body 判据 · decision 示例语义）
+## v1.4.4（markrefs 接入 · 调度绑定 · body 判据 · decision 示例语义）
 
-> 状态：**未打 tag**（v1.4.3 之后累积在 `dev` 上的全部内容）。下次发版时把本节改名为目标版本号 `## vX.Y.Z`——Release 正文取该节，缺节则发布失败。
+> 发布：**v1.4.4**（2026-09-14）｜产物对比基线：release 分支 v1.4.3（v1.4.3 之后累积的全部内容同车发布）。Release 正文即本节。
 
 **产物变化（对比 release 分支 v1.4.3；机械清单由 Release 工作流生成，随 Release 附件 `RELEASE-DIFF.md` 发布）**
 
