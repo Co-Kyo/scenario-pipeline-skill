@@ -74,7 +74,22 @@ jobs:
           cp -R assets/. release/sp-skill/assets/
           cp -R plugins/. release/sp-skill/plugins/
           cp LICENSE release/sp-skill/LICENSE
-          cp VERSION_LINEAGE.json release/sp-skill/VERSION_LINEAGE.json
+          # 血缘文件由构建生成（手写会漂）：源码版本／发布 tag／构建所用框架版本
+          node -e "
+            const fs = require('fs');
+            const [framework, source, tag] = process.argv.slice(1);
+            const lineage = {
+              skillnomad_package: 'skillnomad',
+              skillnomad_version: framework,
+              sp_skill_repo: 'Co-Kyo/sp-skill',
+              sp_skill_source_version: source,
+              sp_skill_release: tag,
+            };
+            fs.writeFileSync('release/sp-skill/VERSION_LINEAGE.json', JSON.stringify(lineage, null, 4) + '\n');
+          " \
+            "$(node -p "require('./node_modules/skillnomad/package.json').version")" \
+            "$(node -p "require('./package.json').version")" \
+            "$RELEASE_TAG"
           cd release/sp-skill
           python3 -m zipfile -c "../sp-skill-${RELEASE_TAG}.zip" .
 
@@ -99,15 +114,15 @@ jobs:
           # 清空旧产物（保留 .git），再拷入新产物
           find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
           find "$GITHUB_WORKSPACE/release/sp-skill" -mindepth 1 -maxdepth 1 -exec cp -R {} . \;
-          cat > README.md <<'EOF'
-          # sp-skill release
-
-          This branch contains the generated, importable Markdown version of sp-skill.
-
-          - `SKILL.md` is the skill entry point.
-          - `processes/` contains the step Markdown files.
-          - The source repository lives on `dev`.
-          EOF
+          # README 模板在 dev 源码里维护（docs/release-branch-readme.md）；本分支是生成物，不手改。
+          # 末尾追加本次生成的版本信息。
+          cp "$GITHUB_WORKSPACE/docs/release-branch-readme.md" README.md
+          {
+            echo ""
+            echo "---"
+            echo ""
+            echo "**本产物**：源码版本 \`$(node -p "require('$GITHUB_WORKSPACE/package.json').version")\` ｜ 发布 tag \`${RELEASE_TAG}\` ｜ 构建用框架 skillnomad \`$(node -p "require('$GITHUB_WORKSPACE/node_modules/skillnomad/package.json').version")\` ｜ 生成时间 \`$(date -u +%Y-%m-%dT%H:%M:%SZ)\`"
+          } >> README.md
           git add .
           if git diff --cached --quiet; then
             echo "release 内容无变化，跳过提交"
