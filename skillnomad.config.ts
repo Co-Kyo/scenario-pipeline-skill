@@ -1,6 +1,6 @@
 import { defineConfig } from 'skillnomad';
 
 export default defineConfig({
-  skill: './skill.ts',
-  outputDir: 'dist/sp-skill',
+    skill: './skill.ts',
+    outputDir: 'dist/sp-skill',
 });

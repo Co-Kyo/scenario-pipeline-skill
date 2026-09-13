@@ -5,35 +5,35 @@
 // - 消费（本文件）：skill.ts 全局口径转出口、scan 绑定、生成断言口径。
 // 改 W 只改框架 SCHEDULING 一处，本文件透传，8 步全跟随。
 import {
-  SCHEDULING,
-  renderBinding,
-  renderModuleDoc,
+    SCHEDULING,
+    renderBinding,
+    renderModuleDoc,
 } from 'skillnomad';
 import type { SourceSchedulingPolicy } from 'skillnomad';
 
 /** skill.ts 全局口径转出口（与 skill.ts:50-62 旧字面量同值；D32-W5 旧断言不断）。 */
 export const SCHEDULING_POLICY: SourceSchedulingPolicy = {
-  concurrencyLimit: SCHEDULING.concurrencyLimit,
-  windowBudget: { ...SCHEDULING.windowBudget },
-  batchPolicy: { ...SCHEDULING.batchPolicy },
-  note: '各步骤具体调度模式（批量并行/滚动窗口/拓扑分批）见 process 的「调度策略」章节；本字段为 skill 级全局口径（W=5）。',
+    concurrencyLimit: SCHEDULING.concurrencyLimit,
+    windowBudget: { ...SCHEDULING.windowBudget },
+    batchPolicy: { ...SCHEDULING.batchPolicy },
+    note: '各步骤具体调度模式（批量并行/滚动窗口/拓扑分批）见 process 的「调度策略」章节；本字段为 skill 级全局口径（W=5）。',
 };
 
 /** scan 绑定（首接 rollingWindow；F-10③：scan `.seq('scan-seq')` 改调模块的落点）。 */
 export const SCAN_BINDING = {
-  stepId: 'scan',
-  mode: 'rolling_window' as const,
-  taskGroup: '1 个命题批次 = 1 个 agent',
-  limitW: SCHEDULING.concurrencyLimit,
-  slotOccupancy: 1,
+    stepId: 'scan',
+    mode: 'rolling_window' as const,
+    taskGroup: '1 个命题批次 = 1 个 agent',
+    limitW: SCHEDULING.concurrencyLimit,
+    slotOccupancy: 1,
 };
 
 /** scan 调度节（scan.ts `.section('调度绑定')` 消费；写文档 = 调渲染传参）。 */
 export function scanSchedulingSection(): string {
-  return renderBinding(SCAN_BINDING);
+    return renderBinding(SCAN_BINDING);
 }
 
 /** 模块文档（附录正本；D34 版式容器复用，内容源切模块渲染）。 */
 export function schedulingModuleDoc(): string {
-  return renderModuleDoc(SCHEDULING_POLICY);
+    return renderModuleDoc(SCHEDULING_POLICY);
 }

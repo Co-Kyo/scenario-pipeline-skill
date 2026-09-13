@@ -16,19 +16,19 @@ export const CONVERGE_PRIORITY = '约束 > 技术 > 场景 > 学习';
 
 /** 约束维度的 reason_type 枚举 */
 export const REASON_TYPES = [
-  'out_of_scope',
-  'below_target',
-  'deprecated',
-  'not_frontend',
+    'out_of_scope',
+    'below_target',
+    'deprecated',
+    'not_frontend',
 ] as const;
 
 /** 级别过滤短语(从 learner 校准表派生,与学习域共用级别名) */
 export function levelFilterPhrase(): string {
-  return LEVEL_CRITERIA_TABLE.map((r) => `${r.level} ${r.traits.split(':')[0]}`).join('，');
+    return LEVEL_CRITERIA_TABLE.map((r) => `${r.level} ${r.traits.split(':')[0]}`).join('，');
 }
 
 export function detail(): string {
-  return `执行步骤：
+    return `执行步骤：
 
 1. 创建 {workDir}/.meta/brainstorm 目录。
 2. 按 agent-init 分发场景、技术、学习、约束 4 个维度 Agent。
@@ -41,8 +41,8 @@ export function detail(): string {
 }
 
 export function qualityGateSection(): string {
-  const checks = DIMENSION_FILES.map((f) => `- ${f}.json 存在且可解析`).join('\n');
-  return `检查 4 个维度文件：
+    const checks = DIMENSION_FILES.map((f) => `- ${f}.json 存在且可解析`).join('\n');
+    return `检查 4 个维度文件：
 
 ${checks}
 - 每个 JSON 包含 dimension 字段和对应 entries
@@ -51,7 +51,7 @@ ${checks}
 }
 
 export function scanInjectSection(): string {
-  return `将 requirement-web.json 作为 {{step:scan}} 输入：
+    return `将 requirement-web.json 作为 {{step:scan}} 输入：
 
 - propositions 列表
 - search_guidance 推荐关键词
@@ -62,7 +62,7 @@ export function scanInjectSection(): string {
 }
 
 export function scenarioTask(): string {
-  return `你是场景维度分析专家。
+    return `你是场景维度分析专家。
 基于 anchors.json 列出 ≥5 个候选场景。
 按 target_level 过滤：${levelFilterPhrase()}。
 每个场景包含 anchor_ref、level_weight、confidence、depth、frequency、granularity_match。
@@ -70,7 +70,7 @@ export function scenarioTask(): string {
 }
 
 export function technicalTask(): string {
-  return `你是技术维度分析专家。
+    return `你是技术维度分析专家。
 拆解原子能力，区分通用与特化能力。
 标注 layer、depends_on、covers、level_weight。
 检查网络层、工具层、运行时层、安全层，缺失时补充 T_ADD{N}。
@@ -78,7 +78,7 @@ export function technicalTask(): string {
 }
 
 export function learningTask(): string {
-  return `你是学习维度分析专家。
+    return `你是学习维度分析专家。
 设计从不会到目标水平的渐进学习路径。
 每个节点包含 prerequisites、estimated_time、verification、is_strategic。
 输出有框架经验和无框架经验两条分支。
@@ -86,7 +86,7 @@ export function learningTask(): string {
 }
 
 export function constraintTask(): string {
-  return `你是约束维度分析专家。
+    return `你是约束维度分析专家。
 提取显式和隐式约束，明确排除项。
 reason_type 只能是 ${REASON_TYPES.join('、')}。
 加入排除已停止维护方案和经验年限约束。
@@ -94,7 +94,7 @@ reason_type 只能是 ${REASON_TYPES.join('、')}。
 }
 
 export function integratorTask(): string {
-  return `你是头脑风暴的收敛者（Integrator）。你需要执行校验、对齐、收束、去重、补位，最终产出 requirement-web.json。
+    return `你是头脑风暴的收敛者（Integrator）。你需要执行校验、对齐、收束、去重、补位，最终产出 requirement-web.json。
 
 你必须用 write 工具将文件写入磁盘。
 

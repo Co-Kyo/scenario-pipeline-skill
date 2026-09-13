@@ -17,93 +17,93 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 const assetsDir = join(repoRoot, 'assets');
 
 const ALLOW_ZERO = new Set([
-  // D32 W2 已删：'assets/01-brainstorm/learning-agent.md'
-  // D32 W2 已删：'assets/01-brainstorm/scenario-agent.md'
-  // D32 W2 已删：'assets/01-brainstorm/technical-agent.md'
-  // D32 W2 已删：'assets/01-brainstorm/constraint-agent.md'
-  // D32 W2 已删：'assets/01-brainstorm/level-weight.md'
-  // D32 W2 已删：'assets/01-brainstorm/scheduling-detail.md'
-  // D32 W4 已接回转生产：'assets/02-partition/schemas.md'
-  // D32 W4 已接回转生产：'assets/04-capability-graph/method.md'
-  'assets/04-capability-graph/schemas.md', // 仅测试引用（fragment 正本），非生产引用
-  // D32 W4 已接回转生产：'assets/05-evaluate-pool/schemas.md'
-  // D35 W0 已删：'assets/common/convention-trace.md'
-  'assets/common/decision-summary.schema.json',
-  // D35 W4 首刀迁出即删：'assets/common/pipeline-params.md'
-  'assets/common/protocol-checkpoint.md',
-  // D35 W4 首刀迁出即删：'assets/common/protocol-scheduling.md'
-  // D35 W0 已删：'assets/common/ref-paths.md'
-  'assets/common/rule-isolation.md',
-  'assets/common/rule-reuse.md',
-  // D35 W4 首刀迁出即删：'assets/common/subagent-budget.md'
-  'assets/README.md', // 文档本身，不进产物渲染
+    // D32 W2 已删：'assets/01-brainstorm/learning-agent.md'
+    // D32 W2 已删：'assets/01-brainstorm/scenario-agent.md'
+    // D32 W2 已删：'assets/01-brainstorm/technical-agent.md'
+    // D32 W2 已删：'assets/01-brainstorm/constraint-agent.md'
+    // D32 W2 已删：'assets/01-brainstorm/level-weight.md'
+    // D32 W2 已删：'assets/01-brainstorm/scheduling-detail.md'
+    // D32 W4 已接回转生产：'assets/02-partition/schemas.md'
+    // D32 W4 已接回转生产：'assets/04-capability-graph/method.md'
+    'assets/04-capability-graph/schemas.md', // 仅测试引用（fragment 正本），非生产引用
+    // D32 W4 已接回转生产：'assets/05-evaluate-pool/schemas.md'
+    // D35 W0 已删：'assets/common/convention-trace.md'
+    'assets/common/decision-summary.schema.json',
+    // D35 W4 首刀迁出即删：'assets/common/pipeline-params.md'
+    'assets/common/protocol-checkpoint.md',
+    // D35 W4 首刀迁出即删：'assets/common/protocol-scheduling.md'
+    // D35 W0 已删：'assets/common/ref-paths.md'
+    'assets/common/rule-isolation.md',
+    'assets/common/rule-reuse.md',
+    // D35 W4 首刀迁出即删：'assets/common/subagent-budget.md'
+    'assets/README.md', // 文档本身，不进产物渲染
 ]);
 
 const PROD_ROOTS = ['src', 'skill.ts', 'skillnomad.config.ts'];
 
 function stripLineComment(line: string): string {
-  const idx = line.indexOf('//');
-  return idx < 0 ? line : line.slice(0, idx);
+    const idx = line.indexOf('//');
+    return idx < 0 ? line : line.slice(0, idx);
 }
 
 function collectTsFiles(dir: string, out: string[] = []): string[] {
-  for (const name of readdirSync(dir)) {
-    if (name === 'node_modules' || name === 'dist') continue;
-    const p = join(dir, name);
-    if (statSync(p).isDirectory()) {
-      collectTsFiles(p, out);
-    } else if (p.endsWith('.ts') && !p.endsWith('.test.ts')) {
-      out.push(p);
+    for (const name of readdirSync(dir)) {
+        if (name === 'node_modules' || name === 'dist') continue;
+        const p = join(dir, name);
+        if (statSync(p).isDirectory()) {
+            collectTsFiles(p, out);
+        } else if (p.endsWith('.ts') && !p.endsWith('.test.ts')) {
+            out.push(p);
+        }
     }
-  }
-  return out;
+    return out;
 }
 
 function collectAssets(dir: string, out: string[] = []): string[] {
-  for (const name of readdirSync(dir)) {
-    const p = join(dir, name);
-    if (statSync(p).isDirectory()) {
-      collectAssets(p, out);
-    } else {
-      out.push(relative(repoRoot, p).split(sep).join('/'));
+    for (const name of readdirSync(dir)) {
+        const p = join(dir, name);
+        if (statSync(p).isDirectory()) {
+            collectAssets(p, out);
+        } else {
+            out.push(relative(repoRoot, p).split(sep).join('/'));
+        }
     }
-  }
-  return out;
+    return out;
 }
 
 function scanZeroRefs(): Set<string> {
-  const prodFiles: string[] = [];
-  for (const root of PROD_ROOTS) {
-    const p = join(repoRoot, root);
-    try {
-      if (statSync(p).isDirectory()) collectTsFiles(p, prodFiles);
-      else prodFiles.push(p);
-    } catch {
-      // 根文件不存在则跳过
+    const prodFiles: string[] = [];
+    for (const root of PROD_ROOTS) {
+        const p = join(repoRoot, root);
+        try {
+            if (statSync(p).isDirectory()) collectTsFiles(p, prodFiles);
+            else prodFiles.push(p);
+        } catch {
+            // 根文件不存在则跳过
+        }
     }
-  }
-  const lines: string[] = [];
-  for (const f of prodFiles) {
-    for (const line of readFileSync(f, 'utf-8').split('\n')) {
-      lines.push(stripLineComment(line));
+    const lines: string[] = [];
+    for (const f of prodFiles) {
+        for (const line of readFileSync(f, 'utf-8').split('\n')) {
+            lines.push(stripLineComment(line));
+        }
     }
-  }
-  const body = lines.join('\n');
-  const zero = new Set<string>();
-  for (const asset of collectAssets(assetsDir)) {
-    if (!body.includes(asset)) zero.add(asset);
-  }
-  return zero;
+    const body = lines.join('\n');
+    const zero = new Set<string>();
+    for (const asset of collectAssets(assetsDir)) {
+        if (!body.includes(asset)) zero.add(asset);
+    }
+    return zero;
 }
 
 test('孤儿扫描：零引用文件不得超出快照清单（新增即红）', () => {
-  const zero = scanZeroRefs();
-  const extra = [...zero].filter((a) => !ALLOW_ZERO.has(a));
-  assert.deepEqual(extra, [], `新增零引用文件: ${extra.join(', ')}`);
+    const zero = scanZeroRefs();
+    const extra = [...zero].filter((a) => !ALLOW_ZERO.has(a));
+    assert.deepEqual(extra, [], `新增零引用文件: ${extra.join(', ')}`);
 });
 
 test('孤儿扫描：快照条目须仍为零引用（处置后同步更新快照）', () => {
-  const zero = scanZeroRefs();
-  const revived = [...ALLOW_ZERO].filter((a) => !zero.has(a));
-  assert.deepEqual(revived, [], `快照条目已恢复生产引用，请同步更新 ALLOW_ZERO: ${revived.join(', ')}`);
+    const zero = scanZeroRefs();
+    const revived = [...ALLOW_ZERO].filter((a) => !zero.has(a));
+    assert.deepEqual(revived, [], `快照条目已恢复生产引用，请同步更新 ALLOW_ZERO: ${revived.join(', ')}`);
 });
