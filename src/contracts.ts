@@ -2,7 +2,7 @@ import type {
     SourceContract,
     SourceRef,
 } from 'skillnomad';
-import { mdRefs } from './domain/entities.js';
+import { refs } from './domain/entities.js';
 
 /**
  * **modules —— 内容模块（9 条）**
@@ -30,9 +30,9 @@ export const modules = {
     antiCrawlFetch: { path: 'plugins/anti-crawl-fetch.md', description: 'Playwright 抓取', required: false },
 } satisfies Record<string, SourceRef>;
 
-// md-deps：模块资产路径登记（构建期校验文件存在性；模块表即声明源，路径即事实）
+// markrefs：模块资产路径登记（构建期校验文件存在性；模块表即声明源，路径即事实）
 for (const module of Object.values(modules)) {
-    mdRefs.refPath(module.path);
+    refs.refPath(module.path);
 }
 
 /**
