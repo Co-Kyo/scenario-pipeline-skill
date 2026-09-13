@@ -13,25 +13,25 @@ export const LADDER_MAX_CAPABILITIES = 8 as const;
 export const LADDER_JUDGMENT_FIELD = '做到才算过' as const;
 
 export const LAYER_RULES = [
-  'Layer 0：无依赖能力',
-  'Layer 1：依赖 Layer 0',
-  'Layer 2：依赖 Layer 0+1',
+    'Layer 0：无依赖能力',
+    'Layer 1：依赖 Layer 0',
+    'Layer 2：依赖 Layer 0+1',
 ] as const;
 
 /** 阶梯 Step 的固定字段;「做到才算过」是二值验收字段(见 effects.ts E-ladder-judgment) */
 export const LADDER_STEP_FIELDS = [
-  '要做什么',
-  '预计时长(分钟)',
-  '你会看到什么',
-  '这说明了什么',
-  '接下来去哪',
-  '做到才算过',
-  '完成标记',
+    '要做什么',
+    '预计时长(分钟)',
+    '你会看到什么',
+    '这说明了什么',
+    '接下来去哪',
+    '做到才算过',
+    '完成标记',
 ] as const;
 
 export function ladderDetail(): string {
-  const layers = LAYER_RULES.map((l) => `- ${l}`).join('\n');
-  return `提取命题能力子图。
+    const layers = LAYER_RULES.map((l) => `- ${l}`).join('\n');
+    return `提取命题能力子图。
 
 按依赖拓扑分层：
 
@@ -41,8 +41,8 @@ ${layers}
 }
 
 export function stepFormat(): string {
-  const fields = LADDER_STEP_FIELDS.map((f) => `- ${f}`).join('\n');
-  return `每步包含：
+    const fields = LADDER_STEP_FIELDS.map((f) => `- ${f}`).join('\n');
+    return `每步包含：
 
 ${fields}
 
@@ -51,8 +51,8 @@ ${fields}
 
 /** D1:判据校准表渲染(运行时按 anchors.json 的 target_level 选用) */
 export function judgmentCalibrationTable(): string {
-  const rows = LEVEL_CRITERIA_TABLE.map((r) => `- **${r.level}**：${r.traits}`).join('\n');
-  return `判据校准表（学习者的 target_level 见 {workDir}/.meta/brainstorm/anchors.json）：
+    const rows = LEVEL_CRITERIA_TABLE.map((r) => `- **${r.level}**：${r.traits}`).join('\n');
+    return `判据校准表（学习者的 target_level 见 {workDir}/.meta/brainstorm/anchors.json）：
 
 ${rows}
 
@@ -60,7 +60,7 @@ ${rows}
 }
 
 export function workerTask(): string {
-  return `你是 {proposition_name} 的学习阶梯生成专家。
+    return `你是 {proposition_name} 的学习阶梯生成专家。
 提取能力子图。
 拓扑排序并归纳阶段。
 每个阶段编排概念、技能、综合步骤，每步给出预计时长(分钟)。

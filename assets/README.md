@@ -8,7 +8,6 @@ assets/
 │   ├── rule-isolation.md        上下文隔离（每步只读该步的文件）
 │   ├── rule-reuse.md            增量复用（文件存在则跳过）
 │   ├── protocol-checkpoint.md   检查点协议（强制停顿 + barrier 记录）
-│   ├── protocol-scheduling.md   子 agent 调度（3 模式 + 校验 + 平台适配）
 │   ├── strategy-level.md        动态策略（级别 × 参数表）
 │   ├── convention-trace.md      决策凭据（_trace 字段）
 │   ├── ref-sources.md           信源分级表
@@ -60,7 +59,9 @@ assets/
 详见 `assets/04-capability-graph/method.md`
 
 # 引用公共资源
-详见 `assets/common/rule-isolation.md` / `assets/common/strategy-level.md` / `assets/common/protocol-scheduling.md`
+详见 `assets/common/rule-isolation.md` / `assets/common/strategy-level.md`
+（注：D35 W4 首刀迁出 `protocol-scheduling.md` / `subagent-budget.md` / `pipeline-params.md`；
+调度正本见框架 `skillnomad-common/scheduling.ts`，消费实例见 `src/domain/scheduling.ts`）
 ```
 
 ## 文件类型说明

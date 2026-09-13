@@ -1,5 +1,31 @@
 # Changelog
 
+## v1.4.4（markrefs 接入 · 调度绑定 · body 判据 · decision 示例语义）
+
+> 发布：**v1.4.4**（2026-09-14）｜产物对比基线：release 分支 v1.4.3（v1.4.3 之后累积的全部内容同车发布）。Release 正文即本节。
+
+**产物变化（对比 release 分支 v1.4.3；机械清单由 Release 工作流生成，随 Release 附件 `RELEASE-DIFF.md` 发布）**
+
+| 产物文件 | 变化 | 来源 |
+|---|---|---|
+| `SKILL.md` | 无变化 | — |
+| `processes/02-brainstorm.md` | +5 / −3：decision 示例值标注（题注「示例值」、`metrics（示例）`、`【示例】` 前缀） | D33-W5（`680299e`） |
+| `processes/04-scan.md` | +12：新增「调度绑定」节（滚动窗口：任务单元／并发／校验／重试）＋ search 任务尾「判据／参照」两句 | D35-W4（`8f53209`）／D40-R2（`1f4137c`） |
+| `assets/README.md` | +3 / −2 | D35-W4（`8f53209`） |
+| `assets/common/` 下 5 个 md | **删除**：`convention-trace`／`pipeline-params`／`protocol-scheduling`／`ref-paths`／`subagent-budget`——已下沉为框架渲染的调度节，零引用后删 | D35-W4（`8f53209`） |
+| `assets/common/decision-summary.schema.json` | +542 / −542：**纯缩进**（4 空格标准化；去空白后逐字相同） | 工程（`b2572b0`） |
+| `VERSION_LINEAGE.json` | 血缘由构建生成（每次发布必变） | Release 工作流 |
+
+合计 47 个文件：删除 5 · 修改 5 · 无变化 37（内容文件实质变化 4 个）。
+
+**护栏与工程改动（不进产物，产物零变化）**
+
+- **markrefs 接入**：键表由实体表派生（27 条）＋引用在 `refOf`／`schemaRef` 内自动登记（`b503230`）——118 处调用点文字零改动。构建期校验上线：`markrefs：133 条引用（15 条判存在性，118 条模板跳过）`，诊断直指调用点 `file:line`。随后：跟随改名（`e96e024`）、框架依赖 0.1.3 → 0.1.4（`a1dea55`）、依赖收口为单条（`fde8aa8`）。
+- **框架依赖对齐**：`skillnomad` 0.1.3 → 0.1.4——本次首次把"声明"与"源码用到的面"对齐；此前声明停在 0.1.3，用声明依赖跑 typecheck 报 7 处、构建直接 SyntaxError，一直靠本地直调掩盖。
+- **工程**：TS/JSON 统一 4 空格缩进＋eslint（`19322f1`／`b2572b0`）；`initStepId` 一行删除（产物零 diff，`9e88c4a`）；release 分支 README 补全＋血缘由构建生成（`4952414`）。
+
+**验收**：typecheck 零报错 · 53/53 · verify:product 4/4 · build 15 文件；框架 0.1.3 → 0.1.4 升级前后产物 13/18 文件哈希逐字相同（5 个差异均为时间戳类）。
+
 ## v1.4.3（D32 源码结构审计处置：守卫先行+逐个处置，零行为变化）
 
 - **守卫先行（W1）**：新增 `src/assets-guard.test.ts` 孤儿扫描守卫（20 项快照：18 零引用＋2 仅测试引用；新增零引用即红、处置同步更新快照；`ALLOW_ZERO` 显式确认）。

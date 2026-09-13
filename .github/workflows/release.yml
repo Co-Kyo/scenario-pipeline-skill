@@ -74,9 +74,41 @@ jobs:
           cp -R assets/. release/sp-skill/assets/
           cp -R plugins/. release/sp-skill/plugins/
           cp LICENSE release/sp-skill/LICENSE
-          cp VERSION_LINEAGE.json release/sp-skill/VERSION_LINEAGE.json
+          # 血缘文件由构建生成（手写会漂）：源码版本／发布 tag／构建所用框架版本
+          node -e "
+            const fs = require('fs');
+            const [framework, source, tag] = process.argv.slice(1);
+            const lineage = {
+              skillnomad_package: 'skillnomad',
+              skillnomad_version: framework,
+              sp_skill_repo: 'Co-Kyo/sp-skill',
+              sp_skill_source_version: source,
+              sp_skill_release: tag,
+            };
+            fs.writeFileSync('release/sp-skill/VERSION_LINEAGE.json', JSON.stringify(lineage, null, 4) + '\n');
+          " \
+            "$(node -p "require('./node_modules/skillnomad/package.json').version")" \
+            "$(node -p "require('./package.json').version")" \
+            "$RELEASE_TAG"
           cd release/sp-skill
           python3 -m zipfile -c "../sp-skill-${RELEASE_TAG}.zip" .
+
+      - name: Diff product against previous release
+        if: steps.version-gate.outputs.should_release == 'true'
+        run: |
+          set -euo pipefail
+          # 机械面：产物变没变、变了多少，客观记录（不靠人记）。归属由 CHANGELOG 版本节承担。
+          git fetch origin release:refs/remotes/origin/release || true
+          rm -rf /tmp/prev-release && mkdir -p /tmp/prev-release
+          if git rev-parse --verify refs/remotes/origin/release >/dev/null 2>&1; then
+            git archive refs/remotes/origin/release | tar -x -C /tmp/prev-release
+            PREV_LABEL="release 分支 @ $(git rev-parse --short refs/remotes/origin/release)"
+          else
+            PREV_LABEL="（无上一版：首次发布）"
+          fi
+          node scripts/release-diff.mjs /tmp/prev-release release/sp-skill \
+            --prev "$PREV_LABEL" --now "tag ${RELEASE_TAG}" --ignore README.md > release/RELEASE-DIFF.md
+          cat release/RELEASE-DIFF.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Update release branch
         if: steps.version-gate.outputs.should_release == 'true'
@@ -99,15 +131,15 @@ jobs:
           # 清空旧产物（保留 .git），再拷入新产物
           find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
           find "$GITHUB_WORKSPACE/release/sp-skill" -mindepth 1 -maxdepth 1 -exec cp -R {} . \;
-          cat > README.md <<'EOF'
-          # sp-skill release
-
-          This branch contains the generated, importable Markdown version of sp-skill.
-
-          - `SKILL.md` is the skill entry point.
-          - `processes/` contains the step Markdown files.
-          - The source repository lives on `dev`.
-          EOF
+          # README 模板在 dev 源码里维护（docs/release-branch-readme.md）；本分支是生成物，不手改。
+          # 末尾追加本次生成的版本信息。
+          cp "$GITHUB_WORKSPACE/docs/release-branch-readme.md" README.md
+          {
+            echo ""
+            echo "---"
+            echo ""
+            echo "**本产物**：源码版本 \`$(node -p "require('$GITHUB_WORKSPACE/package.json').version")\` ｜ 发布 tag \`${RELEASE_TAG}\` ｜ 构建用框架 skillnomad \`$(node -p "require('$GITHUB_WORKSPACE/node_modules/skillnomad/package.json').version")\` ｜ 生成时间 \`$(date -u +%Y-%m-%dT%H:%M:%SZ)\`"
+          } >> README.md
           git add .
           if git diff --cached --quiet; then
             echo "release 内容无变化，跳过提交"
@@ -123,12 +155,31 @@ jobs:
         run: |
           git archive --format=zip -o release/source.zip "$RELEASE_TAG"
 
+      - name: Extract release notes from CHANGELOG
+        if: steps.version-gate.outputs.should_release == 'true'
+        run: |
+          set -euo pipefail
+          # 语义面：Release 正文＝CHANGELOG 对应版本节（单真相源：发版只改 CHANGELOG）。
+          # 版本节要写清"产物变化 × 归属"；缺节即失败——顶部的 产物变更清单 是它的机械输入。
+          VERSION="${RELEASE_TAG#v}"
+          awk -v ver="## v$VERSION" '
+            $0 ~ /^## / { in_sec = ($0 ~ ver) }
+            in_sec { print }
+          ' CHANGELOG.md | awk '/^## / && ++c > 1 { exit } { print }' > release/RELEASE-NOTES.md
+          if ! grep -q . release/RELEASE-NOTES.md; then
+            echo "CHANGELOG 缺少 ${RELEASE_TAG} 对应版本节（## v${VERSION}）" >&2
+            echo "提示：把 CHANGELOG 里的累积节（如 post-vX.Y.Z）改名为 ## v${VERSION} 并写清产物变化×归属" >&2
+            exit 1
+          fi
+
       - name: Create GitHub Release
         if: steps.version-gate.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
+          body_path: release/RELEASE-NOTES.md
           files: |
             release/source.zip
             release/sp-skill-*.zip
+            release/RELEASE-DIFF.md
           generate_release_notes: true

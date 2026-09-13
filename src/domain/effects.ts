@@ -8,57 +8,57 @@ import { LADDER_STAGE_COUNT } from './ladder.js';
 import { entities } from './entities.js';
 
 export interface EffectContract {
-  id: string;
-  artifact: string;
-  owns: readonly string[];
-  expects: readonly string[];
+    id: string;
+    artifact: string;
+    owns: readonly string[];
+    expects: readonly string[];
 }
 
 export const EFFECT_CONTRACTS: readonly EffectContract[] = [
-  {
-    id: 'E-ladder-judgment',
-    artifact: entities.ladder.artifact,
-    owns: ['src/domain/ladder.ts', 'assets/09-learning-ladder/schemas.md'],
-    expects: [
-      '每个阶梯 Step 有「做到才算过」二值验证标准',
+    {
+        id: 'E-ladder-judgment',
+        artifact: entities.ladder.artifact,
+        owns: ['src/domain/ladder.ts', 'assets/09-learning-ladder/schemas.md'],
+        expects: [
+            '每个阶梯 Step 有「做到才算过」二值验证标准',
       `阶段数 ${LADDER_STAGE_COUNT.min}-${LADDER_STAGE_COUNT.max}`,
       '失败时给出明确回退指引',
-    ],
-  },
-  {
-    id: 'E-capability-coverage',
-    artifact: entities.capabilities.artifact,
-    owns: ['src/domain/prompts.ts', 'assets/06-capability-research/schemas.md'],
-    expects: [
-      '每个 fetch_status=ok 素材至少分配到一个能力,不能静默丢弃',
-      '每个摘要包含 material_usage(逐条 material_id/file_path/usage/selection_reason)',
-      '分组上限 5 个能力',
-    ],
-  },
-  {
-    id: 'E-briefing-trace',
-    artifact: entities.briefing.artifact,
-    owns: ['src/domain/prompts.ts', 'assets/07-briefing-assemble/schemas.md'],
-    expects: ['场景化 Trace >= 3/3/3', '缺失能力摘要时标注缺失并继续'],
-  },
-  {
-    id: 'E-assemble-ratio',
-    artifact: entities.assemblyRatioTrace.artifact,
-    owns: ['src/domain/prompts.ts', 'assets/08-assemble/schemas.md'],
-    expects: [
-      '通用高地 <= 70%,场景化/特化内容 >= 30%',
-      '至少 3 个场景化输入、3 个边界、3 个验证点',
-      'trace 记录 generic_pct/scenario_pct 与各项计数',
-    ],
-  },
+        ],
+    },
+    {
+        id: 'E-capability-coverage',
+        artifact: entities.capabilities.artifact,
+        owns: ['src/domain/prompts.ts', 'assets/06-capability-research/schemas.md'],
+        expects: [
+            '每个 fetch_status=ok 素材至少分配到一个能力,不能静默丢弃',
+            '每个摘要包含 material_usage(逐条 material_id/file_path/usage/selection_reason)',
+            '分组上限 5 个能力',
+        ],
+    },
+    {
+        id: 'E-briefing-trace',
+        artifact: entities.briefing.artifact,
+        owns: ['src/domain/prompts.ts', 'assets/07-briefing-assemble/schemas.md'],
+        expects: ['场景化 Trace >= 3/3/3', '缺失能力摘要时标注缺失并继续'],
+    },
+    {
+        id: 'E-assemble-ratio',
+        artifact: entities.assemblyRatioTrace.artifact,
+        owns: ['src/domain/prompts.ts', 'assets/08-assemble/schemas.md'],
+        expects: [
+            '通用高地 <= 70%,场景化/特化内容 >= 30%',
+            '至少 3 个场景化输入、3 个边界、3 个验证点',
+            'trace 记录 generic_pct/scenario_pct 与各项计数',
+        ],
+    },
 ];
 
 /** D7:效果契约小节渲染(运行时 AI 与审计工具的消费方)。未知 id 抛错,防静默漏接。 */
 export function effectContractSection(id: string): string {
-  const c = EFFECT_CONTRACTS.find((x) => x.id === id);
-  if (!c) throw new Error(`未知效果契约:${id}`);
-  const expects = c.expects.map((e) => `- ${e}`).join('\n');
-  return `本产物的效果契约 ${c.id}（违约时修改：${c.owns.join(' / ')}）：
+    const c = EFFECT_CONTRACTS.find((x) => x.id === id);
+    if (!c) throw new Error(`未知效果契约:${id}`);
+    const expects = c.expects.map((e) => `- ${e}`).join('\n');
+    return `本产物的效果契约 ${c.id}（违约时修改：${c.owns.join(' / ')}）：
 
 ${expects}`;
 }

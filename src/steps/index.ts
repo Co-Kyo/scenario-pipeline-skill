@@ -12,15 +12,15 @@ import { assemble } from './assemble.js';
 import { learningLadder } from './learning-ladder.js';
 
 export const steps: SourceStep[] = [
-  initialize,
-  intentAnchor,
-  brainstorm,
-  partition,
-  scan,
-  capabilityGraph,
-  evaluatePool,
-  capabilityResearch,
-  briefingAssemble,
-  assemble,
-  learningLadder,
+    initialize,
+    intentAnchor,
+    brainstorm,
+    partition,
+    scan,
+    capabilityGraph,
+    evaluatePool,
+    capabilityResearch,
+    briefingAssemble,
+    assemble,
+    learningLadder,
 ];

@@ -1,14 +1,14 @@
 // 内容域:评估入池。四维评分维度、防虚高规则、年限阈值为唯一数据源。
 export const SCORE_DIMENSIONS = [
-  'cross_stack_coupling：跨栈耦合',
-  'doc_vacuum：文档真空',
-  'experience_barrier：经验壁垒',
-  'topical_heat：时事热度',
+    'cross_stack_coupling：跨栈耦合',
+    'doc_vacuum：文档真空',
+    'experience_barrier：经验壁垒',
+    'topical_heat：时事热度',
 ] as const;
 
 export function detail(): string {
-  const dims = SCORE_DIMENSIONS.map((d) => `- ${d}`).join('\n');
-  return `四维评分：
+    const dims = SCORE_DIMENSIONS.map((d) => `- ${d}`).join('\n');
+    return `四维评分：
 
 ${dims}
 
@@ -18,7 +18,7 @@ ${dims}
 }
 
 export function thresholdSection(): string {
-  return `L1：通常不入池。
+    return `L1：通常不入池。
 L2：总分 >= 6。
 L3：总分 >= 5。
 L4：任一维度 >= 2 即入池。
@@ -27,14 +27,14 @@ L4：任一维度 >= 2 即入池。
 }
 
 export function scoreTask(): string {
-  return `对每个命题按四维矩阵打分。
+    return `对每个命题按四维矩阵打分。
 记录每个维度的 reasoning。
 检查防虚高规则。
 写入 evaluations.json。`;
 }
 
 export function archiveTask(): string {
-  return `按年限阈值判定 priority。
+    return `按年限阈值判定 priority。
 记录 priority_trace。
 评估 difficulty 和 recommended_order。
 生成 README.md 和 candidates.md。`;

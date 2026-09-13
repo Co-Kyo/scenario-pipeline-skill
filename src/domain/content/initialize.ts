@@ -2,7 +2,7 @@
 export const WORKDIR_NAMING = '{当前日期}-{场景简称}';
 
 export function initializeDetail(): string {
-  return `初始化只负责对齐 workDir 和公共规则：
+    return `初始化只负责对齐 workDir 和公共规则：
 
 1. 用户未指定目录时，默认使用 ${WORKDIR_NAMING}。
 2. 向用户展示目录，等待确认；用户可修正。

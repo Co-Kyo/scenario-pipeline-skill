@@ -13,28 +13,28 @@ const read = (p: string) => readFileSync(repoRoot + p, 'utf-8');
 
 // 声明值（与 src/steps/*.ts:57/64/69/72 四处拼接一致；改源码此处必同步改）
 const DECLARED = [
-  { file: 'src/steps/briefing-assemble.ts', fragment: 'propositions', schemaFile: 'assets/01-brainstorm/requirement-web-schema.md' },
-  { file: 'src/steps/assemble.ts', fragment: 'propositions', schemaFile: 'assets/01-brainstorm/requirement-web-schema.md' },
-  { file: 'src/steps/capability-research.ts', fragment: 'capabilities', schemaFile: 'assets/04-capability-graph/schemas.md' },
-  { file: 'src/steps/learning-ladder.ts', fragment: 'propositions', schemaFile: 'assets/01-brainstorm/requirement-web-schema.md' },
+    { file: 'src/steps/briefing-assemble.ts', fragment: 'propositions', schemaFile: 'assets/01-brainstorm/requirement-web-schema.md' },
+    { file: 'src/steps/assemble.ts', fragment: 'propositions', schemaFile: 'assets/01-brainstorm/requirement-web-schema.md' },
+    { file: 'src/steps/capability-research.ts', fragment: 'capabilities', schemaFile: 'assets/04-capability-graph/schemas.md' },
+    { file: 'src/steps/learning-ladder.ts', fragment: 'propositions', schemaFile: 'assets/01-brainstorm/requirement-web-schema.md' },
 ];
 
 test('fragment 声明值在源码中存在（防声明与测试双漂）', () => {
-  for (const d of DECLARED) {
-    const src = read(d.file);
-    assert.ok(
-      src.includes(`#${d.fragment}`),
+    for (const d of DECLARED) {
+        const src = read(d.file);
+        assert.ok(
+            src.includes(`#${d.fragment}`),
       `${d.file} 缺 '#${d.fragment}'——改源码拼接请同步本表`,
-    );
-  }
+        );
+    }
 });
 
 test('fragment 在 schema 正本中有定义（防 typo 绿构建）', () => {
-  for (const d of DECLARED) {
-    const schema = read(d.schemaFile);
-    assert.ok(
-      schema.includes(d.fragment),
+    for (const d of DECLARED) {
+        const schema = read(d.schemaFile);
+        assert.ok(
+            schema.includes(d.fragment),
       `'#${d.fragment}' 在 ${d.schemaFile} 无定义——typo 或正本缺失`,
-    );
-  }
+        );
+    }
 });

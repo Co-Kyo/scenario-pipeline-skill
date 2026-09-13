@@ -17,34 +17,34 @@ const dist = repoRoot + 'dist/sp-skill/';
 const DECLARED_ORDER = steps.map((s) => s.id);
 
 test('产物 processes 章节数量与声明步数一致（防整节丢失）', () => {
-  const files = readdirSync(dist + 'processes').filter((f) => f.endsWith('.md')).sort();
-  assert.equal(
-    files.length,
-    DECLARED_ORDER.length,
+    const files = readdirSync(dist + 'processes').filter((f) => f.endsWith('.md')).sort();
+    assert.equal(
+        files.length,
+        DECLARED_ORDER.length,
     `processes 章节 ${files.length} ≠ 声明步数 ${DECLARED_ORDER.length}`,
-  );
+    );
 });
 
 test('产物章节顺序与声明顺序一致（防顺序漂移）', () => {
-  const files = readdirSync(dist + 'processes').filter((f) => f.endsWith('.md')).sort();
-  for (const [i, stepId] of DECLARED_ORDER.entries()) {
-    const nn = String(i).padStart(2, '0');
-    const hit = files.find((f) => f.startsWith(nn + '-') && f.includes(stepId));
-    assert.ok(hit, `第 ${i} 步 '${stepId}' 在产物中缺对应章节（期望 ${nn}-*${stepId}*.md）`);
-  }
+    const files = readdirSync(dist + 'processes').filter((f) => f.endsWith('.md')).sort();
+    for (const [i, stepId] of DECLARED_ORDER.entries()) {
+        const nn = String(i).padStart(2, '0');
+        const hit = files.find((f) => f.startsWith(nn + '-') && f.includes(stepId));
+        assert.ok(hit, `第 ${i} 步 '${stepId}' 在产物中缺对应章节（期望 ${nn}-*${stepId}*.md）`);
+    }
 });
 
 test('decision-summary steps 与声明一致（防摘要与产物双漂）', () => {
-  const summary = JSON.parse(readFileSync(dist + 'decision-summary.json', 'utf-8'));
-  const ids = summary.steps.map((s: { step_id: string }) => s.step_id);
-  assert.deepEqual(ids, DECLARED_ORDER, 'decision-summary step 顺序与源码声明不一致');
+    const summary = JSON.parse(readFileSync(dist + 'decision-summary.json', 'utf-8'));
+    const ids = summary.steps.map((s: { step_id: string }) => s.step_id);
+    assert.deepEqual(ids, DECLARED_ORDER, 'decision-summary step 顺序与源码声明不一致');
 });
 
 test('manifest files 清单与 dist 实际文件一致（只比文件名，不比 hash/时间戳）', () => {
-  const manifest = JSON.parse(readFileSync(dist + 'artifact-manifest.json', 'utf-8'));
-  const declared = new Set(manifest.files.map((f: { file: string }) => f.file));
-  assert.ok(existsSync(dist + 'SKILL.md'), 'dist 缺 SKILL.md');
-  for (const f of declared) {
-    assert.ok(existsSync(dist + f), `manifest 声明 '${f}' 在 dist 中缺失`);
-  }
+    const manifest = JSON.parse(readFileSync(dist + 'artifact-manifest.json', 'utf-8'));
+    const declared = new Set(manifest.files.map((f: { file: string }) => f.file));
+    assert.ok(existsSync(dist + 'SKILL.md'), 'dist 缺 SKILL.md');
+    for (const f of declared) {
+        assert.ok(existsSync(dist + f), `manifest 声明 '${f}' 在 dist 中缺失`);
+    }
 });

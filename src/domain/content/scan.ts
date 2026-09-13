@@ -4,25 +4,25 @@ import { PARALLEL_WIDTH } from './shared.js';
 
 /** 扫描密度查表(正本为 assets/common/strategy-level.md 的 L2 列;此处为散文渲染源) */
 export const SCAN_DENSITY = [
-  { role: 'core', kw: 2, r: 8, note: '（L2 默认）' },
-  { role: 'premise', kw: 1, r: 3, note: '' },
-  { role: 'outlook', kw: 1, r: 2, note: '' },
+    { role: 'core', kw: 2, r: 8, note: '（L2 默认）' },
+    { role: 'premise', kw: 1, r: 3, note: '' },
+    { role: 'outlook', kw: 1, r: 2, note: '' },
 ] as const;
 
 /** URL 盘点策略规则 */
 export const URL_STRATEGIES = [
-  'T0/T1 官方或已知可达域名：direct。',
-  '反爬特征明确（login-wall、JS-render、403 历史）：playwright。',
-  '境外网络不可达或代理需求（Google/medium/web.dev 等）：virtual_gateway。',
-  '已知 404/无价值/SPA 空壳：skip 并记录 skip_reason。',
+    'T0/T1 官方或已知可达域名：direct。',
+    '反爬特征明确（login-wall、JS-render、403 历史）：playwright。',
+    '境外网络不可达或代理需求（Google/medium/web.dev 等）：virtual_gateway。',
+    '已知 404/无价值/SPA 空壳：skip 并记录 skip_reason。',
 ] as const;
 
 /** 提取字段四件套 */
 export const EXTRACT_FIELDS = ['key_concepts', 'capability_points', 'depth_level', 'quality_signals'] as const;
 
 export function detail(): string {
-  const density = SCAN_DENSITY.map((d) => `- ${d.role}: kw=${d.kw}, r=${d.r}${d.note}`).join('\n');
-  return `执行前必须完成 Playwright 环境检查。
+    const density = SCAN_DENSITY.map((d) => `- ${d.role}: kw=${d.kw}, r=${d.r}${d.note}`).join('\n');
+    return `执行前必须完成 Playwright 环境检查。
 
 1. 使用 npx playwright --version 检查全局安装状态。
 2. 若未安装，使用 clarify 请用户选择全局安装或跳过。
@@ -37,8 +37,8 @@ ${density}
 }
 
 export function urlPreflightSection(): string {
-  const rules = URL_STRATEGIES.map((s) => `- ${s}`).join('\n');
-  return `Phase A 完成后、Phase B 前，必须先生成 url-preflight.json，禁止未盘点直接批量抓取。
+    const rules = URL_STRATEGIES.map((s) => `- ${s}`).join('\n');
+    return `Phase A 完成后、Phase B 前，必须先生成 url-preflight.json，禁止未盘点直接批量抓取。
 
 策略规则：
 
@@ -48,7 +48,7 @@ virtual_gateway 表示先经过网络策略层判断，不直接反复访问。`
 }
 
 export function phaseASection(): string {
-  return `按命题批次 spawn search-{batch_id} agent。
+    return `按命题批次 spawn search-{batch_id} agent。
 
 批次大小 = ceil(命题数 / W)，W = min(${PARALLEL_WIDTH}, 命题数)。
 
@@ -61,8 +61,8 @@ export function phaseASection(): string {
 }
 
 export function phaseBSection(): string {
-  const fields = EXTRACT_FIELDS.map((f) => `- ${f}`).join('\n');
-  return `按 URL 批次 spawn extract-{batch_id} agent。
+    const fields = EXTRACT_FIELDS.map((f) => `- ${f}`).join('\n');
+    return `按 URL 批次 spawn extract-{batch_id} agent。
 
 抓取策略：
 
@@ -85,7 +85,7 @@ ${fields}
 }
 
 export function phaseCSection(): string {
-  return `主线程合并所有 partial 文件：
+    return `主线程合并所有 partial 文件：
 
 1. 合并 materials 与 discarded。
 2. 对 unknown 域名按 ref-sources 标准分级。
@@ -95,13 +95,13 @@ export function phaseCSection(): string {
 }
 
 export function checkpointSection(): string {
-  return `展示素材 Tier 分布、丢弃数和 role 覆盖统计，使用 clarify 等待用户确认后再进入 {{step:capability-graph}}。`;
+    return `展示素材 Tier 分布、丢弃数和 role 覆盖统计，使用 clarify 等待用户确认后再进入 {{step:capability-graph}}。`;
 }
 
 // B1-A:输出 Schema 以 assets/03-scan/schemas.md 为正本,此处为镜像渲染源;
 // 漂移锁见 scan.test.ts(三方 JSON 块逐字节比对)。
 export function outputSchema(): string {
-  return `search-batch.{batch_id}.json:
+    return `search-batch.{batch_id}.json:
 
 \`\`\`json
 {
@@ -190,15 +190,18 @@ partial.{batch_id}.json:
 }
 
 export function searchTask(): string {
-  return `你是搜索发现专家。
+    return `你是搜索发现专家。
 读取命题搜索计划，逐条执行搜索，取 max_results 条结果。
 记录 url/title/snippet/domain，按 T0/反爬/unknown 分级。
 过滤 excluded_keywords 命中项。
-写入 search-batch.{batch_id}.json。`;
+写入 search-batch.{batch_id}.json。
+
+判据：条数按档取（精确5／窄滤10／宽发现15，上限25，E8）；字段以可打开可定位为准（W1 命题先行，W2 粒度跟原计划走）。
+参照 Search 调用纸 fetchFull／citeFull（mdlego docs/search-call-sheet.md 完整版一节）。`;
 }
 
 export function extractTask(): string {
-  return `你是内容提取专家。
+    return `你是内容提取专家。
 读取 url-batch.{batch_id}.json。
 按 T0/Playwright/unknown 分流抓取。
 抓取成功时提取 ${EXTRACT_FIELDS.join('、')}。

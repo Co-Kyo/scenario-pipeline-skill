@@ -1,7 +1,8 @@
 import type {
-  SourceContract,
-  SourceRef,
+    SourceContract,
+    SourceRef,
 } from 'skillnomad';
+import { refs } from './domain/entities.js';
 
 /**
  * **modules —— 内容模块（9 条）**
@@ -17,17 +18,22 @@ import type {
  *   不再是独立模块（description 保持原字面量，确保产物零 diff）。
  */
 export const modules = {
-  refSources: { path: 'assets/common/ref-sources.md', description: 'T0 域名表 + 反爬域名表 + 信源分级规则', required: true },
-  strategyLevel: { path: 'assets/common/strategy-level.md', description: '密度参数查表', required: true },
-  agentInit: { path: 'assets/01-brainstorm/agent-init.md', description: '维度 Agent 初始化定义', required: true },
-  barrierCheck: { path: 'assets/01-brainstorm/barrier-check.md', description: 'Barrier 检查项与决策矩阵', required: true },
-  fallbackProtocol: { path: 'assets/01-brainstorm/fallback-protocol.md', description: '收敛者失败降级协议', required: true },
-  yearRules: { path: 'assets/00-intent-anchor/year-rules.md', description: '年限推断规则', required: true },
-  skipRules: { path: 'assets/00-intent-anchor/skip-rules.md', description: '跳过判断规则', required: true },
-  evaluationMethod: { path: 'assets/05-evaluate-pool/method.md', description: '评估方法论（投影）', required: true },
-  capabilityMethod: { path: 'assets/04-capability-graph/method.md', description: '能力图谱提取方法论', required: true },
-  antiCrawlFetch: { path: 'plugins/anti-crawl-fetch.md', description: 'Playwright 抓取', required: false },
+    refSources: { path: 'assets/common/ref-sources.md', description: 'T0 域名表 + 反爬域名表 + 信源分级规则', required: true },
+    strategyLevel: { path: 'assets/common/strategy-level.md', description: '密度参数查表', required: true },
+    agentInit: { path: 'assets/01-brainstorm/agent-init.md', description: '维度 Agent 初始化定义', required: true },
+    barrierCheck: { path: 'assets/01-brainstorm/barrier-check.md', description: 'Barrier 检查项与决策矩阵', required: true },
+    fallbackProtocol: { path: 'assets/01-brainstorm/fallback-protocol.md', description: '收敛者失败降级协议', required: true },
+    yearRules: { path: 'assets/00-intent-anchor/year-rules.md', description: '年限推断规则', required: true },
+    skipRules: { path: 'assets/00-intent-anchor/skip-rules.md', description: '跳过判断规则', required: true },
+    evaluationMethod: { path: 'assets/05-evaluate-pool/method.md', description: '评估方法论（投影）', required: true },
+    capabilityMethod: { path: 'assets/04-capability-graph/method.md', description: '能力图谱提取方法论', required: true },
+    antiCrawlFetch: { path: 'plugins/anti-crawl-fetch.md', description: 'Playwright 抓取', required: false },
 } satisfies Record<string, SourceRef>;
+
+// markrefs：模块资产路径登记（构建期校验文件存在性；模块表即声明源，路径即事实）
+for (const module of Object.values(modules)) {
+    refs.refPath(module.path);
+}
 
 /**
  * **模块注册表（8.15 Step 2 起复活）**
@@ -44,14 +50,14 @@ export const modules = {
  * （5 rule + 1 method + 3 schema——schema ×3 待 8.16 挂产物实体）；anti-crawl-fetch 并入 skill 级。
  */
 export const contracts: SourceContract[] = [
-  { id: 'ref-sources', kind: 'policy', path: 'assets/common/ref-sources.md', description: '信源分级与反爬域名', scope: 'skill' },
-  { id: 'strategy-level', kind: 'policy', path: 'assets/common/strategy-level.md', description: '密度参数查表', scope: 'skill' },
-  { id: 'anti-crawl-fetch', kind: 'method', path: 'plugins/anti-crawl-fetch.md', description: 'Playwright 抓取', scope: 'skill' },
-  { id: 'agent-init', kind: 'policy', path: 'assets/01-brainstorm/agent-init.md', description: '维度 Agent 初始化定义', scope: 'step', step: 'brainstorm' },
-  { id: 'barrier-check', kind: 'policy', path: 'assets/01-brainstorm/barrier-check.md', description: 'Barrier 检查项与决策矩阵', scope: 'step', step: 'brainstorm' },
-  { id: 'fallback-protocol', kind: 'policy', path: 'assets/01-brainstorm/fallback-protocol.md', description: '收敛者失败降级协议', scope: 'step', step: 'brainstorm' },
-  { id: 'year-rules', kind: 'policy', path: 'assets/00-intent-anchor/year-rules.md', description: '年限推断规则', scope: 'step', step: 'intent-anchor' },
-  { id: 'skip-rules', kind: 'policy', path: 'assets/00-intent-anchor/skip-rules.md', description: '跳过判断规则', scope: 'step', step: 'intent-anchor' },
-  { id: 'evaluation-method', kind: 'method', path: 'assets/05-evaluate-pool/method.md', description: '评估方法论', scope: 'step', step: 'evaluate-pool' },
-  { id: 'capability-method', kind: 'method', path: 'assets/04-capability-graph/method.md', description: '能力图谱提取方法论', scope: 'step', step: 'capability-graph' },
+    { id: 'ref-sources', kind: 'policy', path: 'assets/common/ref-sources.md', description: '信源分级与反爬域名', scope: 'skill' },
+    { id: 'strategy-level', kind: 'policy', path: 'assets/common/strategy-level.md', description: '密度参数查表', scope: 'skill' },
+    { id: 'anti-crawl-fetch', kind: 'method', path: 'plugins/anti-crawl-fetch.md', description: 'Playwright 抓取', scope: 'skill' },
+    { id: 'agent-init', kind: 'policy', path: 'assets/01-brainstorm/agent-init.md', description: '维度 Agent 初始化定义', scope: 'step', step: 'brainstorm' },
+    { id: 'barrier-check', kind: 'policy', path: 'assets/01-brainstorm/barrier-check.md', description: 'Barrier 检查项与决策矩阵', scope: 'step', step: 'brainstorm' },
+    { id: 'fallback-protocol', kind: 'policy', path: 'assets/01-brainstorm/fallback-protocol.md', description: '收敛者失败降级协议', scope: 'step', step: 'brainstorm' },
+    { id: 'year-rules', kind: 'policy', path: 'assets/00-intent-anchor/year-rules.md', description: '年限推断规则', scope: 'step', step: 'intent-anchor' },
+    { id: 'skip-rules', kind: 'policy', path: 'assets/00-intent-anchor/skip-rules.md', description: '跳过判断规则', scope: 'step', step: 'intent-anchor' },
+    { id: 'evaluation-method', kind: 'method', path: 'assets/05-evaluate-pool/method.md', description: '评估方法论', scope: 'step', step: 'evaluate-pool' },
+    { id: 'capability-method', kind: 'method', path: 'assets/04-capability-graph/method.md', description: '能力图谱提取方法论', scope: 'step', step: 'capability-graph' },
 ];
