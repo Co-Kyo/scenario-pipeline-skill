@@ -1,28 +1,29 @@
 {
-  "name": "@co-kyo/sp-skill-source",
-  "version": "1.4.3",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "build": "tsx node_modules/skillnomad/dist/bin/cli.js build skillnomad.config.ts",
-    "typecheck": "tsc -p tsconfig.json",
-    "test": "node --import tsx --test src/domain/ladder.test.ts src/domain/effects.test.ts src/domain/learner.test.ts src/domain/content/content.test.ts src/domain/content/brainstorm.test.ts src/domain/content/scan.test.ts src/domain/numbering-governance.test.ts src/contracts.test.ts src/fragment.test.ts src/assets-guard.test.ts",
-    "verify:product": "node --import tsx --test src/product-verify.test.ts",
-    "prepare": "git config core.hooksPath scripts/git-hooks",
-    "lint": "eslint .",
-    "format": "eslint . --fix"
-  },
-  "dependencies": {
-    "skillnomad": "0.1.3",
-    "skillnomad-common": "0.1.3",
-    "skillnomad-types": "0.1.3"
-  },
-  "devDependencies": {
-    "@stylistic/eslint-plugin": "^5.10.0",
-    "@types/node": "^26.1.0",
-    "eslint": "^9.39.5",
-    "tsx": "^4.16.0",
-    "typescript": "^5.5.0",
-    "typescript-eslint": "^8.70.0"
-  }
+    "name": "@co-kyo/sp-skill-source",
+    "version": "1.4.3",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "tsx node_modules/skillnomad/dist/bin/cli.js build skillnomad.config.ts",
+        "typecheck": "tsc -p tsconfig.json",
+        "test": "node --import tsx --test src/domain/ladder.test.ts src/domain/effects.test.ts src/domain/learner.test.ts src/domain/content/content.test.ts src/domain/content/brainstorm.test.ts src/domain/content/scan.test.ts src/domain/numbering-governance.test.ts src/contracts.test.ts src/fragment.test.ts src/assets-guard.test.ts",
+        "verify:product": "node --import tsx --test src/product-verify.test.ts",
+        "prepare": "git config core.hooksPath scripts/git-hooks",
+        "lint": "eslint .",
+        "format": "eslint . --fix"
+    },
+    "dependencies": {
+        "skillnomad": "0.1.3",
+        "skillnomad-common": "0.1.3",
+        "skillnomad-types": "0.1.3"
+    },
+    "devDependencies": {
+        "@stylistic/eslint-plugin": "^5.10.0",
+        "@types/node": "^26.1.0",
+        "eslint": "^9.39.5",
+        "eslint-plugin-jsonc": "^3.4.2",
+        "tsx": "^4.16.0",
+        "typescript": "^5.5.0",
+        "typescript-eslint": "^8.70.0"
+    }
 }
