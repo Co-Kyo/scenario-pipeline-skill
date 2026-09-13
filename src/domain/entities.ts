@@ -1,4 +1,5 @@
-import type { SourceRef } from 'skillnomad';
+import type { KeyMap, SourceRef } from 'skillnomad';
+import { createMdRefs } from 'skillnomad';
 
 /**
  * **产物实体声明（8.16 产物路径投射 · 业务顶层）**
@@ -73,6 +74,25 @@ export const entities: Record<string, ProductEntity> = {
 } satisfies Record<string, ProductEntity>;
 
 /**
+ * **md-deps 接入（P1b）**：键表（名字→路径）由本表派生（唯一事实来源不搬家）；
+ * 引用登记在 `refOf`／`schemaRef` 内自动发生——118 处调用点文字不变。
+ * 构建期由框架（skillnomad build）调用 md-deps 校验：名字在表、目标存在、重复定义。
+ */
+export const mdRefs = createMdRefs();
+
+export const mdDepsKeys: KeyMap = {
+    entries: Object.entries(entities).map(([name, entity]) => ({
+        name,
+        path: entity.artifact,
+        scope: 'entity',
+        site: 'src/domain/entities.ts',
+    })),
+};
+
+/** 传给框架的 md-deps 输入（见 skillnomad.config.ts） */
+export const mdDeps = { keys: mdDepsKeys, refs: mdRefs };
+
+/**
  * **概念引用辅助（refOf）**：按实体名取 SourceRef——步骤源码不再出现路径字面量，
  * 路径只存在于 entities 声明（唯一事实来源）。框架渲染/校验仍以 path 为准。
  * 返回类型收窄 `path: string`（refOf 保证已解析）。
@@ -80,6 +100,7 @@ export const entities: Record<string, ProductEntity> = {
 export function refOf(name: keyof typeof entities): SourceRef & { path: string } {
     const e = entities[name];
     if (!e) throw new Error(`未知产物实体: ${String(name)}（8.16：实体只登记不发明，请先登记）`);
+    mdRefs.ref(name, e.artifact);
     return { path: e.artifact, description: e.description, required: true };
 }
 
@@ -89,5 +110,6 @@ export function refOf(name: keyof typeof entities): SourceRef & { path: string }
 export function schemaRef(name: keyof typeof entities): SourceRef & { path: string } {
     const e = entities[name];
     if (!e?.schema) throw new Error(`实体 ${String(name)} 未登记格式契约（schema）`);
+    mdRefs.refPath(e.schema);
     return { path: e.schema, description: `${e.description} 格式契约`, required: true };
 }
