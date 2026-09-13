@@ -1,603 +1,603 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://sp-app.local/spec/decision-summary.schema.json",
-  "title": "DecisionSummary",
-  "description": "Machine-readable decision summary contract shared by v4 UI, sp-skill runtime, and skillpack.",
-  "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "schema_version",
-    "summary_id",
-    "session_id",
-    "run_id",
-    "stage_id",
-    "stage_label",
-    "cp",
-    "gate_type",
-    "status",
-    "context",
-    "metrics",
-    "secondary",
-    "actions"
-  ],
-  "properties": {
-    "schema_version": {
-      "const": "0.1.0"
-    },
-    "summary_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "session_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "run_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "stage_id": {
-      "type": "string",
-      "minLength": 1
-    },
-    "stage_label": {
-      "type": "string",
-      "minLength": 1
-    },
-    "cp": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "gate_type": {
-      "enum": [
-        "human_gate",
-        "auto_segment"
-      ]
-    },
-    "status": {
-      "enum": [
-        "waiting",
-        "running",
-        "done",
-        "partial",
-        "failed"
-      ]
-    },
-    "context": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "current",
-        "question",
-        "next"
-      ],
-      "properties": {
-        "current": {
-          "type": "string",
-          "minLength": 1
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://sp-app.local/spec/decision-summary.schema.json",
+    "title": "DecisionSummary",
+    "description": "Machine-readable decision summary contract shared by v4 UI, sp-skill runtime, and skillpack.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+        "schema_version",
+        "summary_id",
+        "session_id",
+        "run_id",
+        "stage_id",
+        "stage_label",
+        "cp",
+        "gate_type",
+        "status",
+        "context",
+        "metrics",
+        "secondary",
+        "actions"
+    ],
+    "properties": {
+        "schema_version": {
+            "const": "0.1.0"
         },
-        "question": {
-          "type": "string",
-          "minLength": 1
-        },
-        "next": {
-          "type": "string",
-          "minLength": 1
-        },
-        "architecture_preview": {
-          "type": "string"
-        }
-      }
-    },
-    "metrics": {
-      "type": "array",
-      "minItems": 1,
-      "maxItems": 3,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "label",
-          "value",
-          "detail"
-        ],
-        "properties": {
-          "id": {
+        "summary_id": {
             "type": "string",
             "minLength": 1
-          },
-          "label": {
+        },
+        "session_id": {
             "type": "string",
             "minLength": 1
-          },
-          "value": {
+        },
+        "run_id": {
             "type": "string",
             "minLength": 1
-          },
-          "detail": {
-            "type": "string"
-          },
-          "tone": {
-            "enum": [
-              "normal",
-              "warning",
-              "danger"
-            ]
-          }
-        }
-      }
-    },
-    "selection": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "unit",
-        "summary",
-        "total",
-        "selected",
-        "groups"
-      ],
-      "properties": {
-        "unit": {
-          "type": "string",
-          "minLength": 1
         },
-        "summary": {
-          "type": "string",
-          "minLength": 1
-        },
-        "total": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "selected": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "groups": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "label",
-              "total",
-              "selected",
-              "items"
-            ],
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "label": {
-                "type": "string",
-                "minLength": 1
-              },
-              "summary": {
-                "type": "string"
-              },
-              "total": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "selected": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "items": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "id",
-                    "name",
-                    "selected"
-                  ],
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "name": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "meta": {
-                      "type": "string"
-                    },
-                    "selected": {
-                      "type": "boolean"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "execution": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "current",
-        "next",
-        "outputs",
-        "stages"
-      ],
-      "properties": {
-        "current": {
-          "type": "string",
-          "minLength": 1
-        },
-        "next": {
-          "type": "string",
-          "minLength": 1
-        },
-        "outputs": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "string"
-          }
-        },
-        "stages": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "label",
-              "status"
-            ],
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "label": {
-                "type": "string",
-                "minLength": 1
-              },
-              "batch": {
-                "type": "string"
-              },
-              "status": {
-                "enum": [
-                  "pending",
-                  "running",
-                  "done",
-                  "partial",
-                  "failed"
-                ]
-              },
-              "progress": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 100
-              },
-              "output": {
-                "type": "string"
-              },
-              "validation": {
-                "type": "string"
-              },
-              "risks": {
-                "type": "array",
-                "items": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        },
-        "override_actions": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "secondary": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "sections",
-        "evidence"
-      ],
-      "properties": {
-        "sections": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "id",
-              "title",
-              "collapsed",
-              "summary"
-            ],
-            "properties": {
-              "id": {
-                "type": "string",
-                "minLength": 1
-              },
-              "title": {
-                "type": "string",
-                "minLength": 1
-              },
-              "collapsed": {
-                "type": "boolean"
-              },
-              "summary": {
-                "type": "string",
-                "minLength": 1
-              },
-              "view_all_after": {
-                "type": "integer",
-                "minimum": 1,
-                "default": 7
-              },
-              "items": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "id",
-                    "name"
-                  ],
-                  "properties": {
-                    "id": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "name": {
-                      "type": "string",
-                      "minLength": 1
-                    },
-                    "meta": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "evidence": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "path",
-              "label",
-              "detail"
-            ],
-            "properties": {
-              "path": {
-                "type": "string",
-                "minLength": 1
-              },
-              "hash": {
-                "type": "string",
-                "minLength": 1
-              },
-              "label": {
-                "type": "string",
-                "minLength": 1
-              },
-              "detail": {
-                "type": "string"
-              },
-              "kind": {
-                "type": "string"
-              }
-            }
-          }
-        }
-      }
-    },
-    "risks": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "code",
-          "label",
-          "severity",
-          "detail"
-        ],
-        "properties": {
-          "code": {
-            "enum": [
-              "source",
-              "extraction",
-              "model",
-              "validation",
-              "orchestration",
-              "quality"
-            ]
-          },
-          "label": {
+        "stage_id": {
             "type": "string",
             "minLength": 1
-          },
-          "severity": {
-            "enum": [
-              "info",
-              "warning",
-              "critical"
-            ]
-          },
-          "count": {
+        },
+        "stage_label": {
+            "type": "string",
+            "minLength": 1
+        },
+        "cp": {
             "type": "integer",
             "minimum": 0
-          },
-          "detail": {
-            "type": "string"
-          }
-        }
-      }
-    },
-    "actions": {
-      "type": "array",
-      "minItems": 1,
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "id",
-          "label",
-          "verb",
-          "primary"
-        ],
-        "properties": {
-          "id": {
-            "type": "string",
-            "minLength": 1
-          },
-          "label": {
-            "type": "string",
-            "minLength": 1
-          },
-          "verb": {
+        },
+        "gate_type": {
             "enum": [
-              "confirm",
-              "modify",
-              "run",
-              "rerun",
-              "retry",
-              "pause",
-              "skip",
-              "view-all"
+                "human_gate",
+                "auto_segment"
             ]
-          },
-          "primary": {
-            "type": "boolean"
-          },
-          "disabled": {
-            "type": "boolean"
-          }
-        }
-      }
-    },
-    "decision": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
+        },
         "status": {
-          "enum": [
-            "pending",
-            "confirmed",
-            "rejected",
-            "partial"
-          ]
+            "enum": [
+                "waiting",
+                "running",
+                "done",
+                "partial",
+                "failed"
+            ]
         },
-        "decision_at": {
-          "type": "string",
-          "format": "date-time"
+        "context": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "current",
+                "question",
+                "next"
+            ],
+            "properties": {
+                "current": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "question": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "next": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "architecture_preview": {
+                    "type": "string"
+                }
+            }
         },
-        "note": {
-          "type": "string"
-        },
-        "evidence_hash": {
-          "type": "string",
-          "minLength": 1
-        }
-      }
-    },
-    "barrier_summary": {
-      "type": "string",
-      "maxLength": 600
-    },
-    "display": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "pattern"
-      ],
-      "properties": {
-        "pattern": {
-          "enum": [
-            "generic",
-            "title_fold",
-            "partition_cards",
-            "coverage_cards",
-            "threshold_table",
-            "auto_timeline",
-            "delivery_checklist"
-          ]
-        },
-        "primary_unit": {
-          "type": "string"
-        },
-        "max_visible": {
-          "type": "integer",
-          "minimum": 1,
-          "default": 7
-        },
-        "badge": {
-          "type": "string"
-        },
-        "legend": {
-          "type": "boolean"
+        "metrics": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 3,
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "id",
+                    "label",
+                    "value",
+                    "detail"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "label": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "value": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "detail": {
+                        "type": "string"
+                    },
+                    "tone": {
+                        "enum": [
+                            "normal",
+                            "warning",
+                            "danger"
+                        ]
+                    }
+                }
+            }
         },
         "selection": {
-          "enum": [
-            "none",
-            "single",
-            "multi",
-            "confirm"
-          ]
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "unit",
+                "summary",
+                "total",
+                "selected",
+                "groups"
+            ],
+            "properties": {
+                "unit": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "summary": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "total": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "selected": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "groups": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                            "id",
+                            "label",
+                            "total",
+                            "selected",
+                            "items"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            "label": {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            "summary": {
+                                "type": "string"
+                            },
+                            "total": {
+                                "type": "integer",
+                                "minimum": 0
+                            },
+                            "selected": {
+                                "type": "integer",
+                                "minimum": 0
+                            },
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                        "id",
+                                        "name",
+                                        "selected"
+                                    ],
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "minLength": 1
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "minLength": 1
+                                        },
+                                        "meta": {
+                                            "type": "string"
+                                        },
+                                        "selected": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "execution": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "current",
+                "next",
+                "outputs",
+                "stages"
+            ],
+            "properties": {
+                "current": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "next": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "outputs": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "stages": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                            "id",
+                            "label",
+                            "status"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            "label": {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            "batch": {
+                                "type": "string"
+                            },
+                            "status": {
+                                "enum": [
+                                    "pending",
+                                    "running",
+                                    "done",
+                                    "partial",
+                                    "failed"
+                                ]
+                            },
+                            "progress": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 100
+                            },
+                            "output": {
+                                "type": "string"
+                            },
+                            "validation": {
+                                "type": "string"
+                            },
+                            "risks": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "override_actions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "secondary": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "sections",
+                "evidence"
+            ],
+            "properties": {
+                "sections": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                            "id",
+                            "title",
+                            "collapsed",
+                            "summary"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            "title": {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            "collapsed": {
+                                "type": "boolean"
+                            },
+                            "summary": {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            "view_all_after": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "default": 7
+                            },
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                        "id",
+                                        "name"
+                                    ],
+                                    "properties": {
+                                        "id": {
+                                            "type": "string",
+                                            "minLength": 1
+                                        },
+                                        "name": {
+                                            "type": "string",
+                                            "minLength": 1
+                                        },
+                                        "meta": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "evidence": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                            "path",
+                            "label",
+                            "detail"
+                        ],
+                        "properties": {
+                            "path": {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            "hash": {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            "label": {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            "detail": {
+                                "type": "string"
+                            },
+                            "kind": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "risks": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "code",
+                    "label",
+                    "severity",
+                    "detail"
+                ],
+                "properties": {
+                    "code": {
+                        "enum": [
+                            "source",
+                            "extraction",
+                            "model",
+                            "validation",
+                            "orchestration",
+                            "quality"
+                        ]
+                    },
+                    "label": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "severity": {
+                        "enum": [
+                            "info",
+                            "warning",
+                            "critical"
+                        ]
+                    },
+                    "count": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "detail": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "actions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                    "id",
+                    "label",
+                    "verb",
+                    "primary"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "label": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "verb": {
+                        "enum": [
+                            "confirm",
+                            "modify",
+                            "run",
+                            "rerun",
+                            "retry",
+                            "pause",
+                            "skip",
+                            "view-all"
+                        ]
+                    },
+                    "primary": {
+                        "type": "boolean"
+                    },
+                    "disabled": {
+                        "type": "boolean"
+                    }
+                }
+            }
+        },
+        "decision": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "status": {
+                    "enum": [
+                        "pending",
+                        "confirmed",
+                        "rejected",
+                        "partial"
+                    ]
+                },
+                "decision_at": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "evidence_hash": {
+                    "type": "string",
+                    "minLength": 1
+                }
+            }
+        },
+        "barrier_summary": {
+            "type": "string",
+            "maxLength": 600
+        },
+        "display": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "pattern"
+            ],
+            "properties": {
+                "pattern": {
+                    "enum": [
+                        "generic",
+                        "title_fold",
+                        "partition_cards",
+                        "coverage_cards",
+                        "threshold_table",
+                        "auto_timeline",
+                        "delivery_checklist"
+                    ]
+                },
+                "primary_unit": {
+                    "type": "string"
+                },
+                "max_visible": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 7
+                },
+                "badge": {
+                    "type": "string"
+                },
+                "legend": {
+                    "type": "boolean"
+                },
+                "selection": {
+                    "enum": [
+                        "none",
+                        "single",
+                        "multi",
+                        "confirm"
+                    ]
+                }
+            }
         }
-      }
-    }
-  },
-  "allOf": [
-    {
-      "if": {
-        "properties": {
-          "gate_type": {
-            "const": "human_gate"
-          }
-        },
-        "required": [
-          "gate_type"
-        ]
-      },
-      "then": {
-        "required": [
-          "selection"
-        ]
-      }
     },
-    {
-      "if": {
-        "properties": {
-          "gate_type": {
-            "const": "auto_segment"
-          }
+    "allOf": [
+        {
+            "if": {
+                "properties": {
+                    "gate_type": {
+                        "const": "human_gate"
+                    }
+                },
+                "required": [
+                    "gate_type"
+                ]
+            },
+            "then": {
+                "required": [
+                    "selection"
+                ]
+            }
         },
-        "required": [
-          "gate_type"
-        ]
-      },
-      "then": {
-        "required": [
-          "execution"
-        ]
-      }
-    }
-  ]
+        {
+            "if": {
+                "properties": {
+                    "gate_type": {
+                        "const": "auto_segment"
+                    }
+                },
+                "required": [
+                    "gate_type"
+                ]
+            },
+            "then": {
+                "required": [
+                    "execution"
+                ]
+            }
+        }
+    ]
 }

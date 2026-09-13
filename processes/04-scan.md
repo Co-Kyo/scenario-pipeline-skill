@@ -124,6 +124,15 @@ virtual_gateway 表示先经过网络策略层判断，不直接反复访问。
 
 展示素材 Tier 分布、丢弃数和 role 覆盖统计，使用 clarify 等待用户确认后再进入 Step 05。
 
+## 调度绑定
+
+### scan（滚动窗口）
+
+- 任务单元：1 个命题批次 = 1 个 agent
+- 并发：首发前 5 个，1 槽/任务
+- 校验：existence→json→fields，任一步失败即 pending-retry
+- 重试：至多 1 次，原 task 重发，耗尽标 degraded 不阻塞
+
 ## 输出 Schema
 
 search-batch.{batch_id}.json:
@@ -223,6 +232,9 @@ partial.{batch_id}.json:
 记录 url/title/snippet/domain，按 T0/反爬/unknown 分级。
 过滤 excluded_keywords 命中项。
 写入 search-batch.{batch_id}.json。
+
+判据：条数按档取（精确5／窄滤10／宽发现15，上限25，E8）；字段以可打开可定位为准（W1 命题先行，W2 粒度跟原计划走）。
+参照 Search 调用纸 fetchFull／citeFull（mdlego docs/search-call-sheet.md 完整版一节）。
 ```
 ### 提取 Agent
 
