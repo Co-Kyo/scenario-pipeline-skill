@@ -13,9 +13,7 @@
         "format": "eslint . --fix"
     },
     "dependencies": {
-        "skillnomad": "0.1.4",
-        "skillnomad-common": "0.1.4",
-        "skillnomad-types": "0.1.4"
+        "skillnomad": "0.1.4"
     },
     "devDependencies": {
         "@stylistic/eslint-plugin": "^5.10.0",
