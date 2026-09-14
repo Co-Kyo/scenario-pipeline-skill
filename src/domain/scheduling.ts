@@ -6,8 +6,6 @@
 // 改 W 只改框架 SCHEDULING 一处，本文件透传，8 步全跟随。
 import {
     SCHEDULING,
-    renderBinding,
-    renderModuleDoc,
 } from 'skillnomad';
 import type { SourceSchedulingPolicy } from 'skillnomad';
 
@@ -28,12 +26,3 @@ export const SCAN_BINDING = {
     slotOccupancy: 1,
 };
 
-/** scan 调度节（scan.ts `.section('调度绑定')` 消费；写文档 = 调渲染传参）。 */
-export function scanSchedulingSection(): string {
-    return renderBinding(SCAN_BINDING);
-}
-
-/** 模块文档（附录正本；D34 版式容器复用，内容源切模块渲染）。 */
-export function schedulingModuleDoc(): string {
-    return renderModuleDoc(SCHEDULING_POLICY);
-}
