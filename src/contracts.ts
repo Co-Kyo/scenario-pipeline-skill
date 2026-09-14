@@ -35,6 +35,7 @@ for (const module of Object.values(modules)) {
     refs.refPath(module.path);
 }
 
+
 /**
  * **模块注册表（8.15 Step 2 起复活）**
  *
@@ -49,6 +50,12 @@ for (const module of Object.values(modules)) {
  * 存量安置（两次裁决合成）：2 个 skill 级 contract 保留；9 个 step 级按真实性质贴标签
  * （5 rule + 1 method + 3 schema——schema ×3 待 8.16 挂产物实体）；anti-crawl-fetch 并入 skill 级。
  */
+/** scan 调度绑定引用（D35 全链路：内容＝模块 render()；路径仅作逻辑标识与表内展示）。 */
+export const scanBindingRef: SourceRef = {
+    path: 'assets/03-scan/scheduling-binding.md',
+    description: '调度绑定',
+};
+
 export const contracts: SourceContract[] = [
     { id: 'ref-sources', kind: 'policy', path: 'assets/common/ref-sources.md', description: '信源分级与反爬域名', scope: 'skill' },
     { id: 'strategy-level', kind: 'policy', path: 'assets/common/strategy-level.md', description: '密度参数查表', scope: 'skill' },
@@ -60,4 +67,6 @@ export const contracts: SourceContract[] = [
     { id: 'skip-rules', kind: 'policy', path: 'assets/00-intent-anchor/skip-rules.md', description: '跳过判断规则', scope: 'step', step: 'intent-anchor' },
     { id: 'evaluation-method', kind: 'method', path: 'assets/05-evaluate-pool/method.md', description: '评估方法论', scope: 'step', step: 'evaluate-pool' },
     { id: 'capability-method', kind: 'method', path: 'assets/04-capability-graph/method.md', description: '能力图谱提取方法论', scope: 'step', step: 'capability-graph' },
+    // D35 全链路首用例：模块渲染正本（路径为逻辑标识，不落盘、不入 markrefs 存在性校验）。
+    { id: 'scan-scheduling-binding', kind: 'method', path: scanBindingRef.path, description: '调度绑定（模块渲染正本）', scope: 'step', step: 'scan', module: 'scan-binding' },
 ];
