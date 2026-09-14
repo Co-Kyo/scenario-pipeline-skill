@@ -106,16 +106,13 @@ test('D32-W5:调度三值下沉字面量锁（补锁 3，散文引用不断）',
 });
 
 test('D35-W4:调度实例与框架同源（生成关系锁；改 W 即产物变）', async () => {
-    // 生成锁：实例透传框架 SCHEDULING；绑定/策略内容由模块 render() 提供；改框架即产物变（G1 生成断言）。
+    // 首刀生成锁：实例透传框架 SCHEDULING；scan 节由渲染派生；改框架即产物变（G1 生成断言）。
     const { SCHEDULING } = await import('skillnomad');
-    const { SCHEDULING_POLICY, SCAN_BINDING } = await import('../scheduling.js');
-    const { scanBindingModule, schedulingPolicyModule } = await import('../../modules.js');
+    const { SCHEDULING_POLICY, SCAN_BINDING, scanSchedulingSection } = await import('../scheduling.js');
     assert.equal(SCHEDULING_POLICY.concurrencyLimit, SCHEDULING.concurrencyLimit);
     assert.equal(SCHEDULING_POLICY.windowBudget?.maxWindowSize, SCHEDULING.windowBudget.maxWindowSize);
     assert.equal(SCAN_BINDING.limitW, SCHEDULING.concurrencyLimit);
-    // D35 全链路：内容源＝模块 render()（构建期进 scan 的「模块附录」正本）
-    assert.ok(scanBindingModule.render().includes('### scan（滚动窗口）'));
-    assert.ok(schedulingPolicyModule.render().includes('调度策略（模块渲染正本'));
+    assert.ok(scanSchedulingSection().includes('### scan（滚动窗口）'));
 });
 
 test('B2-A:method.md 投影与评估域正本一致(漂移锁)', () => {

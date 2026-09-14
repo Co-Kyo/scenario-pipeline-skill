@@ -9,11 +9,8 @@ import { modules, contracts } from './contracts.js';
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
 
 test('双表路径双向包含：任一单边增删改路径即变红', () => {
-    // D35 全链路：module 引用条目（路径为逻辑标识、内容＝模块 render()）不参与文件双表，
-    // 改由「module id 必在 src/modules.ts 声明」兜底（见下一条测试）。
-    const fileBacked = contracts.filter((c) => !c.module);
     const modPaths = new Set(Object.values(modules).map((m) => m.path));
-    const conPaths = new Set(fileBacked.map((c) => c.path));
+    const conPaths = new Set(contracts.map((c) => c.path));
     for (const p of modPaths) {
         assert.ok(conPaths.has(p), `modules 有但 contracts 缺少: ${p}`);
     }
@@ -21,21 +18,11 @@ test('双表路径双向包含：任一单边增删改路径即变红', () => {
         assert.ok(modPaths.has(p), `contracts 有但 modules 缺少: ${p}`);
     }
     assert.equal(modPaths.size, 10, 'modules 应为 10 条');
-    assert.equal(conPaths.size, 10, 'contracts（文件条目）应为 10 条');
-});
-
-test('module 引用条目：module id 必在 src/modules.ts 声明（D35 全链路）', async () => {
-    const { modules: declared } = await import('./modules.js');
-    const declaredIds = new Set(declared.map((m) => m.id));
-    const moduleEntries = contracts.filter((c) => c.module);
-    assert.equal(moduleEntries.length, 1, '当前首用例：1 条 module 引用条目');
-    for (const c of moduleEntries) {
-        assert.ok(c.module && declaredIds.has(c.module), `module id 未声明: ${c.id} → ${c.module}`);
-    }
+    assert.equal(conPaths.size, 10, 'contracts 应为 10 条');
 });
 
 test('双表键名可互推：camelCase 键归一化后等于 kebab-case id', () => {
-    const ids = new Set(contracts.filter((c) => !c.module).map((c) => norm(c.id)));
+    const ids = new Set(contracts.map((c) => norm(c.id)));
     for (const key of Object.keys(modules)) {
         assert.ok(ids.has(norm(key)), `modules 键无对应 contracts id: ${key}`);
     }
