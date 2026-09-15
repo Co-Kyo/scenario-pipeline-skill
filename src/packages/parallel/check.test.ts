@@ -68,6 +68,24 @@ test('清单合法性：模块身份与代码一致（判据 5）', () => {
     assert.ok(manifest.module.id.length > 0);
 });
 
+test('依赖声明：包内全部外部 import 均已声明，且工具依赖固定版本号', () => {
+    const sources = ['index.ts', 'check.test.ts'].map((f) => readFileSync(join(here, f), 'utf8')).join('\n');
+    const specifiers = [...sources.matchAll(/from\s+'([^']+)'/g)]
+        .map((m) => m[1])
+        .filter((s) => !s.startsWith('.') && !s.startsWith('node:'));
+    const declared = new Set([
+        ...Object.keys((pkg.dependencies ?? {}) as Record<string, string>),
+        ...Object.keys((pkg.peerDependencies ?? {}) as Record<string, string>),
+    ]);
+    const missing = [...new Set(specifiers)].filter((s) => !declared.has(s));
+    assert.deepEqual(missing, [], `未声明的外部依赖：${missing.join(', ')}`);
+
+    // 工具依赖写固定版本号（构思阶段策略，杜绝跨号漂移）
+    for (const [name, version] of Object.entries((pkg.dependencies ?? {}) as Record<string, string>)) {
+        assert.match(version, /^\d+\.\d+\.\d+$/, `${name} 应为固定版本号，当前 ${version}`);
+    }
+});
+
 test('散文拆分：写作块 check 无诊断（methodblocks）', () => {
     assert.deepEqual(packageDiagnostics().structure, []);
 });

@@ -4,6 +4,10 @@
     "description": "并行分析通用方法（多维度并行 → 门禁 → 收敛汇总）",
     "type": "module",
     "dependencies": {
-        "methodblocks": "0.1.1"
+        "methodblocks": "0.1.1",
+        "markrefs": "0.1.0"
+    },
+    "peerDependencies": {
+        "skillnomad": "0.1.6"
     }
 }
