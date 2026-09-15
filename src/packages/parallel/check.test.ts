@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 
 import { isBlocking } from 'markrefs';
 
-import { body, keys, packageDiagnostics, refs } from './index.js';
+import { body, extractRefs, keys, packageDiagnostics, packageIdentity, parallelMethodsModule, refs } from './index.js';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const readJson = (p: string) => JSON.parse(readFileSync(join(here, p), 'utf8')) as Record<string, unknown>;
@@ -16,22 +16,22 @@ const pkg = readJson('package.json');
 const manifest = readJson('skill.json') as {
     standard: string;
     tier: string;
-    name: string;
-    version: string;
     method: { id: string; title: string };
     compose: string[];
     blocks: { id: string; role: string; file: string }[];
     module: { id: string; kind: string; version: string };
 };
 
-test('清单合法性：两处身份一致、名字合分级命名（判据 1）', () => {
-    assert.equal(manifest.name, pkg.name);
-    assert.equal(manifest.version, pkg.version);
-    assert.match(manifest.name, /^@[a-z0-9-]+\/[a-z0-9-]+$/, '全名形态应为 @<域>/<名>');
+test('清单合法性：身份单一事实源在 package.json，名字合分级命名（判据 1）', () => {
+    // 清单不再重复 name/version——身份只在 package.json（防双事实源）
+    assert.ok(!('name' in manifest) && !('version' in manifest), 'skill.json 不应重复 name/version');
+    assert.equal(packageIdentity.name, pkg.name);
+    assert.equal(packageIdentity.version, pkg.version);
+    assert.match(String(pkg.name), /^@[a-z0-9-]+\/[a-z0-9-]+$/, '全名形态应为 @<域>/<名>');
     if (manifest.tier === 'general') {
-        assert.ok(manifest.name.startsWith('@skillnomad/'), 'general 级须在 @skillnomad 域下');
+        assert.ok(String(pkg.name).startsWith('@skillnomad/'), 'general 级须在 @skillnomad 域下');
     } else {
-        assert.ok(!manifest.name.startsWith('@skillnomad/'), '非 general 级不得占用 @skillnomad 域');
+        assert.ok(!String(pkg.name).startsWith('@skillnomad/'), '非 general 级不得占用 @skillnomad 域');
     }
 });
 
@@ -64,7 +64,7 @@ test('清单合法性：名字表与引用表同源（判据 4·续）', () => {
 });
 
 test('清单合法性：模块身份与代码一致（判据 5）', () => {
-    assert.equal(manifest.module.version, manifest.version);
+    assert.equal(manifest.module.version, pkg.version);
     assert.ok(manifest.module.id.length > 0);
 });
 
@@ -86,6 +86,19 @@ test('依赖声明：包内全部外部 import 均已声明，且工具依赖固
     }
 });
 
+test('引用机制：只有 [[块名]] 标记才产生引用；裸提名字不算（判据 6）', () => {
+    const marked = extractRefs([{ id: 'demo', role: 'useMethod', file: 'blocks/how.md' }]);
+    assert.ok(marked.length >= 1, 'how 块应至少有一条标记引用');
+    assert.ok(marked.every((r) => r.name === 'parallel-gate'), '标记引用的名字应为 parallel-gate');
+
+    // 反例：把标记换成裸提名字，抽不到任何引用
+    const bare = extractRefs(
+        [{ id: 'demo', role: 'useMethod', file: 'blocks/how.md' }],
+        () => '这里只是提到 parallel-gate 这个名字，不建立引用关系。',
+    );
+    assert.deepEqual(bare, []);
+});
+
 test('散文拆分：写作块 check 无诊断（methodblocks）', () => {
     assert.deepEqual(packageDiagnostics().structure, []);
 });
@@ -97,4 +110,10 @@ test('文档组合：引用全部解析且目标存在（markrefs）', () => {
 
 test('组合结果非空且含全部块正文', () => {
     assert.equal(body.length, manifest.compose.length);
+});
+
+test('产物不留标记：渲染后正文不含 [[ ]]（源里是标记，产物里是人话）', () => {
+    const rendered = parallelMethodsModule().render();
+    assert.ok(!rendered.includes('[['), '渲染产物不应残留引用标记');
+    assert.ok(rendered.includes('《门禁与收敛检查清单》'), '标记应解析成被引块的标题');
 });

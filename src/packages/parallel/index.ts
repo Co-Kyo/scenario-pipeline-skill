@@ -30,26 +30,40 @@ interface BlockSpec {
     whenToUse?: string;
 }
 
+const pkg = JSON.parse(read('package.json')) as { name: string; version: string };
+
 const manifest = JSON.parse(read('skill.json')) as {
-    name: string;
-    version: string;
     method: { id: string; title: string };
     compose: string[];
     blocks: BlockSpec[];
     module: { id: string; kind: string; version: string };
 };
 
+/**
+ * 显式引用标记：`[[块名]]`。
+ *
+ * 只有标记才是引用；正文里裸提名字只是提到，不建立引用关系（防误报与错拼——
+ * 这也是后续跨包引用（`包名#块名`）的落点）。
+ */
+const REF_MARKER = /\[\[([^\]\s]+)\]\]/g;
+
 const byId = new Map(manifest.blocks.map((b) => [b.id, b]));
-const textOf = (id: string): string => {
+
+/** 块的标题（首行 H1），用于把引用标记解析成可读文字。 */
+const titleOf = (id: string): string => {
     const spec = byId.get(id);
-    if (!spec) throw new Error(`parallel 包：compose 里的块 ${id} 未在清单声明`);
-    return read(spec.file);
+    if (!spec) throw new Error(`parallel 包：引用了未在清单声明的块 ${id}`);
+    const heading = read(spec.file).match(/^#\s+(.+)$/m);
+    return heading ? heading[1].trim() : id;
 };
+
+/** 正文入装前把 `[[块名]]` 解析成该块标题（源里是标记，产物里是人话）。 */
+const resolve = (text: string): string => text.replace(REF_MARKER, (_m, id: string) => `《${titleOf(id)}》`);
 
 /** 块注册表：块文字来自包内 md（单一事实源在文件，代码只做登记）。 */
 export const registry = new Registry();
 for (const spec of manifest.blocks) {
-    const text = read(spec.file);
+    const text = resolve(read(spec.file));
     if (spec.role === 'target') registry.target(spec.id, text);
     else if (spec.role === 'useMethod') registry.useMethod(spec.id, text, spec.whenToUse);
     else registry.example(spec.id, text);
@@ -67,19 +81,22 @@ export const keys: KeyMap = {
     entries: manifest.blocks.map((b) => ({ name: b.id, path: b.file, site: 'skill.json' })),
 };
 
-/** 引用登记：组合声明的每条块名 ＋ 块正文里出现的其它块名（跨块引用）。 */
-export const refs: RefDecl[] = (() => {
-    const out: RefDecl[] = manifest.compose.map((id) => ({ site: 'skill.json', name: id }));
-    for (const spec of manifest.blocks) {
-        const text = read(spec.file);
-        for (const other of manifest.blocks) {
-            if (other.id !== spec.id && text.includes(other.id)) {
-                out.push({ site: spec.file, name: other.id });
-            }
+/** 从块正文抽取显式引用（抽取归宿主；解析与存在性归引用校验）。 */
+export function extractRefs(specs: BlockSpec[] = manifest.blocks, textOfSpec = read): RefDecl[] {
+    const out: RefDecl[] = [];
+    for (const spec of specs) {
+        for (const match of textOfSpec(spec.file).matchAll(REF_MARKER)) {
+            out.push({ site: spec.file, name: match[1] });
         }
     }
     return out;
-})();
+}
+
+/** 引用登记：组合声明的每条块名（块名须存在）＋ 块正文里的显式引用标记。 */
+export const refs: RefDecl[] = [
+    ...manifest.compose.map((id): RefDecl => ({ site: 'skill.json', name: id })),
+    ...extractRefs(),
+];
 
 const io: Io = { exists: (path: string) => {
     try {
@@ -97,6 +114,8 @@ export function packageDiagnostics(): { structure: BlockDiagnostic[]; compositio
         composition: validateRefs(refs, keys, io, { keysSource: 'skill.json' }),
     };
 }
+
+export const packageIdentity = { name: pkg.name, version: pkg.version };
 
 /** 模块对象：`render` 返回组合好的方法正文——构建期渲染进引用步骤的「模块附录」。 */
 export function parallelMethodsModule(): SourceModule {

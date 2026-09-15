@@ -8,6 +8,6 @@
         "markrefs": "0.1.0"
     },
     "peerDependencies": {
-        "skillnomad": "0.1.6"
+        "skillnomad": "^0.1.6"
     }
 }

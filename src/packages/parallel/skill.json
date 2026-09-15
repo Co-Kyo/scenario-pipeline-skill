@@ -1,8 +1,6 @@
 {
     "standard": "skillnomad-skill-package/v1",
     "tier": "incubating",
-    "name": "@co-kyo/parallel",
-    "version": "0.1.0",
     "method": {
         "id": "parallel-analysis",
         "title": "并行分析"
