@@ -2,10 +2,10 @@
 //
 // 内容源＝代码模块的 render()：由构建期渲染进引用步骤的「模块附录」（执行用正本），
 // 不再由步骤手工塞段落（原 scan `.section('调度绑定')`）或手工渲染函数（原 schedulingModuleDoc）。
-import { defineModule, renderBinding, renderModuleDoc } from 'skillnomad';
+import { defineModule, packageModule, renderBinding, renderModuleDoc } from 'skillnomad';
 import type { SourceModule } from 'skillnomad';
+import { fileURLToPath } from 'node:url';
 import { SCHEDULING_POLICY, SCAN_BINDING } from './domain/scheduling.js';
-import { parallelMethodsModule } from './packages/parallel/index.js';
 
 /** 调度策略模块（在册；SKILL 级挂接点待框架后续版本）。 */
 export const schedulingPolicyModule: SourceModule = defineModule({
@@ -23,7 +23,12 @@ export const scanBindingModule: SourceModule = defineModule({
     render: () => renderBinding(SCAN_BINDING),
 });
 
-/** 并行方法包（内置内容包，src/packages/parallel）：方法正文由包内 md 提供。 */
-export const parallelMethods: SourceModule = defineModule(parallelMethodsModule());
+/**
+ * 并行方法包（内置内容包，src/packages/parallel）：**纯声明**（skill.json ＋ blocks），
+ * 由框架装载器读懂并组合——包内没有可执行入口，组合是编译器的职责。
+ */
+export const parallelMethods: SourceModule = defineModule(
+    packageModule(fileURLToPath(new URL('./packages/parallel', import.meta.url))),
+);
 
 export const modules: SourceModule[] = [schedulingPolicyModule, scanBindingModule, parallelMethods];
