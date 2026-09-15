@@ -48,7 +48,7 @@ jobs:
             echo "reason=version-mismatch" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if gh api "repos/Co-Kyo/sp-skill/releases/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
+          if gh api "repos/${{ github.repository }}/releases/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
             echo "should_release=false" >> "$GITHUB_OUTPUT"
             echo "reason=release-exists" >> "$GITHUB_OUTPUT"
             exit 0
@@ -81,7 +81,7 @@ jobs:
             const lineage = {
               skillnomad_package: 'skillnomad',
               skillnomad_version: framework,
-              sp_skill_repo: 'Co-Kyo/sp-skill',
+              sp_skill_repo: process.env.GITHUB_REPOSITORY || 'Co-Kyo/scenario-pipeline-skill',
               sp_skill_source_version: source,
               sp_skill_release: tag,
             };

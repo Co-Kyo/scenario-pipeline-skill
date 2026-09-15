@@ -1,7 +1,8 @@
-# sp-skill · Scenario Pipeline
+# scenario-pipeline-skill · Scenario Pipeline
 
 > **本分支是发布产物分支**（`release`）：内容由 CI 从 `dev` 源码构建生成，**请勿手改**。
-> 仓库名 **`sp-skill`** ＝ **Scenario Pipeline** 的简称；产物内的 skill 名是 **`scenario-pipeline`**。
+> 公开仓库名是 **`scenario-pipeline-skill`**；内部开发口径仍称 **`sp-skill`**（`dev` 分支源码、构建脚本内的目录名均保留）；
+> 产物内的 skill 名是 **`scenario-pipeline`**。
 
 ## 这是什么
 
@@ -32,6 +33,6 @@
 
 ## 来源
 
-- 源码仓库：`Co-Kyo/sp-skill` 的 **`dev`** 分支（`main` 已退役）；本 `release` 分支只放生成产物。
+- 源码仓库：`Co-Kyo/scenario-pipeline-skill` 的 **`dev`** 分支（`main` 已退役；内部开发口径仍称 sp-skill）；本 `release` 分支只放生成产物。
 - 构建器：`skillnomad`（声明式 Markdown skill 打包器）；本分支每次发布由 Release 工作流重建。
 - 要改内容：改 `dev` 源码 → 发版 → CI 重建本分支。**本分支上的任何手改都会在下次发布时被覆盖。**
