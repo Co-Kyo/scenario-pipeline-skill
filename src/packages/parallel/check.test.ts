@@ -20,6 +20,7 @@ const pkg = readJson('package.json') as {
     dependencies?: Record<string, string>;
     peerDependencies?: Record<string, string>;
     devDependencies?: Record<string, string>;
+    optionalDependencies?: Record<string, string>;
 };
 const manifest = readJson('skill.json') as {
     standard: string;
@@ -95,6 +96,27 @@ test('依赖声明：包内全部外部 import 均已声明，工具依赖固定
             );
         }
     }
+});
+
+test('抽取边界：替换测试记录在案，且业务词不入包（仓侧记录 ＋ 机械闸）', () => {
+    const record = readFileSync(join(here, 'EXTRACTION.md'), 'utf8');
+    // 记录必须含替换项表格（每行形如 | 业务词 | 出处 | 通用说法 |）
+    const rows = record
+        .split('\n')
+        .filter((line) => line.startsWith('|') && !line.includes('---') && !line.includes('业务词'))
+        .map((line) => line.split('|').map((c) => c.trim()).filter(Boolean))
+        .filter((cells) => cells.length >= 3);
+    assert.ok(rows.length >= 3, '替换测试记录应至少列出 3 条替换项');
+
+    // 机械闸：记录里列为"业务词"的字面量，不得出现在任何发布块里
+    const shipped = manifest.blocks.map((b) => readFileSync(join(here, b.file), 'utf8')).join('\n');
+    const leaks: string[] = [];
+    for (const cells of rows) {
+        for (const token of cells[0].split(/[／/、]/).map((t) => t.trim())) {
+            if (token.length >= 2 && shipped.includes(token)) leaks.push(token);
+        }
+    }
+    assert.deepEqual(leaks, [], `业务词漏进包：${leaks.join('、')}`);
 });
 
 test('散文拆分：写作块 check 无诊断（结构）', () => {
