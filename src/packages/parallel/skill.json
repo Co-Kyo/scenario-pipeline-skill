@@ -1,20 +1,17 @@
 {
     "name": "parallel",
     "version": "0.1.0",
-    "methods": [
-        {
-            "id": "parallel-analysis",
-            "file": "methods/parallel-analysis.md",
-            "title": "并行分析"
-        }
+    "method": {
+        "id": "parallel-analysis",
+        "title": "并行分析"
+    },
+    "compose": ["parallel-when", "parallel-how", "parallel-gate", "parallel-scope"],
+    "blocks": [
+        { "id": "parallel-when", "role": "target", "file": "blocks/when.md" },
+        { "id": "parallel-how", "role": "useMethod", "file": "blocks/how.md", "whenToUse": "当同一主题需要多个独立维度并行分析并汇总时" },
+        { "id": "parallel-gate", "role": "useMethod", "file": "blocks/gate.md" },
+        { "id": "parallel-scope", "role": "target", "file": "blocks/scope.md" }
     ],
-    "references": [
-        {
-            "id": "gate-checklist",
-            "file": "references/gate-checklist.md"
-        }
-    ],
-    "entry": "parallel-analysis",
     "module": {
         "id": "parallel-methods",
         "kind": "method",

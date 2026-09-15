@@ -14,7 +14,8 @@
     },
     "dependencies": {
         "skillnomad": "0.1.6",
-        "methodblocks": "0.1.1"
+        "methodblocks": "0.1.1",
+        "markrefs": "0.1.0"
     },
     "devDependencies": {
         "@stylistic/eslint-plugin": "^5.10.0",
