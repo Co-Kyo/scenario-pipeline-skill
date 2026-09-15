@@ -84,8 +84,16 @@ test('依赖声明：包内全部外部 import 均已声明，工具依赖固定
     }
     assert.deepEqual([...missing], [], `未声明的外部依赖：${[...missing].join(', ')}`);
 
-    for (const [name, version] of Object.entries(pkg.dependencies ?? {})) {
-        assert.match(version, /^\d+\.\d+\.\d+$/, `${name} 应为固定版本号，当前 ${version}`);
+    // 全局策略：任何依赖字段一律固定版本号，禁用 ^ ／ ~ ／范围
+    const fields = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'] as const;
+    for (const field of fields) {
+        for (const [name, version] of Object.entries((pkg[field] ?? {}) as Record<string, string>)) {
+            assert.match(
+                version,
+                /^\d+\.\d+\.\d+$/,
+                `${field}.${name} 必须写固定版本号，当前 ${version}（构思阶段全局禁用 ^／~／范围）`,
+            );
+        }
     }
 });
 
