@@ -1,0 +1,23 @@
+{
+    "name": "parallel",
+    "version": "0.1.0",
+    "methods": [
+        {
+            "id": "parallel-analysis",
+            "file": "methods/parallel-analysis.md",
+            "title": "并行分析"
+        }
+    ],
+    "references": [
+        {
+            "id": "gate-checklist",
+            "file": "references/gate-checklist.md"
+        }
+    ],
+    "entry": "parallel-analysis",
+    "module": {
+        "id": "parallel-methods",
+        "kind": "method",
+        "version": "0.1.0"
+    }
+}

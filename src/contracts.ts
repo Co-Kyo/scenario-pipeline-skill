@@ -56,6 +56,12 @@ export const scanBindingRef: SourceRef = {
     description: '调度绑定',
 };
 
+/** 并行方法包引用（内容包 parallel：内容＝包内 md 经模块 render()；路径仅作逻辑标识）。 */
+export const parallelMethodRef: SourceRef = {
+    path: 'assets/01-brainstorm/parallel-method.md',
+    description: '并行分析方法（内容包正本）',
+};
+
 export const contracts: SourceContract[] = [
     { id: 'ref-sources', kind: 'policy', path: 'assets/common/ref-sources.md', description: '信源分级与反爬域名', scope: 'skill' },
     { id: 'strategy-level', kind: 'policy', path: 'assets/common/strategy-level.md', description: '密度参数查表', scope: 'skill' },
@@ -69,4 +75,6 @@ export const contracts: SourceContract[] = [
     { id: 'capability-method', kind: 'method', path: 'assets/04-capability-graph/method.md', description: '能力图谱提取方法论', scope: 'step', step: 'capability-graph' },
     // D35 全链路首用例：模块渲染正本（路径为逻辑标识，不落盘、不入 markrefs 存在性校验）。
     { id: 'scan-scheduling-binding', kind: 'method', path: scanBindingRef.path, description: '调度绑定（模块渲染正本）', scope: 'step', step: 'scan', module: 'scan-binding' },
+    // 内容包 parallel（内置形态）：方法正文由包内 md 经模块 render() 提供。
+    { id: 'parallel-method', kind: 'method', path: parallelMethodRef.path, description: '并行分析方法（内容包正本）', scope: 'step', step: 'brainstorm', module: 'parallel-methods' },
 ];

@@ -5,6 +5,7 @@
 import { defineModule, renderBinding, renderModuleDoc } from 'skillnomad';
 import type { SourceModule } from 'skillnomad';
 import { SCHEDULING_POLICY, SCAN_BINDING } from './domain/scheduling.js';
+import { parallelMethodsModule } from './packages/parallel/index.js';
 
 /** 调度策略模块（在册；SKILL 级挂接点待框架后续版本）。 */
 export const schedulingPolicyModule: SourceModule = defineModule({
@@ -22,4 +23,7 @@ export const scanBindingModule: SourceModule = defineModule({
     render: () => renderBinding(SCAN_BINDING),
 });
 
-export const modules: SourceModule[] = [schedulingPolicyModule, scanBindingModule];
+/** 并行方法包（内置内容包，src/packages/parallel）：方法正文由包内 md 提供。 */
+export const parallelMethods: SourceModule = defineModule(parallelMethodsModule());
+
+export const modules: SourceModule[] = [schedulingPolicyModule, scanBindingModule, parallelMethods];
