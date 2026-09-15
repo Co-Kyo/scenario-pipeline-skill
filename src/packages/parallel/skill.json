@@ -1,16 +1,40 @@
 {
-    "name": "parallel",
+    "standard": "skillnomad-skill-package/v1",
+    "tier": "incubating",
+    "name": "@co-kyo/parallel",
     "version": "0.1.0",
     "method": {
         "id": "parallel-analysis",
         "title": "并行分析"
     },
-    "compose": ["parallel-when", "parallel-how", "parallel-gate", "parallel-scope"],
+    "compose": [
+        "parallel-when",
+        "parallel-how",
+        "parallel-gate",
+        "parallel-scope"
+    ],
     "blocks": [
-        { "id": "parallel-when", "role": "target", "file": "blocks/when.md" },
-        { "id": "parallel-how", "role": "useMethod", "file": "blocks/how.md", "whenToUse": "当同一主题需要多个独立维度并行分析并汇总时" },
-        { "id": "parallel-gate", "role": "useMethod", "file": "blocks/gate.md" },
-        { "id": "parallel-scope", "role": "target", "file": "blocks/scope.md" }
+        {
+            "id": "parallel-when",
+            "role": "target",
+            "file": "blocks/when.md"
+        },
+        {
+            "id": "parallel-how",
+            "role": "useMethod",
+            "file": "blocks/how.md",
+            "whenToUse": "当同一主题需要多个独立维度并行分析并汇总时"
+        },
+        {
+            "id": "parallel-gate",
+            "role": "useMethod",
+            "file": "blocks/gate.md"
+        },
+        {
+            "id": "parallel-scope",
+            "role": "target",
+            "file": "blocks/scope.md"
+        }
     ],
     "module": {
         "id": "parallel-methods",

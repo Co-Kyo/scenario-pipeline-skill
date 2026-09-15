@@ -1,5 +1,5 @@
 {
-    "name": "parallel",
+    "name": "@co-kyo/parallel",
     "version": "0.1.0",
     "description": "并行分析通用方法（多维度并行 → 门禁 → 收敛汇总）",
     "type": "module",
