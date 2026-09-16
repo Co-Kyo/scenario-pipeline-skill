@@ -1,4 +1,7 @@
 // 内容域:能力研究。分组规则、域任务、素材分配、任务模板与文件模板为唯一数据源。
+// 并行宽度以 shared.PARALLEL_WIDTH 为唯一源（R2e-P1b：消解手写 W=5 字面量）。
+import { PARALLEL_WIDTH } from './shared.js';
+
 export const research = {
     detail: () => `分组规则：
 
@@ -13,7 +16,7 @@ export const research = {
 
 1. 无跨组依赖的组第一批并行。
 2. 有跨组依赖的组等待依赖组完成。
-3. 同一批内并行，W=5。`,
+3. 同一批内并行，W=${PARALLEL_WIDTH}。`,
     domainAgentTask: () => `每个域 Agent 读取能力描述、扇出度、标签和参考 URL。
 
 按依赖顺序执行：
