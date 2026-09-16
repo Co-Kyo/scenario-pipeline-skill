@@ -18,16 +18,20 @@ import { refs } from './domain/entities.js';
  *   不再是独立模块（description 保持原字面量，确保产物零 diff）。
  */
 export const modules = {
+    // ── skill 级（3 条：跨步共用；改动走 skill 级评审）──
     refSources: { path: 'assets/common/ref-sources.md', description: 'T0 域名表 + 反爬域名表 + 信源分级规则', required: true },
     strategyLevel: { path: 'assets/common/strategy-level.md', description: '密度参数查表', required: true },
+    antiCrawlFetch: { path: 'plugins/anti-crawl-fetch.md', description: 'Playwright 抓取', required: false },
+    // ── intent-anchor 步（2 条）──
+    yearRules: { path: 'assets/00-intent-anchor/year-rules.md', description: '年限推断规则', required: true },
+    skipRules: { path: 'assets/00-intent-anchor/skip-rules.md', description: '跳过判断规则', required: true },
+    // ── brainstorm 步（3 条旧址：形状已迁入 @co-kyo/brainstorm-rules，读包附录）──
     agentInit: { path: 'assets/01-brainstorm/agent-init.md', description: '维度 Agent 初始化定义（旧址：形状已迁入 @co-kyo/brainstorm-rules，见 brainstorm-rules-methods 附录）', required: true },
     barrierCheck: { path: 'assets/01-brainstorm/barrier-check.md', description: 'Barrier 检查项与决策矩阵（旧址：形状已迁入 @co-kyo/brainstorm-rules，见 brainstorm-rules-methods 附录）', required: true },
     fallbackProtocol: { path: 'assets/01-brainstorm/fallback-protocol.md', description: '收敛者失败降级协议（旧址：形状已迁入 @co-kyo/brainstorm-rules，见 brainstorm-rules-methods 附录）', required: true },
-    yearRules: { path: 'assets/00-intent-anchor/year-rules.md', description: '年限推断规则', required: true },
-    skipRules: { path: 'assets/00-intent-anchor/skip-rules.md', description: '跳过判断规则', required: true },
+    // ── 方法投影（2 条：评估／图谱方法论）──
     evaluationMethod: { path: 'assets/05-evaluate-pool/method.md', description: '评估方法论（投影）', required: true },
     capabilityMethod: { path: 'assets/04-capability-graph/method.md', description: '能力图谱提取方法论', required: true },
-    antiCrawlFetch: { path: 'plugins/anti-crawl-fetch.md', description: 'Playwright 抓取', required: false },
 } satisfies Record<string, SourceRef>;
 
 // markrefs：模块资产路径登记（构建期校验文件存在性；模块表即声明源，路径即事实）
@@ -87,16 +91,21 @@ export const capabilityMethodRef: SourceRef = {
 };
 
 export const contracts: SourceContract[] = [
+    // ── skill 级（3 条）──
     { id: 'ref-sources', kind: 'policy', path: 'assets/common/ref-sources.md', description: '信源分级与反爬域名', scope: 'skill' },
     { id: 'strategy-level', kind: 'policy', path: 'assets/common/strategy-level.md', description: '密度参数查表', scope: 'skill' },
     { id: 'anti-crawl-fetch', kind: 'method', path: 'plugins/anti-crawl-fetch.md', description: 'Playwright 抓取', scope: 'skill' },
+    // ── intent-anchor 步（2 条）──
+    { id: 'year-rules', kind: 'policy', path: 'assets/00-intent-anchor/year-rules.md', description: '年限推断规则', scope: 'step', step: 'intent-anchor' },
+    { id: 'skip-rules', kind: 'policy', path: 'assets/00-intent-anchor/skip-rules.md', description: '跳过判断规则', scope: 'step', step: 'intent-anchor' },
+    // ── brainstorm 步文件背（3 条旧址）──
     { id: 'agent-init', kind: 'policy', path: 'assets/01-brainstorm/agent-init.md', description: '维度 Agent 初始化定义', scope: 'step', step: 'brainstorm' },
     { id: 'barrier-check', kind: 'policy', path: 'assets/01-brainstorm/barrier-check.md', description: 'Barrier 检查项与决策矩阵', scope: 'step', step: 'brainstorm' },
     { id: 'fallback-protocol', kind: 'policy', path: 'assets/01-brainstorm/fallback-protocol.md', description: '收敛者失败降级协议', scope: 'step', step: 'brainstorm' },
-    { id: 'year-rules', kind: 'policy', path: 'assets/00-intent-anchor/year-rules.md', description: '年限推断规则', scope: 'step', step: 'intent-anchor' },
-    { id: 'skip-rules', kind: 'policy', path: 'assets/00-intent-anchor/skip-rules.md', description: '跳过判断规则', scope: 'step', step: 'intent-anchor' },
+    // ── 方法投影（2 条）──
     { id: 'evaluation-method', kind: 'method', path: 'assets/05-evaluate-pool/method.md', description: '评估方法论', scope: 'step', step: 'evaluate-pool' },
     { id: 'capability-method', kind: 'method', path: 'assets/04-capability-graph/method.md', description: '能力图谱提取方法论', scope: 'step', step: 'capability-graph' },
+    // ── 模块通道（6 条：路径为逻辑标识，内容＝模块 render()）──
     // D35 全链路首用例：模块渲染正本（路径为逻辑标识，不落盘、不入 markrefs 存在性校验）。
     { id: 'scan-scheduling-binding', kind: 'method', path: scanBindingRef.path, description: '调度绑定（模块渲染正本）', scope: 'step', step: 'scan', module: 'scan-binding' },
     // 内容包 parallel（内置形态）：方法正文由包内 md 经模块 render() 提供。
