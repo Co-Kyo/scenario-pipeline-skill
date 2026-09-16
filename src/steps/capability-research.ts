@@ -1,7 +1,7 @@
 import { step } from 'skillnomad';
 import { doAction } from '../actions.js';
 import { effectContractSection } from '../domain/effects.js';
-import { research } from '../domain/prompts.js';
+import { research } from '../domain/content/research.js';
 import { modules } from '../contracts.js';
 import { refOf } from '../domain/entities.js';
 
