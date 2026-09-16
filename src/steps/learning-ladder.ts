@@ -8,7 +8,7 @@ import {
     ladderDetail,
     stepFormat,
     workerTask,
-} from '../domain/ladder.js';
+} from '../domain/content/ladder.js';
 import { refOf } from '../domain/entities.js';
 
 import { barrier } from '../policies.js';

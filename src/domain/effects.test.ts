@@ -43,7 +43,7 @@ test('D7:契约小节渲染含编号、归属与保证', () => {
     const s = effectContractSection('E-ladder-judgment');
     assert.ok(s.includes('E-ladder-judgment'));
     assert.ok(s.includes('做到才算过'));
-    assert.ok(s.includes('src/domain/ladder.ts'));
+    assert.ok(s.includes('src/domain/content/ladder.ts'));
 });
 
 test('D7:未知契约 id 抛错(防静默漏接)', () => {
