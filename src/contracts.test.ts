@@ -28,8 +28,8 @@ test('module 引用条目：module id 必在 src/modules.ts 声明（D35 全链�
     const { modules: declared } = await import('./modules.js');
     const declaredIds = new Set(declared.map((m) => m.id));
     const moduleEntries = contracts.filter((c) => c.module);
-    // 3 条（拆包第二例）：scan-scheduling-binding（scan Binding 模块）＋ parallel-method（内容包 parallel）＋ evaluate-method（内容包 evaluate）
-    assert.equal(moduleEntries.length, 3, '模块通道当前 3 条引用条目（scan-binding ＋ parallel-methods ＋ evaluate-methods）');
+    // 4 条（拆包第三例）：scan-scheduling-binding（scan Binding 模块）＋ parallel-method（内容包 parallel）＋ evaluate-method（内容包 evaluate）＋ partition-method（内容包 partition）
+    assert.equal(moduleEntries.length, 4, '模块通道当前 4 条引用条目（scan-binding ＋ parallel-methods ＋ evaluate-methods ＋ partition-methods）');
     for (const c of moduleEntries) {
         assert.ok(c.module && declaredIds.has(c.module), `module id 未声明: ${c.id} → ${c.module}`);
     }

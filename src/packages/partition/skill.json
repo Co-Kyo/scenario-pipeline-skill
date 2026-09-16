@@ -1,0 +1,42 @@
+{
+    "standard": "skillnomad-skill-package/v1",
+    "tier": "incubating",
+    "method": {
+        "id": "partition-batch",
+        "title": "依赖分区"
+    },
+    "compose": [
+        "part-when",
+        "part-how",
+        "part-gate",
+        "part-scope"
+    ],
+    "blocks": [
+        {
+            "id": "part-when",
+            "role": "target",
+            "file": "blocks/when.md"
+        },
+        {
+            "id": "part-how",
+            "role": "useMethod",
+            "file": "blocks/how.md",
+            "whenToUse": "当候选项之间存在依赖、需要分批处理时"
+        },
+        {
+            "id": "part-gate",
+            "role": "useMethod",
+            "file": "blocks/gate.md"
+        },
+        {
+            "id": "part-scope",
+            "role": "target",
+            "file": "blocks/scope.md"
+        }
+    ],
+    "module": {
+        "id": "partition-methods",
+        "kind": "method",
+        "version": "0.1.0"
+    }
+}

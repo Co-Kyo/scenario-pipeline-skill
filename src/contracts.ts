@@ -68,6 +68,12 @@ export const evalMethodRef: SourceRef = {
     description: '评估方法通用形状（内容包正本）',
 };
 
+/** 分区方法包引用（内容包 partition：内容＝包内 md 经模块 render()；路径仅作逻辑标识）。 */
+export const partitionMethodRef: SourceRef = {
+    path: 'assets/02-partition/partition-method.md',
+    description: '依赖分区通用形状（内容包正本）',
+};
+
 export const contracts: SourceContract[] = [
     { id: 'ref-sources', kind: 'policy', path: 'assets/common/ref-sources.md', description: '信源分级与反爬域名', scope: 'skill' },
     { id: 'strategy-level', kind: 'policy', path: 'assets/common/strategy-level.md', description: '密度参数查表', scope: 'skill' },
@@ -85,4 +91,6 @@ export const contracts: SourceContract[] = [
     { id: 'parallel-method', kind: 'method', path: parallelMethodRef.path, description: '并行分析方法（内容包正本）', scope: 'step', step: 'brainstorm', module: 'parallel-methods' },
     // 内容包 evaluate（内置形态）：方法正文由包内 md 经模块 render() 提供。
     { id: 'evaluate-method', kind: 'method', path: evalMethodRef.path, description: '评估方法通用形状（内容包正本）', scope: 'step', step: 'evaluate-pool', module: 'evaluate-methods' },
+    // 内容包 partition（内置形态）：方法正文由包内 md 经模块 render() 提供。
+    { id: 'partition-method', kind: 'method', path: partitionMethodRef.path, description: '依赖分区通用形状（内容包正本）', scope: 'step', step: 'partition', module: 'partition-methods' },
 ];

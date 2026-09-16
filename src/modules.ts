@@ -39,4 +39,12 @@ export const evaluateMethods: SourceModule = defineModule(
     packageModule(fileURLToPath(new URL('./packages/evaluate', import.meta.url))),
 );
 
-export const modules: SourceModule[] = [schedulingPolicyModule, scanBindingModule, parallelMethods, evaluateMethods];
+/**
+ * 分区方法包（内置内容包，src/packages/partition）：**纯声明**（skill.json ＋ blocks），
+ * 由框架装载器读懂并组合——包内没有可执行入口，组合是编译器的职责。
+ */
+export const partitionMethods: SourceModule = defineModule(
+    packageModule(fileURLToPath(new URL('./packages/partition', import.meta.url))),
+);
+
+export const modules: SourceModule[] = [schedulingPolicyModule, scanBindingModule, parallelMethods, evaluateMethods, partitionMethods];
