@@ -1,0 +1,17 @@
+{
+    "name": "@co-kyo/capability",
+    "version": "0.1.0",
+    "description": "能力图谱通用方法（去重 → 扇出 → 价值 → 路径）",
+    "type": "module",
+    "files": [
+        "skill.json",
+        "blocks"
+    ],
+    "dependencies": {
+        "methodblocks": "0.1.1",
+        "markrefs": "0.1.0"
+    },
+    "peerDependencies": {
+        "skillnomad": "0.1.6"
+    }
+}

@@ -1,0 +1,48 @@
+{
+    "standard": "skillnomad-skill-package/v1",
+    "tier": "incubating",
+    "method": {
+        "id": "capability-mapping",
+        "title": "能力图谱"
+    },
+    "compose": [
+        "cap-when",
+        "cap-how",
+        "cap-gate",
+        "cap-order",
+        "cap-scope"
+    ],
+    "blocks": [
+        {
+            "id": "cap-when",
+            "role": "target",
+            "file": "blocks/when.md"
+        },
+        {
+            "id": "cap-how",
+            "role": "useMethod",
+            "file": "blocks/how.md",
+            "whenToUse": "当候选项需要提炼原子能力并计算战略价值时"
+        },
+        {
+            "id": "cap-gate",
+            "role": "useMethod",
+            "file": "blocks/gate.md"
+        },
+        {
+            "id": "cap-order",
+            "role": "useMethod",
+            "file": "blocks/order.md"
+        },
+        {
+            "id": "cap-scope",
+            "role": "target",
+            "file": "blocks/scope.md"
+        }
+    ],
+    "module": {
+        "id": "capability-methods",
+        "kind": "method",
+        "version": "0.1.0"
+    }
+}

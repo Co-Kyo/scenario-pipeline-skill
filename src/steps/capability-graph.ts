@@ -3,7 +3,7 @@ import { doAction } from '../actions.js';
 import * as capability from '../domain/content/capability.js';
 import { displayFoldMulti } from '../domain/mechanics.js';
 import { refOf } from '../domain/entities.js';
-import { modules } from '../contracts.js';
+import { modules, capabilityMethodRef } from '../contracts.js';
 import { barrier } from '../policies.js';
 import { fail, verify } from '../verify.js';
 
@@ -11,7 +11,7 @@ export const capabilityGraph = step('capability-graph', '能力图谱')
     .target('生成能力图谱、依赖图、战略高地与学习路径')
     .summary('跨命题去重合并原子能力，计算战略价值')
     .dependsOn('scan')
-    .reads(refOf('requirementWeb'), refOf('scanIndex'), { ...modules.capabilityMethod, as: 'method' })
+    .reads(refOf('requirementWeb'), refOf('scanIndex'), { ...modules.capabilityMethod, as: 'method' }, capabilityMethodRef)
     .writes(refOf('capabilityGraph'), refOf('dependencyGraph'), refOf('highgrounds'), refOf('learningPath'))
     .inputs(refOf('requirementWeb').path, refOf('scanIndex').path)
     .outputs(

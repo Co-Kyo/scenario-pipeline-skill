@@ -74,6 +74,12 @@ export const partitionMethodRef: SourceRef = {
     description: '依赖分区通用形状（内容包正本）',
 };
 
+/** 图谱方法包引用（内容包 capability：内容＝包内 md 经模块 render()；路径仅作逻辑标识）。 */
+export const capabilityMethodRef: SourceRef = {
+    path: 'assets/04-capability-graph/capability-method.md',
+    description: '能力图谱通用形状（内容包正本）',
+};
+
 export const contracts: SourceContract[] = [
     { id: 'ref-sources', kind: 'policy', path: 'assets/common/ref-sources.md', description: '信源分级与反爬域名', scope: 'skill' },
     { id: 'strategy-level', kind: 'policy', path: 'assets/common/strategy-level.md', description: '密度参数查表', scope: 'skill' },
@@ -93,4 +99,6 @@ export const contracts: SourceContract[] = [
     { id: 'evaluate-method', kind: 'method', path: evalMethodRef.path, description: '评估方法通用形状（内容包正本）', scope: 'step', step: 'evaluate-pool', module: 'evaluate-methods' },
     // 内容包 partition（内置形态）：方法正文由包内 md 经模块 render() 提供。
     { id: 'partition-method', kind: 'method', path: partitionMethodRef.path, description: '依赖分区通用形状（内容包正本）', scope: 'step', step: 'partition', module: 'partition-methods' },
+    // 内容包 capability（内置形态）：方法正文由包内 md 经模块 render() 提供。
+    { id: 'capability-method-pack', kind: 'method', path: capabilityMethodRef.path, description: '能力图谱通用形状（内容包正本）', scope: 'step', step: 'capability-graph', module: 'capability-methods' },
 ];
