@@ -1,0 +1,42 @@
+{
+    "standard": "skillnomad-skill-package/v1",
+    "tier": "incubating",
+    "method": {
+        "id": "brainstorm-execution",
+        "title": "头脑风暴执行规则"
+    },
+    "compose": [
+        "rules-when",
+        "rules-how",
+        "rules-gate",
+        "rules-scope"
+    ],
+    "blocks": [
+        {
+            "id": "rules-when",
+            "role": "target",
+            "file": "blocks/when.md"
+        },
+        {
+            "id": "rules-how",
+            "role": "useMethod",
+            "file": "blocks/how.md",
+            "whenToUse": "当多维度并行需要分发、门禁与降级规则时"
+        },
+        {
+            "id": "rules-gate",
+            "role": "useMethod",
+            "file": "blocks/gate.md"
+        },
+        {
+            "id": "rules-scope",
+            "role": "target",
+            "file": "blocks/scope.md"
+        }
+    ],
+    "module": {
+        "id": "brainstorm-rules-methods",
+        "kind": "method",
+        "version": "0.1.0"
+    }
+}

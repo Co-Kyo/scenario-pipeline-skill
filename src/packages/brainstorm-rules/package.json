@@ -1,0 +1,17 @@
+{
+    "name": "@co-kyo/brainstorm-rules",
+    "version": "0.1.0",
+    "description": "头脑风暴执行规则（分发 → 门禁 → 降级）",
+    "type": "module",
+    "files": [
+        "skill.json",
+        "blocks"
+    ],
+    "dependencies": {
+        "methodblocks": "0.1.1",
+        "markrefs": "0.1.0"
+    },
+    "peerDependencies": {
+        "skillnomad": "0.1.6"
+    }
+}

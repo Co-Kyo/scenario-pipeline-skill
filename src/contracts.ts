@@ -20,9 +20,9 @@ import { refs } from './domain/entities.js';
 export const modules = {
     refSources: { path: 'assets/common/ref-sources.md', description: 'T0 域名表 + 反爬域名表 + 信源分级规则', required: true },
     strategyLevel: { path: 'assets/common/strategy-level.md', description: '密度参数查表', required: true },
-    agentInit: { path: 'assets/01-brainstorm/agent-init.md', description: '维度 Agent 初始化定义', required: true },
-    barrierCheck: { path: 'assets/01-brainstorm/barrier-check.md', description: 'Barrier 检查项与决策矩阵', required: true },
-    fallbackProtocol: { path: 'assets/01-brainstorm/fallback-protocol.md', description: '收敛者失败降级协议', required: true },
+    agentInit: { path: 'assets/01-brainstorm/agent-init.md', description: '维度 Agent 初始化定义（旧址：形状已迁入 @co-kyo/brainstorm-rules，见 brainstorm-rules-methods 附录）', required: true },
+    barrierCheck: { path: 'assets/01-brainstorm/barrier-check.md', description: 'Barrier 检查项与决策矩阵（旧址：形状已迁入 @co-kyo/brainstorm-rules，见 brainstorm-rules-methods 附录）', required: true },
+    fallbackProtocol: { path: 'assets/01-brainstorm/fallback-protocol.md', description: '收敛者失败降级协议（旧址：形状已迁入 @co-kyo/brainstorm-rules，见 brainstorm-rules-methods 附录）', required: true },
     yearRules: { path: 'assets/00-intent-anchor/year-rules.md', description: '年限推断规则', required: true },
     skipRules: { path: 'assets/00-intent-anchor/skip-rules.md', description: '跳过判断规则', required: true },
     evaluationMethod: { path: 'assets/05-evaluate-pool/method.md', description: '评估方法论（投影）', required: true },
@@ -62,6 +62,12 @@ export const parallelMethodRef: SourceRef = {
     description: '并行分析方法（内容包正本）',
 };
 
+/** 头脑风暴执行规则包引用（内容包 brainstorm-rules：内容＝包内 md 经模块 render()；路径仅作逻辑标识）。 */
+export const brainstormRulesMethodRef: SourceRef = {
+    path: 'assets/01-brainstorm/brainstorm-rules-method.md',
+    description: '头脑风暴执行规则（内容包正本）',
+};
+
 /** 评估方法包引用（内容包 evaluate：内容＝包内 md 经模块 render()；路径仅作逻辑标识）。 */
 export const evalMethodRef: SourceRef = {
     path: 'assets/05-evaluate-pool/evaluate-method.md',
@@ -95,6 +101,8 @@ export const contracts: SourceContract[] = [
     { id: 'scan-scheduling-binding', kind: 'method', path: scanBindingRef.path, description: '调度绑定（模块渲染正本）', scope: 'step', step: 'scan', module: 'scan-binding' },
     // 内容包 parallel（内置形态）：方法正文由包内 md 经模块 render() 提供。
     { id: 'parallel-method', kind: 'method', path: parallelMethodRef.path, description: '并行分析方法（内容包正本）', scope: 'step', step: 'brainstorm', module: 'parallel-methods' },
+    // 内容包 brainstorm-rules（内置形态）：方法正文由包内 md 经模块 render() 提供。
+    { id: 'brainstorm-rules-method', kind: 'method', path: brainstormRulesMethodRef.path, description: '头脑风暴执行规则（内容包正本）', scope: 'step', step: 'brainstorm', module: 'brainstorm-rules-methods' },
     // 内容包 evaluate（内置形态）：方法正文由包内 md 经模块 render() 提供。
     { id: 'evaluate-method', kind: 'method', path: evalMethodRef.path, description: '评估方法通用形状（内容包正本）', scope: 'step', step: 'evaluate-pool', module: 'evaluate-methods' },
     // 内容包 partition（内置形态）：方法正文由包内 md 经模块 render() 提供。

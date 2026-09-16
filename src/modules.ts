@@ -55,4 +55,12 @@ export const capabilityMethods: SourceModule = defineModule(
     packageModule(fileURLToPath(new URL('./packages/capability', import.meta.url))),
 );
 
-export const modules: SourceModule[] = [schedulingPolicyModule, scanBindingModule, parallelMethods, evaluateMethods, partitionMethods, capabilityMethods];
+/**
+ * 头脑风暴执行规则包（内置内容包，src/packages/brainstorm-rules）：**纯声明**（skill.json ＋ blocks），
+ * 由框架装载器读懂并组合——包内没有可执行入口，组合是编译器的职责。
+ */
+export const brainstormRulesMethods: SourceModule = defineModule(
+    packageModule(fileURLToPath(new URL('./packages/brainstorm-rules', import.meta.url))),
+);
+
+export const modules: SourceModule[] = [schedulingPolicyModule, scanBindingModule, parallelMethods, evaluateMethods, partitionMethods, capabilityMethods, brainstormRulesMethods];

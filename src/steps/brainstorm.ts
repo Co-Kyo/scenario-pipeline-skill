@@ -2,7 +2,7 @@ import { step } from 'skillnomad';
 import { agentAction, doAction } from '../actions.js';
 import * as brainstormRules from '../domain/content/brainstorm.js';
 import { displayFoldMulti } from '../domain/mechanics.js';
-import { modules, parallelMethodRef } from '../contracts.js';
+import { parallelMethodRef, brainstormRulesMethodRef } from '../contracts.js';
 import { refOf, schemaRef } from '../domain/entities.js';
 import { barrier } from '../policies.js';
 import { fail, verify } from '../verify.js';
@@ -13,11 +13,9 @@ export const brainstorm = step('brainstorm', '头脑风暴')
     .dependsOn('intent-anchor')
     .reads(
         refOf('anchors'),
-        { ...modules.agentInit, as: 'rule' },
-        { ...modules.barrierCheck, as: 'rule' },
-        { ...modules.fallbackProtocol, as: 'rule' },
         { ...schemaRef('requirementWeb'), as: 'schema' },
         parallelMethodRef,
+        brainstormRulesMethodRef,
     )
     .writes(refOf('requirementWeb'))
     .inputs(refOf('anchors').path)
