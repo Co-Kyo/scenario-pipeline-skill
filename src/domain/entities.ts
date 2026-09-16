@@ -63,7 +63,7 @@ export const entities: Record<string, ProductEntity> = {
     // ── evaluation（content/evaluation.ts）────────────────────
     evaluations: { concept: 'evaluation', artifact: '{workDir}/.meta/evaluations.json', kind: 'learning', description: '评估结果', schema: 'assets/05-evaluate-pool/schemas.md' },
 
-    // ── ladder（domain/ladder.ts）─────────────────────────────
+    // ── ladder（content/ladder.ts）─────────────────────────────
     ladder: { concept: 'ladder', artifact: '{workDir}/{seq}-{short_name}/learning-ladder.md', kind: 'learning', description: '学习阶梯' },
     learningPath: { concept: 'ladder', artifact: '{workDir}/.meta/learning-path.json', kind: 'learning', description: '学习路径' },
 
