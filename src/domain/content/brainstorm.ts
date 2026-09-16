@@ -31,7 +31,7 @@ export function detail(): string {
     return `执行步骤：
 
 1. 创建 {workDir}/.meta/brainstorm 目录。
-2. 按 agent-init 分发场景、技术、学习、约束 4 个维度 Agent。
+2. 按执行规则包分发场景、技术、学习、约束 4 个维度 Agent。
 3. 轮询等待，轮询间隔 ${POLL_INTERVAL}，每个 Agent 完成时即时校验文件、JSON、dimension 和 entries。
 4. 失败 Agent 最多补发 ${RETRY_MAX} 次。
 5. 4 个维度全部结束后执行质量门禁。

@@ -62,7 +62,7 @@ export const brainstorm = step('brainstorm', '头脑风暴')
         fail.retry('维度 Agent 超时', '检查文件是否已写入；完整保留，不完整补发一次'),
         fail.degrade('3+ 维度缺失', '降级为原始指令扫描，{{step:scan}} 按原始指令执行'),
         fail.retry('收敛者超时', '检查 requirement-web.json 是否完整；不完整重试一次'),
-        fail.degrade('收敛者 JSON 解析失败', '执行 fallback-protocol 重建 requirement-web.json'),
+        fail.degrade('收敛者 JSON 解析失败', '执行降级协议重建 requirement-web.json'),
     )
     .checkpoint(
         barrier(
