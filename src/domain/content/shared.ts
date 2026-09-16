@@ -1,5 +1,5 @@
 // 内容域共享常量与片段。所有片段必须与流程版原文逐字一致(零差异纪律)。
-// 双写收敛记录:RATIO_CLAUSE/SCENARIO_MINIMUM 消解 prompts.ts assembly 组的内部双写;
+// 双写收敛记录:RATIO_CLAUSE/SCENARIO_MINIMUM 消解 assembly 组内部双写(R2 第二刀 prompts.ts 按步拆分前);
 // PARALLEL_WIDTH 为并行宽度唯一源：scan 批次公式与 research 依赖编排均插值引用本常量（R2e-P1c）。
 
 /** 并行宽度:scan 批次公式 W = min(PARALLEL_WIDTH, 命题数) */

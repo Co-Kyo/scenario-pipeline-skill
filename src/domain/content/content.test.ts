@@ -81,7 +81,7 @@ test('initialize:workDir 命名规则单一出处', () => {
     assert.ok(initializeDetail().includes(`默认使用 ${WORKDIR_NAMING}。`));
 });
 
-test('shared:片段与原文逐字一致(供 prompts.ts 双写收敛)', () => {
+test('shared:片段与原文逐字一致', () => {
     assert.equal(RATIO_CLAUSE, '内容比例：通用高地 <= 70%，场景化/特化内容 >= 30%。');
     assert.equal(SCENARIO_MINIMUM, '至少 3 个场景化输入、3 个边界、3 个验证点。');
 });
