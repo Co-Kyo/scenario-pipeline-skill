@@ -25,10 +25,7 @@ export const modules = {
     // ── intent-anchor 步（2 条）──
     yearRules: { path: 'assets/00-intent-anchor/year-rules.md', description: '年限推断规则', required: true },
     skipRules: { path: 'assets/00-intent-anchor/skip-rules.md', description: '跳过判断规则', required: true },
-    // ── brainstorm 步（3 条旧址：形状已迁入 @co-kyo/brainstorm-rules，读包附录）──
-    agentInit: { path: 'assets/01-brainstorm/agent-init.md', description: '维度 Agent 初始化定义（旧址：形状已迁入 @co-kyo/brainstorm-rules，见 brainstorm-rules-methods 附录）', required: true },
-    barrierCheck: { path: 'assets/01-brainstorm/barrier-check.md', description: 'Barrier 检查项与决策矩阵（旧址：形状已迁入 @co-kyo/brainstorm-rules，见 brainstorm-rules-methods 附录）', required: true },
-    fallbackProtocol: { path: 'assets/01-brainstorm/fallback-protocol.md', description: '收敛者失败降级协议（旧址：形状已迁入 @co-kyo/brainstorm-rules，见 brainstorm-rules-methods 附录）', required: true },
+    // ── brainstorm 步旧址（R2 钉子 1 已删除：形状已迁入 @co-kyo/brainstorm-rules 包，登记同步删除；存在性不再校验）──
     // ── 方法投影（2 条：评估／图谱方法论）──
     evaluationMethod: { path: 'assets/05-evaluate-pool/method.md', description: '评估方法论（投影）', required: true },
     capabilityMethod: { path: 'assets/04-capability-graph/method.md', description: '能力图谱提取方法论', required: true },
@@ -98,10 +95,7 @@ export const contracts: SourceContract[] = [
     // ── intent-anchor 步（2 条）──
     { id: 'year-rules', kind: 'policy', path: 'assets/00-intent-anchor/year-rules.md', description: '年限推断规则', scope: 'step', step: 'intent-anchor' },
     { id: 'skip-rules', kind: 'policy', path: 'assets/00-intent-anchor/skip-rules.md', description: '跳过判断规则', scope: 'step', step: 'intent-anchor' },
-    // ── brainstorm 步文件背（3 条旧址）──
-    { id: 'agent-init', kind: 'policy', path: 'assets/01-brainstorm/agent-init.md', description: '维度 Agent 初始化定义', scope: 'step', step: 'brainstorm' },
-    { id: 'barrier-check', kind: 'policy', path: 'assets/01-brainstorm/barrier-check.md', description: 'Barrier 检查项与决策矩阵', scope: 'step', step: 'brainstorm' },
-    { id: 'fallback-protocol', kind: 'policy', path: 'assets/01-brainstorm/fallback-protocol.md', description: '收敛者失败降级协议', scope: 'step', step: 'brainstorm' },
+    // ── brainstorm 步文件背旧址（R2 钉子 1 已删除：3 条登记同步删除；形状见 brainstorm-rules-methods 附录）──
     // ── 方法投影（2 条）──
     { id: 'evaluation-method', kind: 'method', path: 'assets/05-evaluate-pool/method.md', description: '评估方法论', scope: 'step', step: 'evaluate-pool' },
     { id: 'capability-method', kind: 'method', path: 'assets/04-capability-graph/method.md', description: '能力图谱提取方法论', scope: 'step', step: 'capability-graph' },

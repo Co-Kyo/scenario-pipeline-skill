@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { modules, contracts } from './contracts.js';
 
-// 专案23（P2 双表无守卫）：modules（Record 10 键）与 contracts（数组 10 条）
-// D32 W4：+1 capability-method（04 method 接回），双表同步 9→10
+// 专案23（P2 双表无守卫）：modules 与 contracts 文件条目登记同一批资产路径。
+// R2 钉子 1：brainstorm 旧址 3 条登记＋文件同步删除，双表 10→7。
 // 登记同一批资产路径。任一单边改路径后本测试变红，防止静默漂移。
 // 审计证据：改 modules.agentInit 路径后构建仍绿、产物直接采用新值，无测试兜底。
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -20,8 +20,8 @@ test('双表路径双向包含：任一单边增删改路径即变红', () => {
     for (const p of conPaths) {
         assert.ok(modPaths.has(p), `contracts 有但 modules 缺少: ${p}`);
     }
-    assert.equal(modPaths.size, 10, 'modules 应为 10 条');
-    assert.equal(conPaths.size, 10, 'contracts（文件条目）应为 10 条');
+    assert.equal(modPaths.size, 7, 'modules 应为 7 条（R2 钉子 1 删旧址 3 条后 10→7）');
+    assert.equal(conPaths.size, 7, 'contracts（文件条目）应为 7 条（R2 钉子 1 删旧址 3 条后 10→7）');
 });
 
 test('module 引用条目：module id 必在 src/modules.ts 声明（D35 全链路）', async () => {
