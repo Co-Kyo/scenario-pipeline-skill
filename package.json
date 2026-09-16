@@ -6,7 +6,7 @@
     "scripts": {
         "build": "tsx node_modules/skillnomad/dist/bin/cli.js build skillnomad.config.ts",
         "typecheck": "tsc -p tsconfig.json",
-        "test": "node --import tsx --test src/domain/ladder.test.ts src/domain/effects.test.ts src/domain/learner.test.ts src/domain/content/content.test.ts src/domain/content/brainstorm.test.ts src/domain/content/scan.test.ts src/domain/numbering-governance.test.ts src/contracts.test.ts src/fragment.test.ts src/assets-guard.test.ts src/packages/parallel/check.test.ts src/packages/evaluate/check.test.ts src/packages/partition/check.test.ts src/packages/capability/check.test.ts",
+        "test": "node --import tsx --test src/domain/ladder.test.ts src/domain/effects.test.ts src/domain/learner.test.ts src/domain/content/content.test.ts src/domain/content/brainstorm.test.ts src/domain/content/scan.test.ts src/domain/numbering-governance.test.ts src/contracts.test.ts src/fragment.test.ts src/assets-guard.test.ts src/maintainability.test.ts src/packages/parallel/check.test.ts src/packages/evaluate/check.test.ts src/packages/partition/check.test.ts src/packages/capability/check.test.ts",
         "verify:product": "node --import tsx --test src/product-verify.test.ts",
         "prepare": "git config core.hooksPath scripts/git-hooks",
         "lint": "eslint .",
