@@ -31,4 +31,12 @@ export const parallelMethods: SourceModule = defineModule(
     packageModule(fileURLToPath(new URL('./packages/parallel', import.meta.url))),
 );
 
-export const modules: SourceModule[] = [schedulingPolicyModule, scanBindingModule, parallelMethods];
+/**
+ * 评估方法包（内置内容包，src/packages/evaluate）：**纯声明**（skill.json ＋ blocks），
+ * 由框架装载器读懂并组合——包内没有可执行入口，组合是编译器的职责。
+ */
+export const evaluateMethods: SourceModule = defineModule(
+    packageModule(fileURLToPath(new URL('./packages/evaluate', import.meta.url))),
+);
+
+export const modules: SourceModule[] = [schedulingPolicyModule, scanBindingModule, parallelMethods, evaluateMethods];

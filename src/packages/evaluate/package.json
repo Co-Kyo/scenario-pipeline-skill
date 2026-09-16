@@ -1,0 +1,17 @@
+{
+    "name": "@co-kyo/evaluate",
+    "version": "0.1.0",
+    "description": "评估入池通用方法（打分 → 门禁 → 排序）",
+    "type": "module",
+    "files": [
+        "skill.json",
+        "blocks"
+    ],
+    "dependencies": {
+        "methodblocks": "0.1.1",
+        "markrefs": "0.1.0"
+    },
+    "peerDependencies": {
+        "skillnomad": "0.1.6"
+    }
+}
