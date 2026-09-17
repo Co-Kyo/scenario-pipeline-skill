@@ -104,7 +104,7 @@ export function integratorTask(): string {
 3. 技术维度报告：{workDir}/.meta/brainstorm/technical.json
 4. 学习维度报告：{workDir}/.meta/brainstorm/learning.json
 5. 约束维度报告：{workDir}/.meta/brainstorm/constraint.json
-6. 输出格式：src/steps/brainstorm/assets/requirement-web-schema.md
+6. 输出格式：steps/02-brainstorm/requirement-web-schema.md（发布形态，框架按角色派生）
 
 ## 你的任务
 1. 按模块附录执行收敛五动作；对齐优先级为（${CONVERGE_PRIORITY}）。

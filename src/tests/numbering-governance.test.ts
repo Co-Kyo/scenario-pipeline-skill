@@ -62,28 +62,29 @@ test('编号治理:「数字+步骤名」型残留清零', () => {
     }
 });
 
-test('编号治理:processes 渲染产物无未解析占位符', (t) => {
-    const dist = `${repoRoot}dist/sp-skill/processes`;
+test('编号治理:步骤渲染产物无未解析占位符', (t) => {
+    const dist = `${repoRoot}dist/sp-skill/steps`;
     if (!existsSync(dist)) {
         t.skip('需先 npm run build');
         return;
     }
-    for (const e of readdirSync(dist)) {
-        const text = readFileSync(`${dist}/${e}`, 'utf-8');
+    for (const dir of readdirSync(dist)) {
+        const file = `${dist}/${dir}/step.md`;
+        const text = readFileSync(file, 'utf-8');
         const hits = text.match(/\{\{(step|num|order):/g);
-        assert.ok(!hits, `${e} 含未解析占位符:${hits?.join(', ')}`);
+        assert.ok(!hits, `${dir}/step.md 含未解析占位符:${hits?.join(', ')}`);
     }
 });
 
-test('编号治理:assets/plugins 引用的 processes 路径必须存在(对照构建产物)', (t) => {
-    const dist = `${repoRoot}dist/sp-skill/processes`;
+test('编号治理:assets/plugins 引用的步骤路径必须存在(对照构建产物)', (t) => {
+    const dist = `${repoRoot}dist/sp-skill/steps`;
     if (!existsSync(dist)) {
         t.skip('需先 npm run build');
         return;
     }
     for (const [rel, text] of assetTexts()) {
-        for (const m of text.matchAll(/processes\/([A-Za-z0-9-]+\.md)/g)) {
-            assert.ok(existsSync(`${dist}/${m[1]}`), `${rel} 引用不存在的步骤文件:${m[1]}`);
+        for (const m of text.matchAll(/steps\/([A-Za-z0-9-]+)\/(step\.md)/g)) {
+            assert.ok(existsSync(`${dist}/${m[1]}/${m[2]}`), `${rel} 引用不存在的步骤文件:${m[1]}/${m[2]}`);
         }
     }
 });

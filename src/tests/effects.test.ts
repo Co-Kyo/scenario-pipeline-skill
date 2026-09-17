@@ -39,11 +39,12 @@ test('能力研究契约:素材不静默丢弃', () => {
     assert.ok(research.expects.some((e) => e.includes('不能静默丢弃')));
 });
 
-test('D7:契约小节渲染含编号、归属与保证', () => {
+test('D7:契约小节渲染含编号与保证，且不含源码路径（维护者注记不进部署物）', () => {
     const s = effectContractSection('E-ladder-judgment');
     assert.ok(s.includes('E-ladder-judgment'));
     assert.ok(s.includes('做到才算过'));
-    assert.ok(s.includes('src/steps/learning-ladder/content.ts'));
+    // owns 留在源码侧（由上一项 existsSync 锁存在），产物只渲染 expects
+    assert.ok(!/src\//.test(s), `契约小节不应含源码形态路径：${s}`);
 });
 
 test('D7:未知契约 id 抛错(防静默漏接)', () => {

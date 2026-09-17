@@ -10,7 +10,9 @@
         "verify:product": "node --import tsx --test src/tests/product-verify.test.ts",
         "prepare": "git config core.hooksPath scripts/git-hooks",
         "lint": "eslint .",
-        "format": "eslint . --fix"
+        "format": "eslint . --fix",
+        "assemble:release": "tsx scripts/assemble-release.ts",
+        "verify:release": "tsx scripts/assemble-release.ts --check"
     },
     "dependencies": {
         "skillnomad": "0.1.6"

@@ -16,21 +16,22 @@ const dist = repoRoot + 'dist/sp-skill/';
 // 声明：steps/index.ts 导出顺序即 11 步正本（改步骤增删此处必同步改）
 const DECLARED_ORDER = steps.map((s) => s.id);
 
-test('产物 processes 章节数量与声明步数一致（防整节丢失）', () => {
-    const files = readdirSync(dist + 'processes').filter((f) => f.endsWith('.md')).sort();
+test('产物 steps 目录数量与声明步数一致（防整节丢失）', () => {
+    const dirs = readdirSync(dist + 'steps').sort();
     assert.equal(
-        files.length,
+        dirs.length,
         DECLARED_ORDER.length,
-    `processes 章节 ${files.length} ≠ 声明步数 ${DECLARED_ORDER.length}`,
+    `steps 目录 ${dirs.length} ≠ 声明步数 ${DECLARED_ORDER.length}`,
     );
 });
 
-test('产物章节顺序与声明顺序一致（防顺序漂移）', () => {
-    const files = readdirSync(dist + 'processes').filter((f) => f.endsWith('.md')).sort();
+test('产物步序与声明顺序一致（防顺序漂移）', () => {
+    const dirs = readdirSync(dist + 'steps').sort();
     for (const [i, stepId] of DECLARED_ORDER.entries()) {
         const nn = String(i).padStart(2, '0');
-        const hit = files.find((f) => f.startsWith(nn + '-') && f.includes(stepId));
-        assert.ok(hit, `第 ${i} 步 '${stepId}' 在产物中缺对应章节（期望 ${nn}-*${stepId}*.md）`);
+        const hit = dirs.find((d) => d.startsWith(nn + '-') && d.includes(stepId));
+        assert.ok(hit, `第 ${i} 步 '${stepId}' 在产物中缺对应目录（期望 ${nn}-*${stepId}/）`);
+        assert.ok(existsSync(`${dist}steps/${nn}-${stepId}/step.md`), `${nn}-${stepId} 缺 step.md`);
     }
 });
 

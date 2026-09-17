@@ -25,7 +25,7 @@
 ## 2. 项目边界（dev/release 双分支是红线，main 已退役）
 
 - `dev` = TS 源码开发分支（真相源）；`release` = CI 生成的纯 Markdown 产物分支（可导入成品，只读）；`main` 已退役删除，不再使用。
-- 铁律：**绝不手改 `release` 下 `processes/*.md` 与 `SKILL.md`**（生成物）；源码改动只在 `dev`；push dev 前跑全绿（pre-push hook 强制，见 §6）。
+- 铁律：**绝不手改 `release` 下 `steps/**` 与 `SKILL.md`**（生成物）；源码改动只在 `dev`；push dev 前跑全绿（pre-push hook 强制，见 §6）。
 - 本机私有 overlay 见 `agents.local.md`（gitignore，不入库）。
 
 ## 3. 内容→角色映射
@@ -40,7 +40,7 @@
 
 1. 跑 `git branch -a` 确认 dev / release 双分支状态（main 应不存在）。
 2. 读 `README.md`（生成物声明）、`SKILL.md`（scenario-pipeline 入口）、`VERSION_LINEAGE.json`。
-3. 列 `src/steps/` 清单；抽查 release 分支 `processes/` 章节（`grep '^## '`，只读不改）。
+3. 列 `src/steps/` 清单；抽查 release 分支 `steps/*/step.md` 章节（`grep '^## '`，只读不改）。
 
 ## 5. 执行分级
 

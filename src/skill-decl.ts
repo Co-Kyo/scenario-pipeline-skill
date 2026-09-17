@@ -122,6 +122,13 @@ export const contracts: SourceContract[] = [
     // ── 方法投影（2 条）──
     { id: 'evaluation-method', kind: 'method', path: assets.evaluationMethod.path, description: '评估方法论', scope: 'step', step: 'evaluate-pool' },
     { id: 'capability-method', kind: 'method', path: assets.capabilityMethod.path, description: '能力图谱提取方法论', scope: 'step', step: 'capability-graph' },
+    // ── 格式契约（6 条：步自有资产；发布位置由框架按角色派生）──
+    { id: 'anchors-schema', kind: 'schema', path: assets.anchorsSchema.path, description: '共享骨架格式契约', scope: 'step', step: 'intent-anchor' },
+    { id: 'requirement-web-schema', kind: 'schema', path: assets.requirementWebSchema.path, description: '需求网输出格式契约', scope: 'step', step: 'brainstorm' },
+    { id: 'brainstorm-schema', kind: 'schema', path: assets.brainstormSchema.path, description: '维度报告格式契约', scope: 'step', step: 'brainstorm' },
+    { id: 'partition-schema', kind: 'schema', path: assets.partitionSchema.path, description: '分区分析格式契约', scope: 'step', step: 'partition' },
+    { id: 'scan-schema', kind: 'schema', path: assets.scanSchema.path, description: '素材索引格式契约', scope: 'step', step: 'scan' },
+    { id: 'evaluations-schema', kind: 'schema', path: assets.evaluationsSchema.path, description: '评估结果格式契约', scope: 'step', step: 'evaluate-pool' },
     // ── 模块通道（5 条：路径为逻辑标识，内容＝模块 render()）──
     { id: 'parallel-method', kind: 'method', path: parallelMethodRef.path, description: '并行分析方法（内容包正本）', scope: 'step', step: 'brainstorm', module: 'parallel-methods' },
     { id: 'brainstorm-rules-method', kind: 'method', path: brainstormRulesMethodRef.path, description: '头脑风暴执行规则（内容包正本）', scope: 'step', step: 'brainstorm', module: 'brainstorm-rules-methods' },

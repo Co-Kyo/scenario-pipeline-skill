@@ -94,6 +94,13 @@ export const assets = {
     // ── 方法投影（2 条：评估／图谱方法论）──
     evaluationMethod: { path: 'assets/05-evaluate-pool/method.md', description: '评估方法论（投影）', required: true },
     capabilityMethod: { path: 'assets/04-capability-graph/method.md', description: '能力图谱提取方法论', required: true },
+    // ── 格式契约（6 条：随产物实体，由 schemaRef 引用）──
+    anchorsSchema: { path: 'src/steps/intent-anchor/assets/schemas.md', description: '共享骨架格式契约', required: true },
+    requirementWebSchema: { path: 'src/steps/brainstorm/assets/requirement-web-schema.md', description: '需求网输出格式契约', required: true },
+    brainstormSchema: { path: 'src/steps/brainstorm/assets/schemas.md', description: '维度报告格式契约', required: true },
+    partitionSchema: { path: 'src/steps/partition/assets/schemas.md', description: '分区分析格式契约', required: true },
+    scanSchema: { path: 'src/steps/scan/assets/schemas.md', description: '素材索引格式契约', required: true },
+    evaluationsSchema: { path: 'src/steps/evaluate-pool/assets/schemas.md', description: '评估结果格式契约', required: true },
 } satisfies Record<string, SourceRef>;
 
 /**
@@ -199,7 +206,8 @@ export function effectContractSection(id: string): string {
     const c = EFFECT_CONTRACTS.find((x) => x.id === id);
     if (!c) throw new Error(`未知效果契约:${id}`);
     const expects = c.expects.map((e) => `- ${e}`).join('\n');
-    return `本产物的效果契约 ${c.id}（违约时修改：${c.owns.join(' / ')}）：
+    // owns 是维护者注记（"违约时改哪里"）：留在源码侧（effects.test 校验路径存在），不渲染进部署物。
+    return `本产物的效果契约 ${c.id}：
 
 ${expects}`;
 }
