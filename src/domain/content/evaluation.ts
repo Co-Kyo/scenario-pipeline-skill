@@ -27,15 +27,11 @@ L4：任一维度 >= 2 即入池。
 }
 
 export function scoreTask(): string {
-    return `对每个命题按四维矩阵打分。
-记录每个维度的 reasoning。
-检查防虚高规则。
-写入 evaluations.json。`;
+    return `打分做法见模块附录（evaluate-methods）：逐维打分、记录依据、防虚高。
+本任务绑定：按四维矩阵打分，写入 evaluations.json。`;
 }
 
 export function archiveTask(): string {
-    return `按年限阈值判定 priority。
-记录 priority_trace。
-评估 difficulty 和 recommended_order。
-生成 README.md 和 candidates.md。`;
+    return `门禁与排序见模块附录（evaluate-methods）：阈值门禁、直通、难度分级与排序。
+本任务绑定：按年限阈值判定 priority，记录 priority_trace，评估 difficulty 和 recommended_order，生成 README.md 和 candidates.md。`;
 }

@@ -94,7 +94,7 @@ reason_type 只能是 ${REASON_TYPES.join('、')}。
 }
 
 export function integratorTask(): string {
-    return `你是头脑风暴的收敛者（Integrator）。你需要执行校验、对齐、收束、去重、补位，最终产出 requirement-web.json。
+    return `你是头脑风暴的收敛者（Integrator）。收敛五动作（校验、对齐、收束、去重、补位）见模块附录（parallel-methods）。
 
 你必须用 write 工具将文件写入磁盘。
 
@@ -107,12 +107,8 @@ export function integratorTask(): string {
 6. 输出格式：assets/01-brainstorm/requirement-web-schema.md
 
 ## 你的任务
-1. 校验：检查 4 个维度输出中的 level_weight 是否跨维度一致
-2. 对齐：不一致时按优先级对齐（${CONVERGE_PRIORITY}）
-3. 收束：用 anchor_ref 编织跨维度关系图，建立场景与能力映射
-4. 去重：同维度内描述重叠则合并；不同维度同锚点则标注不同视角
-5. 补位：检测 anchor_coverage 覆盖缺口
-6. 图谱构建：产出 capability_web（按能力 ID 组织，含 type/fanout/covers/dependencies）
+1. 按模块附录执行收敛五动作；对齐优先级为（${CONVERGE_PRIORITY}）。
+2. 图谱构建：产出 capability_web（按能力 ID 组织，含 type/fanout/covers/dependencies）。
 
 ## 输出格式
 严格按 requirement-web-schema.md 格式输出。
