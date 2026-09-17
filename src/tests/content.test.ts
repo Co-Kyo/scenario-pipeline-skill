@@ -2,18 +2,18 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { REASON_TYPES } from '../../steps/brainstorm/content.js';
-import { SCAN_DENSITY } from '../../steps/scan/content.js';
-import { countVerifyText, detail, INTERCEPT_WORDS, insufficientAnchorsText, skipSection, target } from '../../steps/intent-anchor/content.js';
-import { detail as partitionDetail, sessionOverflowText, threeLayerSection } from '../../steps/partition/content.js';
-import { capabilityOverflowText, highgroundSection } from '../../steps/capability-graph/content.js';
-import { detail as evaluationDetail, thresholdSection } from '../../steps/evaluate-pool/content.js';
-import { initializeDetail, WORKDIR_NAMING } from '../../steps/initialize/content.js';
-import { RATIO_CLAUSE, SCENARIO_MINIMUM } from './shared.js';
-import { SCHEDULING_POLICY } from '../scheduling.js';
+import { REASON_TYPES } from '../steps/brainstorm/content.js';
+import { SCAN_DENSITY } from '../steps/scan/content.js';
+import { countVerifyText, detail, INTERCEPT_WORDS, insufficientAnchorsText, skipSection, target } from '../steps/intent-anchor/content.js';
+import { detail as partitionDetail, sessionOverflowText, threeLayerSection } from '../steps/partition/content.js';
+import { capabilityOverflowText, highgroundSection } from '../steps/capability-graph/content.js';
+import { detail as evaluationDetail, thresholdSection } from '../steps/evaluate-pool/content.js';
+import { initializeDetail, WORKDIR_NAMING } from '../steps/initialize/content.js';
+import { RATIO_CLAUSE, SCENARIO_MINIMUM } from '../domain/content/shared.js';
+import { SCHEDULING_POLICY } from '../domain/scheduling.js';
 
-// 仓库根(src/domain/content/ 上三级)
-const repoRoot = fileURLToPath(new URL('../../../', import.meta.url));
+// 仓库根(src/tests/ 上两级)
+const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
 
 test('intent:锚点数量常量贯穿派生文本(target/detail/verify/halt)', () => {
     assert.ok(target().startsWith('生成 8-15 个锚点'));
@@ -108,8 +108,8 @@ test('D32-W5:调度三值下沉字面量锁（补锁 3，散文引用不断）',
 test('D35-W4:调度实例与框架同源（生成关系锁；改 W 即产物变）', async () => {
     // 生成锁：实例透传框架 SCHEDULING；绑定/策略内容由模块 render() 提供；改框架即产物变（G1 生成断言）。
     const { SCHEDULING } = await import('skillnomad');
-    const { SCHEDULING_POLICY, SCAN_BINDING } = await import('../scheduling.js');
-    const { scanBindingModule, schedulingPolicyModule } = await import('../../modules.js');
+    const { SCHEDULING_POLICY, SCAN_BINDING } = await import('../domain/scheduling.js');
+    const { scanBindingModule, schedulingPolicyModule } = await import('../modules.js');
     assert.equal(SCHEDULING_POLICY.concurrencyLimit, SCHEDULING.concurrencyLimit);
     assert.equal(SCHEDULING_POLICY.windowBudget?.maxWindowSize, SCHEDULING.windowBudget.maxWindowSize);
     assert.equal(SCAN_BINDING.limitW, SCHEDULING.concurrencyLimit);

@@ -8,7 +8,7 @@ import test from 'node:test';
 // "声明值 vs schema 正本"锁死：任一 typo 即变红。
 // 审计证据：将 `#capabilities` 改为 typo 后构建仍 exit 0，产物含 typo。
 // 框架侧 `#` 语义未定义（原样透传，不解析），校验待语义稳定后加。
-const repoRoot = fileURLToPath(new URL('../', import.meta.url));
+const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
 const read = (p: string) => readFileSync(repoRoot + p, 'utf-8');
 
 // 声明值（与 src/steps/*/step.ts 四处拼接一致；改源码此处必同步改）

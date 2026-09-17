@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { modules, contracts } from './contracts.js';
+import { modules, contracts } from '../contracts.js';
 
 // 专案23（P2 双表无守卫）：modules 与 contracts 文件条目登记同一批资产路径。
 // R2 钉子 1：brainstorm 旧址 3 条登记＋文件同步删除，双表 10→7。
@@ -25,7 +25,7 @@ test('双表路径双向包含：任一单边增删改路径即变红', () => {
 });
 
 test('module 引用条目：module id 必在 src/modules.ts 声明（D35 全链路）', async () => {
-    const { modules: declared } = await import('./modules.js');
+    const { modules: declared } = await import('../modules.js');
     const declaredIds = new Set(declared.map((m) => m.id));
     const moduleEntries = contracts.filter((c) => c.module);
     // 6 条（拆包第五例）：scan-scheduling-binding ＋ parallel-method ＋ evaluate-method ＋ partition-method ＋ capability-method-pack ＋ brainstorm-rules-method

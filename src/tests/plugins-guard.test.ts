@@ -8,7 +8,7 @@ import test from 'node:test';
 // 但在 E 类噪音清单、唯一源 17 处声明、任何测试里全无名——三处全漏。
 // 口径：只锁存在性（文件在＋登记在＋步骤引用在），不管内容对错（内容归 mdlego，不管对错）。
 // 可逆：只加本文件，不碰生产码；红了即删，不留痕。
-const repoRoot = fileURLToPath(new URL('../', import.meta.url));
+const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
 const read = (p: string) => readFileSync(repoRoot + p, 'utf-8');
 
 test('plugins:anti-crawl-fetch.md 文件存在（B4 内容本体）', () => {

@@ -13,7 +13,7 @@ import { fileURLToPath } from 'node:url';
 // 均另行标注）。处置时同步更新 ALLOW_ZERO（删 6→减 6，接回 3→转生产；
 // 新增合法资产时显式确认，R1 #7）。
 
-const repoRoot = fileURLToPath(new URL('..', import.meta.url));
+const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 const assetsDir = join(repoRoot, 'assets');
 
 const ALLOW_ZERO = new Set([

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { steps } from './steps/index.js';
+import { steps } from '../steps/index.js';
 
 // 模式④独立复核（只对结构，不对语义）：产物侧第二套验收，与声明侧单测不同源。
 // 正本＝源码声明（steps/index.ts 顺序 + decision-summary step_ids），不新建范本文件。
@@ -10,7 +10,7 @@ import { steps } from './steps/index.js';
 // 审计前科：P1 早返时 44 测试全绿——声明侧与实现侧同盲区；本脚本走产物侧对质。
 // 噪声说明：artifact-manifest.json 含 generated_at 时间戳（每次构建必变），本脚本
 // 只核对 files 清单的文件名集合，不比对 hash/时间戳（见交接文档 manifest 噪声登记）。
-const repoRoot = fileURLToPath(new URL('../', import.meta.url));
+const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
 const dist = repoRoot + 'dist/sp-skill/';
 
 // 声明：steps/index.ts 导出顺序即 11 步正本（改步骤增删此处必同步改）
