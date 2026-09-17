@@ -1,5 +1,11 @@
+// 本 skill 的文件全图：产出什么（产物登记）、读什么（输入资产）、保什么（效果契约）。
+// 读者时刻：我要知道这个 skill 产出哪些文件、谁依赖谁、读了哪些共享文档。
+//
+// 唯一源：产物路径只写在本文件；步骤源码用 refOf(name) 引用，不出现路径字面量。
+// 契约登记的输入资产路径由下方 assets 表派生，不再二次手写。
 import type { KeyMap, SourceRef } from 'skillnomad';
 import { createRefs } from 'skillnomad';
+import { LADDER_STAGE_COUNT } from './steps/learning-ladder/content.js';
 
 /**
  * **产物实体声明（8.16 产物路径投射 · 业务顶层）**
@@ -18,7 +24,7 @@ import { createRefs } from 'skillnomad';
 export type EntityKind = 'learning' | 'asset' | 'mechanism';
 
 export interface ProductEntity {
-    /** 领域概念（对应 domain/ 或 content/ 模块，只登记不发明） */
+    /** 领域概念（对应 steps/<步>/ 内容域，只登记不发明） */
     concept: string;
     /** 产物落点（路径模板）——唯一事实来源，替代 contracts.ts runtime 表手写 */
     artifact: string;
@@ -40,12 +46,12 @@ export const entities: Record<string, ProductEntity> = {
     dependencyGraph: { concept: 'partition', artifact: '{workDir}/.meta/dependency-graph.json', kind: 'learning', description: '依赖图' },
     executionPlan: { concept: 'partition', artifact: '{workDir}/execution-plan.md', kind: 'mechanism', description: '执行计划' },
 
-    // ── scan（content/scan.ts）────────────────────────────────
+    // ── scan（steps/scan/content.ts）────────────────────────────────
     scanIndex: { concept: 'scan', artifact: '{workDir}/.meta/.raw-materials/index.json', kind: 'learning', description: '素材索引', schema: 'src/steps/scan/assets/schemas.md' },
     scanMaterials: { concept: 'scan', artifact: '{workDir}/.meta/.raw-materials/*.md', kind: 'learning', description: '素材正文' },
     candidates: { concept: 'scan', artifact: '{workDir}/.meta/candidates.md', kind: 'learning', description: '候选池' },
 
-    // ── capability（content/capability.ts，最大簇）─────────────
+    // ── capability（steps/capability-graph/content.ts，最大簇）─────────────
     capabilityGraph: { concept: 'capability', artifact: '{workDir}/.meta/capability-graph.json', kind: 'learning', description: '能力图谱' },
     capabilities: { concept: 'capability', artifact: '{workDir}/capabilities/*.md', kind: 'asset', description: '能力主文件（跨命题长期资产）' },
     summaries: { concept: 'capability', artifact: '{workDir}/.meta/summaries/*.json', kind: 'learning', description: '能力摘要' },
@@ -60,10 +66,10 @@ export const entities: Record<string, ProductEntity> = {
     references: { concept: 'capability', artifact: '{workDir}/{seq}-{short_name}/references.md', kind: 'learning', description: 'References' },
     experiment: { concept: 'capability', artifact: '{workDir}/{seq}-{short_name}/experiment/README.md', kind: 'learning', description: 'Experiment' },
 
-    // ── evaluation（content/evaluation.ts）────────────────────
+    // ── evaluation（steps/evaluate-pool/content.ts）────────────────────
     evaluations: { concept: 'evaluation', artifact: '{workDir}/.meta/evaluations.json', kind: 'learning', description: '评估结果', schema: 'src/steps/evaluate-pool/assets/schemas.md' },
 
-    // ── ladder（content/ladder.ts）─────────────────────────────
+    // ── ladder（steps/learning-ladder/content.ts）─────────────────────────────
     ladder: { concept: 'ladder', artifact: '{workDir}/{seq}-{short_name}/learning-ladder.md', kind: 'learning', description: '学习阶梯' },
     learningPath: { concept: 'ladder', artifact: '{workDir}/.meta/learning-path.json', kind: 'learning', description: '学习路径' },
 
@@ -74,18 +80,40 @@ export const entities: Record<string, ProductEntity> = {
 } satisfies Record<string, ProductEntity>;
 
 /**
- * **markrefs 接入（P1b）**：键表（名字→路径）由本表派生（唯一事实来源不搬家）；
+ * **输入资产表**：步骤读的共享文件（不是产物，是随 skill 分发的源资产）。
+ * 步骤用 `{ ...assets.<名>, as: 'contract' }` 引用；契约登记（skill-decl）的路径由此派生。
+ */
+export const assets = {
+    // ── skill 级（3 条：跨步共用）──
+    refSources: { path: 'assets/common/ref-sources.md', description: 'T0 域名表 + 反爬域名表 + 信源分级规则', required: true },
+    strategyLevel: { path: 'assets/common/strategy-level.md', description: '密度参数查表', required: true },
+    antiCrawlFetch: { path: 'plugins/anti-crawl-fetch.md', description: 'Playwright 抓取', required: false },
+    // ── intent-anchor 步（2 条）──
+    yearRules: { path: 'src/steps/intent-anchor/assets/year-rules.md', description: '年限推断规则', required: true },
+    skipRules: { path: 'src/steps/intent-anchor/assets/skip-rules.md', description: '跳过判断规则', required: true },
+    // ── 方法投影（2 条：评估／图谱方法论）──
+    evaluationMethod: { path: 'assets/05-evaluate-pool/method.md', description: '评估方法论（投影）', required: true },
+    capabilityMethod: { path: 'assets/04-capability-graph/method.md', description: '能力图谱提取方法论', required: true },
+} satisfies Record<string, SourceRef>;
+
+/**
+ * **markrefs 接入（P1b）**：键表（名字→路径）由产物表派生（唯一事实来源不搬家）；
  * 引用登记在 `refOf`／`schemaRef` 内自动发生——118 处调用点文字不变。
  * 构建期由框架（skillnomad build）调用 markrefs 校验：名字在表、目标存在、重复定义。
  */
 export const refs = createRefs();
+
+// 输入资产路径登记（改路径只改上表一处）
+for (const asset of Object.values(assets)) {
+    refs.refPath(asset.path);
+}
 
 export const markrefsKeys: KeyMap = {
     entries: Object.entries(entities).map(([name, entity]) => ({
         name,
         path: entity.artifact,
         scope: 'entity',
-        site: 'src/domain/entities.ts',
+        site: 'src/artifacts.ts',
     })),
 };
 
@@ -112,4 +140,66 @@ export function schemaRef(name: keyof typeof entities): SourceRef & { path: stri
     if (!e?.schema) throw new Error(`实体 ${String(name)} 未登记格式契约（schema）`);
     refs.refPath(e.schema);
     return { path: e.schema, description: `${e.description} 格式契约`, required: true };
+}
+
+// ─────────────────────────────────────────────────────────────
+// 效果契约：产物的既有保证，显式化为源码级数据。
+// owns = 违约时应修改的源码位置（指向语义的现居地：步骤内容域 + 对应 schema 资产）；
+// 路径存在性由 effects.test.ts 校验。数值类保证一律从步骤内容域常量派生，不留硬编码字面量。
+// ─────────────────────────────────────────────────────────────
+
+export interface EffectContract {
+    id: string;
+    artifact: string;
+    owns: readonly string[];
+    expects: readonly string[];
+}
+
+export const EFFECT_CONTRACTS: readonly EffectContract[] = [
+    {
+        id: 'E-ladder-judgment',
+        artifact: entities.ladder.artifact,
+        owns: ['src/steps/learning-ladder/content.ts', 'src/steps/learning-ladder/assets/schemas.md'],
+        expects: [
+            '每个阶梯 Step 有「做到才算过」二值验证标准',
+      `阶段数 ${LADDER_STAGE_COUNT.min}-${LADDER_STAGE_COUNT.max}`,
+      '失败时给出明确回退指引',
+        ],
+    },
+    {
+        id: 'E-capability-coverage',
+        artifact: entities.capabilities.artifact,
+        owns: ['src/steps/capability-research/content.ts', 'src/steps/capability-research/assets/schemas.md'],
+        expects: [
+            '每个 fetch_status=ok 素材至少分配到一个能力,不能静默丢弃',
+            '每个摘要包含 material_usage(逐条 material_id/file_path/usage/selection_reason)',
+            '分组上限 5 个能力',
+        ],
+    },
+    {
+        id: 'E-briefing-trace',
+        artifact: entities.briefing.artifact,
+        owns: ['src/steps/briefing-assemble/content.ts', 'src/steps/briefing-assemble/assets/schemas.md'],
+        expects: ['场景化 Trace >= 3/3/3', '缺失能力摘要时标注缺失并继续'],
+    },
+    {
+        id: 'E-assemble-ratio',
+        artifact: entities.assemblyRatioTrace.artifact,
+        owns: ['src/steps/assemble/content.ts', 'src/steps/assemble/assets/schemas.md'],
+        expects: [
+            '通用高地 <= 70%,场景化/特化内容 >= 30%',
+            '至少 3 个场景化输入、3 个边界、3 个验证点',
+            'trace 记录 generic_pct/scenario_pct 与各项计数',
+        ],
+    },
+];
+
+/** D7:效果契约小节渲染(运行时 AI 与审计工具的消费方)。未知 id 抛错,防静默漏接。 */
+export function effectContractSection(id: string): string {
+    const c = EFFECT_CONTRACTS.find((x) => x.id === id);
+    if (!c) throw new Error(`未知效果契约:${id}`);
+    const expects = c.expects.map((e) => `- ${e}`).join('\n');
+    return `本产物的效果契约 ${c.id}（违约时修改：${c.owns.join(' / ')}）：
+
+${expects}`;
 }

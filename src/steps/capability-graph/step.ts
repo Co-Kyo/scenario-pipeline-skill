@@ -1,17 +1,14 @@
 import { step } from 'skillnomad';
-import { doAction } from '../../actions.js';
+import { doAction, displayFoldMulti, barrier, fail, verify } from '../../step-parts.js';
 import * as capability from './content.js';
-import { displayFoldMulti } from '../../domain/mechanics.js';
-import { refOf } from '../../domain/entities.js';
-import { modules, capabilityMethodRef } from '../../contracts.js';
-import { barrier } from '../../policies.js';
-import { fail, verify } from '../../verify.js';
+import { refOf, assets } from '../../artifacts.js';
+import { capabilityMethodRef } from '../../skill-decl.js';
 
 export const capabilityGraph = step('capability-graph', '能力图谱')
     .target('生成能力图谱、依赖图、战略高地与学习路径')
     .summary('跨命题去重合并原子能力，计算战略价值')
     .dependsOn('scan')
-    .reads(refOf('requirementWeb'), refOf('scanIndex'), { ...modules.capabilityMethod, as: 'method' }, capabilityMethodRef)
+    .reads(refOf('requirementWeb'), refOf('scanIndex'), { ...assets.capabilityMethod, as: 'method' }, capabilityMethodRef)
     .writes(refOf('capabilityGraph'), refOf('dependencyGraph'), refOf('highgrounds'), refOf('learningPath'))
     .inputs(refOf('requirementWeb').path, refOf('scanIndex').path)
     .outputs(

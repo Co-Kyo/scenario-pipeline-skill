@@ -1,7 +1,7 @@
 import type { SkillSourceModel } from 'skillnomad';
 import { createSkillFromModel } from 'skillnomad';
-import { contracts } from './src/contracts.js';
-import { policies } from './src/policies.js';
+import { contracts } from './src/skill-decl.js';
+import { policies } from './src/skill-decl.js';
 import { steps } from './src/steps/index.js';
 
 // Phase II:阶段→步骤映射唯一数据源（链顺序唯一事实是 dependsOn 声明，由框架构建期校验；

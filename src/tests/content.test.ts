@@ -9,8 +9,8 @@ import { detail as partitionDetail, sessionOverflowText, threeLayerSection } fro
 import { capabilityOverflowText, highgroundSection } from '../steps/capability-graph/content.js';
 import { detail as evaluationDetail, thresholdSection } from '../steps/evaluate-pool/content.js';
 import { initializeDetail, WORKDIR_NAMING } from '../steps/initialize/content.js';
-import { RATIO_CLAUSE, SCENARIO_MINIMUM } from '../domain/content/shared.js';
-import { BATCH_POLICY, CONCURRENCY_LIMIT, WINDOW_BUDGET } from '../domain/scheduling.js';
+import { RATIO_CLAUSE, SCENARIO_MINIMUM } from '../steps/assemble/content.js';
+import { BATCH_POLICY, CONCURRENCY_LIMIT, WINDOW_BUDGET } from '../skill-decl.js';
 
 // 仓库根(src/tests/ 上两级)
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
@@ -108,7 +108,7 @@ test('D32-W5:并发口径自有常量锁（字面量锁；框架零调度口径�
 test('D35-W4退役:scan-binding模块已随调度移除而删除（存在性反断言）', async () => {
     // scan-binding／scheduling-policy 两模块＋contracts条目＋scan reads已删除；
     // 模块通道现为 5 条纯内容包。本测试锁"删干净"：任一回潮即红。
-    const { modules: declared } = await import('../modules.js');
+    const { modules: declared } = await import('../skill-decl.js');
     const ids = new Set(declared.map((m) => m.id));
     assert.ok(!ids.has('scan-binding'), 'scan-binding 回潮');
     assert.ok(!ids.has('scheduling-policy'), 'scheduling-policy 回潮');

@@ -9,7 +9,7 @@ import {
     stepFormat,
     workerTask,
 } from './content.js';
-import { LEVELS } from '../../domain/learner.js';
+import { LEVELS } from './learner.js';
 
 test('ladderDetail 派生文本包含分层规则与阶段数约束', () => {
     const d = ladderDetail();

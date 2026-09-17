@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { LEVELS, LEVEL_CRITERIA_TABLE, levelCriterion } from '../domain/learner.js';
+import { LEVELS, LEVEL_CRITERIA_TABLE, levelCriterion } from '../steps/learning-ladder/learner.js';
 
 test('级别集合完备且有序', () => {
     assert.deepEqual(LEVELS, ['L1', 'L2', 'L3', 'L4']);

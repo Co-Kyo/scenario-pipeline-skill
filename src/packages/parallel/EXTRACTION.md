@@ -8,7 +8,7 @@
 
 | 业务词（留宿主） | 原出现处 | 包内通用说法 |
 |---|---|---|
-| 场景／技术／学习／约束（4 个维度名） | `src/steps/brainstorm.ts`、`src/domain/content/brainstorm.ts` | 3–5 个互补视角（由使用方声明） |
+| 场景／技术／学习／约束（4 个维度名） | `src/steps/brainstorm/step.ts`、`src/steps/brainstorm/content.ts` | 3–5 个互补视角（由使用方声明） |
 | `scenario.json`／`technical.json`／`learning.json`／`constraint.json` | 同上 | 每维度一份「维度报告」（写到约定位置） |
 | `requirement-web.json`（汇总产物） | 同上 | 汇总产物（格式由使用方声明） |
 | `CONVERGE_PRIORITY`＝约束 > 技术 > 场景 > 学习 | `content/brainstorm.ts` | 按使用方声明的优先级取舍 |

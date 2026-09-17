@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { EFFECT_CONTRACTS, effectContractSection } from '../domain/effects.js';
+import { EFFECT_CONTRACTS, effectContractSection } from '../artifacts.js';
 
 // 仓库根(src/tests/ 上两级),用于 owns 路径存在性校验
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
@@ -30,7 +30,7 @@ test('学习阶梯契约:二值验收与阶段数在保证列表中', () => {
     assert.ok(ladder, '缺少 E-ladder-judgment');
     assert.ok(ladder.expects.some((e) => e.includes('做到才算过')));
     assert.ok(ladder.expects.some((e) => e.includes('阶段数 3-4')));
-    assert.ok(ladder.owns.some((o) => o.startsWith('src/steps/') || o.startsWith('src/domain/')));
+    assert.ok(ladder.owns.some((o) => o.startsWith('src/steps/')));
 });
 
 test('能力研究契约:素材不静默丢弃', () => {

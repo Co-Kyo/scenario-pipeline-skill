@@ -1,6 +1,7 @@
 // 内容域:命题组装。双 Agent 分工、任务模板为唯一数据源。
-// RATIO_CLAUSE/SCENARIO_MINIMUM 收敛自 content/shared.ts（消解 assembly 组内部双写）。
-import { RATIO_CLAUSE, SCENARIO_MINIMUM } from '../../domain/content/shared.js';
+// 本步私有条款（原 domain/content/shared.ts 迁回）：只被本步 detail/task 引用，不跨步。
+export const RATIO_CLAUSE = '内容比例：通用高地 <= 70%，场景化/特化内容 >= 30%。';
+export const SCENARIO_MINIMUM = '至少 3 个场景化输入、3 个边界、3 个验证点。';
 
 export const assembly = {
     detail: () => `每个命题使用 2 个 Agent：

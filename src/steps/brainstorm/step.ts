@@ -1,11 +1,8 @@
 import { step } from 'skillnomad';
-import { agentAction, doAction } from '../../actions.js';
+import { agentAction, doAction, displayFoldMulti, barrier, fail, verify } from '../../step-parts.js';
 import * as brainstormRules from './content.js';
-import { displayFoldMulti } from '../../domain/mechanics.js';
-import { parallelMethodRef, brainstormRulesMethodRef } from '../../contracts.js';
-import { refOf, schemaRef } from '../../domain/entities.js';
-import { barrier } from '../../policies.js';
-import { fail, verify } from '../../verify.js';
+import { parallelMethodRef, brainstormRulesMethodRef } from '../../skill-decl.js';
+import { refOf, schemaRef } from '../../artifacts.js';
 
 export const brainstorm = step('brainstorm', '头脑风暴')
     .target('收敛出可被 {{step:scan}} 消费的 requirement-web.json')

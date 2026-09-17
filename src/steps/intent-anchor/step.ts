@@ -1,10 +1,7 @@
 import { step } from 'skillnomad';
 import * as intent from './content.js';
-import { displayFoldMulti } from '../../domain/mechanics.js';
-import { modules } from '../../contracts.js';
-import { refOf, schemaRef } from '../../domain/entities.js';
-import { barrier } from '../../policies.js';
-import { fail, verify } from '../../verify.js';
+import { displayFoldMulti, barrier, fail, verify } from '../../step-parts.js';
+import { assets, refOf, schemaRef } from '../../artifacts.js';
 
 export const intentAnchor = step('intent-anchor', '意图锚定')
     .target(intent.target())
@@ -12,9 +9,9 @@ export const intentAnchor = step('intent-anchor', '意图锚定')
     .dependsOn('initialize')
     .reads(
         { ...schemaRef('anchors'), as: 'schema' },
-        { ...modules.yearRules, as: 'rule' },
-        { ...modules.skipRules, as: 'rule' },
-        { ...modules.strategyLevel, as: 'contract' },
+        { ...assets.yearRules, as: 'rule' },
+        { ...assets.skipRules, as: 'rule' },
+        { ...assets.strategyLevel, as: 'contract' },
     )
     .writes(refOf('anchors'))
     .inputs('raw_input')

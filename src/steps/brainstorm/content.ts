@@ -1,6 +1,6 @@
 // 内容域:头脑风暴。维度 Agent、调度参数、收敛优先级、reason_type 枚举为唯一数据源。
 // 级别过滤短语从 learner.LEVEL_CRITERIA_TABLE 派生(消解与学习域的真重复)。
-import { LEVEL_CRITERIA_TABLE } from '../../domain/learner.js';
+import { LEVEL_CRITERIA_TABLE } from '../learning-ladder/learner.js';
 
 /** 4 个维度 Agent 的输出文件名(不含扩展名) */
 export const DIMENSION_FILES = ['scenario', 'technical', 'learning', 'constraint'] as const;

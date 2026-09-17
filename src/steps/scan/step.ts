@@ -1,10 +1,7 @@
 import { step } from 'skillnomad';
-import { doAction } from '../../actions.js';
-import { modules } from '../../contracts.js';
-import { refOf, schemaRef } from '../../domain/entities.js';
+import { doAction, barrier, fail, verify } from '../../step-parts.js';
+import { assets, refOf, schemaRef } from '../../artifacts.js';
 import * as scanRules from './content.js';
-import { barrier } from '../../policies.js';
-import { fail, verify } from '../../verify.js';
 
 export const scan = step('scan', '广域扫描')
     .target('生成可被能力图谱消费的素材索引和素材正文')
@@ -14,9 +11,9 @@ export const scan = step('scan', '广域扫描')
         refOf('requirementWeb'),
         { ...refOf('partitionAnalysis'), required: false },
         { ...schemaRef('scanIndex'), as: 'schema' },
-        { ...modules.refSources, as: 'contract' },
-        { ...modules.strategyLevel, as: 'contract' },
-        modules.antiCrawlFetch,
+        { ...assets.refSources, as: 'contract' },
+        { ...assets.strategyLevel, as: 'contract' },
+        assets.antiCrawlFetch,
     )
     .writes(refOf('scanIndex'), refOf('scanMaterials'))
     .inputs(

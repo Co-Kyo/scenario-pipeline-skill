@@ -1,11 +1,8 @@
 import { step } from 'skillnomad';
-import { doAction } from '../../actions.js';
-import { effectContractSection } from '../../domain/effects.js';
+import { doAction, barrier, fail, verify } from '../../step-parts.js';
+import { effectContractSection, refOf } from '../../artifacts.js';
 import { assembly } from './content.js';
-import { refOf } from '../../domain/entities.js';
 
-import { barrier } from '../../policies.js';
-import { fail, verify } from '../../verify.js';
 
 export const assemble = step('assemble', '命题组装')
     .target('为每个命题生成四象限研究输出')

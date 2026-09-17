@@ -1,6 +1,6 @@
 // 内容域:广域扫描。密度表、URL 策略映射、抓取分流、提取字段、超时恢复规则为唯一数据源。
 // 「输出 Schema」为整块搬移单元(含转义反引号),禁止拆分。
-import { CONCURRENCY_LIMIT } from '../../domain/scheduling.js';
+import { CONCURRENCY_LIMIT } from '../../skill-decl.js';
 
 /** 扫描密度查表(正本为 assets/common/strategy-level.md 的 L2 列;此处为散文渲染源) */
 export const SCAN_DENSITY = [

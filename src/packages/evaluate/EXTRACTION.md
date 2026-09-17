@@ -7,7 +7,7 @@
 
 | 业务词（留宿主） | 原出现处 | 包内通用说法 |
 |---|---|---|
-| 跨栈耦合／文档真空／经验壁垒／时事热度（4 个维度名＋英文 id） | `src/domain/content/evaluation.ts` L2–7、`assets/05-evaluate-pool/method.md` L11–16 | N 个评估维度（由使用方声明） |
+| 跨栈耦合／文档真空／经验壁垒／时事热度（4 个维度名＋英文 id） | `src/steps/evaluate-pool/content.ts` L2–7、`assets/05-evaluate-pool/method.md` L11–16 | N 个评估维度（由使用方声明） |
 | 校准依据：MDN／规范／Google 首页／翻 2–3 页／跨 3+ 篇拼凑；规模锚（百万 DAU／复杂部署）；热度口径（面试／社区／招聘） | `method.md` L22–31 | 每维度的客观依据（由使用方声明） |
 | L1 通常不入池／L2 总分 ≥6／L3 总分 ≥5／L4 任一维度 ≥2 | `evaluation.ts` L20–27、`method.md` L33–44 | 各档入池阈值（由使用方声明） |
 | 一票三条：2+ 信息源／明确 Trade-off／新兴与既有碰撞 | `method.md` L46–52、`evaluation.ts` L26 | 直通条件（由使用方声明） |

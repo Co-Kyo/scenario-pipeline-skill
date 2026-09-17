@@ -1,6 +1,6 @@
 // 内容域:能力研究。分组规则、域任务、素材分配、任务模板与文件模板为唯一数据源。
 // 并发上限以消费仓自有 CONCURRENCY_LIMIT 为唯一源（原 shared.PARALLEL_WIDTH 已随调度极致移除而删除）。
-import { CONCURRENCY_LIMIT } from '../../domain/scheduling.js';
+import { CONCURRENCY_LIMIT } from '../../skill-decl.js';
 
 export const research = {
     detail: () => `分组规则：

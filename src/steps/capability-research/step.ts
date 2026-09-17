@@ -1,18 +1,14 @@
 import { step } from 'skillnomad';
-import { doAction } from '../../actions.js';
-import { effectContractSection } from '../../domain/effects.js';
+import { doAction, barrier, fail, verify } from '../../step-parts.js';
+import { effectContractSection, assets, refOf } from '../../artifacts.js';
 import { research } from './content.js';
-import { modules } from '../../contracts.js';
-import { refOf } from '../../domain/entities.js';
 
-import { barrier } from '../../policies.js';
-import { fail, verify } from '../../verify.js';
 
 export const capabilityResearch = step('capability-research', '能力研究')
     .target('生成能力知识库主文件、结构化摘要和索引')
     .summary('深度研究原子能力，产出知识库主文件')
     .dependsOn('evaluate-pool')
-    .reads(refOf('capabilityGraph'), refOf('readme'), { ...modules.refSources, as: 'contract' }, refOf('scanIndex'))
+    .reads(refOf('capabilityGraph'), refOf('readme'), { ...assets.refSources, as: 'contract' }, refOf('scanIndex'))
     .writes(refOf('researchPlan'), refOf('capabilities'), refOf('summaries'), refOf('capabilitiesReadme'))
     .inputs(refOf('capabilityGraph').path, refOf('readme').path, refOf('scanIndex').path)
     .outputs(refOf('researchPlan').path, refOf('capabilities').path, refOf('summaries').path, refOf('capabilitiesReadme').path)

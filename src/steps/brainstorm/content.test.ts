@@ -11,7 +11,7 @@ import {
     RETRY_MAX,
     scenarioTask,
 } from './content.js';
-import { LEVEL_CRITERIA_TABLE } from '../../domain/learner.js';
+import { LEVEL_CRITERIA_TABLE } from '../learning-ladder/learner.js';
 
 test('brainstorm:调度参数常量贯穿执行步骤', () => {
     const d = detail();

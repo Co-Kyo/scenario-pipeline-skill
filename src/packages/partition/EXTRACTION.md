@@ -7,7 +7,7 @@
 
 | 业务词（留宿主） | 原出现处 | 包内通用说法 |
 |---|---|---|
-| prerequisite／enables／related／extends＋中文解释（4 个依赖类型） | `src/domain/content/partition.ts` L2–7 | 本域依赖类型表（由使用方声明，含方向） |
+| prerequisite／enables／related／extends＋中文解释（4 个依赖类型） | `src/steps/partition/content.ts` L2–7 | 本域依赖类型表（由使用方声明，含方向） |
 | LEIDEN_THRESHOLD＝8、聚类算法名 Leiden | `partition.ts` L10、`threeLayerSection()` | 社区分量阈值（由使用方声明）＋社区聚类 |
 | SESSION_MAX_PROPOSITIONS＝12、S1／S2／S3、core 命题 | `partition.ts` L13、`sessionSection()` | 当前批次上限（由使用方声明）＋后续批次 |
 | `partition-analysis.json`／`dependency-graph.json`／`execution-plan.md`＋`current_session`／`scan_batches` | 步骤 reads／writes、entities L39–41 | 分区分析／执行计划（写到约定位置） |
