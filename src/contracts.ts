@@ -13,7 +13,7 @@ import { refs } from './domain/entities.js';
  * 8.15 Step 1 相对旧 `refs` 的两处变化：
  * - **移除 4 条**：protocolScheduling / pipelineParams / subagentBudget / schedulingDetail
  *   已随 8.13/8.14 下沉到 `meta.schedulingPolicy`，步骤不再引用（零处引用，非行为变更）。
- * - **收编 1 条**：`assets/00-intent-anchor/schemas.md` 原为裸路径字面量（intent-anchor.ts），
+ * - **收编 1 条**：`src/steps/intent-anchor/assets/schemas.md` 原为裸路径字面量（intent-anchor.ts），
  *   逃逸在注册表外；8.16 起已挂到产物实体名下（`entities.ts` anchors 条目的 `schema` 字段），
  *   不再是独立模块（description 保持原字面量，确保产物零 diff）。
  */
@@ -23,8 +23,8 @@ export const modules = {
     strategyLevel: { path: 'assets/common/strategy-level.md', description: '密度参数查表', required: true },
     antiCrawlFetch: { path: 'plugins/anti-crawl-fetch.md', description: 'Playwright 抓取', required: false },
     // ── intent-anchor 步（2 条）──
-    yearRules: { path: 'assets/00-intent-anchor/year-rules.md', description: '年限推断规则', required: true },
-    skipRules: { path: 'assets/00-intent-anchor/skip-rules.md', description: '跳过判断规则', required: true },
+    yearRules: { path: 'src/steps/intent-anchor/assets/year-rules.md', description: '年限推断规则', required: true },
+    skipRules: { path: 'src/steps/intent-anchor/assets/skip-rules.md', description: '跳过判断规则', required: true },
     // ── brainstorm 步旧址（R2 钉子 1 已删除：形状已迁入 @co-kyo/brainstorm-rules 包，登记同步删除；存在性不再校验）──
     // ── 方法投影（2 条：评估／图谱方法论）──
     evaluationMethod: { path: 'assets/05-evaluate-pool/method.md', description: '评估方法论（投影）', required: true },
@@ -93,8 +93,8 @@ export const contracts: SourceContract[] = [
     { id: 'strategy-level', kind: 'policy', path: 'assets/common/strategy-level.md', description: '密度参数查表', scope: 'skill' },
     { id: 'anti-crawl-fetch', kind: 'method', path: 'plugins/anti-crawl-fetch.md', description: 'Playwright 抓取', scope: 'skill' },
     // ── intent-anchor 步（2 条）──
-    { id: 'year-rules', kind: 'policy', path: 'assets/00-intent-anchor/year-rules.md', description: '年限推断规则', scope: 'step', step: 'intent-anchor' },
-    { id: 'skip-rules', kind: 'policy', path: 'assets/00-intent-anchor/skip-rules.md', description: '跳过判断规则', scope: 'step', step: 'intent-anchor' },
+    { id: 'year-rules', kind: 'policy', path: 'src/steps/intent-anchor/assets/year-rules.md', description: '年限推断规则', scope: 'step', step: 'intent-anchor' },
+    { id: 'skip-rules', kind: 'policy', path: 'src/steps/intent-anchor/assets/skip-rules.md', description: '跳过判断规则', scope: 'step', step: 'intent-anchor' },
     // ── brainstorm 步文件背旧址（R2 钉子 1 已删除：3 条登记同步删除；形状见 brainstorm-rules-methods 附录）──
     // ── 方法投影（2 条）──
     { id: 'evaluation-method', kind: 'method', path: 'assets/05-evaluate-pool/method.md', description: '评估方法论', scope: 'step', step: 'evaluate-pool' },

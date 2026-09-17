@@ -1,10 +1,10 @@
 import { step } from 'skillnomad';
-import * as intent from '../domain/content/intent.js';
-import { displayFoldMulti } from '../domain/mechanics.js';
-import { modules } from '../contracts.js';
-import { refOf, schemaRef } from '../domain/entities.js';
-import { barrier } from '../policies.js';
-import { fail, verify } from '../verify.js';
+import * as intent from './content.js';
+import { displayFoldMulti } from '../../domain/mechanics.js';
+import { modules } from '../../contracts.js';
+import { refOf, schemaRef } from '../../domain/entities.js';
+import { barrier } from '../../policies.js';
+import { fail, verify } from '../../verify.js';
 
 export const intentAnchor = step('intent-anchor', '意图锚定')
     .target(intent.target())

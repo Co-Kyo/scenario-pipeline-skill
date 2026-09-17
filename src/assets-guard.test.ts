@@ -25,7 +25,7 @@ const ALLOW_ZERO = new Set([
     // D32 W2 已删：'assets/01-brainstorm/scheduling-detail.md'
     // D32 W4 已接回转生产：'assets/02-partition/schemas.md'
     // D32 W4 已接回转生产：'assets/04-capability-graph/method.md'
-    'assets/04-capability-graph/schemas.md', // 仅测试引用（fragment 正本），非生产引用
+    // R4-N9 文件夹已迁出：'assets/04-capability-graph/schemas.md' → src/steps/capability-graph/assets/schemas.md（随步骤同目录；存在性改由 fragment.test.ts 锁定）
     // D32 W4 已接回转生产：'assets/05-evaluate-pool/schemas.md'
     // D35 W0 已删：'assets/common/convention-trace.md'
     'assets/common/decision-summary.schema.json',

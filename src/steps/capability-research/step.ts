@@ -1,12 +1,12 @@
 import { step } from 'skillnomad';
-import { doAction } from '../actions.js';
-import { effectContractSection } from '../domain/effects.js';
-import { research } from '../domain/content/research.js';
-import { modules } from '../contracts.js';
-import { refOf } from '../domain/entities.js';
+import { doAction } from '../../actions.js';
+import { effectContractSection } from '../../domain/effects.js';
+import { research } from './content.js';
+import { modules } from '../../contracts.js';
+import { refOf } from '../../domain/entities.js';
 
-import { barrier } from '../policies.js';
-import { fail, verify } from '../verify.js';
+import { barrier } from '../../policies.js';
+import { fail, verify } from '../../verify.js';
 
 export const capabilityResearch = step('capability-research', '能力研究')
     .target('生成能力知识库主文件、结构化摘要和索引')

@@ -2,13 +2,13 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { REASON_TYPES } from './brainstorm.js';
-import { SCAN_DENSITY } from './scan.js';
-import { countVerifyText, detail, INTERCEPT_WORDS, insufficientAnchorsText, skipSection, target } from './intent.js';
+import { REASON_TYPES } from '../../steps/brainstorm/content.js';
+import { SCAN_DENSITY } from '../../steps/scan/content.js';
+import { countVerifyText, detail, INTERCEPT_WORDS, insufficientAnchorsText, skipSection, target } from '../../steps/intent-anchor/content.js';
 import { detail as partitionDetail, sessionOverflowText, threeLayerSection } from '../../steps/partition/content.js';
-import { capabilityOverflowText, highgroundSection } from './capability.js';
-import { detail as evaluationDetail, thresholdSection } from './evaluation.js';
-import { initializeDetail, WORKDIR_NAMING } from './initialize.js';
+import { capabilityOverflowText, highgroundSection } from '../../steps/capability-graph/content.js';
+import { detail as evaluationDetail, thresholdSection } from '../../steps/evaluate-pool/content.js';
+import { initializeDetail, WORKDIR_NAMING } from '../../steps/initialize/content.js';
 import { RATIO_CLAUSE, SCENARIO_MINIMUM } from './shared.js';
 import { SCHEDULING_POLICY } from '../scheduling.js';
 
@@ -43,7 +43,7 @@ test('B3:SCAN_DENSITY 与 strategy-level.md L2 列一致(漂移锁)', () => {
 
 test('B4:role/level 约束在两份资产中同义存在(漂移锁)', () => {
     const sl = readFileSync(repoRoot + 'assets/common/strategy-level.md', 'utf-8');
-    const sr = readFileSync(repoRoot + 'assets/00-intent-anchor/skip-rules.md', 'utf-8');
+    const sr = readFileSync(repoRoot + 'src/steps/intent-anchor/assets/skip-rules.md', 'utf-8');
     assert.ok(sl.includes('= target_level - 1'), 'strategy-level 缺 premise 约束');
     assert.ok(sr.includes('level=target_level-1'), 'skip-rules 缺 premise 约束');
 });
@@ -51,7 +51,7 @@ test('B4:role/level 约束在两份资产中同义存在(漂移锁)', () => {
 test('B5:reason_type 枚举在 schemas 正本中齐全(漂移锁)', () => {
     // D32 W2：constraint-agent.md 已删（死文件，运行时零消费），本锁只留活文件一端；
     // 内联工厂 constraintTask() 的 REASON_TYPES 内插由 brainstorm.test.ts 字面量断言覆盖。
-    const sch = readFileSync(repoRoot + 'assets/01-brainstorm/schemas.md', 'utf-8');
+    const sch = readFileSync(repoRoot + 'src/steps/brainstorm/assets/schemas.md', 'utf-8');
     for (const r of REASON_TYPES) {
         assert.ok(sch.includes(r), `schemas 缺 ${r}`);
     }

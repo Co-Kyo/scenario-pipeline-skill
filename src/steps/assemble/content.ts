@@ -1,6 +1,6 @@
 // 内容域:命题组装。双 Agent 分工、任务模板为唯一数据源。
 // RATIO_CLAUSE/SCENARIO_MINIMUM 收敛自 content/shared.ts（消解 assembly 组内部双写）。
-import { RATIO_CLAUSE, SCENARIO_MINIMUM } from './shared.js';
+import { RATIO_CLAUSE, SCENARIO_MINIMUM } from '../../domain/content/shared.js';
 
 export const assembly = {
     detail: () => `每个命题使用 2 个 Agent：

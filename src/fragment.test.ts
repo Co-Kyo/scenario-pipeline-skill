@@ -11,12 +11,12 @@ import test from 'node:test';
 const repoRoot = fileURLToPath(new URL('../', import.meta.url));
 const read = (p: string) => readFileSync(repoRoot + p, 'utf-8');
 
-// 声明值（与 src/steps/*.ts:57/64/69/72 四处拼接一致；改源码此处必同步改）
+// 声明值（与 src/steps/*/step.ts 四处拼接一致；改源码此处必同步改）
 const DECLARED = [
-    { file: 'src/steps/briefing-assemble.ts', fragment: 'propositions', schemaFile: 'assets/01-brainstorm/requirement-web-schema.md' },
-    { file: 'src/steps/assemble.ts', fragment: 'propositions', schemaFile: 'assets/01-brainstorm/requirement-web-schema.md' },
-    { file: 'src/steps/capability-research.ts', fragment: 'capabilities', schemaFile: 'assets/04-capability-graph/schemas.md' },
-    { file: 'src/steps/learning-ladder.ts', fragment: 'propositions', schemaFile: 'assets/01-brainstorm/requirement-web-schema.md' },
+    { file: 'src/steps/briefing-assemble/step.ts', fragment: 'propositions', schemaFile: 'src/steps/brainstorm/assets/requirement-web-schema.md' },
+    { file: 'src/steps/assemble/step.ts', fragment: 'propositions', schemaFile: 'src/steps/brainstorm/assets/requirement-web-schema.md' },
+    { file: 'src/steps/capability-research/step.ts', fragment: 'capabilities', schemaFile: 'src/steps/capability-graph/assets/schemas.md' },
+    { file: 'src/steps/learning-ladder/step.ts', fragment: 'propositions', schemaFile: 'src/steps/brainstorm/assets/requirement-web-schema.md' },
 ];
 
 test('fragment 声明值在源码中存在（防声明与测试双漂）', () => {

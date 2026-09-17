@@ -29,11 +29,11 @@ export interface ProductEntity {
 }
 
 export const entities: Record<string, ProductEntity> = {
-    // ── intent（content/intent.ts）────────────────────────────
-    anchors: { concept: 'intent', artifact: '{workDir}/.meta/brainstorm/anchors.json', kind: 'learning', description: '共享骨架', schema: 'assets/00-intent-anchor/schemas.md' },
+    // ── intent（steps/intent-anchor/content.ts；文件夹：与步骤同目录）────────────────────────────
+    anchors: { concept: 'intent', artifact: '{workDir}/.meta/brainstorm/anchors.json', kind: 'learning', description: '共享骨架', schema: 'src/steps/intent-anchor/assets/schemas.md' },
 
-    // ── brainstorm（content/brainstorm.ts）────────────────────
-    requirementWeb: { concept: 'brainstorm', artifact: '{workDir}/.meta/requirement-web.json', kind: 'learning', description: '需求网', schema: 'assets/01-brainstorm/schemas.md' },
+    // ── brainstorm（steps/brainstorm/content.ts；文件夹：与步骤同目录）────────────────────
+    requirementWeb: { concept: 'brainstorm', artifact: '{workDir}/.meta/requirement-web.json', kind: 'learning', description: '需求网', schema: 'src/steps/brainstorm/assets/schemas.md' },
 
     // ── partition（steps/partition/content.ts；R4-N8 文件夹试点：与步骤同目录）──────────────────────
     partitionAnalysis: { concept: 'partition', artifact: '{workDir}/.meta/partition-analysis.json', kind: 'learning', description: '分区分析', schema: 'src/steps/partition/assets/schemas.md' },
@@ -41,7 +41,7 @@ export const entities: Record<string, ProductEntity> = {
     executionPlan: { concept: 'partition', artifact: '{workDir}/execution-plan.md', kind: 'mechanism', description: '执行计划' },
 
     // ── scan（content/scan.ts）────────────────────────────────
-    scanIndex: { concept: 'scan', artifact: '{workDir}/.meta/.raw-materials/index.json', kind: 'learning', description: '素材索引', schema: 'assets/03-scan/schemas.md' },
+    scanIndex: { concept: 'scan', artifact: '{workDir}/.meta/.raw-materials/index.json', kind: 'learning', description: '素材索引', schema: 'src/steps/scan/assets/schemas.md' },
     scanMaterials: { concept: 'scan', artifact: '{workDir}/.meta/.raw-materials/*.md', kind: 'learning', description: '素材正文' },
     candidates: { concept: 'scan', artifact: '{workDir}/.meta/candidates.md', kind: 'learning', description: '候选池' },
 
@@ -61,7 +61,7 @@ export const entities: Record<string, ProductEntity> = {
     experiment: { concept: 'capability', artifact: '{workDir}/{seq}-{short_name}/experiment/README.md', kind: 'learning', description: 'Experiment' },
 
     // ── evaluation（content/evaluation.ts）────────────────────
-    evaluations: { concept: 'evaluation', artifact: '{workDir}/.meta/evaluations.json', kind: 'learning', description: '评估结果', schema: 'assets/05-evaluate-pool/schemas.md' },
+    evaluations: { concept: 'evaluation', artifact: '{workDir}/.meta/evaluations.json', kind: 'learning', description: '评估结果', schema: 'src/steps/evaluate-pool/assets/schemas.md' },
 
     // ── ladder（content/ladder.ts）─────────────────────────────
     ladder: { concept: 'ladder', artifact: '{workDir}/{seq}-{short_name}/learning-ladder.md', kind: 'learning', description: '学习阶梯' },

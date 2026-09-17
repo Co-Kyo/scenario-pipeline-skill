@@ -2,10 +2,10 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { detail, extractTask, EXTRACT_FIELDS, outputSchema, phaseASection, SCAN_DENSITY } from './scan.js';
-import { PARALLEL_WIDTH } from './shared.js';
+import { detail, extractTask, EXTRACT_FIELDS, outputSchema, phaseASection, SCAN_DENSITY } from './content.js';
+import { PARALLEL_WIDTH } from '../../domain/content/shared.js';
 
-// 仓库根(src/domain/content/ 上三级)
+// 仓库根(src/steps/scan/ 上三级)
 const repoRoot = fileURLToPath(new URL('../../../', import.meta.url));
 
 test('scan:密度表派生逐字一致(含 L2 默认注记)', () => {
@@ -37,10 +37,10 @@ test('scan:密度表角色覆盖 detail 与 SCAN_DENSITY 一致', () => {
     assert.deepEqual(SCAN_DENSITY.map((d) => d.role), ['core', 'premise', 'outlook']);
 });
 
-test('B1-A:outputSchema 与 assets/03-scan/schemas.md 正本逐块一致(漂移锁)', () => {
+test('B1-A:outputSchema 与 scan/assets/schemas.md 正本逐块一致(漂移锁)', () => {
     // 行尾归一:Windows checkout(autocrlf)会把正本转成 CRLF,源码模板是 LF,
     // 行尾是格式不是内容——归一后再逐块比较,内容漂移仍会被锁捕获。
-    const asset = readFileSync(repoRoot + 'assets/03-scan/schemas.md', 'utf-8').replace(/\r\n/g, '\n');
+    const asset = readFileSync(repoRoot + 'src/steps/scan/assets/schemas.md', 'utf-8').replace(/\r\n/g, '\n');
     const blocks = (t: string) => t.split('```json').slice(1).map((b) => b.split('```')[0].trim());
     assert.deepEqual(blocks(outputSchema()), blocks(asset));
 });

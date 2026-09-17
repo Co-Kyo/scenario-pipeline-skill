@@ -1,6 +1,6 @@
 // 内容域:能力研究。分组规则、域任务、素材分配、任务模板与文件模板为唯一数据源。
 // 并行宽度以 shared.PARALLEL_WIDTH 为唯一源（R2e-P1b：消解手写 W=5 字面量）。
-import { PARALLEL_WIDTH } from './shared.js';
+import { PARALLEL_WIDTH } from '../../domain/content/shared.js';
 
 export const research = {
     detail: () => `分组规则：

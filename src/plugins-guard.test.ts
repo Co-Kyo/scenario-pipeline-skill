@@ -27,7 +27,7 @@ test('plugins:antiCrawlFetch 登记存在（contracts 双表）', () => {
 });
 
 test('plugins:scan 步骤引用存在（reads 链不断）', () => {
-    const src = read('src/steps/scan.ts');
+    const src = read('src/steps/scan/step.ts');
     assert.ok(
         src.includes('modules.antiCrawlFetch'),
         'scan.ts 缺 antiCrawlFetch 引用——B4 起点丢失',

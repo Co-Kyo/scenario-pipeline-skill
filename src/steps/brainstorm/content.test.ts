@@ -10,8 +10,8 @@ import {
     REASON_TYPES,
     RETRY_MAX,
     scenarioTask,
-} from './brainstorm.js';
-import { LEVEL_CRITERIA_TABLE } from '../learner.js';
+} from './content.js';
+import { LEVEL_CRITERIA_TABLE } from '../../domain/learner.js';
 
 test('brainstorm:调度参数常量贯穿执行步骤', () => {
     const d = detail();

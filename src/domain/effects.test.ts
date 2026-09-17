@@ -30,7 +30,7 @@ test('学习阶梯契约:二值验收与阶段数在保证列表中', () => {
     assert.ok(ladder, '缺少 E-ladder-judgment');
     assert.ok(ladder.expects.some((e) => e.includes('做到才算过')));
     assert.ok(ladder.expects.some((e) => e.includes('阶段数 3-4')));
-    assert.ok(ladder.owns.some((o) => o.startsWith('src/domain/')));
+    assert.ok(ladder.owns.some((o) => o.startsWith('src/steps/') || o.startsWith('src/domain/')));
 });
 
 test('能力研究契约:素材不静默丢弃', () => {
@@ -43,7 +43,7 @@ test('D7:契约小节渲染含编号、归属与保证', () => {
     const s = effectContractSection('E-ladder-judgment');
     assert.ok(s.includes('E-ladder-judgment'));
     assert.ok(s.includes('做到才算过'));
-    assert.ok(s.includes('src/domain/content/ladder.ts'));
+    assert.ok(s.includes('src/steps/learning-ladder/content.ts'));
 });
 
 test('D7:未知契约 id 抛错(防静默漏接)', () => {

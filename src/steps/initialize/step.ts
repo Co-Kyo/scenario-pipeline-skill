@@ -1,9 +1,9 @@
 import { step } from 'skillnomad';
-import { initializeDetail, WORKDIR_NAMING } from '../domain/content/initialize.js';
-import { verifyPair } from '../domain/mechanics.js';
-import { refOf } from '../domain/entities.js';
-import { barrier } from '../policies.js';
-import { fail, verify } from '../verify.js';
+import { initializeDetail, WORKDIR_NAMING } from './content.js';
+import { verifyPair } from '../../domain/mechanics.js';
+import { refOf } from '../../domain/entities.js';
+import { barrier } from '../../policies.js';
+import { fail, verify } from '../../verify.js';
 
 export const initialize = step('initialize', '初始化')
     .target('确认 workDir 并建立可追溯的初始化记录')

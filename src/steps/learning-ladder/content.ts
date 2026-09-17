@@ -2,7 +2,7 @@
 // 阶段数量、拓扑分层、Step 字段是学习规则——在此声明为数据,
 // 提示词由规则派生。Phase I(D1-D4)新增:判据校准表渲染、预计时长、
 // 完成标记与进度留痕、救援链接规则。
-import { LEVEL_CRITERIA_TABLE } from '../learner.js';
+import { LEVEL_CRITERIA_TABLE } from '../../domain/learner.js';
 
 export const LADDER_STAGE_COUNT = { min: 3, max: 4 } as const;
 

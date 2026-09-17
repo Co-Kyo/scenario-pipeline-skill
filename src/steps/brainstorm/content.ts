@@ -1,6 +1,6 @@
 // 内容域:头脑风暴。维度 Agent、调度参数、收敛优先级、reason_type 枚举为唯一数据源。
 // 级别过滤短语从 learner.LEVEL_CRITERIA_TABLE 派生(消解与学习域的真重复)。
-import { LEVEL_CRITERIA_TABLE } from '../learner.js';
+import { LEVEL_CRITERIA_TABLE } from '../../domain/learner.js';
 
 /** 4 个维度 Agent 的输出文件名(不含扩展名) */
 export const DIMENSION_FILES = ['scenario', 'technical', 'learning', 'constraint'] as const;
@@ -104,7 +104,7 @@ export function integratorTask(): string {
 3. 技术维度报告：{workDir}/.meta/brainstorm/technical.json
 4. 学习维度报告：{workDir}/.meta/brainstorm/learning.json
 5. 约束维度报告：{workDir}/.meta/brainstorm/constraint.json
-6. 输出格式：assets/01-brainstorm/requirement-web-schema.md
+6. 输出格式：src/steps/brainstorm/assets/requirement-web-schema.md
 
 ## 你的任务
 1. 按模块附录执行收敛五动作；对齐优先级为（${CONVERGE_PRIORITY}）。

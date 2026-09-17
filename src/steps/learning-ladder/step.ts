@@ -1,6 +1,6 @@
 import { step } from 'skillnomad';
-import { doAction } from '../actions.js';
-import { effectContractSection } from '../domain/effects.js';
+import { doAction } from '../../actions.js';
+import { effectContractSection } from '../../domain/effects.js';
 import {
     LADDER_JUDGMENT_FIELD,
     LADDER_MAX_CAPABILITIES,
@@ -8,11 +8,11 @@ import {
     ladderDetail,
     stepFormat,
     workerTask,
-} from '../domain/content/ladder.js';
-import { refOf } from '../domain/entities.js';
+} from './content.js';
+import { refOf } from '../../domain/entities.js';
 
-import { barrier } from '../policies.js';
-import { fail, verify } from '../verify.js';
+import { barrier } from '../../policies.js';
+import { fail, verify } from '../../verify.js';
 
 export const learningLadder = step('learning-ladder', '学习阶梯')
     .target('为每个命题生成从不会到能讲的渐进学习路径')

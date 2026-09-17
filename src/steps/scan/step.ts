@@ -1,10 +1,10 @@
 import { step } from 'skillnomad';
-import { doAction } from '../actions.js';
-import { modules, scanBindingRef } from '../contracts.js';
-import { refOf, schemaRef } from '../domain/entities.js';
-import * as scanRules from '../domain/content/scan.js';
-import { barrier } from '../policies.js';
-import { fail, verify } from '../verify.js';
+import { doAction } from '../../actions.js';
+import { modules, scanBindingRef } from '../../contracts.js';
+import { refOf, schemaRef } from '../../domain/entities.js';
+import * as scanRules from './content.js';
+import { barrier } from '../../policies.js';
+import { fail, verify } from '../../verify.js';
 
 export const scan = step('scan', '广域扫描')
     .target('生成可被能力图谱消费的素材索引和素材正文')

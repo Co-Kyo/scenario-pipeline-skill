@@ -1,11 +1,11 @@
 import { step } from 'skillnomad';
-import { doAction } from '../actions.js';
-import { effectContractSection } from '../domain/effects.js';
-import { briefing } from '../domain/content/briefing.js';
-import { refOf } from '../domain/entities.js';
+import { doAction } from '../../actions.js';
+import { effectContractSection } from '../../domain/effects.js';
+import { briefing } from './content.js';
+import { refOf } from '../../domain/entities.js';
 
-import { barrier } from '../policies.js';
-import { fail, verify } from '../verify.js';
+import { barrier } from '../../policies.js';
+import { fail, verify } from '../../verify.js';
 
 export const briefingAssemble = step('briefing-assemble', 'Briefing 组装')
     .target('为每个命题生成包含能力摘要的 Briefing')

@@ -1,6 +1,6 @@
 // 内容域:广域扫描。密度表、URL 策略映射、抓取分流、提取字段、超时恢复规则为唯一数据源。
 // 「输出 Schema」为整块搬移单元(含转义反引号),禁止拆分。
-import { PARALLEL_WIDTH } from './shared.js';
+import { PARALLEL_WIDTH } from '../../domain/content/shared.js';
 
 /** 扫描密度查表(正本为 assets/common/strategy-level.md 的 L2 列;此处为散文渲染源) */
 export const SCAN_DENSITY = [
@@ -98,7 +98,7 @@ export function checkpointSection(): string {
     return `展示素材 Tier 分布、丢弃数和 role 覆盖统计，使用 clarify 等待用户确认后再进入 {{step:capability-graph}}。`;
 }
 
-// B1-A:输出 Schema 以 assets/03-scan/schemas.md 为正本,此处为镜像渲染源;
+// B1-A:输出 Schema 以 src/steps/scan/assets/schemas.md 为正本,此处为镜像渲染源;
 // 漂移锁见 scan.test.ts(三方 JSON 块逐字节比对)。
 export function outputSchema(): string {
     return `search-batch.{batch_id}.json:
