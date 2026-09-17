@@ -2,7 +2,7 @@ import type { SourceStep } from 'skillnomad';
 import { initialize } from './initialize.js';
 import { intentAnchor } from './intent-anchor.js';
 import { brainstorm } from './brainstorm.js';
-import { partition } from './partition.js';
+import { partition } from './partition/step.js';
 import { scan } from './scan.js';
 import { capabilityGraph } from './capability-graph.js';
 import { evaluatePool } from './evaluate-pool.js';

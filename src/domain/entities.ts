@@ -35,8 +35,8 @@ export const entities: Record<string, ProductEntity> = {
     // ── brainstorm（content/brainstorm.ts）────────────────────
     requirementWeb: { concept: 'brainstorm', artifact: '{workDir}/.meta/requirement-web.json', kind: 'learning', description: '需求网', schema: 'assets/01-brainstorm/schemas.md' },
 
-    // ── partition（content/partition.ts）──────────────────────
-    partitionAnalysis: { concept: 'partition', artifact: '{workDir}/.meta/partition-analysis.json', kind: 'learning', description: '分区分析', schema: 'assets/02-partition/schemas.md' },
+    // ── partition（steps/partition/content.ts；R4-N8 文件夹试点：与步骤同目录）──────────────────────
+    partitionAnalysis: { concept: 'partition', artifact: '{workDir}/.meta/partition-analysis.json', kind: 'learning', description: '分区分析', schema: 'src/steps/partition/assets/schemas.md' },
     dependencyGraph: { concept: 'partition', artifact: '{workDir}/.meta/dependency-graph.json', kind: 'learning', description: '依赖图' },
     executionPlan: { concept: 'partition', artifact: '{workDir}/execution-plan.md', kind: 'mechanism', description: '执行计划' },
 

@@ -5,7 +5,7 @@ import test from 'node:test';
 import { REASON_TYPES } from './brainstorm.js';
 import { SCAN_DENSITY } from './scan.js';
 import { countVerifyText, detail, INTERCEPT_WORDS, insufficientAnchorsText, skipSection, target } from './intent.js';
-import { detail as partitionDetail, sessionOverflowText, threeLayerSection } from './partition.js';
+import { detail as partitionDetail, sessionOverflowText, threeLayerSection } from '../../steps/partition/content.js';
 import { capabilityOverflowText, highgroundSection } from './capability.js';
 import { detail as evaluationDetail, thresholdSection } from './evaluation.js';
 import { initializeDetail, WORKDIR_NAMING } from './initialize.js';

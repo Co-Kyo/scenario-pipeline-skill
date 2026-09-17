@@ -27,8 +27,8 @@ assets/
 │   ├── barrier-check.md        ← Barrier 检查项 + 决策矩阵
 │   ├── scheduling-detail.md    ← 调度参数 + 超时 + 降级
 │   ├── fallback-protocol.md    ← 收敛者失败降级协议
-├── 02-partition/
-│   └── schemas.md              ← partition-analysis.json 格式
+├── 02-partition/                  ← 已迁出（R4-N8 文件夹试点）：见 `src/steps/partition/assets/schemas.md`
+│   ~~└── schemas.md              ← partition-analysis.json 格式~~（随目录迁移，路径见上）
 ├── 03-scan/
 │   └── schemas.md              ← search-batch / url-batches / partial 格式
 ├── 04-capability-graph/
