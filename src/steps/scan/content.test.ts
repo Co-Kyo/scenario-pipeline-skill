@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { detail, extractTask, EXTRACT_FIELDS, outputSchema, phaseASection, SCAN_DENSITY } from './content.js';
-import { PARALLEL_WIDTH } from '../../domain/content/shared.js';
+import { CONCURRENCY_LIMIT } from '../../domain/scheduling.js';
 
 // 仓库根(src/steps/scan/ 上三级)
 const repoRoot = fileURLToPath(new URL('../../../', import.meta.url));
@@ -15,9 +15,9 @@ test('scan:密度表派生逐字一致(含 L2 默认注记)', () => {
     assert.ok(d.includes('- outlook: kw=1, r=2'));
 });
 
-test('scan:W 公式与 shared.PARALLEL_WIDTH 同源', () => {
-    assert.ok(phaseASection().includes(`W = min(${PARALLEL_WIDTH}, 命题数)`));
-    assert.equal(PARALLEL_WIDTH, 5);
+test('scan:W 公式与自有 CONCURRENCY_LIMIT 同源', () => {
+    assert.ok(phaseASection().includes(`本 skill 并发上限 ${CONCURRENCY_LIMIT}`));
+    assert.equal(CONCURRENCY_LIMIT, 5);
 });
 
 test('scan:提取字段四件套在枚举与任务文案同源', () => {

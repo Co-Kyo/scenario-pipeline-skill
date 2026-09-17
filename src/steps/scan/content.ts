@@ -1,6 +1,6 @@
 // 内容域:广域扫描。密度表、URL 策略映射、抓取分流、提取字段、超时恢复规则为唯一数据源。
 // 「输出 Schema」为整块搬移单元(含转义反引号),禁止拆分。
-import { PARALLEL_WIDTH } from '../../domain/content/shared.js';
+import { CONCURRENCY_LIMIT } from '../../domain/scheduling.js';
 
 /** 扫描密度查表(正本为 assets/common/strategy-level.md 的 L2 列;此处为散文渲染源) */
 export const SCAN_DENSITY = [
@@ -50,7 +50,7 @@ virtual_gateway 表示先经过网络策略层判断，不直接反复访问。`
 export function phaseASection(): string {
     return `按命题批次 spawn search-{batch_id} agent。
 
-批次大小 = ceil(命题数 / W)，W = min(${PARALLEL_WIDTH}, 命题数)。
+批次大小 = ceil(命题数 / W)，W = min(本 skill 并发上限 ${CONCURRENCY_LIMIT}，命题数)。
 
 每个搜索 agent 输出 search-batch.{batch_id}.json，主线程 merge 后：
 

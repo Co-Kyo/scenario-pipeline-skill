@@ -1,7 +1,6 @@
 import type { SkillSourceModel } from 'skillnomad';
 import { createSkillFromModel } from 'skillnomad';
 import { contracts } from './src/contracts.js';
-import { SCHEDULING_POLICY } from './src/domain/scheduling.js';
 import { policies } from './src/policies.js';
 import { steps } from './src/steps/index.js';
 
@@ -46,10 +45,6 @@ const model: SkillSourceModel = {
         ],
         phases: phaseDefs,
         // D40 R0-①：initStepId 删（派生值，?? deriveInitStepId 回落，root 即 initialize，零行为变化）。
-        // 8.13/8.14 下沉：调度策略为 skill 级全局口径，步骤不再各自登记（消除横切散布）。
-        // D35 W4 首刀：唯一事实源切框架 SCHEDULING（本字段透传，改 W 只改框架一处）；
-        // 旧三 md（protocol-scheduling/subagent-budget/pipeline-params）已迁出即删，备份照做。
-        schedulingPolicy: SCHEDULING_POLICY,
     },
     contracts,
     policies,

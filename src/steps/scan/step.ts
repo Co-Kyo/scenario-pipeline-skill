@@ -1,6 +1,6 @@
 import { step } from 'skillnomad';
 import { doAction } from '../../actions.js';
-import { modules, scanBindingRef } from '../../contracts.js';
+import { modules } from '../../contracts.js';
 import { refOf, schemaRef } from '../../domain/entities.js';
 import * as scanRules from './content.js';
 import { barrier } from '../../policies.js';
@@ -17,7 +17,6 @@ export const scan = step('scan', '广域扫描')
         { ...modules.refSources, as: 'contract' },
         { ...modules.strategyLevel, as: 'contract' },
         modules.antiCrawlFetch,
-        scanBindingRef,
     )
     .writes(refOf('scanIndex'), refOf('scanMaterials'))
     .inputs(

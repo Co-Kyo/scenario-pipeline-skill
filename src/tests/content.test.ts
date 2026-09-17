@@ -10,7 +10,7 @@ import { capabilityOverflowText, highgroundSection } from '../steps/capability-g
 import { detail as evaluationDetail, thresholdSection } from '../steps/evaluate-pool/content.js';
 import { initializeDetail, WORKDIR_NAMING } from '../steps/initialize/content.js';
 import { RATIO_CLAUSE, SCENARIO_MINIMUM } from '../domain/content/shared.js';
-import { SCHEDULING_POLICY } from '../domain/scheduling.js';
+import { BATCH_POLICY, CONCURRENCY_LIMIT, WINDOW_BUDGET } from '../domain/scheduling.js';
 
 // 仓库根(src/tests/ 上两级)
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
@@ -95,27 +95,23 @@ test('C2-A:04 method.md 阈值与能力域正本一致(漂移锁，D32 W4)', () 
     assert.ok(text.includes('扇出'), '扇出度概念缺失');
 });
 
-test('D32-W5:调度三值下沉字面量锁（补锁 3，散文引用不断）', () => {
-    // D32 W5 修法 R2 F-5：三 md 为散文引用（非注册消费），锁字面量不断引用链。
-    // D35 W4 首刀升级不断旧断言（过渡期双锁，R2 F-10）：旧字面量锁保留，新生成断言见 D35-W4。
-    // 旧断言读 skill.ts 字面量；首刀后 skill.ts 改透传 scheduling.ts 实例（值同源），故改读实例值。
-    assert.equal(SCHEDULING_POLICY.concurrencyLimit, 5);
-    assert.equal(SCHEDULING_POLICY.windowBudget?.maxWindowSize, 4);
-    assert.equal(SCHEDULING_POLICY.windowBudget?.inputChunkTokens, 6000);
-    assert.equal(SCHEDULING_POLICY.windowBudget?.itemSummaryTokens, 500);
+test('D32-W5:并发口径自有常量锁（字面量锁；框架零调度口径后数字只活消费侧）', () => {
+    // 原 D32-W5 读 skill.ts 字面量 → D35-W4 改读透传实例；框架极致移除后改读自有常量。
+    // 框架侧 SCHEDULING／SourceSchedulingPolicy／validate／渲染已删除，无同源可言。
+    assert.equal(CONCURRENCY_LIMIT, 5);
+    assert.equal(WINDOW_BUDGET?.maxWindowSize, 4);
+    assert.equal(WINDOW_BUDGET?.inputChunkTokens, 6000);
+    assert.equal(WINDOW_BUDGET?.itemSummaryTokens, 500);
+    assert.equal(BATCH_POLICY?.mode, 'rolling_window');
 });
 
-test('D35-W4:调度实例与框架同源（生成关系锁；改 W 即产物变）', async () => {
-    // 生成锁：实例透传框架 SCHEDULING；绑定/策略内容由模块 render() 提供；改框架即产物变（G1 生成断言）。
-    const { SCHEDULING } = await import('skillnomad');
-    const { SCHEDULING_POLICY, SCAN_BINDING } = await import('../domain/scheduling.js');
-    const { scanBindingModule, schedulingPolicyModule } = await import('../modules.js');
-    assert.equal(SCHEDULING_POLICY.concurrencyLimit, SCHEDULING.concurrencyLimit);
-    assert.equal(SCHEDULING_POLICY.windowBudget?.maxWindowSize, SCHEDULING.windowBudget.maxWindowSize);
-    assert.equal(SCAN_BINDING.limitW, SCHEDULING.concurrencyLimit);
-    // D35 全链路：内容源＝模块 render()（构建期进 scan 的「模块附录」正本）
-    assert.ok(scanBindingModule.render().includes('### scan（滚动窗口）'));
-    assert.ok(schedulingPolicyModule.render().includes('调度策略（模块渲染正本'));
+test('D35-W4退役:scan-binding模块已随调度移除而删除（存在性反断言）', async () => {
+    // scan-binding／scheduling-policy 两模块＋contracts条目＋scan reads已删除；
+    // 模块通道现为 5 条纯内容包。本测试锁"删干净"：任一回潮即红。
+    const { modules: declared } = await import('../modules.js');
+    const ids = new Set(declared.map((m) => m.id));
+    assert.ok(!ids.has('scan-binding'), 'scan-binding 回潮');
+    assert.ok(!ids.has('scheduling-policy'), 'scheduling-policy 回潮');
 });
 
 test('B2-A:method.md 投影与评估域正本一致(漂移锁)', () => {

@@ -1,28 +1,14 @@
-// 消费仓调度实例（D35 W4 首刀 · P2 归属框架仓，sp-skill 只做第一个消费者）。
-//
-// 本文件是框架机制 + sp-skill 业务配置的唯一交汇点：
-// - 框架（skillnomad-common scheduling）：SCHEDULING 默认值、三动作组合子、动词、渲染；
-// - 消费（本文件）：skill.ts 全局口径转出口、scan 绑定、生成断言口径。
-// 改 W 只改框架 SCHEDULING 一处，本文件透传，8 步全跟随。
-import {
-    SCHEDULING,
-} from 'skillnomad';
-import type { SourceSchedulingPolicy } from 'skillnomad';
+// 消费仓并发口径（自有常量：框架零调度口径后，数字只活在本文件）。
+// 改 W 只改 CONCURRENCY_LIMIT 一处；窗口/分批同文件声明。
+// （原 D35 W4 透传框架 SCHEDULING；框架侧已极致移除，本文件收回为自有。
+//  原 SCAN_BINDING scan绑定已随模块删除而删除：scan reads不再引用，附录不再渲染。）
 
-/** skill.ts 全局口径转出口（与 skill.ts:50-62 旧字面量同值；D32-W5 旧断言不断）。 */
-export const SCHEDULING_POLICY: SourceSchedulingPolicy = {
-    concurrencyLimit: SCHEDULING.concurrencyLimit,
-    windowBudget: { ...SCHEDULING.windowBudget },
-    batchPolicy: { ...SCHEDULING.batchPolicy },
-    note: '各步骤具体调度模式（批量并行/滚动窗口/拓扑分批）见 process 的「调度策略」章节；本字段为 skill 级全局口径（W=5）。',
-};
+/** 全局最大并发 Task Group 数。 */
+export const CONCURRENCY_LIMIT = 5 as const;
 
-/** scan 绑定（首接 rollingWindow；F-10③：scan `.seq('scan-seq')` 改调模块的落点）。 */
-export const SCAN_BINDING = {
-    stepId: 'scan',
-    mode: 'rolling_window' as const,
-    taskGroup: '1 个命题批次 = 1 个 agent',
-    limitW: SCHEDULING.concurrencyLimit,
-    slotOccupancy: 1,
-};
+/** 窗口预算（单次调用/输入压缩）。 */
+export const WINDOW_BUDGET = { maxWindowSize: 4, inputChunkTokens: 6000, itemSummaryTokens: 500 } as const;
+
+/** 分批规则（模式 + 每批容量 + 槽位）。 */
+export const BATCH_POLICY = { mode: 'rolling_window' as const, maxBatchSize: 3, slotOccupancy: 1 } as const;
 

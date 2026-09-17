@@ -12,7 +12,7 @@ import { refs } from './domain/entities.js';
  *
  * 8.15 Step 1 相对旧 `refs` 的两处变化：
  * - **移除 4 条**：protocolScheduling / pipelineParams / subagentBudget / schedulingDetail
- *   已随 8.13/8.14 下沉到 `meta.schedulingPolicy`，步骤不再引用（零处引用，非行为变更）。
+ *   已随 8.13/8.14 下沉（框架侧该口径已随调度极致移除而删除；消费侧散文自述，不再登记）。
  * - **收编 1 条**：`src/steps/intent-anchor/assets/schemas.md` 原为裸路径字面量（intent-anchor.ts），
  *   逃逸在注册表外；8.16 起已挂到产物实体名下（`entities.ts` anchors 条目的 `schema` 字段），
  *   不再是独立模块（description 保持原字面量，确保产物零 diff）。
@@ -51,12 +51,6 @@ for (const module of Object.values(modules)) {
  * 存量安置（两次裁决合成）：2 个 skill 级 contract 保留；9 个 step 级按真实性质贴标签
  * （5 rule + 1 method + 3 schema——schema ×3 待 8.16 挂产物实体）；anti-crawl-fetch 并入 skill 级。
  */
-/** scan 调度绑定引用（D35 全链路：内容＝模块 render()；路径仅作逻辑标识与表内展示）。 */
-export const scanBindingRef: SourceRef = {
-    path: 'assets/03-scan/scheduling-binding.md',
-    description: '调度绑定',
-};
-
 /** 并行方法包引用（内容包 parallel：内容＝包内 md 经模块 render()；路径仅作逻辑标识）。 */
 export const parallelMethodRef: SourceRef = {
     path: 'assets/01-brainstorm/parallel-method.md',
@@ -99,9 +93,7 @@ export const contracts: SourceContract[] = [
     // ── 方法投影（2 条）──
     { id: 'evaluation-method', kind: 'method', path: 'assets/05-evaluate-pool/method.md', description: '评估方法论', scope: 'step', step: 'evaluate-pool' },
     { id: 'capability-method', kind: 'method', path: 'assets/04-capability-graph/method.md', description: '能力图谱提取方法论', scope: 'step', step: 'capability-graph' },
-    // ── 模块通道（6 条：路径为逻辑标识，内容＝模块 render()）──
-    // D35 全链路首用例：模块渲染正本（路径为逻辑标识，不落盘、不入 markrefs 存在性校验）。
-    { id: 'scan-scheduling-binding', kind: 'method', path: scanBindingRef.path, description: '调度绑定（模块渲染正本）', scope: 'step', step: 'scan', module: 'scan-binding' },
+    // ── 模块通道（5 条：路径为逻辑标识，内容＝模块 render()）──
     // 内容包 parallel（内置形态）：方法正文由包内 md 经模块 render() 提供。
     { id: 'parallel-method', kind: 'method', path: parallelMethodRef.path, description: '并行分析方法（内容包正本）', scope: 'step', step: 'brainstorm', module: 'parallel-methods' },
     // 内容包 brainstorm-rules（内置形态）：方法正文由包内 md 经模块 render() 提供。
