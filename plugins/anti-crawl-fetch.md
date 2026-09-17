@@ -11,7 +11,7 @@ description: "广域扫描(scan)的 web_fetch 反爬降级方案。当 web_fetch
 
 ## 域名分类
 
-域名路由逻辑在 `processes/04-scan.md` 的抓取策略中定义。域名分类统一维护在 `assets/common/ref-sources.md`（T0 表 + 反爬域名表）。
+域名路由逻辑在 `steps/04-scan/step.md` 的抓取策略中定义。域名分类统一维护在 `references/ref-sources.md`（T0 表 + 反爬域名表）。
 
 本插件只负责：当 scan.md 判定某个 URL 需要走 Playwright 时，提供执行指令。
 

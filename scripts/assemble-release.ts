@@ -14,6 +14,7 @@ import {
     STEP_ENTRY_FILE,
     checkPublishLayout,
     publishPath,
+    scanDanglingRefs,
     type PublishableAsset,
 } from 'skillnomad';
 import { contracts } from '../src/skill-decl.js';
@@ -69,6 +70,34 @@ for (const item of plan) {
     if (!existsSync(join(repoRoot, item.source))) problems.push(`源文件不存在：${item.source}`);
 }
 
+/**
+ * 部署物文本扫描（官方"相对路径"约束＋本仓 D7）：随包 markdown 里的包内路径引用必须解析得到。
+ * 判据＝磁盘实存：老布局前缀（assets/<步>/…、processes/…、plugins/…）与源码路径（src/…）都会红。
+ * 为什么在组装处而不是框架 build 处：框架只渲染步骤与 SKILL.md，
+ * 而资产是原样拷贝的——只扫渲染物会漏掉拷贝件（本检查补的正是这一盲区）。
+ * 覆盖范围＝实际发货的全集（steps/ ＋ references/ ＋ assets/ ＋ SKILL.md）。
+ */
+function shippedText(): { rel: string; content: string }[] {
+    const out: { rel: string; content: string }[] = [];
+    const walk = (dir: string): void => {
+        for (const entry of readdirSync(dir, { withFileTypes: true })) {
+            const p = join(dir, entry.name);
+            if (entry.isDirectory()) walk(p);
+            else if (/\.(md|markdown)$/i.test(entry.name)) {
+                out.push({ rel: p.slice(outDir.length + 1), content: readFileSync(p, 'utf-8') });
+            }
+        }
+    };
+    walk(outDir);
+    return out;
+}
+
+function scanShipped(): string[] {
+    return scanDanglingRefs(shippedText(), (ref) => existsSync(join(outDir, ref))).map(
+        (hit) => `部署物含包内解析不到的路径：${hit.rel}:${hit.line}  ${hit.ref}`,
+    );
+}
+
 if (checkOnly) {
     for (const item of plan) {
         if (!existsSync(join(outDir, item.target))) problems.push(`发布物缺文件：${item.target}（源自 ${item.source}）`);
@@ -78,6 +107,7 @@ if (checkOnly) {
         const rel = `${PUBLISH_DIRS.steps}/${String(seq).padStart(2, '0')}-${id}/${STEP_ENTRY_FILE}`;
         if (!existsSync(join(outDir, rel))) problems.push(`发布物缺步骤文件：${rel}`);
     }
+    problems.push(...scanShipped());
     if (problems.length > 0) {
         for (const p of problems) console.error(`  ✗ ${p}`);
         console.error(`verify:release failed with ${problems.length} problem(s)`);
@@ -119,6 +149,13 @@ writeFileSync(
     ) + '\n',
     'utf-8',
 );
+
+const leaked = scanShipped();
+if (leaked.length > 0) {
+    for (const l of leaked) console.error(`  ✗ ${l}`);
+    console.error(`组装完成但部署物含源码路径（${leaked.length} 处）：${outDir}`);
+    process.exit(1);
+}
 
 console.log(`assembled → ${outDir}`);
 for (const item of plan) console.log(`  ✓ ${item.source} → ${item.target}`);
