@@ -15,7 +15,7 @@
         "verify:release": "tsx scripts/assemble-release.ts --check"
     },
     "dependencies": {
-        "skillnomad": "0.1.6"
+        "skillnomad": "0.2.0"
     },
     "devDependencies": {
         "@stylistic/eslint-plugin": "5.10.0",
