@@ -1,13 +1,14 @@
 import { step } from 'skillnomad';
 import { initializeDetail, WORKDIR_NAMING } from './content.js';
 import { verifyPair, barrier, fail, verify } from '../../step-parts.js';
-import { refOf } from '../../artifacts.js';
+import { assets, refOf } from '../../artifacts.js';
 
 export const initialize = step('initialize', '初始化')
     .target('确认 workDir 并建立可追溯的初始化记录')
     .summary('确认 workDir（交互步骤），各步骤按需加载公共规则')
 // 8.4 迁移：dependsOn 收窄为单值。initialize 是链起点（root），无前驱，
 // 省略 dependsOn 由框架推导（deriveInitStepId 从链起点推导 initStepId）。
+    .reads({ ...assets.checkpointProtocol, as: 'contract' })
     .writes(
         { path: refOf('init').path, description: '初始化记录', required: true },
         refOf('run'),

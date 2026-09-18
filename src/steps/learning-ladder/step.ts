@@ -1,10 +1,11 @@
 import { step } from 'skillnomad';
 import { doAction, barrier, fail, verify } from '../../step-parts.js';
-import { effectContractSection, refOf } from '../../artifacts.js';
+import { effectContractSection, refOf, schemaRef } from '../../artifacts.js';
 import {
     LADDER_JUDGMENT_FIELD,
     LADDER_MAX_CAPABILITIES,
     LADDER_STAGE_COUNT,
+    judgmentCalibrationTable,
     ladderDetail,
     stepFormat,
     workerTask,
@@ -15,12 +16,13 @@ export const learningLadder = step('learning-ladder', '学习阶梯')
     .target('为每个命题生成从不会到能讲的渐进学习路径')
     .summary('生成从"不会"到"能讲"的渐进式路径')
     .dependsOn('assemble')
-    .reads(refOf('dependencyGraph'), refOf('summaries'), refOf('overview'), refOf('anchors'))
+    .reads(refOf('dependencyGraph'), refOf('summaries'), refOf('overview'), refOf('anchors'), { ...schemaRef('ladder'), as: 'schema' })
     .writes(refOf('ladder'))
     .inputs(refOf('dependencyGraph').path, refOf('summaries').path, refOf('overview').path)
     .outputs(refOf('ladder').path)
     .detail(ladderDetail())
     .section('步骤格式', stepFormat())
+    .section('判据校准', judgmentCalibrationTable())
     .section('效果契约', effectContractSection('E-ladder-judgment'))
 // 8.5 迁移：contractRefs 收拢进 reads + as:'contract'，本方法已从 beta.4 类型删除。
     .taskTemplate(

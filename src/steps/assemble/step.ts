@@ -1,6 +1,6 @@
 import { step } from 'skillnomad';
 import { doAction, barrier, fail, verify } from '../../step-parts.js';
-import { effectContractSection, refOf } from '../../artifacts.js';
+import { effectContractSection, refOf, schemaRef } from '../../artifacts.js';
 import { assembly } from './content.js';
 
 
@@ -8,7 +8,7 @@ export const assemble = step('assemble', '命题组装')
     .target('为每个命题生成四象限研究输出')
     .summary('组装四象限研究输出（overview/edge-cases/trade-offs/experiment）')
     .dependsOn('briefing-assemble')
-    .reads(refOf('briefing'), refOf('requirementWeb'), refOf('capabilityGraph'))
+    .reads(refOf('briefing'), refOf('requirementWeb'), refOf('capabilityGraph'), { ...schemaRef('overview'), as: 'schema' })
     .writes(refOf('overview'), refOf('edgeCases'), refOf('tradeoffs'), refOf('references'), refOf('experiment'), refOf('assemblyRatioTrace'))
     .inputs(refOf('briefing').path)
     .outputs(

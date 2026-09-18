@@ -1,14 +1,14 @@
 import { step } from 'skillnomad';
 import { doAction, displayFoldMulti, barrier, fail, verify } from '../../step-parts.js';
 import * as capability from './content.js';
-import { refOf, assets } from '../../artifacts.js';
+import { refOf, assets, schemaRef } from '../../artifacts.js';
 import { capabilityMethodRef } from '../../skill-decl.js';
 
 export const capabilityGraph = step('capability-graph', '能力图谱')
     .target('生成能力图谱、依赖图、战略高地与学习路径')
     .summary('跨命题去重合并原子能力，计算战略价值')
     .dependsOn('scan')
-    .reads(refOf('requirementWeb'), refOf('scanIndex'), { ...assets.capabilityMethod, as: 'method' }, capabilityMethodRef)
+    .reads(refOf('requirementWeb'), refOf('scanIndex'), { ...assets.capabilityMethod, as: 'method' }, { ...schemaRef('capabilityGraph'), as: 'schema' }, capabilityMethodRef)
     .writes(refOf('capabilityGraph'), refOf('dependencyGraph'), refOf('highgrounds'), refOf('learningPath'))
     .inputs(refOf('requirementWeb').path, refOf('scanIndex').path)
     .outputs(

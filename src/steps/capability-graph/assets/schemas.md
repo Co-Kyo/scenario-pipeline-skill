@@ -2,7 +2,7 @@
 
 ## §0: capabilities.md — 能力知识库主文件
 
-> 见 `assets/06-capability-research/schemas.md`
+> 见 `steps/07-capability-research/schemas.md` 的"主文件"一节（能力知识库主文件模板）
 
 ## §1: capability-graph.json
 

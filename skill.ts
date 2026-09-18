@@ -37,7 +37,7 @@ const model: SkillSourceModel = {
             { label: '断点续写', pattern: '使用 scenario-pipeline，从 Step <N> 继续处理 <场景>' },
         ],
         usageNote: '系统从自然语言自动推断：经验年限、研究深度、目标平台等约束。',
-        isolationNote: '每步只读该步文件，严禁提前加载后续步骤，详见 rule-isolation.md。',
+        isolationNote: '每步只读该步文件，严禁提前加载后续步骤；长文档按需分段查阅。',
         includeBuildFooter: false,
         params: [
             { name: '--year=L1|L2|L3|L4', description: '经验年限，可省略并自动推断' },

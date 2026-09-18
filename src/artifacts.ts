@@ -52,15 +52,15 @@ export const entities: Record<string, ProductEntity> = {
     candidates: { concept: 'scan', artifact: '{workDir}/.meta/candidates.md', kind: 'learning', description: '候选池' },
 
     // ── capability（steps/capability-graph/content.ts，最大簇）─────────────
-    capabilityGraph: { concept: 'capability', artifact: '{workDir}/.meta/capability-graph.json', kind: 'learning', description: '能力图谱' },
+    capabilityGraph: { concept: 'capability', artifact: '{workDir}/.meta/capability-graph.json', kind: 'learning', description: '能力图谱', schema: 'src/steps/capability-graph/assets/schemas.md' },
     capabilities: { concept: 'capability', artifact: '{workDir}/capabilities/*.md', kind: 'asset', description: '能力主文件（跨命题长期资产）' },
     summaries: { concept: 'capability', artifact: '{workDir}/.meta/summaries/*.json', kind: 'learning', description: '能力摘要' },
     capabilitiesReadme: { concept: 'capability', artifact: '{workDir}/capabilities/README.md', kind: 'asset', description: '能力索引' },
     highgrounds: { concept: 'capability', artifact: '{workDir}/.meta/highgrounds.json', kind: 'learning', description: '战略高地' },
-    researchPlan: { concept: 'capability', artifact: '{workDir}/.meta/research-plan.json', kind: 'learning', description: '能力研究素材分配与 usage trace' },
-    briefing: { concept: 'capability', artifact: '{workDir}/.meta/briefings/{seq}-{short_name}.md', kind: 'learning', description: '命题 Briefing' },
+    researchPlan: { concept: 'capability', artifact: '{workDir}/.meta/research-plan.json', kind: 'learning', description: '能力研究素材分配与 usage trace', schema: 'src/steps/capability-research/assets/schemas.md' },
+    briefing: { concept: 'capability', artifact: '{workDir}/.meta/briefings/{seq}-{short_name}.md', kind: 'learning', description: '命题 Briefing', schema: 'src/steps/briefing-assemble/assets/schemas.md' },
     readme: { concept: 'capability', artifact: '{workDir}/README.md', kind: 'asset', description: '命题总览' },
-    overview: { concept: 'capability', artifact: '{workDir}/{seq}-{short_name}/overview.md', kind: 'learning', description: 'Overview' },
+    overview: { concept: 'capability', artifact: '{workDir}/{seq}-{short_name}/overview.md', kind: 'learning', description: 'Overview', schema: 'src/steps/assemble/assets/schemas.md' },
     edgeCases: { concept: 'capability', artifact: '{workDir}/{seq}-{short_name}/edge-cases.md', kind: 'learning', description: 'Edge Cases' },
     tradeoffs: { concept: 'capability', artifact: '{workDir}/{seq}-{short_name}/trade-offs.md', kind: 'learning', description: 'Trade-offs' },
     references: { concept: 'capability', artifact: '{workDir}/{seq}-{short_name}/references.md', kind: 'learning', description: 'References' },
@@ -70,7 +70,7 @@ export const entities: Record<string, ProductEntity> = {
     evaluations: { concept: 'evaluation', artifact: '{workDir}/.meta/evaluations.json', kind: 'learning', description: '评估结果', schema: 'src/steps/evaluate-pool/assets/schemas.md' },
 
     // ── ladder（steps/learning-ladder/content.ts）─────────────────────────────
-    ladder: { concept: 'ladder', artifact: '{workDir}/{seq}-{short_name}/learning-ladder.md', kind: 'learning', description: '学习阶梯' },
+    ladder: { concept: 'ladder', artifact: '{workDir}/{seq}-{short_name}/learning-ladder.md', kind: 'learning', description: '学习阶梯', schema: 'src/steps/learning-ladder/assets/schemas.md' },
     learningPath: { concept: 'ladder', artifact: '{workDir}/.meta/learning-path.json', kind: 'learning', description: '学习路径' },
 
     // ── 机制产物（无领域概念）─────────────────────────────────
@@ -88,6 +88,8 @@ export const assets = {
     refSources: { path: 'assets/common/ref-sources.md', description: 'T0 域名表 + 反爬域名表 + 信源分级规则', required: true },
     strategyLevel: { path: 'assets/common/strategy-level.md', description: '密度参数查表', required: true },
     antiCrawlFetch: { path: 'plugins/anti-crawl-fetch.md', description: 'Playwright 抓取', required: false },
+    checkpointProtocol: { path: 'assets/common/protocol-checkpoint.md', description: '检查点五步流程与跳过条件', required: true },
+    decisionSummarySchema: { path: 'assets/common/decision-summary.schema.json', description: '决策摘要 shape（检查点协议引用）', required: true },
     // ── intent-anchor 步（2 条）──
     yearRules: { path: 'src/steps/intent-anchor/assets/year-rules.md', description: '年限推断规则', required: true },
     skipRules: { path: 'src/steps/intent-anchor/assets/skip-rules.md', description: '跳过判断规则', required: true },
@@ -101,6 +103,11 @@ export const assets = {
     partitionSchema: { path: 'src/steps/partition/assets/schemas.md', description: '分区分析格式契约', required: true },
     scanSchema: { path: 'src/steps/scan/assets/schemas.md', description: '素材索引格式契约', required: true },
     evaluationsSchema: { path: 'src/steps/evaluate-pool/assets/schemas.md', description: '评估结果格式契约', required: true },
+    capabilityGraphSchema: { path: 'src/steps/capability-graph/assets/schemas.md', description: '能力图谱输出格式契约', required: true },
+    capabilityResearchSchema: { path: 'src/steps/capability-research/assets/schemas.md', description: '能力研究产出格式契约', required: true },
+    briefingAssembleSchema: { path: 'src/steps/briefing-assemble/assets/schemas.md', description: 'Briefing 产出格式契约', required: true },
+    assembleSchema: { path: 'src/steps/assemble/assets/schemas.md', description: '命题组装产出格式契约', required: true },
+    learningLadderSchema: { path: 'src/steps/learning-ladder/assets/schemas.md', description: '学习阶梯产出格式契约', required: true },
 } satisfies Record<string, SourceRef>;
 
 /**

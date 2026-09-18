@@ -1,6 +1,6 @@
 import { step } from 'skillnomad';
 import { doAction, barrier, fail, verify } from '../../step-parts.js';
-import { effectContractSection, refOf } from '../../artifacts.js';
+import { effectContractSection, refOf, schemaRef } from '../../artifacts.js';
 import { briefing } from './content.js';
 
 
@@ -8,7 +8,7 @@ export const briefingAssemble = step('briefing-assemble', 'Briefing 组装')
     .target('为每个命题生成包含能力摘要的 Briefing')
     .summary('从能力摘要提取关键信息，组装Briefing')
     .dependsOn('capability-research')
-    .reads(refOf('requirementWeb'), refOf('summaries'))
+    .reads(refOf('requirementWeb'), refOf('summaries'), { ...schemaRef('briefing'), as: 'schema' })
     .writes(refOf('briefing'))
     .inputs(refOf('requirementWeb').path, refOf('summaries').path)
     .outputs(refOf('briefing').path)

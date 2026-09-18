@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 const repoRoot = fileURLToPath(new URL('../..', import.meta.url));
 const assetsDir = join(repoRoot, 'assets');
 
-const ALLOW_ZERO = new Set([
+const ALLOW_ZERO: Set<string> = new Set([
     // D32 W2 已删：'assets/01-brainstorm/learning-agent.md'
     // D32 W2 已删：'assets/01-brainstorm/scenario-agent.md'
     // D32 W2 已删：'assets/01-brainstorm/technical-agent.md'
@@ -28,15 +28,15 @@ const ALLOW_ZERO = new Set([
     // R4-N9 文件夹已迁出：'assets/04-capability-graph/schemas.md' → src/steps/capability-graph/assets/schemas.md（随步骤同目录；存在性改由 fragment.test.ts 锁定）
     // D32 W4 已接回转生产：'assets/05-evaluate-pool/schemas.md'
     // D35 W0 已删：'assets/common/convention-trace.md'
-    'assets/common/decision-summary.schema.json',
+    // 发布布局（2026-09-18）已接回转生产：'assets/common/decision-summary.schema.json'（检查点协议引用，随包）
     // D35 W4 首刀迁出即删：'assets/common/pipeline-params.md'
-    'assets/common/protocol-checkpoint.md',
+    // 发布布局（2026-09-18）已接回转生产：'assets/common/protocol-checkpoint.md'（initialize 步 .reads 契约引用，随包）
     // D35 W4 首刀迁出即删：'assets/common/protocol-scheduling.md'
     // D35 W0 已删：'assets/common/ref-paths.md'
-    'assets/common/rule-isolation.md',
-    'assets/common/rule-reuse.md',
+    // 发布布局（2026-09-18）：rule-isolation.md 已删（原则并入 skill.ts isolationNote；示例里的旧路径已无人可修）
+    // 发布布局（2026-09-18）：rule-reuse.md 已删（增量复用表由各步 .reuse() 声明渲染，源文件无人引用）
     // D35 W4 首刀迁出即删：'assets/common/subagent-budget.md'
-    'assets/README.md', // 文档本身，不进产物渲染
+    // 发布布局（2026-09-18）：assets/README.md 已删（R4 前老布局索引，目录树与引用全过期）
 ]);
 
 const PROD_ROOTS = ['src', 'skill.ts', 'skillnomad.config.ts'];

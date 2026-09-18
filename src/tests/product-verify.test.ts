@@ -49,3 +49,11 @@ test('manifest files 清单与 dist 实际文件一致（只比文件名，不�
         assert.ok(existsSync(dist + f), `manifest 声明 '${f}' 在 dist 中缺失`);
     }
 });
+
+test('name≠载体目录是已知例外（官方 name=父目录名；随下次改名发版一起改）', () => {
+    // 定性结论（2026-09-18）：保 scenario-pipeline 调用面（/scenario-pipeline 句式＋callExamples），
+    // 载体目录向 skill 名看齐。改名前此测试钉住"已知例外"，防静默烂下去。
+    const skill = readFileSync(dist + 'SKILL.md', 'utf-8');
+    const name = skill.match(/^name:\s*(\S+)/m)?.[1];
+    assert.equal(name, 'scenario-pipeline', 'skill 名变更请同步更新本测试与全部调用句式');
+});
