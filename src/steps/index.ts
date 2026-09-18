@@ -1,15 +1,15 @@
 import type { SourceStep } from 'skillnomad';
-import { initialize } from './initialize.js';
-import { intentAnchor } from './intent-anchor.js';
-import { brainstorm } from './brainstorm.js';
-import { partition } from './partition.js';
-import { scan } from './scan.js';
-import { capabilityGraph } from './capability-graph.js';
-import { evaluatePool } from './evaluate-pool.js';
-import { capabilityResearch } from './capability-research.js';
-import { briefingAssemble } from './briefing-assemble.js';
-import { assemble } from './assemble.js';
-import { learningLadder } from './learning-ladder.js';
+import { initialize } from './initialize/step.js';
+import { intentAnchor } from './intent-anchor/step.js';
+import { brainstorm } from './brainstorm/step.js';
+import { partition } from './partition/step.js';
+import { scan } from './scan/step.js';
+import { capabilityGraph } from './capability-graph/step.js';
+import { evaluatePool } from './evaluate-pool/step.js';
+import { capabilityResearch } from './capability-research/step.js';
+import { briefingAssemble } from './briefing-assemble/step.js';
+import { assemble } from './assemble/step.js';
+import { learningLadder } from './learning-ladder/step.js';
 
 export const steps: SourceStep[] = [
     initialize,

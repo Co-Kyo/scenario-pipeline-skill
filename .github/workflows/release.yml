@@ -67,29 +67,10 @@ jobs:
         if: steps.version-gate.outputs.should_release == 'true'
         run: |
           set -euo pipefail
-          rm -rf release/sp-skill
-          mkdir -p release/sp-skill
-          cp dist/sp-skill/SKILL.md release/sp-skill/SKILL.md
-          cp -R dist/sp-skill/processes release/sp-skill/processes
-          cp -R assets/. release/sp-skill/assets/
-          cp -R plugins/. release/sp-skill/plugins/
-          cp LICENSE release/sp-skill/LICENSE
-          # 血缘文件由构建生成（手写会漂）：源码版本／发布 tag／构建所用框架版本
-          node -e "
-            const fs = require('fs');
-            const [framework, source, tag] = process.argv.slice(1);
-            const lineage = {
-              skillnomad_package: 'skillnomad',
-              skillnomad_version: framework,
-              sp_skill_repo: process.env.GITHUB_REPOSITORY || 'Co-Kyo/scenario-pipeline-skill',
-              sp_skill_source_version: source,
-              sp_skill_release: tag,
-            };
-            fs.writeFileSync('release/sp-skill/VERSION_LINEAGE.json', JSON.stringify(lineage, null, 4) + '\n');
-          " \
-            "$(node -p "require('./node_modules/skillnomad/package.json').version")" \
-            "$(node -p "require('./package.json').version")" \
-            "$RELEASE_TAG"
+          # 声明驱动：组装读同一份「角色 → 发布路径」派生（scripts/assemble-release.ts），
+          # 不再在 yml 里硬编码目录清单——否则声明改了、打包没跟会静默漏发。
+          npm run assemble:release
+          npm run verify:release
           cd release/sp-skill
           python3 -m zipfile -c "../sp-skill-${RELEASE_TAG}.zip" .
 

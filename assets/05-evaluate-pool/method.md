@@ -1,6 +1,7 @@
 # Workflow Core：复合工程场景评估框架
 
-> 本文是评估域规则的文档投影；唯一事实源：`src/domain/content/evaluation.ts`。冲突时以源码为准。
+> 本文是评估域规则的文档投影；唯一事实源：评估步骤的实现（evaluate-pool）。冲突时以实现为准。
+> 通用形状正本见内容包 `@co-kyo/evaluate` 附录（评估步骤的「模块附录」）；维度名、阈值、校准口径等业务声明以本文与源码为准。
 
 ---
 
@@ -32,7 +33,7 @@
 
 ### 入池阈值（与步骤定义同源）
 
-以学习者经验年限适配（对应 `src/domain/content/evaluation.ts` 的 thresholdSection）：
+以学习者经验年限适配（对应评估步骤的 thresholdSection）：
 
 | 年限 | 入池阈值 |
 |------|----------|

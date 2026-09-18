@@ -1,8 +1,7 @@
 import type { SkillSourceModel } from 'skillnomad';
 import { createSkillFromModel } from 'skillnomad';
-import { contracts } from './src/contracts.js';
-import { SCHEDULING_POLICY } from './src/domain/scheduling.js';
-import { policies } from './src/policies.js';
+import { contracts } from './src/skill-decl.js';
+import { policies } from './src/skill-decl.js';
 import { steps } from './src/steps/index.js';
 
 // Phase II:阶段→步骤映射唯一数据源（链顺序唯一事实是 dependsOn 声明，由框架构建期校验；
@@ -38,7 +37,7 @@ const model: SkillSourceModel = {
             { label: '断点续写', pattern: '使用 scenario-pipeline，从 Step <N> 继续处理 <场景>' },
         ],
         usageNote: '系统从自然语言自动推断：经验年限、研究深度、目标平台等约束。',
-        isolationNote: '每步只读该步文件，严禁提前加载后续步骤，详见 rule-isolation.md。',
+        isolationNote: '每步只读该步文件，严禁提前加载后续步骤；长文档按需分段查阅。',
         includeBuildFooter: false,
         params: [
             { name: '--year=L1|L2|L3|L4', description: '经验年限，可省略并自动推断' },
@@ -46,10 +45,6 @@ const model: SkillSourceModel = {
         ],
         phases: phaseDefs,
         // D40 R0-①：initStepId 删（派生值，?? deriveInitStepId 回落，root 即 initialize，零行为变化）。
-        // 8.13/8.14 下沉：调度策略为 skill 级全局口径，步骤不再各自登记（消除横切散布）。
-        // D35 W4 首刀：唯一事实源切框架 SCHEDULING（本字段透传，改 W 只改框架一处）；
-        // 旧三 md（protocol-scheduling/subagent-budget/pipeline-params）已迁出即删，备份照做。
-        schedulingPolicy: SCHEDULING_POLICY,
     },
     contracts,
     policies,

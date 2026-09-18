@@ -1,6 +1,6 @@
 import { defineConfig } from 'skillnomad';
-import { markrefs } from './src/domain/entities.js';
-import { modules } from './src/modules.js';
+import { markrefs } from './src/artifacts.js';
+import { modules } from './src/skill-decl.js';
 
 export default defineConfig({
     skill: './skill.ts',

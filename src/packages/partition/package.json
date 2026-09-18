@@ -1,0 +1,17 @@
+{
+    "name": "@co-kyo/partition",
+    "version": "0.1.0",
+    "description": "依赖分区通用方法（建图 → 分层 → 分批）",
+    "type": "module",
+    "files": [
+        "skill.json",
+        "blocks"
+    ],
+    "dependencies": {
+        "methodblocks": "0.1.1",
+        "markrefs": "0.1.0"
+    },
+    "peerDependencies": {
+        "skillnomad": "0.1.6"
+    }
+}

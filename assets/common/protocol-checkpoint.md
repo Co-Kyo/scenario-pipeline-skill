@@ -2,7 +2,7 @@
 
 🚨 每个检查点**强制停顿**，依次执行五步，**严禁跳过或自动推进**：
 
-1. **生成决策摘要**：按 `assets/common/decision-summary.schema.json` 写入 `{workDir}/.meta/checkpoints/{stage_id}-decision-summary.json`（此时 `decision` 留空）
+1. **生成决策摘要**：按 `assets/decision-summary.schema.json` 的 shape 写入 `{workDir}/.meta/checkpoints/{stage_id}-decision-summary.json`（此时 `decision` 留空）
 2. **展示摘要**：从该 JSON 按 `display.pattern` 选择渲染方式，展示当前阶段的关键产物统计、质量指标、选择摘要和下一步
 3. **写入检查点记录**：将决策摘要镜像写入 `{workDir}/.meta/checkpoints/{stage_id}-barrier.md`
 4. **🛑 停住等待**：使用 `clarify` 工具向用户提问，**必须等待用户回复后才能继续**。不得在用户未回复时自动进入下一步
@@ -92,5 +92,4 @@
 
 ## 跳过条件
 
-- `--batch=pending` 模式：自动跳过所有检查点
 - 用户输入"全部确认"：跳过后续所有检查点

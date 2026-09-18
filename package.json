@@ -1,27 +1,29 @@
 {
     "name": "@co-kyo/sp-skill-source",
-    "version": "1.4.4",
+    "version": "1.5.0",
     "private": true,
     "type": "module",
     "scripts": {
         "build": "tsx node_modules/skillnomad/dist/bin/cli.js build skillnomad.config.ts",
         "typecheck": "tsc -p tsconfig.json",
-        "test": "node --import tsx --test src/domain/ladder.test.ts src/domain/effects.test.ts src/domain/learner.test.ts src/domain/content/content.test.ts src/domain/content/brainstorm.test.ts src/domain/content/scan.test.ts src/domain/numbering-governance.test.ts src/contracts.test.ts src/fragment.test.ts src/assets-guard.test.ts",
-        "verify:product": "node --import tsx --test src/product-verify.test.ts",
+        "test": "node --import tsx --test src/steps/learning-ladder/content.test.ts src/tests/effects.test.ts src/tests/learner.test.ts src/tests/content.test.ts src/steps/brainstorm/content.test.ts src/steps/scan/content.test.ts src/tests/numbering-governance.test.ts src/tests/contracts.test.ts src/tests/fragment.test.ts src/tests/assets-guard.test.ts src/tests/plugins-guard.test.ts src/tests/ship-paths.test.ts src/packages/parallel/check.test.ts src/packages/evaluate/check.test.ts src/packages/partition/check.test.ts src/packages/capability/check.test.ts src/packages/brainstorm-rules/check.test.ts",
+        "verify:product": "node --import tsx --test src/tests/product-verify.test.ts",
         "prepare": "git config core.hooksPath scripts/git-hooks",
         "lint": "eslint .",
-        "format": "eslint . --fix"
+        "format": "eslint . --fix",
+        "assemble:release": "tsx scripts/assemble-release.ts",
+        "verify:release": "tsx scripts/assemble-release.ts --check"
     },
     "dependencies": {
-        "skillnomad": "0.1.6"
+        "skillnomad": "0.2.0"
     },
     "devDependencies": {
-        "@stylistic/eslint-plugin": "^5.10.0",
-        "@types/node": "^26.1.0",
-        "eslint": "^9.39.5",
-        "eslint-plugin-jsonc": "^3.4.2",
-        "tsx": "^4.16.0",
-        "typescript": "^5.5.0",
-        "typescript-eslint": "^8.70.0"
+        "@stylistic/eslint-plugin": "5.10.0",
+        "@types/node": "26.5.1",
+        "eslint": "9.39.5",
+        "eslint-plugin-jsonc": "3.4.2",
+        "tsx": "4.20.6",
+        "typescript": "5.9.3",
+        "typescript-eslint": "8.70.0"
     }
 }

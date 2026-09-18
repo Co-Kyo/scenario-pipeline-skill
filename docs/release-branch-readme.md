@@ -25,7 +25,8 @@
 | 路径 | 是什么 |
 |---|---|
 | `SKILL.md` | 入口：frontmatter（`name` / `description`）＋目录＋正文 |
-| `processes/` | 11 个步骤的 Markdown，编号即执行顺序 |
+| `steps/` | 每步一个目录（`<NN>-<步id>/step.md` ＋该步声明的资产），编号即执行顺序 |
+| `references/` | 技能级共享文档 |
 | `assets/` | 运行期 Markdown 资产（公共规则与各步骤私有契约） |
 | `plugins/` | 插件片段 |
 | `LICENSE` | MIT |

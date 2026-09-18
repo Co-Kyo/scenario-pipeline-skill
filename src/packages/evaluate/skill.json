@@ -1,0 +1,48 @@
+{
+    "standard": "skillnomad-skill-package/v1",
+    "tier": "incubating",
+    "method": {
+        "id": "evaluate-scoring",
+        "title": "评估入池"
+    },
+    "compose": [
+        "eval-when",
+        "eval-how",
+        "eval-gate",
+        "eval-order",
+        "eval-scope"
+    ],
+    "blocks": [
+        {
+            "id": "eval-when",
+            "role": "target",
+            "file": "blocks/when.md"
+        },
+        {
+            "id": "eval-how",
+            "role": "useMethod",
+            "file": "blocks/how.md",
+            "whenToUse": "当候选项需要多维度打分并按档位判定入池时"
+        },
+        {
+            "id": "eval-gate",
+            "role": "useMethod",
+            "file": "blocks/gate.md"
+        },
+        {
+            "id": "eval-order",
+            "role": "useMethod",
+            "file": "blocks/order.md"
+        },
+        {
+            "id": "eval-scope",
+            "role": "target",
+            "file": "blocks/scope.md"
+        }
+    ],
+    "module": {
+        "id": "evaluate-methods",
+        "kind": "method",
+        "version": "0.1.0"
+    }
+}
