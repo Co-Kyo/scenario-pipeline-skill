@@ -1,5 +1,32 @@
 # Changelog
 
+## v1.5.0（发布布局 steps/ · 框架 0.2.0 对齐 · 检查点协议随包）
+
+> 发布：**v1.5.0**｜产物对比基线：release 分支 v1.4.3（v1.4.4 的 tag 已打但 release 分支停在 v1.4.3，本次含 v1.4.4 之后累积的全部内容）。Release 正文即本节。
+
+**产物变化（对比 release 分支 v1.4.3；机械清单由 Release 工作流生成，随 Release 附件 `RELEASE-DIFF.md` 发布）**
+
+| 产物文件 | 变化 | 来源 |
+|---|---|---|
+| 布局 | `processes/*.md`（11）→ `steps/<NN>-<id>/step.md`；`assets/<步>/…` → 步目录内或 `references/`；`plugins/*.md`（3）→ `references/` | 发布布局机制（框架 0.2.0 派生，消费侧声明角色） |
+| `SKILL.md` | +2 / −9：隔离注改写（去 `rule-isolation.md` 裸指针，加分段查阅）；删 skill 级调度策略节（框架零调度）；执行节改 steps 形态 | 调度极致移除承接＋发布布局跟随 |
+| `references/protocol-checkpoint.md` | **新增**：检查点五步流程与跳过条件（删已不存在的 `--batch=pending` 条） | 三件定性第一件（被误伤的活协议接回） |
+| `assets/decision-summary.schema.json` | **新增**：决策摘要 shape（检查点协议引用） | 三件定性第一件 |
+| 5 步 schemas | **新增**：`steps/05~10` 各步 `schemas.md`（图谱 JSON 形状／research-plan／Briefing 模板／组装模板／阶梯校准表） | 三件定性第二件（历史欠账：旧包只在 owns 注记里提及） |
+| 死文档 | **删除**：`rule-reuse.md`（复用表由 `.reuse()` 渲染替代）、`rule-isolation.md`（原则并入 SKILL）、`assets/README.md`（R4 前过期索引） | 三件定性第一件 |
+| `VERSION_LINEAGE.json` | 血缘由构建生成（每次发布必变） | Release 工作流 |
+
+合计 79 个文件：新增 31 · 删除 45 · 修改 2 · 无变化 1（内容文件实质变化 1 个；其余为布局移动）。
+
+**护栏与工程改动（不进产物，产物零变化）**
+
+- **框架依赖对齐**：`skillnomad` 0.1.6 → 0.2.0（单包单仓；lockfile 清 `skillnomad-common/types` 残留）——回归对着 registry 真包验证。
+- **组装声明驱动**：`scripts/assemble-release.ts`（角色→发布路径派生＋整包实存解析）＋ `verify:release`；release.yml 改调脚本（不再硬编码 cp 清单）。
+- **三道校验**：框架 build 期 `checkPublishLayout`＋`scanSourcePaths`；组装期 `scanDanglingRefs`；本地快测 `ship-paths.test.ts`（全包引用解析失败 0）。
+- **工程**：R5 顶层重排（domain 解散为 artifacts/step-parts/skill-decl 三面）；10 步文件夹同目录；测试归拢 `src/tests/`；`name≠载体目录` 已知例外锁。
+
+**验收**：typecheck 零报错 · 113/113 · verify:product 5/5 · build Validation passed；组装 20 条资产＋11 步，`verify:release OK`。
+
 ## v1.4.4（markrefs 接入 · 调度绑定 · body 判据 · decision 示例语义）
 
 > 发布：**v1.4.4**（2026-09-14）｜产物对比基线：release 分支 v1.4.3（v1.4.3 之后累积的全部内容同车发布）。Release 正文即本节。
