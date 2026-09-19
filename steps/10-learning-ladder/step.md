@@ -102,6 +102,7 @@ done
 | 读取 | `{workDir}/.meta/summaries/*.json` | 能力摘要 |
 | 读取 | `{workDir}/{seq}-{short_name}/overview.md` | Overview |
 | 读取 | `{workDir}/.meta/brainstorm/anchors.json` | 共享骨架 |
+| 读取 | `{workDir}/.meta/requirement-web.json` | 需求网 |
 | 读取 | `steps/10-learning-ladder/schemas.md` | 学习阶梯 格式契约 |
 | 产出 | `{workDir}/{seq}-{short_name}/learning-ladder.md` | 学习阶梯 |
 
