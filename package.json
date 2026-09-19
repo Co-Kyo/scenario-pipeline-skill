@@ -1,6 +1,6 @@
 {
     "name": "@co-kyo/sp-skill-source",
-    "version": "1.5.0",
+    "version": "1.5.1",
     "private": true,
     "type": "module",
     "scripts": {
@@ -15,7 +15,7 @@
         "verify:release": "tsx scripts/assemble-release.ts --check"
     },
     "dependencies": {
-        "skillnomad": "0.2.0"
+        "skillnomad": "0.2.1"
     },
     "devDependencies": {
         "@stylistic/eslint-plugin": "5.10.0",

@@ -88,3 +88,40 @@ test('编号治理:assets/plugins 引用的步骤路径必须存在(对照构建
         }
     }
 });
+
+// ── src 面守卫（2026-09-19 补）：此前守卫只扫根 assets/plugins，src 内手写编号引用是盲区。
+// 散文里写 `steps/NN-<id>/<file>` 的两种烂法都要拦：NN 与链序不符（重排即烂）；文件段无实存（断链）。
+
+function srcTexts(): [string, string][] {
+    const out: [string, string][] = [];
+    const walk = (p: string) => {
+        for (const e of readdirSync(p, { withFileTypes: true })) {
+            const full = `${p}/${e.name}`;
+            if (e.isDirectory()) walk(full);
+            else if (e.name.endsWith('.ts') && !e.name.endsWith('.test.ts')) out.push([full.replace(repoRoot, ''), readFileSync(full, 'utf-8')]);
+            else if (e.name.endsWith('.md') && full.includes('/steps/')) out.push([full.replace(repoRoot, ''), readFileSync(full, 'utf-8')]);
+        }
+    };
+    walk('src');
+    return out;
+}
+
+test('编号治理:src 内手写 steps/NN-<id>/ 引用必须匹配链序编号', async () => {
+    const { steps } = await import('../steps/index.js');
+    const order = steps.map((s) => s.id);
+    for (const [rel, text] of srcTexts()) {
+        for (const m of text.matchAll(/steps\/(\d{2})-([A-Za-z0-9_-]+)\/([\w.()-]+\.(?:md|json))/g)) {
+            const [, nn, id, file] = m;
+            const canon = order.indexOf(id);
+            assert.ok(canon >= 0, `${rel}:「${m[0]}」引用了链上不存在的步骤 ${id}`);
+            assert.equal(
+                nn, String(canon).padStart(2, '0'),
+                `${rel}:「${m[0]}」编号与链序不符（${id} 的 canonical 编号是 ${String(canon).padStart(2, '0')}；改用 {{num:${id}}} 占位符或步骤名引用）`,
+            );
+            const target = file === 'step.md'
+                ? `${repoRoot}dist/sp-skill/steps/${nn}-${id}/step.md`
+                : `${repoRoot}src/steps/${id}/assets/${file}`;
+            assert.ok(existsSync(target), `${rel}:「${m[0]}」指向的文件不存在:${target.replace(repoRoot, '')}`);
+        }
+    }
+});

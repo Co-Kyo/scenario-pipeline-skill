@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.5.1（声明面三缺口修复 · 框架 0.2.1 对齐）
+
+> 发布：**v1.5.1**｜产物对比基线：v1.5.0。Release 正文即本节。
+
+**产物变化（对比 v1.5.0）**
+
+| 产物文件 | 变化 | 来源 |
+|---|---|---|
+| `steps/10-learning-ladder/step.md` | +1 行：文件引用表新增「读取 requirement-web.json｜需求网」 | 声明面修复①（map 输入此前未进 reads，产物读写清单少一行） |
+
+合计：15 个产物文件中实质变化 1 个（一行），其余逐字不变。
+
+**护栏与工程改动（不进产物）**
+
+- **声明面三缺口修复**（2026-09-19 取证＋证伪审查抓出）：① learning-ladder `.reads` 补 `requirementWeb`（map over 输入漏声明）；② `artifacts.ts` 结构重排——entities 的 10 条 schema 路径改由 assets 表派生，同文件双写从结构上消失；③ `numbering-governance` 守卫扩面 src（手写 `steps/NN-<id>/` 引用须编号匹配链序＋文件实存；重排实验双向验证；现存三处引用核验合法）。
+- **框架依赖对齐**：`skillnomad` 0.2.0 → 0.2.1（map 输入派生 B' 裁定；对着 registry 真包回归，产物零额外变化——reads 已声明使派生行命中去重，实证零侵入）。
+
+**回归**：114 测全绿（新增守卫 1）＋verify:product 5/5＋build＋verify:release OK；产物 diff 仅 ladder 一行。
+
 ## v1.5.0（发布布局 steps/ · 框架 0.2.0 对齐 · 检查点协议随包）
 
 > 发布：**v1.5.0**｜产物对比基线：release 分支 v1.4.3（v1.4.4 的 tag 已打但 release 分支停在 v1.4.3，本次含 v1.4.4 之后累积的全部内容）。Release 正文即本节。
