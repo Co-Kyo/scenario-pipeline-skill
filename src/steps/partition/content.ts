@@ -38,13 +38,20 @@ export function sessionSection(): string {
 }
 
 export function dagTask(): string {
-    return `建图做法见模块附录（partition-methods）：建图、断环。
-本任务绑定：读取 requirement-web.json，构建节点和边。`;
+    return `建图与断环的通用做法见模块附录（partition-methods）；本任务按下列步骤执行：
+读取 requirement-web.json。
+为每对命题判断依赖类型。
+构建节点和边。
+检测环，断开 related 边直到无环。`;
 }
 
 export function sessionTask(): string {
-    return `分层分批见模块附录（partition-methods）：三层分层、批次分配。
-本任务绑定：分配 current_session 和 deferred_sessions，生成 execution-plan.md。`;
+    return `分层分批的通用做法见模块附录（partition-methods）；本任务按下列步骤执行：
+按连通分量分组。
+计算每个分量的拓扑深度。
+超过阈值时运行社区发现。
+分配 current_session 和 deferred_sessions。
+生成 execution-plan.md。`;
 }
 
 /** fail.degrade 触发词 */

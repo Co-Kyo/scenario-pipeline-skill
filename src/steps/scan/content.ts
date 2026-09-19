@@ -47,6 +47,9 @@ ${rules}
 virtual_gateway 表示先经过网络策略层判断，不直接反复访问。`;
 }
 
+/** URL 分批每批条数（正本参数值；旧 pipeline-params 表退役后值随引用处内联，防悬空 token） */
+export const URL_BATCH_SIZE = '30-50';
+
 export function phaseASection(): string {
     return `按命题批次 spawn search-{batch_id} agent。
 
@@ -57,7 +60,7 @@ export function phaseASection(): string {
 1. 按 URL 去重，保留 snippet 最长的一条。
 2. 合并 from_proposition。
 3. 按 T0 / anti-crawl / unknown 分级。
-4. 按 url-batch-size 分批并写入 url-batches.json。`;
+4. 按每批 ${URL_BATCH_SIZE} 条 URL 分批并写入 url-batches.json。`;
 }
 
 export function phaseBSection(): string {

@@ -44,11 +44,13 @@ ${chain}
 
 export function skipSection(): string {
     const words = INTERCEPT_WORDS.join('、');
-    return `跳过头脑风暴需要同时满足：
+    return `跳过头脑风暴需要同时满足以下 3 项（正本见 skip-rules.md）：
 
 - topic 明确，tech_stack 都是具体工具/框架名
-- 年限推断置信度高
-- 无场景化拦截词，例如 ${words}
+- 年限已推断且置信度高
+- platform 已指定（web/miniapp/rn 可确定）
+
+额外拦截：raw_input 含场景化关键词（例如 ${words}）时，即使 3 项均满足也强制走完整路径。
 
 否则进入 {{step:brainstorm}}。`;
 }
