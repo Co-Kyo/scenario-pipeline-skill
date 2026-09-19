@@ -36,13 +36,19 @@ export function highgroundSection(): string {
 }
 
 export function dedupeTask(): string {
-    return `去重做法见模块附录（capability-methods）：两轮去重、依赖推断。
-本任务绑定：提取 capability_web 雏形，记录 merge_trace 或 split_trace。`;
+    return `两轮去重与依赖推断的通用做法见模块附录（capability-methods）；本任务按下列步骤执行：
+提取 capability_web 雏形。
+按名称+层级匹配候选合并。
+读取关联 material 做语义比对。
+记录 merge_trace 或 split_trace。`;
 }
 
 export function highgroundTask(): string {
-    return `价值分级与排序见模块附录（capability-methods）：扇出计数、价值分级、依赖累积、拓扑排序。
-本任务绑定：按阈值分级，输出 highgrounds.json 和 learning-path.json。`;
+    return `扇出计数、价值分级、依赖累积、拓扑排序的通用做法见模块附录（capability-methods）；本任务按下列步骤执行：
+计算每个能力 strategic_value。
+按阈值分级。
+执行高地依赖累积。
+输出 highgrounds.json 和 learning-path.json。`;
 }
 
 /** fail.checkpoint 触发词 */

@@ -1,5 +1,31 @@
 # Changelog
 
+## v1.5.2（产物散文质量修复 · 框架 0.2.2 对齐 · 散文门上线）
+
+> 发布：**v1.5.2**｜产物对比基线：v1.5.1。Release 正文即本节。
+> 背景：产物散文审计（三路取证＋双证伪）确认发布物存在不通顺与断供——本版按审计归因修复内容侧，并上线散文质量门防再犯。
+
+**产物变化（对比 v1.5.1，实质变化 9 文件）**
+
+| 产物文件 | 变化 | 来源 |
+|---|---|---|
+| `steps/02-brainstorm/step.md` | 收敛者任务回填域绑定五动作（level_weight 校验／anchor_ref 编织／anchor_coverage 补位等 6 步回正文）；decision 示例数据净化（"（示例）"字样撤除，语义由框架题注承载） | 审计 BLOCKER-B（子 Agent 读取清单不含 step.md，指针化即断供）＋框架 0.2.2 |
+| `steps/03-partition/step.md` | DAG/Session 任务回填可执行序列（断开 related 边、拓扑深度、连通分量） | 指针化退化修复 |
+| `steps/05-capability-graph/step.md` | 去重/高地任务回填（读取关联 material 语义比对、strategic_value 计算序列） | 指针化退化修复 |
+| `steps/06-evaluate-pool/step.md` | 打分/入池任务回填步骤化 | 指针化退化修复（伤最轻） |
+| `steps/01-intent-anchor/step.md` | 跳过条件补 platform 项（与正本 skip-rules.md 三项对齐）＋标注正本指针 | 审计 BLOCKER-A（双源矛盾：按正文可跳过、按正本不可） |
+| `steps/04-scan/step.md` | 悬空 token `url-batch-size` 改内联值"每批 30-50 条 URL" | 参数断链修复（实况：仅此一 token 真断链，另两值系死参数非回归） |
+| `steps/07-capability-research/step.md` | 插件行去"条件性加载"假断言 | 框架 0.2.2 传导 |
+| `SKILL.md` | frontmatter「定向扫描」→「广域扫描」（与步骤正本名一致）；"三阶段"计数修正；调用口径统一自然语言（与 callExamples 一致） | 命名漂移修复 |
+
+**工程改动（不进产物）**
+
+- **框架依赖对齐**：`skillnomad` 0.2.1 → 0.2.2（示例行级叠加撤除／附录元话语中性化／plugins 假断言撤除／output-manifest 文件名修正；registry 真包回归）。
+- **散文质量门上线**（`src/tests/prose-quality.test.ts`，5 测）：域绑定词存活锁（防指针化断供复发）；框架 `scanMetaDiscourse`/`scanMarkerDuplication` 接线（元话语黑名单／标记叠加判据由本仓给）；参数守恒（旧 token 悬空即红）；跳过条件双源一致产物侧锁。另 `content.test.ts` 增 intent 跳过条件漂移锁（声明侧）。
+- **数据侧"（示例）"清理**：brainstorm decision 的 label/summary/detail 去自带标注（框架 v0.2.2 题注一处承载，deprecation 契约触发）。
+
+**回归**：npm test 115（114＋intent 漂移锁 1，其中 2 个读 dist 用例在无产物时按既有模式 skip）＋verify:product 10/10（product-verify 5＋散文门 5，CI 中 build 后执行）＋build＋verify:release OK＋lint/typecheck 绿。
+
 ## v1.5.1（声明面三缺口修复 · 框架 0.2.1 对齐）
 
 > 发布：**v1.5.1**｜产物对比基线：v1.5.0。Release 正文即本节。

@@ -29,7 +29,7 @@ const model: SkillSourceModel = {
 - **命题研究** → overview + edge-cases + trade-offs + experiment
 - **能力知识库** → capabilities/{id}-{name}.md（跨命题原子能力）
 - **学习阶梯** → learning-ladder.md（渐进式引导路径）`,
-        frontmatterDescription: '前端复合工程场景知识管线。三阶段工作流：意图锚定→头脑风暴→前处理（定向扫描→能力图谱构建→评估入池）+ 后处理（能力研究→Briefing→命题组装→学习阶梯）。通过 /scenario-pipeline 命令显式调用，支持从任意步骤断点续写。',
+        frontmatterDescription: '前端复合工程场景知识管线。工作流：意图锚定→头脑风暴→前处理（广域扫描→能力图谱构建→评估入池）＋后处理（能力研究→Briefing→命题组装→学习阶梯）。用自然语言显式调用（见 SKILL.md 调用方式），支持从任意步骤断点续写。',
         callExamples: [
             { label: '完整流程', pattern: '使用 scenario-pipeline，对 <场景描述> 进行完整研究' },
             { label: '仅前处理', pattern: '使用 scenario-pipeline，对 <信息源> 进行前处理' },

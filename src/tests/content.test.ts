@@ -34,6 +34,17 @@ test('intent:拦截词数组进跳过判断(B7-A 并集后 8 词)', () => {
     assert.ok(skipSection().includes('面试、场景、分析、复杂、考察、问、中大型、多团队'));
 });
 
+test('intent:跳过条件三项与正本 skip-rules.md 一致(双源漂移锁)', () => {
+    const s = skipSection();
+    const sr = readFileSync(repoRoot + 'src/steps/intent-anchor/assets/skip-rules.md', 'utf-8');
+    // 三项条件：正文与正本必须同有（缺一即双源漂移——2026-09-19 散文审计 BLOCKER-A）
+    for (const [name, kw] of [['topic 明确', 'topic'], ['年限', 'year'], ['platform', 'platform']] as const) {
+        assert.ok(s.includes(name), `正文跳过条件缺「${name}」`);
+        assert.ok(sr.includes(kw), `正本缺「${name}」判据`);
+    }
+    assert.ok(s.includes('skip-rules.md'), '正文未指向正本');
+});
+
 test('B3:SCAN_DENSITY 与 strategy-level.md L2 列一致(漂移锁)', () => {
     const t = readFileSync(repoRoot + 'assets/common/strategy-level.md', 'utf-8');
     for (const d of SCAN_DENSITY) {

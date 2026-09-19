@@ -18,7 +18,7 @@
 
 1. 把本分支（或 Release 里的 `sp-skill-<tag>.zip`）整体交给 agent；
 2. 入口是 `SKILL.md`——agent 从它开始读，其余文件按需加载；
-3. 显式调用：`/scenario-pipeline`；支持从任意步骤断点续写。
+3. 用自然语言显式调用（推荐句式见 SKILL.md「调用方式」）；支持从任意步骤断点续写。
 
 ## 目录
 
