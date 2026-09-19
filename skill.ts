@@ -18,7 +18,6 @@ export const phaseDefs: { name: string; stepIds: string[]; description: string }
     { name: '后处理', stepIds: ['capability-research', 'briefing-assemble', 'assemble', 'learning-ladder'], description: '串行研究、Briefing、组装、学习阶梯' },
 ];
 
-// B10-A 已退役：flowOverview 现由 skillnomad 构建期派生（deriveFlowOverview），
 // 手写副本删除——"标注与边界一致"是派生的定义而非待守卫的约束。
 
 const model: SkillSourceModel = {

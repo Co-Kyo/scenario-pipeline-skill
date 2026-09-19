@@ -8,10 +8,10 @@ import { createRefs } from 'skillnomad';
 import { LADDER_STAGE_COUNT } from './steps/learning-ladder/content.js';
 
 /**
- * **产物实体声明（8.16 产物路径投射 · 业务顶层）**
+ * **产物实体声明（业务顶层）**
  *
- * 产物路径模型是从学习模型中投射出来的（老板裁定）——实体 = 业务顶层**已有领域概念**，
- * 只登记不发明（R2 红线）。27 条 runtime 产物归入 8 组概念：
+ * 产物路径模型从学习模型投射——实体 = 业务顶层**已有领域概念**，
+ * 只登记不发明。27 条 runtime 产物归入 8 组概念：
  * intent / brainstorm / partition / scan / capability / evaluation / ladder + 机制产物。
  *
  * **kind**：
@@ -72,7 +72,7 @@ export const entities: Record<string, ProductEntity> = {
     // ── brainstorm（steps/brainstorm/content.ts；文件夹：与步骤同目录）────────────────────
     requirementWeb: { concept: 'brainstorm', artifact: '{workDir}/.meta/requirement-web.json', kind: 'learning', description: '需求网', schema: assets.brainstormSchema.path },
 
-    // ── partition（steps/partition/content.ts；R4-N8 文件夹试点：与步骤同目录）──────────────────────
+    // ── partition（steps/partition/content.ts；与步骤同目录）──────────────────────
     partitionAnalysis: { concept: 'partition', artifact: '{workDir}/.meta/partition-analysis.json', kind: 'learning', description: '分区分析', schema: assets.partitionSchema.path },
     dependencyGraph: { concept: 'partition', artifact: '{workDir}/.meta/dependency-graph.json', kind: 'learning', description: '依赖图' },
     executionPlan: { concept: 'partition', artifact: '{workDir}/execution-plan.md', kind: 'mechanism', description: '执行计划' },
@@ -142,7 +142,7 @@ export const markrefs = { keys: markrefsKeys, refs };
  */
 export function refOf(name: keyof typeof entities): SourceRef & { path: string } {
     const e = entities[name];
-    if (!e) throw new Error(`未知产物实体: ${String(name)}（8.16：实体只登记不发明，请先登记）`);
+    if (!e) throw new Error(`未知产物实体: ${String(name)}（实体只登记不发明，请先登记）`);
     refs.ref(name, e.artifact);
     return { path: e.artifact, description: e.description, required: true };
 }
@@ -209,7 +209,7 @@ export const EFFECT_CONTRACTS: readonly EffectContract[] = [
     },
 ];
 
-/** D7:效果契约小节渲染(运行时 AI 与审计工具的消费方)。未知 id 抛错,防静默漏接。 */
+/** 效果契约小节渲染(运行时 AI 与审计工具的消费方)。未知 id 抛错,防静默漏接。 */
 export function effectContractSection(id: string): string {
     const c = EFFECT_CONTRACTS.find((x) => x.id === id);
     if (!c) throw new Error(`未知效果契约:${id}`);

@@ -5,7 +5,7 @@ export const ANCHOR_COUNT = { min: 8, max: 15 } as const;
 export const LEVEL_ROLE_CONSTRAINT =
     'core=target_level、premise=target_level-1、outlook=target_level+1';
 
-/** 跳过头脑风暴的场景化拦截词(B7-A:与 src/steps/intent-anchor/assets/skip-rules.md 并集统一) */
+/** 跳过头脑风暴的场景化拦截词(与 src/steps/intent-anchor/assets/skip-rules.md 并集统一) */
 export const INTERCEPT_WORDS = [
     '面试',
     '场景',

@@ -15,7 +15,6 @@ export const partition = step('partition', '依赖分区')
     .detail(partitionRules.detail())
     .section('三层分区', partitionRules.threeLayerSection())
     .section('Session 分配', partitionRules.sessionSection())
-// 8.5 迁移：contractRefs 收拢进 reads + as:'contract'，本方法已从 beta.4 类型删除。
 // contractRefs 内 partitionAnalysis/executionPlan 实为 writes 产物，不进 reads；
     .taskTemplate(
         'DAG 构建',

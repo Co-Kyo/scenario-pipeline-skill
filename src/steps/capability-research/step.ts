@@ -16,7 +16,6 @@ export const capabilityResearch = step('capability-research', '能力研究')
     .section('域 Agent 任务', research.domainAgentTask())
     .section('素材分配与 usage trace', research.materialAllocation())
     .section('效果契约', effectContractSection('E-capability-coverage'))
-// 8.5 迁移：contractRefs 收拢进 reads + as:'contract'，本方法已从 beta.4 类型删除。
 // contractRefs 内 researchPlan/capabilities/summaries/capabilitiesReadme 实为 writes 产物，不进 reads；
     .taskTemplate(
         '域 Agent 任务',
