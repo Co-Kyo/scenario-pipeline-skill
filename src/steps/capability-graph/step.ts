@@ -19,7 +19,6 @@ export const capabilityGraph = step('capability-graph', '能力图谱')
     )
     .detail(capability.detail())
     .section('战略高地', capability.highgroundSection())
-// 8.5 迁移：contractRefs 收拢进 reads + as:'contract'，本方法已从 beta.4 类型删除。
 // contractRefs 内 capabilityGraph/dependencyGraph/highgrounds/learningPath 实为 writes 产物，不进 reads。
     .taskTemplate(
         '能力去重',
