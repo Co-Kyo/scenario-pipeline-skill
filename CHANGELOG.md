@@ -24,7 +24,7 @@
 - **散文质量门上线**（`src/tests/prose-quality.test.ts`，5 测）：域绑定词存活锁（防指针化断供复发）；框架 `scanMetaDiscourse`/`scanMarkerDuplication` 接线（元话语黑名单／标记叠加判据由本仓给）；参数守恒（旧 token 悬空即红）；跳过条件双源一致产物侧锁。另 `content.test.ts` 增 intent 跳过条件漂移锁（声明侧）。
 - **数据侧"（示例）"清理**：brainstorm decision 的 label/summary/detail 去自带标注（框架 v0.2.2 题注一处承载，deprecation 契约触发）。
 
-**回归**：120 测全绿（114＋intent 漂移锁 1＋散文门 5）＋verify:product 5/5＋build＋verify:release OK＋lint/typecheck 绿。
+**回归**：npm test 115（114＋intent 漂移锁 1，其中 2 个读 dist 用例在无产物时按既有模式 skip）＋verify:product 10/10（product-verify 5＋散文门 5，CI 中 build 后执行）＋build＋verify:release OK＋lint/typecheck 绿。
 
 ## v1.5.1（声明面三缺口修复 · 框架 0.2.1 对齐）
 
