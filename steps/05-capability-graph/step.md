@@ -64,14 +64,20 @@ strategic_value = fanout.count x (1 / coupling)。
 ### 能力去重
 
 ```text
-去重做法见模块附录（capability-methods）：两轮去重、依赖推断。
-本任务绑定：提取 capability_web 雏形，记录 merge_trace 或 split_trace。
+两轮去重与依赖推断的通用做法见模块附录（capability-methods）；本任务按下列步骤执行：
+提取 capability_web 雏形。
+按名称+层级匹配候选合并。
+读取关联 material 做语义比对。
+记录 merge_trace 或 split_trace。
 ```
 ### 战略高地
 
 ```text
-价值分级与排序见模块附录（capability-methods）：扇出计数、价值分级、依赖累积、拓扑排序。
-本任务绑定：按阈值分级，输出 highgrounds.json 和 learning-path.json。
+扇出计数、价值分级、依赖累积、拓扑排序的通用做法见模块附录（capability-methods）；本任务按下列步骤执行：
+计算每个能力 strategic_value。
+按阈值分级。
+执行高地依赖累积。
+输出 highgrounds.json 和 learning-path.json。
 ```
 
 
@@ -196,11 +202,11 @@ barrier 相关事件（barrier_confirmed / barrier_rejected）的 ref 必须使�
 
 ## 模块附录
 
-> 本节由构建期模块渲染生成（D35）；引用表模块条目此处为执行用正本。
+> 本节为执行用正本。
 
 ### 模块：`capability-methods`（capability-method-pack）
 
-> 来源：模块 `capability-methods`［构建时渲染，版本随产物 manifest 锁定］
+> 来源：模块 `capability-methods`
 
 # 适用
 

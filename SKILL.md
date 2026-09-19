@@ -1,6 +1,6 @@
 ---
 name: scenario-pipeline
-description: "前端复合工程场景知识管线。三阶段工作流：意图锚定→头脑风暴→前处理（定向扫描→能力图谱构建→评估入池）+ 后处理（能力研究→Briefing→命题组装→学习阶梯）。通过 /scenario-pipeline 命令显式调用，支持从任意步骤断点续写。"
+description: "前端复合工程场景知识管线。工作流：意图锚定→头脑风暴→前处理（广域扫描→能力图谱构建→评估入池）＋后处理（能力研究→Briefing→命题组装→学习阶梯）。用自然语言显式调用（见 SKILL.md 调用方式），支持从任意步骤断点续写。"
 ---
 
 # Scenario Pipeline

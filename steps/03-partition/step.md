@@ -62,14 +62,21 @@ scan
 ### DAG 构建
 
 ```text
-建图做法见模块附录（partition-methods）：建图、断环。
-本任务绑定：读取 requirement-web.json，构建节点和边。
+建图与断环的通用做法见模块附录（partition-methods）；本任务按下列步骤执行：
+读取 requirement-web.json。
+为每对命题判断依赖类型。
+构建节点和边。
+检测环，断开 related 边直到无环。
 ```
 ### Session 分配
 
 ```text
-分层分批见模块附录（partition-methods）：三层分层、批次分配。
-本任务绑定：分配 current_session 和 deferred_sessions，生成 execution-plan.md。
+分层分批的通用做法见模块附录（partition-methods）；本任务按下列步骤执行：
+按连通分量分组。
+计算每个分量的拓扑深度。
+超过阈值时运行社区发现。
+分配 current_session 和 deferred_sessions。
+生成 execution-plan.md。
 ```
 
 
@@ -189,11 +196,11 @@ barrier 相关事件（barrier_confirmed / barrier_rejected）的 ref 必须使�
 
 ## 模块附录
 
-> 本节由构建期模块渲染生成（D35）；引用表模块条目此处为执行用正本。
+> 本节为执行用正本。
 
 ### 模块：`partition-methods`（partition-method）
 
-> 来源：模块 `partition-methods`［构建时渲染，版本随产物 manifest 锁定］
+> 来源：模块 `partition-methods`
 
 # 适用
 

@@ -60,14 +60,20 @@ L4：任一维度 >= 2 即入池。
 ### 四维评分
 
 ```text
-打分做法见模块附录（evaluate-methods）：逐维打分、记录依据、防虚高。
-本任务绑定：按四维矩阵打分，写入 evaluations.json。
+逐维打分、记录依据、防虚高的通用做法见模块附录（evaluate-methods）；本任务按下列步骤执行：
+对每个命题按四维矩阵打分。
+记录每个维度的 reasoning。
+检查防虚高规则（阈值见下文详细说明）。
+写入 evaluations.json。
 ```
 ### 入池归档
 
 ```text
-门禁与排序见模块附录（evaluate-methods）：阈值门禁、直通、难度分级与排序。
-本任务绑定：按年限阈值判定 priority，记录 priority_trace，评估 difficulty 和 recommended_order，生成 README.md 和 candidates.md。
+阈值门禁、直通、难度分级与排序的通用做法见模块附录（evaluate-methods）；本任务按下列步骤执行：
+按年限阈值判定 priority。
+记录 priority_trace。
+评估 difficulty 和 recommended_order。
+生成 README.md 和 candidates.md。
 ```
 
 
@@ -138,7 +144,7 @@ L4：任一维度 >= 2 即入池。
 
 ## 插件加载
 
-- `year-granularity`：条件性加载
+- `year-granularity`
 
 ## 运行记录
 
@@ -195,11 +201,11 @@ barrier 相关事件（barrier_confirmed / barrier_rejected）的 ref 必须使�
 
 ## 模块附录
 
-> 本节由构建期模块渲染生成（D35）；引用表模块条目此处为执行用正本。
+> 本节为执行用正本。
 
 ### 模块：`evaluate-methods`（evaluate-method）
 
-> 来源：模块 `evaluate-methods`［构建时渲染，版本随产物 manifest 锁定］
+> 来源：模块 `evaluate-methods`
 
 # 适用
 

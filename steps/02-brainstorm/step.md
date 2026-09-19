@@ -117,7 +117,7 @@ reason_type 只能是 out_of_scope、below_target、deprecated、not_frontend。
 ### 收敛者
 
 ```text
-你是头脑风暴的收敛者（Integrator）。收敛五动作（校验、对齐、收束、去重、补位）见模块附录（parallel-methods）。
+你是头脑风暴的收敛者（Integrator）。收敛五动作的通用做法见模块附录（parallel-methods）；本任务按下列域绑定步骤执行。
 
 你必须用 write 工具将文件写入磁盘。
 
@@ -127,11 +127,15 @@ reason_type 只能是 out_of_scope、below_target、deprecated、not_frontend。
 3. 技术维度报告：{workDir}/.meta/brainstorm/technical.json
 4. 学习维度报告：{workDir}/.meta/brainstorm/learning.json
 5. 约束维度报告：{workDir}/.meta/brainstorm/constraint.json
-6. 输出格式：steps/02-brainstorm/requirement-web-schema.md（发布形态，框架按角色派生）
+6. 输出格式：steps/02-brainstorm/requirement-web-schema.md
 
 ## 你的任务
-1. 按模块附录执行收敛五动作；对齐优先级为（约束 > 技术 > 场景 > 学习）。
-2. 图谱构建：产出 capability_web（按能力 ID 组织，含 type/fanout/covers/dependencies）。
+1. 校验：检查 4 个维度输出中的 level_weight 是否跨维度一致。
+2. 对齐：不一致时按优先级对齐（约束 > 技术 > 场景 > 学习）。
+3. 收束：用 anchor_ref 编织跨维度关系图，建立场景与能力映射。
+4. 去重：同维度内描述重叠则合并；不同维度同锚点则标注不同视角。
+5. 补位：检测 anchor_coverage 覆盖缺口。
+6. 图谱构建：产出 capability_web（按能力 ID 组织，含 type/fanout/covers/dependencies）。
 
 ## 输出格式
 严格按 requirement-web-schema.md 格式输出。
@@ -228,14 +232,14 @@ reason_type 只能是 out_of_scope、below_target、deprecated、not_frontend。
 
 - gate_type: `human_gate`
 - confirm: 确认需求网
-- metrics（示例）: 命题（示例）=10; 年限推断（示例）=L2; 排除项（示例）=20
-- selection（示例）: 示例：10/10 命题默认选中，可按命题或分组调整。
+- metrics: 命题=10; 年限推断=L2; 排除项=20
+- selection: 10/10 命题默认选中，可按命题或分组调整。
 
-> 【示例】示例值——当前阶段：需求网确认；本次确认：命题/年限/排除边界；下一步：分区确认；命题 10，年限 L2，排除项 20；10/10 已选。
+> 当前阶段：需求网确认；本次确认：命题/年限/排除边界；下一步：分区确认；命题 10，年限 L2，排除项 20；10/10 已选。
 
 ## 插件加载
 
-- `year-granularity`：条件性加载
+- `year-granularity`
 
 ## 运行记录
 
@@ -292,11 +296,11 @@ barrier 相关事件（barrier_confirmed / barrier_rejected）的 ref 必须使�
 
 ## 模块附录
 
-> 本节由构建期模块渲染生成（D35）；引用表模块条目此处为执行用正本。
+> 本节为执行用正本。
 
 ### 模块：`parallel-methods`（parallel-method）
 
-> 来源：模块 `parallel-methods`［构建时渲染，版本随产物 manifest 锁定］
+> 来源：模块 `parallel-methods`
 
 # 适用
 
@@ -340,7 +344,7 @@ barrier 相关事件（barrier_confirmed / barrier_rejected）的 ref 必须使�
 <!-- module:parallel-methods -->
 ### 模块：`brainstorm-rules-methods`（brainstorm-rules-method）
 
-> 来源：模块 `brainstorm-rules-methods`［构建时渲染，版本随产物 manifest 锁定］
+> 来源：模块 `brainstorm-rules-methods`
 
 # 适用
 

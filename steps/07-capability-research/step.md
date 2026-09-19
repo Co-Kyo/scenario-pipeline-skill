@@ -186,7 +186,7 @@ T0 优先，缺失时按 T1/T2/T3 补充。
 
 ## 插件加载
 
-- `capability-research-mode`：条件性加载
+- `capability-research-mode`
 
 ## 运行记录
 

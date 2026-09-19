@@ -82,7 +82,7 @@ virtual_gateway 表示先经过网络策略层判断，不直接反复访问。
 1. 按 URL 去重，保留 snippet 最长的一条。
 2. 合并 from_proposition。
 3. 按 T0 / anti-crawl / unknown 分级。
-4. 按 url-batch-size 分批并写入 url-batches.json。
+4. 按每批 30-50 条 URL 分批并写入 url-batches.json。
 
 ## Phase B 执行细节
 
@@ -307,8 +307,8 @@ partial.{batch_id}.json:
 
 ## 插件加载
 
-- `anti-crawl-fetch`：条件性加载
-- `year-granularity`：条件性加载
+- `anti-crawl-fetch`
+- `year-granularity`
 
 ## 运行记录
 
