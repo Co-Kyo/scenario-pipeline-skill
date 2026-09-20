@@ -1,8 +1,6 @@
 // 本 skill 的文件全图：产出什么（产物登记）、读什么（输入资产）、保什么（效果契约）。
-// 读者时刻：我要知道这个 skill 产出哪些文件、谁依赖谁、读了哪些共享文档。
-//
-// 唯一源：产物路径只写在本文件；步骤源码用 refOf(name) 引用，不出现路径字面量。
-// 契约登记的输入资产路径由下方 assets 表派生，不再二次手写。
+// 产物路径只写在本文件：步骤源码用 refOf(name) 引用，不出现路径字面量;
+// 契约登记的输入资产路径由下方 assets 表派生，不二次手写。
 import type { KeyMap, SourceRef } from 'skillnomad';
 import { createRefs } from 'skillnomad';
 import { LADDER_STAGE_COUNT } from './steps/learning-ladder/content.js';
@@ -116,9 +114,9 @@ export const entities: Record<string, ProductEntity> = {
 
 
 /**
- * **markrefs 接入（P1b）**：键表（名字→路径）由产物表派生（唯一事实来源不搬家）；
- * 引用登记在 `refOf`／`schemaRef` 内自动发生——118 处调用点文字不变。
- * 构建期由框架（skillnomad build）调用 markrefs 校验：名字在表、目标存在、重复定义。
+ * **markrefs 接入**：键表（名字→路径）由产物表派生；
+ * 引用登记在 `refOf`／`schemaRef` 内自动发生。
+ * 构建期由框架（skillnomad build）做引用校验：名字在表、目标存在、重复定义。
  */
 export const refs = createRefs();
 
@@ -152,7 +150,7 @@ export function refOf(name: keyof typeof entities): SourceRef & { path: string }
 }
 
 /**
- * **格式契约引用（schemaRef）**：按实体名取该实体的格式投影（③A——schemas 跟随实体）。
+ * **格式契约引用（schemaRef）**：按实体名取该实体的格式契约。
  */
 export function schemaRef(name: keyof typeof entities): SourceRef & { path: string } {
     const e = entities[name];
