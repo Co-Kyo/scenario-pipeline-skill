@@ -134,3 +134,41 @@ test('B2-A:method.md 投影与评估域正本一致(漂移锁)', () => {
     assert.ok(!text.includes('≥ 8'), '旧入池线残留');
     assert.ok(!text.includes('6-7'), '旧档位残留');
 });
+
+// ── 2026-09-19 北极星审计补锁：三源互锁＋无锁步上锁（改动无锁＝可改不可验）──
+
+test('B2-B:防虚高规则三源互锁（content 正本 ↔ method 投影 ↔ how 块通用句）', async () => {
+    const { detail } = await import('../steps/evaluate-pool/content.js');
+    const host = detail();
+    // 正本数值核：均>=2 分触发、压低至少 1 分
+    assert.match(host, /4 个维度均 >= 2 时必须重新审视并压低至少 1 分/);
+    const method = readFileSync(repoRoot + 'assets/05-evaluate-pool/method.md', 'utf-8');
+    assert.ok(method.includes('均为 2 分及以上') && method.includes('压低 1 分'), 'method 投影与正本数值脱节');
+    const block = readFileSync(repoRoot + 'src/packages/evaluate/blocks/how.md', 'utf-8');
+    assert.ok(block.includes('防虚高') && block.includes('压低'), 'how 块丢了防虚高通用句');
+});
+
+test('07:能力研究分组上限与合并条件锁', async () => {
+    const { research } = await import('../steps/capability-research/content.js');
+    const t = research.detail();
+    assert.match(t, /每组上限 5 个能力/);
+    assert.match(t, /不足 2 个可与相邻组合并/);
+});
+
+test('08:Briefing 结构比例与 Trace 下限锁', async () => {
+    const { briefing } = await import('../steps/briefing-assemble/content.js');
+    const r = briefing.contentRatio();
+    assert.match(r, /开篇 10-15%/);
+    assert.match(r, /主体 <= 70%/);
+    assert.match(r, /收尾 10-15%/);
+    assert.match(r, /至少 3 个场景输入、3 个边界、3 个验证点/);
+    const w = briefing.workerTask();
+    assert.match(w, /3\/3\/3/);
+});
+
+test('06:打分 task 行存活锁（防整行删除不红）', async () => {
+    const { scoreTask } = await import('../steps/evaluate-pool/content.js');
+    const t = scoreTask();
+    assert.match(t, /检查防虚高规则/);
+    assert.match(t, /记录每个维度的 reasoning/);
+});

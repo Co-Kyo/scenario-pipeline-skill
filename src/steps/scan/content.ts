@@ -47,7 +47,7 @@ ${rules}
 virtual_gateway 表示先经过网络策略层判断，不直接反复访问。`;
 }
 
-/** URL 分批每批条数（正本参数值；旧 pipeline-params 表退役后值随引用处内联，防悬空 token） */
+/** URL 分批每批条数（值随引用处内联，防悬空 token） */
 export const URL_BATCH_SIZE = '30-50';
 
 export function phaseASection(): string {
@@ -101,7 +101,7 @@ export function checkpointSection(): string {
     return `展示素材 Tier 分布、丢弃数和 role 覆盖统计，使用 clarify 等待用户确认后再进入 {{step:capability-graph}}。`;
 }
 
-// B1-A:输出 Schema 以 src/steps/scan/assets/schemas.md 为正本,此处为镜像渲染源;
+// 输出 Schema 以 src/steps/scan/assets/schemas.md 为正本,此处为镜像渲染源(漂移锁见 scan/content.test);
 // 漂移锁见 scan.test.ts(三方 JSON 块逐字节比对)。
 export function outputSchema(): string {
     return `search-batch.{batch_id}.json:
@@ -199,8 +199,7 @@ export function searchTask(): string {
 过滤 excluded_keywords 命中项。
 写入 search-batch.{batch_id}.json。
 
-判据：条数按档取（精确5／窄滤10／宽发现15，上限25，E8）；字段以可打开可定位为准（W1 命题先行，W2 粒度跟原计划走）。
-参照 Search 调用纸 fetchFull／citeFull（mdlego docs/search-call-sheet.md 完整版一节）。`;
+判据：条数按档取（精确 5／窄滤 10／宽发现 15，上限 25）；字段以可打开可定位为准（命题先行，粒度跟搜索计划走）。`;
 }
 
 export function extractTask(): string {

@@ -14,7 +14,6 @@ export const evaluatePool = step('evaluate-pool', '评估入池')
     .outputs(refOf('evaluations').path, refOf('readme').path, refOf('candidates').path)
     .detail(evaluation.detail())
     .section('年限阈值', evaluation.thresholdSection())
-// 8.5 迁移：contractRefs 收拢进 reads + as:'contract'，本方法已从 beta.4 类型删除。
 // contractRefs 内 evaluations/readme/candidates 实为 writes 产物，不进 reads。
     .taskTemplate(
         '四维评分',

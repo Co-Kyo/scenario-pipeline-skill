@@ -20,7 +20,6 @@ export const brainstorm = step('brainstorm', '头脑风暴')
     .detail(brainstormRules.detail())
     .section('质量门禁', brainstormRules.qualityGateSection())
     .section('{{step:scan}} 注入', brainstormRules.scanInjectSection())
-// 8.5 迁移：contractRefs 收拢进 reads + as:'contract'，本方法已从 beta.4 类型删除。
     .taskTemplate(
         '场景维度',
         brainstormRules.scenarioTask(),
@@ -70,7 +69,7 @@ export const brainstorm = step('brainstorm', '头脑风暴')
 // decision 示例值：以下 metrics/selection/risks/barrier_summary 均为
 // **某次真实历史运行的示例取值**（命题 10、L2、排除项 20），非运行时计算值。
 // `isExample: true` 为机器可读边界（语义见 `SourceDecisionSummary.isExample`）；
-// 示例语义由渲染层区块题注一处承载（框架 v0.2.2 起），数据侧不再自带"（示例）"字样。
+// 示例语义由渲染层区块题注一处承载，数据侧不自带"（示例）"字样。
     .decision({
         isExample: true,
         gateType: 'human_gate',

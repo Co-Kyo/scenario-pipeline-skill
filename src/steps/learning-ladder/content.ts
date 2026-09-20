@@ -1,6 +1,6 @@
 // 学习域:学习阶梯领域服务。
 // 阶段数量、拓扑分层、Step 字段是学习规则——在此声明为数据,
-// 提示词由规则派生。Phase I(D1-D4)新增:判据校准表渲染、预计时长、
+// 提示词由规则派生:判据校准表渲染、预计时长、
 // 完成标记与进度留痕、救援链接规则。
 import { LEVEL_CRITERIA_TABLE } from './learner.js';
 
@@ -49,7 +49,7 @@ ${fields}
 失败时给出明确回退指引。`;
 }
 
-/** D1:判据校准表渲染(运行时按 anchors.json 的 target_level 选用) */
+/** 判据校准表渲染(运行时按 anchors.json 的 target_level 选用) */
 export function judgmentCalibrationTable(): string {
     const rows = LEVEL_CRITERIA_TABLE.map((r) => `- **${r.level}**：${r.traits}`).join('\n');
     return `判据校准表（学习者的 target_level 见 {workDir}/.meta/brainstorm/anchors.json）：

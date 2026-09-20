@@ -1,6 +1,6 @@
 // 学习域:学习者模型。
-// Phase I(D1):判据校准规则数据化为 per-level 表,渲染进阶梯模板;
-// 运行时由 AI 按 anchors.json 的 target_level 选用(不做构建期求值,审查 B-P2-7)。
+// 判据校准规则数据化为 per-level 表,渲染进阶梯模板;
+// 运行时由 AI 按 anchors.json 的 target_level 选用(不做构建期求值)。
 export type Level = 'L1' | 'L2' | 'L3' | 'L4';
 
 export const LEVELS: readonly Level[] = ['L1', 'L2', 'L3', 'L4'];
