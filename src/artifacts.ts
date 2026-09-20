@@ -6,31 +6,16 @@ import { createRefs } from 'skillnomad';
 import { LADDER_STAGE_COUNT } from './steps/learning-ladder/content.js';
 
 /**
- * **产物实体声明（业务顶层）**
+ * **产物实体声明**：产物路径的**单一登记处**。
  *
- * 实体表 = 产物路径的**单一登记处**。27 条 runtime 产物归入 8 组概念：
- * intent / brainstorm / partition / scan / capability / evaluation / ladder + 机制产物；
- * 实体只用业务顶层**已有领域概念**做归属标注（`concept`），不发明新概念。
- *
- * 注意：`concept` / `kind` 是**归属标签**（供人与评估工具阅读，构建期不消费）——
- * 产物路径是登记值。level/role 判据的选用发生在运行时由 AI 按 anchors.json 执行
- * （见 learning-ladder/learner.ts），构建层没有模型推导边。
- *
- * **kind**：
- * - `learning`：学习域产物（会话内生成）
- * - `asset`：长期资产（跨命题累积，如 capabilities/*.md）
- * - `mechanism`：管线机制产物（无领域概念，如 run/executionPlan）
- *
- * **schema**：格式契约跟随产物实体登记（schemas.md 由 assets 表派生，非独立模块）。
+ * 每条 = 产物落点（路径模板）＋描述（＋可选的格式契约 schemas.md）。
+ * 登记只回答"这个产物叫什么、落在哪"，不回答"它属于哪个领域概念"——
+ * concept/kind 字段已随"学习模型"方向一并移除（作者裁定：学习模型暂搁；
+ * 学习模型真正接入时再为实体加领域归属）。
  */
-export type EntityKind = 'learning' | 'asset' | 'mechanism';
-
 export interface ProductEntity {
-    /** 领域归属标签（对应 steps/<步>/ 内容域；供阅读，构建期不消费） */
-    concept: string;
-    /** 产物落点（路径模板）——唯一事实来源，替代 contracts.ts runtime 表手写 */
+    /** 产物落点（路径模板）——唯一事实来源 */
     artifact: string;
-    kind: EntityKind;
     description: string;
     /** 格式契约（schemas.md，由 assets 表派生登记） */
     schema?: string;
@@ -69,47 +54,47 @@ export const assets = {
 
 export const entities: Record<string, ProductEntity> = {
     // ── intent（steps/intent-anchor/content.ts；文件夹：与步骤同目录）────────────────────────────
-    anchors: { concept: 'intent', artifact: '{workDir}/.meta/brainstorm/anchors.json', kind: 'learning', description: '共享骨架', schema: assets.anchorsSchema.path },
+    anchors: { artifact: '{workDir}/.meta/brainstorm/anchors.json', description: '共享骨架', schema: assets.anchorsSchema.path },
 
     // ── brainstorm（steps/brainstorm/content.ts；文件夹：与步骤同目录）────────────────────
-    requirementWeb: { concept: 'brainstorm', artifact: '{workDir}/.meta/requirement-web.json', kind: 'learning', description: '需求网', schema: assets.brainstormSchema.path },
+    requirementWeb: { artifact: '{workDir}/.meta/requirement-web.json', description: '需求网', schema: assets.brainstormSchema.path },
 
     // ── partition（steps/partition/content.ts；与步骤同目录）──────────────────────
-    partitionAnalysis: { concept: 'partition', artifact: '{workDir}/.meta/partition-analysis.json', kind: 'learning', description: '分区分析', schema: assets.partitionSchema.path },
-    dependencyGraph: { concept: 'partition', artifact: '{workDir}/.meta/dependency-graph.json', kind: 'learning', description: '依赖图' },
-    executionPlan: { concept: 'partition', artifact: '{workDir}/execution-plan.md', kind: 'mechanism', description: '执行计划' },
+    partitionAnalysis: { artifact: '{workDir}/.meta/partition-analysis.json', description: '分区分析', schema: assets.partitionSchema.path },
+    dependencyGraph: { artifact: '{workDir}/.meta/dependency-graph.json', description: '依赖图' },
+    executionPlan: { artifact: '{workDir}/execution-plan.md', description: '执行计划' },
 
     // ── scan（steps/scan/content.ts）────────────────────────────────
-    scanIndex: { concept: 'scan', artifact: '{workDir}/.meta/.raw-materials/index.json', kind: 'learning', description: '素材索引', schema: assets.scanSchema.path },
-    scanMaterials: { concept: 'scan', artifact: '{workDir}/.meta/.raw-materials/*.md', kind: 'learning', description: '素材正文' },
-    candidates: { concept: 'scan', artifact: '{workDir}/.meta/candidates.md', kind: 'learning', description: '候选池' },
+    scanIndex: { artifact: '{workDir}/.meta/.raw-materials/index.json', description: '素材索引', schema: assets.scanSchema.path },
+    scanMaterials: { artifact: '{workDir}/.meta/.raw-materials/*.md', description: '素材正文' },
+    candidates: { artifact: '{workDir}/.meta/candidates.md', description: '候选池' },
 
     // ── capability（steps/capability-graph/content.ts，最大簇）─────────────
-    capabilityGraph: { concept: 'capability', artifact: '{workDir}/.meta/capability-graph.json', kind: 'learning', description: '能力图谱', schema: assets.capabilityGraphSchema.path },
-    capabilities: { concept: 'capability', artifact: '{workDir}/capabilities/*.md', kind: 'asset', description: '能力主文件（跨命题长期资产）' },
-    summaries: { concept: 'capability', artifact: '{workDir}/.meta/summaries/*.json', kind: 'learning', description: '能力摘要' },
-    capabilitiesReadme: { concept: 'capability', artifact: '{workDir}/capabilities/README.md', kind: 'asset', description: '能力索引' },
-    highgrounds: { concept: 'capability', artifact: '{workDir}/.meta/highgrounds.json', kind: 'learning', description: '战略高地' },
-    researchPlan: { concept: 'capability', artifact: '{workDir}/.meta/research-plan.json', kind: 'learning', description: '能力研究素材分配与 usage trace', schema: assets.capabilityResearchSchema.path },
-    briefing: { concept: 'capability', artifact: '{workDir}/.meta/briefings/{seq}-{short_name}.md', kind: 'learning', description: '命题 Briefing', schema: assets.briefingAssembleSchema.path },
-    readme: { concept: 'capability', artifact: '{workDir}/README.md', kind: 'asset', description: '命题总览' },
-    overview: { concept: 'capability', artifact: '{workDir}/{seq}-{short_name}/overview.md', kind: 'learning', description: 'Overview', schema: assets.assembleSchema.path },
-    edgeCases: { concept: 'capability', artifact: '{workDir}/{seq}-{short_name}/edge-cases.md', kind: 'learning', description: 'Edge Cases' },
-    tradeoffs: { concept: 'capability', artifact: '{workDir}/{seq}-{short_name}/trade-offs.md', kind: 'learning', description: 'Trade-offs' },
-    references: { concept: 'capability', artifact: '{workDir}/{seq}-{short_name}/references.md', kind: 'learning', description: 'References' },
-    experiment: { concept: 'capability', artifact: '{workDir}/{seq}-{short_name}/experiment/README.md', kind: 'learning', description: 'Experiment' },
+    capabilityGraph: { artifact: '{workDir}/.meta/capability-graph.json', description: '能力图谱', schema: assets.capabilityGraphSchema.path },
+    capabilities: { artifact: '{workDir}/capabilities/*.md', description: '能力主文件（跨命题长期资产）' },
+    summaries: { artifact: '{workDir}/.meta/summaries/*.json', description: '能力摘要' },
+    capabilitiesReadme: { artifact: '{workDir}/capabilities/README.md', description: '能力索引' },
+    highgrounds: { artifact: '{workDir}/.meta/highgrounds.json', description: '战略高地' },
+    researchPlan: { artifact: '{workDir}/.meta/research-plan.json', description: '能力研究素材分配与 usage trace', schema: assets.capabilityResearchSchema.path },
+    briefing: { artifact: '{workDir}/.meta/briefings/{seq}-{short_name}.md', description: '命题 Briefing', schema: assets.briefingAssembleSchema.path },
+    readme: { artifact: '{workDir}/README.md', description: '命题总览' },
+    overview: { artifact: '{workDir}/{seq}-{short_name}/overview.md', description: 'Overview', schema: assets.assembleSchema.path },
+    edgeCases: { artifact: '{workDir}/{seq}-{short_name}/edge-cases.md', description: 'Edge Cases' },
+    tradeoffs: { artifact: '{workDir}/{seq}-{short_name}/trade-offs.md', description: 'Trade-offs' },
+    references: { artifact: '{workDir}/{seq}-{short_name}/references.md', description: 'References' },
+    experiment: { artifact: '{workDir}/{seq}-{short_name}/experiment/README.md', description: 'Experiment' },
 
     // ── evaluation（steps/evaluate-pool/content.ts）────────────────────
-    evaluations: { concept: 'evaluation', artifact: '{workDir}/.meta/evaluations.json', kind: 'learning', description: '评估结果', schema: assets.evaluationsSchema.path },
+    evaluations: { artifact: '{workDir}/.meta/evaluations.json', description: '评估结果', schema: assets.evaluationsSchema.path },
 
     // ── ladder（steps/learning-ladder/content.ts）─────────────────────────────
-    ladder: { concept: 'ladder', artifact: '{workDir}/{seq}-{short_name}/learning-ladder.md', kind: 'learning', description: '学习阶梯', schema: assets.learningLadderSchema.path },
-    learningPath: { concept: 'ladder', artifact: '{workDir}/.meta/learning-path.json', kind: 'learning', description: '学习路径' },
+    ladder: { artifact: '{workDir}/{seq}-{short_name}/learning-ladder.md', description: '学习阶梯', schema: assets.learningLadderSchema.path },
+    learningPath: { artifact: '{workDir}/.meta/learning-path.json', description: '学习路径' },
 
     // ── 机制产物（无领域概念）─────────────────────────────────
-    run: { concept: 'initialize', artifact: '{workDir}/.meta/run/run.json', kind: 'mechanism', description: '运行信封' },
-    init: { concept: 'initialize', artifact: '{workDir}/.meta/init.json', kind: 'mechanism', description: '初始化结果' },
-    assemblyRatioTrace: { concept: 'assemble', artifact: '{workDir}/{seq}-{short_name}/_assembly_ratio_trace.json', kind: 'mechanism', description: '组装特化占比 trace（有 EFFECT 保证）' },
+    run: { artifact: '{workDir}/.meta/run/run.json', description: '运行信封' },
+    init: { artifact: '{workDir}/.meta/init.json', description: '初始化结果' },
+    assemblyRatioTrace: { artifact: '{workDir}/{seq}-{short_name}/_assembly_ratio_trace.json', description: '组装特化占比 trace（有 EFFECT 保证）' },
 } satisfies Record<string, ProductEntity>;
 
 
