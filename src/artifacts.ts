@@ -9,9 +9,6 @@ import { LADDER_STAGE_COUNT } from './steps/learning-ladder/content.js';
  * **产物实体声明**：产物路径的**单一登记处**。
  *
  * 每条 = 产物落点（路径模板）＋描述（＋可选的格式契约 schemas.md）。
- * 登记只回答"这个产物叫什么、落在哪"，不回答"它属于哪个领域概念"——
- * concept/kind 字段已随"学习模型"方向一并移除（作者裁定：学习模型暂搁；
- * 学习模型真正接入时再为实体加领域归属）。
  */
 export interface ProductEntity {
     /** 产物落点（路径模板）——唯一事实来源 */
