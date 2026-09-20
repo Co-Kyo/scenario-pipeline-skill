@@ -10,14 +10,13 @@ import { LADDER_STAGE_COUNT } from './steps/learning-ladder/content.js';
 /**
  * **产物实体声明（业务顶层）**
  *
- * 实体表 = 产物路径的**单一登记处**：实体只登记业务顶层**已有领域概念**，不发明。
- * 27 条 runtime 产物归入 8 组概念：
- * intent / brainstorm / partition / scan / capability / evaluation / ladder + 机制产物。
+ * 实体表 = 产物路径的**单一登记处**。27 条 runtime 产物归入 8 组概念：
+ * intent / brainstorm / partition / scan / capability / evaluation / ladder + 机制产物；
+ * 实体只用业务顶层**已有领域概念**做归属标注（`concept`），不发明新概念。
  *
- * 注意：`concept` / `kind` 是**领域归属标签**，供人与评估工具阅读，构建期不消费——
- * 产物路径是登记值，不是从某个模型推导出来的（"从学习模型投射"是早期设计愿景，
- * 该模型已在架构演进中抹平，勿据此找不存在的数据流）。level/role 判据的选用发生在
- * 运行时由 AI 按 anchors.json 执行（见 learning-ladder/learner.ts），构建层无此边。
+ * 注意：`concept` / `kind` 是**归属标签**（供人与评估工具阅读，构建期不消费）——
+ * 产物路径是登记值。level/role 判据的选用发生在运行时由 AI 按 anchors.json 执行
+ * （见 learning-ladder/learner.ts），构建层没有模型推导边。
  *
  * **kind**：
  * - `learning`：学习域产物（会话内生成）
