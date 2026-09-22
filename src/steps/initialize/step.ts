@@ -5,7 +5,7 @@ import { assets, refOf } from '../../artifacts.js';
 
 export const initialize = step('initialize', '初始化')
     .target('确认 workDir 并建立可追溯的初始化记录')
-    .summary('确认 workDir（交互步骤），各步骤按需加载公共规则')
+    .summary('确认 workDir（交互步骤），各步骤按需加载 references/ 共享文档')
 // 8.4 迁移：dependsOn 收窄为单值。initialize 是链起点（root），无前驱，
 // 省略 dependsOn 由框架推导（deriveInitStepId 从链起点推导 initStepId）。
     .reads({ ...assets.checkpointProtocol, as: 'contract' })
@@ -16,8 +16,8 @@ export const initialize = step('initialize', '初始化')
     .inputs('raw_input')
     .action('parse', 'init-parse', '解析输出目录', `解析用户指定目录或默认 ${WORKDIR_NAMING}，确认目录可用。`)
     .action('wait', 'init-confirm', '确认 workDir', '向用户展示输出目录并等待确认；用户可修正路径。')
-    .action('validate', 'init-write', '写入初始化记录', '写入 workDir、确认状态和公共规则加载结果。')
-    .action('generate', 'init-run-write', '写入运行信封', '创建 {workDir}/.meta/run/run.json，记录 run_id、started_at、workdir、输入摘要和 sp-skill 版本。')
+    .action('validate', 'init-write', '写入初始化记录', '写入 workDir、确认状态和共享文档加载结果。')
+    .action('generate', 'init-run-write', '写入运行信封', '创建 {workDir}/.meta/run/run.json，记录 run_id、started_at、workdir、输入摘要和 scenario-pipeline 版本（VERSION_LINEAGE.json 的发布 tag）。')
     .outputs(refOf('init').path, refOf('run').path)
     .initRules(
         { title: '确认 workDir', body: `向用户展示将要使用的输出目录并等待确认；如果用户未指定，默认使用 ${WORKDIR_NAMING} 作为 workDir；用户可修正 workDir 路径` },
@@ -35,7 +35,7 @@ export const initialize = step('initialize', '初始化')
     )
     .checkpoint(
         barrier(
-            ['workDir 已确认', 'init.json 已写入', 'run.json 已创建', '公共规则可加载'],
+            ['workDir 已确认', 'init.json 已写入', 'run.json 已创建', '共享文档可加载'],
             '请确认 workDir 与初始化规则。',
         ),
     )

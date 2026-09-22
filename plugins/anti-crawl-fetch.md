@@ -1,6 +1,6 @@
 ---
 name: anti-crawl-fetch
-description: "广域扫描(scan)的 web_fetch 反爬降级方案。当 web_fetch 失败（403/超时/JS渲染空白）时，用 Playwright headless Chromium 绕过反爬提取内容。触发条件：fetch_status=failed 且域名不在排除列表中。"
+description: "广域扫描(scan)的 web_fetch 反爬降级方案。当 web_fetch 失败（403/超时/JS渲染空白）时，用 Playwright headless Chromium 绕过反爬提取内容。触发条件：fetch_status=failed 且域名属反爬域名表（见 references/ref-sources.md）。"
 ---
 
 # 反爬降级抓取（Anti-Crawl Fallback）
@@ -13,13 +13,13 @@ description: "广域扫描(scan)的 web_fetch 反爬降级方案。当 web_fetch
 
 域名路由逻辑在 `steps/04-scan/step.md` 的抓取策略中定义。域名分类统一维护在 `references/ref-sources.md`（T0 表 + 反爬域名表）。
 
-本插件只负责：当 scan.md 判定某个 URL 需要走 Playwright 时，提供执行指令。
+本插件只负责：当 `steps/04-scan/step.md` 判定某个 URL 需要走 Playwright 时，提供执行指令。
 
 ---
 
 ## 触发条件
 
-scan.md 的抓取策略判定某 URL 需要走 Playwright 时，加载本插件执行。
+steps/04-scan/step.md 的抓取策略判定某 URL 需要走 Playwright 时，加载本插件执行。
 
 ---
 
@@ -53,7 +53,7 @@ npm install -g playwright --registry=https://registry.npmmirror.com && npx playw
 npm install -g playwright && npx playwright install chromium
 ```
 
-> **与主流程联动（B8-A）**：全局安装失败时，主流程标记 `playwright_available=false`；此后反爬域名的 `fetch_status` 统一记为 `failed`（`fetch_status_trace` 记录原因），由主流程降级处理，本插件不再重试。
+> **与主流程联动**：全局安装失败时，主流程标记 `playwright_available=false`；此后反爬域名的 `fetch_status` 统一记为 `failed`（`fetch_status_trace` 记录原因），由主流程降级处理，本插件不再重试。
 
 **标记**：安装成功后，后续步骤不再重复检查。安装失败标记 `fetch_status: "failed"` + `fetch_status_trace: "Playwright 安装失败"`。
 
