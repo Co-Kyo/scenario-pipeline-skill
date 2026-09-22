@@ -41,13 +41,13 @@ intent-anchor
 
 ## 详细说明
 
-初始化只负责对齐 workDir 和公共规则：
+初始化只负责对齐 workDir 和共享文档：
 
 1. 用户未指定目录时，默认使用 {当前日期}-{场景简称}。
 2. 向用户展示目录，等待确认；用户可修正。
 3. 确认后写入 {workDir}/.meta/init.json。
 4. 创建 {workDir}/.meta/run/run.json，作为本次运行的 run envelope。
-5. 后续步骤按需加载公共规则，不再重复确认 workDir。
+5. 后续步骤按需加载 references/ 共享文档，不再重复确认 workDir。
 
 
 ---
@@ -89,14 +89,14 @@ intent-anchor
     - Task：`写入初始化记录` [agent]
       Body：
 ```
-写入 workDir、确认状态和公共规则加载结果。
+写入 workDir、确认状态和共享文档加载结果。
 ```
 
   第 4 步：
     - Task：`写入运行信封` [agent]
       Body：
 ```
-创建 {workDir}/.meta/run/run.json，记录 run_id、started_at、workdir、输入摘要和 sp-skill 版本。
+创建 {workDir}/.meta/run/run.json，记录 run_id、started_at、workdir、输入摘要和 scenario-pipeline 版本（VERSION_LINEAGE.json 的发布 tag）。
 ```
 
 
@@ -107,7 +107,7 @@ intent-anchor
 - workDir 已确认
 - init.json 已写入
 - run.json 已创建
-- 公共规则可加载
+- 共享文档可加载
 
 **`clarify` 提示：**
 > 请确认 workDir 与初始化规则。

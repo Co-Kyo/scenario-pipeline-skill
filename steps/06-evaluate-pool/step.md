@@ -88,6 +88,7 @@ L4：任一维度 >= 2 即入池。
 | 读取 | `steps/06-evaluate-pool/method.md` | 评估方法论（投影） |
 | 读取 | `steps/06-evaluate-pool/schemas.md` | 评估结果 格式契约 |
 | 读取 | （见附录：模块 `evaluate-methods`） | 评估方法通用形状（内容包正本） |
+| 读取 | `references/year-granularity.md` | 经验年限命题颗粒度规则 |
 | 产出 | `{workDir}/.meta/evaluations.json` | 评估结果 |
 | 产出 | `{workDir}/README.md` | 命题总览 |
 | 产出 | `{workDir}/.meta/candidates.md` | 候选池 |

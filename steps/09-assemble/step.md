@@ -124,7 +124,7 @@ README 说明运行方式、预期结果、成功判据、失败含义和验证�
 | 产出 | `{workDir}/{seq}-{short_name}/trade-offs.md` | Trade-offs |
 | 产出 | `{workDir}/{seq}-{short_name}/references.md` | References |
 | 产出 | `{workDir}/{seq}-{short_name}/experiment/README.md` | Experiment |
-| 产出 | `{workDir}/{seq}-{short_name}/_assembly_ratio_trace.json` | 组装特化占比 trace（有 EFFECT 保证） |
+| 产出 | `{workDir}/{seq}-{short_name}/_assembly_ratio_trace.json` | 组装特化占比 trace（须满足本步 E-assemble-ratio） |
 
 ## 依赖
 

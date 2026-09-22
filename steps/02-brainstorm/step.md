@@ -156,6 +156,7 @@ reason_type 只能是 out_of_scope、below_target、deprecated、not_frontend。
 | 读取 | `steps/02-brainstorm/schemas.md` | 需求网 格式契约 |
 | 读取 | （见附录：模块 `parallel-methods`） | 并行分析方法（内容包正本） |
 | 读取 | （见附录：模块 `brainstorm-rules-methods`） | 头脑风暴执行规则（内容包正本） |
+| 读取 | `references/year-granularity.md` | 经验年限命题颗粒度规则 |
 | 产出 | `{workDir}/.meta/requirement-web.json` | 需求网 |
 
 ## 依赖

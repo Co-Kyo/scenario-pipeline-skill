@@ -1,8 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "$id": "https://sp-app.local/spec/decision-summary.schema.json",
     "title": "DecisionSummary",
-    "description": "Machine-readable decision summary contract shared by v4 UI, sp-skill runtime, and skillpack.",
+    "description": "Machine-readable decision summary contract for the checkpoint protocol (see references/protocol-checkpoint.md).",
     "type": "object",
     "additionalProperties": false,
     "required": [

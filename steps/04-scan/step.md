@@ -252,6 +252,7 @@ partial.{batch_id}.json:
 | 读取 | `{workDir}/.meta/partition-analysis.json` | 分区分析 |
 | 读取 | `steps/04-scan/schemas.md` | 素材索引 格式契约 |
 | 读取 | `references/anti-crawl-fetch.md` | Playwright 抓取 |
+| 读取 | `references/year-granularity.md` | 经验年限命题颗粒度规则 |
 | 产出 | `{workDir}/.meta/.raw-materials/index.json` | 素材索引 |
 | 产出 | `{workDir}/.meta/.raw-materials/*.md` | 素材正文 |
 

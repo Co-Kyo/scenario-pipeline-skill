@@ -45,7 +45,7 @@ description: "前端复合工程场景知识管线。工作流：意图锚定→
 
 | # | 步骤 | 核心目的 | 关键产出 |
 |---|------|----------|----------|
-| 00 | 初始化 | 确认 workDir（交互步骤），各步骤按需加载公共规则 | `.meta/init.json`, `.meta/run/run.json` |
+| 00 | 初始化 | 确认 workDir（交互步骤），各步骤按需加载 references/ 共享文档 | `.meta/init.json`, `.meta/run/run.json` |
 | 01 | 意图锚定 | 解析用户指令，推断年限，生成共享骨架 | `.meta/brainstorm/anchors.json` |
 | 02 | 头脑风暴 | 4维度Agent并行分析，产出结构化需求网 | `.meta/requirement-web.json` |
 | 03 | 依赖分区 | 整理命题依赖DAG，识别分区点分批执行 | `.meta/partition-analysis.json`, `execution-plan.md` |
@@ -61,7 +61,7 @@ description: "前端复合工程场景知识管线。工作流：意图锚定→
 
 | 阶段 | 步骤 | 说明 |
 |------|------|------|
-| **初始化** | initialize | 确认 workDir（交互步骤），各步骤按需加载公共规则 |
+| **初始化** | initialize | 确认 workDir（交互步骤），各步骤按需加载 references/ 共享文档 |
 | **意图锚定** | intent-anchor | 解析用户指令，推断年限，生成共享骨架 |
 | **头脑风暴** | brainstorm | 4维度Agent并行分析，产出结构化需求网 |
 | **依赖分区** | partition | 整理命题依赖DAG，识别分区点分批执行 |

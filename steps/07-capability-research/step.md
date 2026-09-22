@@ -136,6 +136,7 @@ T0 优先，缺失时按 T1/T2/T3 补充。
 | 读取 | `{workDir}/README.md` | 命题总览 |
 | 读取 | `{workDir}/.meta/.raw-materials/index.json` | 素材索引 |
 | 读取 | `steps/07-capability-research/schemas.md` | 能力研究素材分配与 usage trace 格式契约 |
+| 读取 | `references/capability-research-mode.md` | 能力研究域 task 格式规范 |
 | 产出 | `{workDir}/.meta/research-plan.json` | 能力研究素材分配与 usage trace |
 | 产出 | `{workDir}/capabilities/*.md` | 能力主文件（跨命题长期资产） |
 | 产出 | `{workDir}/.meta/summaries/*.json` | 能力摘要 |
