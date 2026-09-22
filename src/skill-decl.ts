@@ -108,14 +108,16 @@ export const capabilityMethodRef: SourceRef = {
 /**
  * 契约登记（框架 contracts 字段）：
  * - scope/step 是 V1／V2 校验的判据（V2：step 级只能被归属步骤引用）；
- * - 文件背条目（前 7 条）的路径从 artifacts 的 assets 表派生——改路径只改一处；
+ * - 文件背条目（前 9 条）的路径从 artifacts 的 assets 表派生——改路径只改一处；
  * - 模块通道条目（后 5 条）的路径是逻辑标识，内容＝模块 render()。
  */
 export const contracts: SourceContract[] = [
-    // ── skill 级（5 条）──
+    // ── skill 级（7 条）──
     { id: 'ref-sources', kind: 'policy', path: assets.refSources.path, description: '信源分级与反爬域名', scope: 'skill' },
     { id: 'strategy-level', kind: 'policy', path: assets.strategyLevel.path, description: '密度参数查表', scope: 'skill' },
     { id: 'anti-crawl-fetch', kind: 'method', path: assets.antiCrawlFetch.path, description: 'Playwright 抓取', scope: 'skill' },
+    { id: 'year-granularity', kind: 'method', path: assets.yearGranularity.path, description: '经验年限命题颗粒度规则', scope: 'skill' },
+    { id: 'capability-research-mode', kind: 'method', path: assets.capabilityResearchMode.path, description: '能力研究域 task 格式规范', scope: 'skill' },
     { id: 'checkpoint-protocol', kind: 'policy', path: assets.checkpointProtocol.path, description: '检查点五步流程与跳过条件', scope: 'skill' },
     { id: 'decision-summary-schema', kind: 'schema', path: assets.decisionSummarySchema.path, description: '决策摘要 shape', scope: 'skill' },
     // ── intent-anchor 步（2 条）──

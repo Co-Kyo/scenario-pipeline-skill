@@ -23,10 +23,12 @@ export interface ProductEntity {
  * 步骤用 `{ ...assets.<名>, as: 'contract' }` 引用；契约登记（skill-decl）的路径由此派生。
  */
 export const assets = {
-    // ── skill 级（3 条：跨步共用）──
+    // ── skill 级（7 条：跨步共用）──
     refSources: { path: 'assets/common/ref-sources.md', description: 'T0 域名表 + 反爬域名表 + 信源分级规则', required: true },
     strategyLevel: { path: 'assets/common/strategy-level.md', description: '密度参数查表', required: true },
     antiCrawlFetch: { path: 'plugins/anti-crawl-fetch.md', description: 'Playwright 抓取', required: false },
+    yearGranularity: { path: 'plugins/year-granularity.md', description: '经验年限命题颗粒度规则', required: false },
+    capabilityResearchMode: { path: 'plugins/capability-research-mode.md', description: '能力研究域 task 格式规范', required: false },
     checkpointProtocol: { path: 'assets/common/protocol-checkpoint.md', description: '检查点五步流程与跳过条件', required: true },
     decisionSummarySchema: { path: 'assets/common/decision-summary.schema.json', description: '决策摘要 shape（检查点协议引用）', required: true },
     // ── intent-anchor 步（2 条）──
@@ -91,7 +93,7 @@ export const entities: Record<string, ProductEntity> = {
     // ── 机制产物（无领域概念）─────────────────────────────────
     run: { artifact: '{workDir}/.meta/run/run.json', description: '运行信封' },
     init: { artifact: '{workDir}/.meta/init.json', description: '初始化结果' },
-    assemblyRatioTrace: { artifact: '{workDir}/{seq}-{short_name}/_assembly_ratio_trace.json', description: '组装特化占比 trace（有 EFFECT 保证）' },
+    assemblyRatioTrace: { artifact: '{workDir}/{seq}-{short_name}/_assembly_ratio_trace.json', description: '组装特化占比 trace（须满足本步 E-assemble-ratio）' },
 } satisfies Record<string, ProductEntity>;
 
 

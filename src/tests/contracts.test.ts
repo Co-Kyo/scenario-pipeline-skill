@@ -20,8 +20,8 @@ test('资产表 ↔ 登记表：每条输入资产都有登记，每条文件背
     for (const p of conPaths) {
         assert.ok(assetPaths.has(p), `登记有但资产表缺少: ${p}`);
     }
-    assert.equal(assetPaths.size, 20, '随包资产应为 20 条（skill 级 5 ＋ intent-anchor 步 2 ＋ 方法投影 2 ＋ 格式契约 11）');
-    assert.equal(conPaths.size, 20, '文件背登记应为 20 条');
+    assert.equal(assetPaths.size, 22, '随包资产应为 22 条（skill 级 7 ＋ intent-anchor 步 2 ＋ 方法投影 2 ＋ 格式契约 11）');
+    assert.equal(conPaths.size, 22, '文件背登记应为 22 条');
 });
 
 test('module 引用条目：module id 必在 skill-decl.ts 声明（D35 全链路）', async () => {
