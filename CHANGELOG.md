@@ -1,5 +1,29 @@
 # Changelog
 
+## v1.5.4（产物文本修正 · 插件随包分发）
+
+> 发布：**v1.5.4**｜产物对比基线：v1.5.3。Release 正文即本节。
+
+**产物变化（对比 v1.5.3）**
+
+| 产物文件 | 变化 | 来源 |
+|---|---|---|
+| `references/year-granularity.md` | 新增 | 此前只在源码仓存在，未随产物分发 |
+| `references/capability-research-mode.md` | 新增 | 同上 |
+| `steps/02-brainstorm/step.md`、`steps/04-scan/step.md`、`steps/06-evaluate-pool/step.md`、`steps/07-capability-research/step.md` | 文件引用表补齐上述两插件的读取行 | 四个「插件加载」指令此前在包内无载体 |
+| `steps/00-initialize/step.md`、`SKILL.md` | 「公共规则」改为指向 `references/` 共享文档 | 该说法在包内无对应载体 |
+| `references/anti-crawl-fetch.md` | 步骤引用改为 `steps/04-scan/step.md`；触发条件改为指向反爬域名表 | 原引用为包内不存在的文件名 |
+| `assets/decision-summary.schema.json` | 去掉内部域名 `$id`；description 改为指向检查点协议 | 随包文件不含内部标识 |
+| `steps/09-assemble/step.md` | 产出说明指向本步效果契约名 | 原为包内无定义的占位说法 |
+
+**发布分支 README（由模板生成）**：目录树改为实际布局、步骤名与产物一致、`assets/` 行描述改为实存内容。
+
+**工程改动（不进产物）**
+
+- 契约计数快照同步（20 → 22）；源码目录树文档改为实存文件。
+
+**回归**：119 测全绿＋verify:product 10/10＋build＋lint/typecheck 绿。
+
 ## v1.5.3（注释净化 · 实体登记职责收束）
 
 > 发布：**v1.5.3**｜产物对比基线：v1.5.2。Release 正文即本节。
