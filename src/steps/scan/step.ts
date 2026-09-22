@@ -14,6 +14,7 @@ export const scan = step('scan', '广域扫描')
         { ...assets.refSources, as: 'contract' },
         { ...assets.strategyLevel, as: 'contract' },
         assets.antiCrawlFetch,
+        assets.yearGranularity,
     )
     .writes(refOf('scanIndex'), refOf('scanMaterials'))
     .inputs(
