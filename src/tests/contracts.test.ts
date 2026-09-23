@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { assets } from '../artifacts.js';
-import { contracts } from '../skill-decl.js';
+import { assets } from '../artifacts.ts';
+import { contracts } from '../skill-decl.ts';
 
 // 路径单源（原「双表」守卫的收敛版）：输入资产路径只写在 artifacts.ts 的 assets 表，
 // skill-decl 的文件背登记从该表派生——两表同一批路径是**构造保证**，不再是需要人肉同步的双写。
@@ -25,7 +25,7 @@ test('资产表 ↔ 登记表：每条输入资产都有登记，每条文件背
 });
 
 test('module 引用条目：module id 必在 skill-decl.ts 声明（D35 全链路）', async () => {
-    const { modules: declared } = await import('../skill-decl.js');
+    const { modules: declared } = await import('../skill-decl.ts');
     const declaredIds = new Set(declared.map((m) => m.id));
     const moduleEntries = contracts.filter((c) => c.module);
     // 5 条纯内容包（调度极致移除后 scan-scheduling-binding 已删除）

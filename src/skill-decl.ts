@@ -6,7 +6,7 @@
 import { defineModule, packageModule } from 'skillnomad';
 import type { SourceContract, SourceModule, SourcePolicies, SourceRef } from 'skillnomad';
 import { fileURLToPath } from 'node:url';
-import { assets } from './artifacts.js';
+import { assets } from './artifacts.ts';
 
 /** skill 级策略声明（框架 policies 字段）。 */
 export const policies: SourcePolicies = {

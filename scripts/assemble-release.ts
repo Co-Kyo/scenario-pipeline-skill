@@ -4,8 +4,8 @@
 // 组装必须读同一份声明，否则「声明改了、打包没跟」会静默漏发。
 //
 // 用法：
-//   tsx scripts/assemble-release.ts --out release/sp-skill            # 组装
-//   tsx scripts/assemble-release.ts --check --out release/sp-skill    # 只校验（CI 与本地同用）
+//   node scripts/assemble-release.ts --out release/sp-skill            # 组装
+//   node scripts/assemble-release.ts --check --out release/sp-skill    # 只校验（CI 与本地同用）
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -17,7 +17,7 @@ import {
     scanDanglingRefs,
     type PublishableAsset,
 } from 'skillnomad';
-import { contracts } from '../src/skill-decl.js';
+import { contracts } from '../src/skill-decl.ts';
 
 const repoRoot = fileURLToPath(new URL('../', import.meta.url));
 const args = process.argv.slice(2);

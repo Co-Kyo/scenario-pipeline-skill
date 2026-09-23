@@ -3,8 +3,8 @@ import test from 'node:test';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { PUBLISH_DIRS, publishPath, scanDanglingRefs, type PublishableAsset } from 'skillnomad';
-import { contracts } from '../skill-decl.js';
-import { steps } from '../steps/index.js';
+import { contracts } from '../skill-decl.ts';
+import { steps } from '../steps/index.ts';
 
 // 部署物路径卫生（本地快速版；发布形态的同一道检查在 scripts/assemble-release.ts）。
 // 口径：随包 markdown 里的包内路径引用必须能在包内解析——发布形态算数，老布局（assets/<步>/…、

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { EFFECT_CONTRACTS, effectContractSection } from '../artifacts.js';
+import { EFFECT_CONTRACTS, effectContractSection } from '../artifacts.ts';
 
 // 仓库根(src/tests/ 上两级),用于 owns 路径存在性校验
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));

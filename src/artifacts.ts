@@ -3,7 +3,7 @@
 // 契约登记的输入资产路径由下方 assets 表派生，不二次手写。
 import type { KeyMap, SourceRef } from 'skillnomad';
 import { createRefs } from 'skillnomad';
-import { LADDER_STAGE_COUNT } from './steps/learning-ladder/content.js';
+import { LADDER_STAGE_COUNT } from './steps/learning-ladder/content.ts';
 
 /**
  * **产物实体声明**：产物路径的**单一登记处**。

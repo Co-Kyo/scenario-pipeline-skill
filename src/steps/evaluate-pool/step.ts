@@ -1,8 +1,8 @@
 import { step } from 'skillnomad';
-import { doAction, barrier, fail, verify } from '../../step-parts.js';
-import * as evaluation from './content.js';
-import { assets, refOf, schemaRef } from '../../artifacts.js';
-import { evalMethodRef } from '../../skill-decl.js';
+import { doAction, barrier, fail, verify } from '../../step-parts.ts';
+import * as evaluation from './content.ts';
+import { assets, refOf, schemaRef } from '../../artifacts.ts';
+import { evalMethodRef } from '../../skill-decl.ts';
 
 export const evaluatePool = step('evaluate-pool', '评估入池')
     .target('生成按年限阈值入池的评估结果与推荐顺序')

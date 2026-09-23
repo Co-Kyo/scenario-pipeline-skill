@@ -4,15 +4,15 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "tsx node_modules/skillnomad/dist/bin/cli.js build skillnomad.config.ts",
+        "build": "node node_modules/skillnomad/dist/bin/cli.js build skillnomad.config.ts",
         "typecheck": "tsc -p tsconfig.json",
-        "test": "node --import tsx --test src/steps/learning-ladder/content.test.ts src/tests/effects.test.ts src/tests/learner.test.ts src/tests/content.test.ts src/steps/brainstorm/content.test.ts src/steps/scan/content.test.ts src/tests/numbering-governance.test.ts src/tests/contracts.test.ts src/tests/fragment.test.ts src/tests/assets-guard.test.ts src/tests/plugins-guard.test.ts src/tests/ship-paths.test.ts src/packages/parallel/check.test.ts src/packages/evaluate/check.test.ts src/packages/partition/check.test.ts src/packages/capability/check.test.ts src/packages/brainstorm-rules/check.test.ts",
-        "verify:product": "node --import tsx --test src/tests/product-verify.test.ts src/tests/prose-quality.test.ts",
+        "test": "node --test src/steps/learning-ladder/content.test.ts src/tests/effects.test.ts src/tests/learner.test.ts src/tests/content.test.ts src/steps/brainstorm/content.test.ts src/steps/scan/content.test.ts src/tests/numbering-governance.test.ts src/tests/contracts.test.ts src/tests/fragment.test.ts src/tests/assets-guard.test.ts src/tests/plugins-guard.test.ts src/tests/ship-paths.test.ts src/packages/parallel/check.test.ts src/packages/evaluate/check.test.ts src/packages/partition/check.test.ts src/packages/capability/check.test.ts src/packages/brainstorm-rules/check.test.ts",
+        "verify:product": "node --test src/tests/product-verify.test.ts src/tests/prose-quality.test.ts",
         "prepare": "git config core.hooksPath scripts/git-hooks",
         "lint": "eslint .",
         "format": "eslint . --fix",
-        "assemble:release": "tsx scripts/assemble-release.ts",
-        "verify:release": "tsx scripts/assemble-release.ts --check"
+        "assemble:release": "node scripts/assemble-release.ts",
+        "verify:release": "node scripts/assemble-release.ts --check"
     },
     "dependencies": {
         "skillnomad": "0.2.2"
@@ -22,8 +22,10 @@
         "@types/node": "26.5.1",
         "eslint": "9.39.5",
         "eslint-plugin-jsonc": "3.4.2",
-        "tsx": "4.20.6",
         "typescript": "5.9.3",
         "typescript-eslint": "8.70.0"
+    },
+    "engines": {
+        "node": ">=22.18"
     }
 }

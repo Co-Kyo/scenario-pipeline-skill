@@ -8,8 +8,8 @@ import {
     ladderDetail,
     stepFormat,
     workerTask,
-} from './content.js';
-import { LEVELS } from './learner.js';
+} from './content.ts';
+import { LEVELS } from './learner.ts';
 
 test('ladderDetail 派生文本包含分层规则与阶段数约束', () => {
     const d = ladderDetail();

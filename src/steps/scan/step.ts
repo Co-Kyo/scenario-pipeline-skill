@@ -1,7 +1,7 @@
 import { step } from 'skillnomad';
-import { doAction, barrier, fail, verify } from '../../step-parts.js';
-import { assets, refOf, schemaRef } from '../../artifacts.js';
-import * as scanRules from './content.js';
+import { doAction, barrier, fail, verify } from '../../step-parts.ts';
+import { assets, refOf, schemaRef } from '../../artifacts.ts';
+import * as scanRules from './content.ts';
 
 export const scan = step('scan', '广域扫描')
     .target('生成可被能力图谱消费的素材索引和素材正文')

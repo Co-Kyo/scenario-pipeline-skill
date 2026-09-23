@@ -2,15 +2,15 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { REASON_TYPES } from '../steps/brainstorm/content.js';
-import { SCAN_DENSITY } from '../steps/scan/content.js';
-import { countVerifyText, detail, INTERCEPT_WORDS, insufficientAnchorsText, skipSection, target } from '../steps/intent-anchor/content.js';
-import { detail as partitionDetail, sessionOverflowText, threeLayerSection } from '../steps/partition/content.js';
-import { capabilityOverflowText, highgroundSection } from '../steps/capability-graph/content.js';
-import { detail as evaluationDetail, thresholdSection } from '../steps/evaluate-pool/content.js';
-import { initializeDetail, WORKDIR_NAMING } from '../steps/initialize/content.js';
-import { RATIO_CLAUSE, SCENARIO_MINIMUM } from '../steps/assemble/content.js';
-import { BATCH_POLICY, CONCURRENCY_LIMIT, WINDOW_BUDGET } from '../skill-decl.js';
+import { REASON_TYPES } from '../steps/brainstorm/content.ts';
+import { SCAN_DENSITY } from '../steps/scan/content.ts';
+import { countVerifyText, detail, INTERCEPT_WORDS, insufficientAnchorsText, skipSection, target } from '../steps/intent-anchor/content.ts';
+import { detail as partitionDetail, sessionOverflowText, threeLayerSection } from '../steps/partition/content.ts';
+import { capabilityOverflowText, highgroundSection } from '../steps/capability-graph/content.ts';
+import { detail as evaluationDetail, thresholdSection } from '../steps/evaluate-pool/content.ts';
+import { initializeDetail, WORKDIR_NAMING } from '../steps/initialize/content.ts';
+import { RATIO_CLAUSE, SCENARIO_MINIMUM } from '../steps/assemble/content.ts';
+import { BATCH_POLICY, CONCURRENCY_LIMIT, WINDOW_BUDGET } from '../skill-decl.ts';
 
 // 仓库根(src/tests/ 上两级)
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
@@ -119,7 +119,7 @@ test('D32-W5:并发口径自有常量锁（字面量锁；框架零调度口径�
 test('D35-W4退役:scan-binding模块已随调度移除而删除（存在性反断言）', async () => {
     // scan-binding／scheduling-policy 两模块＋contracts条目＋scan reads已删除；
     // 模块通道现为 5 条纯内容包。本测试锁"删干净"：任一回潮即红。
-    const { modules: declared } = await import('../skill-decl.js');
+    const { modules: declared } = await import('../skill-decl.ts');
     const ids = new Set(declared.map((m) => m.id));
     assert.ok(!ids.has('scan-binding'), 'scan-binding 回潮');
     assert.ok(!ids.has('scheduling-policy'), 'scheduling-policy 回潮');
@@ -138,7 +138,7 @@ test('B2-A:method.md 投影与评估域正本一致(漂移锁)', () => {
 // ── 2026-09-19 北极星审计补锁：三源互锁＋无锁步上锁（改动无锁＝可改不可验）──
 
 test('B2-B:防虚高规则三源互锁（content 正本 ↔ method 投影 ↔ how 块通用句）', async () => {
-    const { detail } = await import('../steps/evaluate-pool/content.js');
+    const { detail } = await import('../steps/evaluate-pool/content.ts');
     const host = detail();
     // 正本数值核：均>=2 分触发、压低至少 1 分
     assert.match(host, /4 个维度均 >= 2 时必须重新审视并压低至少 1 分/);
@@ -149,14 +149,14 @@ test('B2-B:防虚高规则三源互锁（content 正本 ↔ method 投影 ↔ ho
 });
 
 test('07:能力研究分组上限与合并条件锁', async () => {
-    const { research } = await import('../steps/capability-research/content.js');
+    const { research } = await import('../steps/capability-research/content.ts');
     const t = research.detail();
     assert.match(t, /每组上限 5 个能力/);
     assert.match(t, /不足 2 个可与相邻组合并/);
 });
 
 test('08:Briefing 结构比例与 Trace 下限锁', async () => {
-    const { briefing } = await import('../steps/briefing-assemble/content.js');
+    const { briefing } = await import('../steps/briefing-assemble/content.ts');
     const r = briefing.contentRatio();
     assert.match(r, /开篇 10-15%/);
     assert.match(r, /主体 <= 70%/);
@@ -167,7 +167,7 @@ test('08:Briefing 结构比例与 Trace 下限锁', async () => {
 });
 
 test('06:打分 task 行存活锁（防整行删除不红）', async () => {
-    const { scoreTask } = await import('../steps/evaluate-pool/content.js');
+    const { scoreTask } = await import('../steps/evaluate-pool/content.ts');
     const t = scoreTask();
     assert.match(t, /检查防虚高规则/);
     assert.match(t, /记录每个维度的 reasoning/);

@@ -1,7 +1,7 @@
 import { step } from 'skillnomad';
-import * as intent from './content.js';
-import { displayFoldMulti, barrier, fail, verify } from '../../step-parts.js';
-import { assets, refOf, schemaRef } from '../../artifacts.js';
+import * as intent from './content.ts';
+import { displayFoldMulti, barrier, fail, verify } from '../../step-parts.ts';
+import { assets, refOf, schemaRef } from '../../artifacts.ts';
 
 export const intentAnchor = step('intent-anchor', '意图锚定')
     .target(intent.target())

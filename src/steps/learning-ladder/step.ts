@@ -1,6 +1,6 @@
 import { step } from 'skillnomad';
-import { doAction, barrier, fail, verify } from '../../step-parts.js';
-import { effectContractSection, refOf, schemaRef } from '../../artifacts.js';
+import { doAction, barrier, fail, verify } from '../../step-parts.ts';
+import { effectContractSection, refOf, schemaRef } from '../../artifacts.ts';
 import {
     LADDER_JUDGMENT_FIELD,
     LADDER_MAX_CAPABILITIES,
@@ -9,7 +9,7 @@ import {
     ladderDetail,
     stepFormat,
     workerTask,
-} from './content.js';
+} from './content.ts';
 
 
 export const learningLadder = step('learning-ladder', '学习阶梯')
