@@ -1,7 +1,7 @@
 {
     "skillnomad_package": "skillnomad",
-    "skillnomad_version": "0.2.2",
+    "skillnomad_version": "0.2.4",
     "sp_skill_repo": "Co-Kyo/scenario-pipeline-skill",
-    "sp_skill_source_version": "1.5.4",
-    "sp_skill_release": "v1.5.4"
+    "sp_skill_source_version": "1.5.5",
+    "sp_skill_release": "v1.5.5"
 }
