@@ -107,7 +107,7 @@ function srcTexts(): [string, string][] {
 }
 
 test('编号治理:src 内手写 steps/NN-<id>/ 引用必须匹配链序编号', async () => {
-    const { steps } = await import('../steps/index.js');
+    const { steps } = await import('../steps/index.ts');
     const order = steps.map((s) => s.id);
     for (const [rel, text] of srcTexts()) {
         for (const m of text.matchAll(/steps\/(\d{2})-([A-Za-z0-9_-]+)\/([\w.()-]+\.(?:md|json))/g)) {

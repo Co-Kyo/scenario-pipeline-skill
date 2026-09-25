@@ -1,6 +1,6 @@
 // 内容域:能力研究。分组规则、域任务、素材分配、任务模板与文件模板为唯一数据源。
 // 并发上限以消费仓自有 CONCURRENCY_LIMIT 为唯一源。
-import { CONCURRENCY_LIMIT } from '../../skill-decl.js';
+import { CONCURRENCY_LIMIT } from '../../skill-decl.ts';
 
 export const research = {
     detail: () => `分组规则：

@@ -1,7 +1,7 @@
 import { step } from 'skillnomad';
-import { doAction, barrier, fail, verify } from '../../step-parts.js';
-import { effectContractSection, refOf, schemaRef } from '../../artifacts.js';
-import { assembly } from './content.js';
+import { doAction, barrier, fail, verify } from '../../step-parts.ts';
+import { effectContractSection, refOf, schemaRef } from '../../artifacts.ts';
+import { assembly } from './content.ts';
 
 
 export const assemble = step('assemble', '命题组装')

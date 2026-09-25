@@ -9,11 +9,13 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "noEmit": true
+        "noEmit": true,
+        "allowImportingTsExtensions": true
     },
     "include": [
         "skillnomad.config.ts",
         "skill.ts",
-        "src/**/*.ts"
+        "src/**/*.ts",
+        "scripts/**/*.ts"
     ]
 }

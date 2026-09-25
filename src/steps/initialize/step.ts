@@ -1,7 +1,7 @@
 import { step } from 'skillnomad';
-import { initializeDetail, WORKDIR_NAMING } from './content.js';
-import { verifyPair, barrier, fail, verify } from '../../step-parts.js';
-import { assets, refOf } from '../../artifacts.js';
+import { initializeDetail, WORKDIR_NAMING } from './content.ts';
+import { verifyPair, barrier, fail, verify } from '../../step-parts.ts';
+import { assets, refOf } from '../../artifacts.ts';
 
 export const initialize = step('initialize', '初始化')
     .target('确认 workDir 并建立可追溯的初始化记录')

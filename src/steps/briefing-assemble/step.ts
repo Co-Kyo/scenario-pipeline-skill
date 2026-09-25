@@ -1,7 +1,7 @@
 import { step } from 'skillnomad';
-import { doAction, barrier, fail, verify } from '../../step-parts.js';
-import { effectContractSection, refOf, schemaRef } from '../../artifacts.js';
-import { briefing } from './content.js';
+import { doAction, barrier, fail, verify } from '../../step-parts.ts';
+import { effectContractSection, refOf, schemaRef } from '../../artifacts.ts';
+import { briefing } from './content.ts';
 
 
 export const briefingAssemble = step('briefing-assemble', 'Briefing 组装')

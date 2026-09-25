@@ -1,8 +1,8 @@
 import { step } from 'skillnomad';
-import { doAction, barrier, fail, verify } from '../../step-parts.js';
-import * as partitionRules from './content.js';
-import { partitionMethodRef } from '../../skill-decl.js';
-import { refOf, schemaRef } from '../../artifacts.js';
+import { doAction, barrier, fail, verify } from '../../step-parts.ts';
+import * as partitionRules from './content.ts';
+import { partitionMethodRef } from '../../skill-decl.ts';
+import { refOf, schemaRef } from '../../artifacts.ts';
 
 export const partition = step('partition', '依赖分区')
     .target('生成可被 scan 消费的分区分析和执行计划')

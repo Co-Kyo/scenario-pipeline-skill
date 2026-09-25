@@ -1,8 +1,8 @@
 import type { SkillSourceModel } from 'skillnomad';
 import { createSkillFromModel } from 'skillnomad';
-import { contracts } from './src/skill-decl.js';
-import { policies } from './src/skill-decl.js';
-import { steps } from './src/steps/index.js';
+import { contracts } from './src/skill-decl.ts';
+import { policies } from './src/skill-decl.ts';
+import { steps } from './src/steps/index.ts';
 
 // Phase II:阶段→步骤映射唯一数据源（链顺序唯一事实是 dependsOn 声明，由框架构建期校验；
 // flow.test 为 8.9 裁定的空壳记录文件，无断言，不跑守卫）

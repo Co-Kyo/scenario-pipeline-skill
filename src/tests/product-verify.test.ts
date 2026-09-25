@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { steps } from '../steps/index.js';
+import { steps } from '../steps/index.ts';
 
 // 模式④独立复核（只对结构，不对语义）：产物侧第二套验收，与声明侧单测不同源。
 // 正本＝源码声明（steps/index.ts 顺序 + decision-summary step_ids），不新建范本文件。

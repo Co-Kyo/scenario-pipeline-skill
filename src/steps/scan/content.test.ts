@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
-import { detail, extractTask, EXTRACT_FIELDS, outputSchema, phaseASection, SCAN_DENSITY } from './content.js';
-import { CONCURRENCY_LIMIT } from '../../skill-decl.js';
+import { detail, extractTask, EXTRACT_FIELDS, outputSchema, phaseASection, SCAN_DENSITY } from './content.ts';
+import { CONCURRENCY_LIMIT } from '../../skill-decl.ts';
 
 // 仓库根(src/steps/scan/ 上三级)
 const repoRoot = fileURLToPath(new URL('../../../', import.meta.url));

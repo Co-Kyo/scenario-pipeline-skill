@@ -1,7 +1,7 @@
 import { step } from 'skillnomad';
-import { doAction, barrier, fail, verify } from '../../step-parts.js';
-import { effectContractSection, assets, refOf, schemaRef } from '../../artifacts.js';
-import { research } from './content.js';
+import { doAction, barrier, fail, verify } from '../../step-parts.ts';
+import { effectContractSection, assets, refOf, schemaRef } from '../../artifacts.ts';
+import { research } from './content.ts';
 
 
 export const capabilityResearch = step('capability-research', '能力研究')
