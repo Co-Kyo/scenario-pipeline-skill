@@ -27,15 +27,15 @@ export const evaluatePool = step('evaluate-pool', '评估入池')
         verify.file(refOf('readme').path, '命题总览存在'),
         verify.json(refOf('evaluations').path, '评估结果可解析'),
         verify.field('priority_trace', '每个命题包含 priority_trace'),
-        verify.field('recommended_order', '推荐顺序合理'),
+        verify.field('recommended_order', 'recommended_order 字段存在且非空'),
     )
     .onFail(
-        fail.degrade('信息不足以打分', '标记 medium 并说明 reasoning'),
+        fail.degrade('任一维度的评分理由为空，或没有素材引用作支撑', '标记为 medium 并补写评分理由'),
         fail.halt('所有命题 rejected', '提示用户调整搜索范围'),
     )
     .checkpoint(
         barrier(
-            ['评估表', '优先级分布', '难度分级', '推荐顺序'],
+            ['评估表已生成：每个命题四个维度的评分齐全、理由非空、总分不超过 12', '入池命题全部满足所在年限层的阈值（逐条对照 L1-L4 阈值表）', '难度分级（展示供确认，不作过/不过依据）'],
             '请确认评估结果和后处理范围。',
         ),
     )

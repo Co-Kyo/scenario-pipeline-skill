@@ -35,7 +35,7 @@ export const initialize = step('initialize', '初始化')
     )
     .checkpoint(
         barrier(
-            ['workDir 已确认', 'init.json 已写入', 'run.json 已创建', '共享文档可加载'],
+            ['workDir 已确认', '检查点协议文档可加载、可被引用（本步唯一声明读取的共享文档）；其余共享文档到使用它的步骤再核验'],
             '请确认 workDir 与初始化规则。',
         ),
     )
