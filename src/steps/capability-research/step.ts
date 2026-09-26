@@ -33,6 +33,8 @@ export const capabilityResearch = step('capability-research', '能力研究')
         verify.file(refOf('capabilities').path.replace('*', '{id}-{name}'), '能力主文件存在'),
         verify.json(refOf('summaries').path.replace('*', '{id}-{name}'), '能力摘要可解析'),
         verify.count('分组能力数不超过 5'),
+        verify.count('能力知识库主文件与索引文件均已产出且非空'),
+        verify.count('每组能力数不超过 5；不足 2 个的组已并入相邻组'),
     )
     .onFail(
         fail.retry('子组 Agent 超时', '拆分为更小子组重试'),
