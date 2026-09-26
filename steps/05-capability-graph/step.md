@@ -21,6 +21,7 @@
 - [ ] [json-parse] {workDir}/.meta/capability-graph.json: 能力图谱可解析
 - [ ] [field] dependencies_trace: 非空依赖包含 dependencies_trace
 - [ ] [field] t0_missing: T0 参考状态已记录
+- [ ] [count]: 每次合并或拆分都留有对应记录（merge_trace 或 split_trace 非空）
 
 ## 失败处理
 

@@ -24,6 +24,7 @@
 - [ ] [file-exists] {workDir}/{seq}-{short_name}/_assembly_ratio_trace.json: 组装占比 trace 存在
 - [ ] [json-parse] {workDir}/{seq}-{short_name}/_assembly_ratio_trace.json: 组装占比 trace 可解析
 - [ ] [count]: 场景化输入/边界/验证 >= 3，特化占比 >= 30%
+- [ ] [count]: 输出文件四个部分齐全：overview／edge-cases／trade-offs／experiment 各一节且非空
 
 ## 失败处理
 

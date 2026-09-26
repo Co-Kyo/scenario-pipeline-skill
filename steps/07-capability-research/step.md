@@ -26,6 +26,8 @@
 - [ ] [file-exists] {workDir}/capabilities/{id}-{name}.md: 能力主文件存在
 - [ ] [json-parse] {workDir}/.meta/summaries/{id}-{name}.json: 能力摘要可解析
 - [ ] [count]: 分组能力数不超过 5
+- [ ] [count]: 能力知识库主文件与索引文件均已产出且非空
+- [ ] [count]: 每组能力数不超过 5；不足 2 个的组已并入相邻组
 
 ## 失败处理
 

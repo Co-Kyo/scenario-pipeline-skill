@@ -26,6 +26,7 @@
 - [ ] [field] level_weight: 每个 proposition 包含 level_weight
 - [ ] [field] strategy: strategy 元数据已写入
 - [ ] [field] provisional_role: 锚点与 proposition 的 level_weight 一致
+- [ ] [count]: 四份维度报告各自：文件存在、JSON 可解析、维度标识（dimension）正确、条目（entries）非空
 
 ## 失败处理
 
