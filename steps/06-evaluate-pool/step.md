@@ -20,13 +20,13 @@
 - [ ] [file-exists] {workDir}/README.md: 命题总览存在
 - [ ] [json-parse] {workDir}/.meta/evaluations.json: 评估结果可解析
 - [ ] [field] priority_trace: 每个命题包含 priority_trace
-- [ ] [field] recommended_order: 推荐顺序合理
+- [ ] [field] recommended_order: recommended_order 字段存在且非空
 
 ## 失败处理
 
 | 触发 | 行为 | 处理 |
 |------|------|------|
-| 信息不足以打分 | degrade | 标记 medium 并说明 reasoning |
+| 任一维度的评分理由为空，或没有素材引用作支撑 | degrade | 标记为 medium 并补写评分理由 |
 | 所有命题 rejected | halt | 提示用户调整搜索范围 |
 
 ## 下一步
@@ -130,10 +130,9 @@ L4：任一维度 >= 2 即入池。
 ## Barrier evaluate-pool
 
 **检查项：**
-- 评估表
-- 优先级分布
-- 难度分级
-- 推荐顺序
+- 评估表已生成：每个命题四个维度的评分齐全、理由非空、总分不超过 12
+- 入池命题全部满足所在年限层的阈值（逐条对照 L1-L4 阈值表）
+- 难度分级（展示供确认，不作过/不过依据）
 
 **`clarify` 提示：**
 > 请确认评估结果和后处理范围。

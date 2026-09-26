@@ -16,7 +16,7 @@
 ## 校验清单
 
 - [ ] [json-parse] {workDir}/.meta/partition-analysis.json: 分区分析可解析
-- [ ] [field] current_session: current_session 命题明确
+- [ ] [field] current_session: 当前会话的命题列表非空、不超过 12 条、且每条都是需求网中存在的命题编号
 - [ ] [field] scan_batches: scan_batches 可消费
 
 ## 失败处理
@@ -129,9 +129,9 @@ scan
 ## Barrier partition
 
 **检查项：**
-- session 数量
-- 当前 session 命题
-- 排期 session 命题
+- session 数量（展示供确认，不作过/不过依据）
+- 当前会话命题数不超过 12，且是包含核心命题最多的一组
+- 排期 session 命题（展示供确认，不作过/不过依据）
 
 **`clarify` 提示：**
 > 请确认分区方案和本次执行计划。
