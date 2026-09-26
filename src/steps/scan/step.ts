@@ -58,7 +58,7 @@ export const scan = step('scan', '广域扫描')
     )
     .checkpoint(
         barrier(
-            ['素材 Tier 分布', '丢弃数', 'role 覆盖统计'],
+            ['T0 素材数非 0；T0/T1/T2/T3 各档计数与 role 覆盖逐条列出', '丢弃数 + 每条附 skip_reason/discard_reason 非空', '每个命题的 core/premise/outlook 均有素材（缺哪个 role 逐条列名）'],
             '请确认扫描素材质量和信源覆盖。',
         ),
     )

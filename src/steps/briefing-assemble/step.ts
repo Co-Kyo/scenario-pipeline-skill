@@ -30,7 +30,7 @@ export const briefingAssemble = step('briefing-assemble', 'Briefing 组装')
     )
     .checkpoint(
         barrier(
-            ['完成数', '跳过数', '失败数'],
+            ['完成数 = 命题总数；跳过/失败逐一列名', '跳过数（展示供确认，不作过/不过依据）', '失败数（期望 0；非 0 列命题与缺项）'],
             '请确认 Briefing 素材完整性。',
         ),
     )

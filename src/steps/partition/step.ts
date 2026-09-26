@@ -26,7 +26,7 @@ export const partition = step('partition', '依赖分区')
     )
     .verify(
         verify.json(refOf('partitionAnalysis').path, '分区分析可解析'),
-        verify.field('current_session', 'current_session 命题明确'),
+        verify.field('current_session', `current_session 命题列表非空、数 <= ${partitionRules.SESSION_MAX_PROPOSITIONS}、且每条为 requirement-web 中存在的命题 id`),
         verify.field('scan_batches', 'scan_batches 可消费'),
     )
     .onFail(
@@ -35,7 +35,7 @@ export const partition = step('partition', '依赖分区')
     )
     .checkpoint(
         barrier(
-            ['session 数量', '当前 session 命题', '排期 session 命题'],
+            ['session 数量（展示供确认，不作过/不过依据）', `当前 session 命题数 <= ${partitionRules.SESSION_MAX_PROPOSITIONS} 且为含最多 core 的分量`, '排期 session 命题（展示供确认，不作过/不过依据）'],
             '请确认分区方案和本次执行计划。',
         ),
     )

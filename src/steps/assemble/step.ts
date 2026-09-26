@@ -45,7 +45,7 @@ export const assemble = step('assemble', '命题组装')
     )
     .checkpoint(
         barrier(
-            ['完成数', '部分完成数', '失败数'],
+            ['完成数 = 命题总数（含 partial/failed 拆分；非完成项逐一列名）', '部分完成数 + 每个 partial 命题缺哪个 Agent', '失败数（期望 0；非 0 逐条列命题与原因）'],
             '请确认命题组装质量。',
         ),
     )

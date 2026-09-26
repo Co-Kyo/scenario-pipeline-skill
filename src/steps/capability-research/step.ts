@@ -40,7 +40,7 @@ export const capabilityResearch = step('capability-research', '能力研究')
     )
     .checkpoint(
         barrier(
-            ['完成数', '跳过数', '失败数', '素材覆盖率'],
+            ['完成数 = 能力总数（跳过/失败逐一列名）', '跳过数（展示供确认，不作过/不过依据）', '失败数（期望 0；非 0 列能力与缺项）', 'assigned_pct = X%，且全部 fetch_status=ok 素材均被分配（不得静默丢弃）'],
             '请确认能力研究质量。',
         ),
     )

@@ -63,7 +63,7 @@ export const brainstorm = step('brainstorm', '头脑风暴')
     )
     .checkpoint(
         barrier(
-            ['命题数量', '能力数量', '依赖关系数', '排除项数'],
+            ['命题数量（每条均含 id/name/depth/search_keywords/level_weight，且与 anchors 覆盖关系可追）', '能力数量（与 propositions 的 capability_ids 引用一致）', '排除项数 > 0（机检已过）＋reason_type 枚举分布（out_of_scope/below_target/deprecated/not_frontend 各几条）'],
             '请确认头脑风暴收敛后的需求网。',
         ),
     )
