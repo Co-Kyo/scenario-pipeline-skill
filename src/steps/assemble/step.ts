@@ -38,6 +38,7 @@ export const assemble = step('assemble', '命题组装')
         verify.file(refOf('assemblyRatioTrace').path, '组装占比 trace 存在'),
         verify.json(refOf('assemblyRatioTrace').path, '组装占比 trace 可解析'),
         verify.count('场景化输入/边界/验证 >= 3，特化占比 >= 30%'),
+        verify.count('输出文件四个部分齐全：overview／edge-cases／trade-offs／experiment 各一节且非空'),
     )
     .onFail(
         fail.halt('Briefing 缺失', '停止并提示先完成 {{step:briefing-assemble}}'),

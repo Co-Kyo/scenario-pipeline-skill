@@ -54,6 +54,7 @@ export const brainstorm = step('brainstorm', '头脑风暴')
         verify.field('level_weight', '每个 proposition 包含 level_weight'),
         verify.field('strategy', 'strategy 元数据已写入'),
         verify.field('provisional_role', '锚点与 proposition 的 level_weight 一致'),
+        verify.count('四份维度报告各自：文件存在、JSON 可解析、维度标识（dimension）正确、条目（entries）非空'),
     )
     .onFail(
         fail.retry('维度 Agent 超时', '检查文件是否已写入；完整保留，不完整补发一次'),

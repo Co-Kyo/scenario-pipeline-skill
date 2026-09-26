@@ -32,6 +32,7 @@ export const capabilityGraph = step('capability-graph', '能力图谱')
         verify.json(refOf('capabilityGraph').path, '能力图谱可解析'),
         verify.field('dependencies_trace', '非空依赖包含 dependencies_trace'),
         verify.field('t0_missing', 'T0 参考状态已记录'),
+        verify.count('每次合并或拆分都留有对应记录（merge_trace 或 split_trace 非空）'),
     )
     .onFail(
         fail.degrade('T0 信源不可达', '标记 t0_missing 并用 T1/T2 补充'),
