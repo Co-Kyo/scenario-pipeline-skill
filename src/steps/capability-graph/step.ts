@@ -39,7 +39,7 @@ export const capabilityGraph = step('capability-graph', '能力图谱')
     )
     .checkpoint(
         barrier(
-            ['能力数量', '展示扇出度 Top 3 能力名单（供人看，不作过/不过依据）', `一级高地数（strategic_value >= ${capability.HIGHGROUND_THRESHOLDS.tier1Min} 可机检）`, '学习路径覆盖全部高地且按 strategic_value 降序/依赖序无断链'],
+            ['能力数量', '展示扇出度最高的前 3 个能力（供人看，不作过/不过依据）', `一级高地数（价值评分达到 ${capability.HIGHGROUND_THRESHOLDS.tier1Min} 及以上的战略高地数量）`, '学习路径包含全部战略高地：价值高的排在前面；有前置依赖的能力不先于其前置出现（前置关系取自能力图谱的依赖声明）'],
             '请确认能力图谱质量。',
         ),
     )

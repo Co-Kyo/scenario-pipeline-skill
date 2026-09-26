@@ -33,12 +33,12 @@ export const intentAnchor = step('intent-anchor', '意图锚定')
         verify.field('provisional_role', '每个锚点包含 provisional_role'),
     )
     .onFail(
-        fail.checkpoint('年限推断命中优先级链第 3 级（隐式信号）及以下', '默认 L2，并在初始化 Barrier 请用户确认'),
+        fail.checkpoint('年限推断只命中了优先级链第 3 级（隐式信号）或更低级别', '默认 L2，并在初始化 Barrier 请用户确认'),
         fail.halt(intent.insufficientAnchorsText(), '提示用户补充信息或降低核心锚点门槛'),
     )
     .checkpoint(
         barrier(
-            ['展示年限推断链命中层级与 year_inference_trace 内容（供确认，不作过/不过依据）', '跳过判断结果'],
+            ['展示年限推断命中的优先级层级与推断依据记录（供确认，不作过/不过依据）', '跳过判断结果'],
             '请确认意图锚定结果、年限推断和跳过判断。',
         ),
     )

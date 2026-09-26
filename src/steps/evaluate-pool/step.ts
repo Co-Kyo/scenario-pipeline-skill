@@ -30,12 +30,12 @@ export const evaluatePool = step('evaluate-pool', '评估入池')
         verify.field('recommended_order', 'recommended_order 字段存在且非空'),
     )
     .onFail(
-        fail.degrade('任一维度 reasoning 为空或无素材引用支撑', '标记 medium 并说明 reasoning'),
+        fail.degrade('任一维度的评分理由为空，或没有素材引用作支撑', '标记为 medium 并补写评分理由'),
         fail.halt('所有命题 rejected', '提示用户调整搜索范围'),
     )
     .checkpoint(
         barrier(
-            ['评估表已生成，且每个命题四维权重分数齐、各维 reasoning 非空、总分 <= 12', '入池命题全部满足本层阈值，逐条对表 L1-L4', '难度分级（展示供确认，不作过/不过依据）'],
+            ['评估表已生成：每个命题四个维度的评分齐全、理由非空、总分不超过 12', '入池命题全部满足所在年限层的阈值（逐条对照 L1-L4 阈值表）', '难度分级（展示供确认，不作过/不过依据）'],
             '请确认评估结果和后处理范围。',
         ),
     )
