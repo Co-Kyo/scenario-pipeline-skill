@@ -5,7 +5,7 @@ import { briefing } from './content.ts';
 
 
 export const briefingAssemble = step('briefing-assemble', 'Briefing 组装')
-    .target('为每个命题生成包含能力摘要的 Briefing')
+    .wish('为每个命题生成包含能力摘要的 Briefing')
     .summary('从能力摘要提取关键信息，组装Briefing')
     .dependsOn('capability-research')
     .reads(refOf('requirementWeb'), refOf('summaries'), { ...schemaRef('briefing'), as: 'schema' })
@@ -30,7 +30,11 @@ export const briefingAssemble = step('briefing-assemble', 'Briefing 组装')
     )
     .checkpoint(
         barrier(
-            ['完成数 = 命题总数（跳过与失败的逐一列出命题名）', '跳过数（展示供确认，不作过/不过依据）', '失败数（期望为 0；不为 0 时列出命题与缺项）'],
+            [
+                { label: '完成数', expect: '完成数 = 命题总数；跳过与失败的逐一列出命题名' },
+                { label: '跳过数', informational: true },
+                { label: '失败数', expect: '期望为 0；不为 0 时列出命题与缺项' },
+            ],
             '请确认 Briefing 素材完整性。',
         ),
     )

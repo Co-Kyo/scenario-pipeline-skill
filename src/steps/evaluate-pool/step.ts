@@ -5,7 +5,7 @@ import { assets, refOf, schemaRef } from '../../artifacts.ts';
 import { evalMethodRef } from '../../skill-decl.ts';
 
 export const evaluatePool = step('evaluate-pool', '评估入池')
-    .target('生成按年限阈值入池的评估结果与推荐顺序')
+    .wish('生成按年限阈值入池的评估结果与推荐顺序')
     .summary('四维评估矩阵打分，确定优先级和学习顺序')
     .dependsOn('capability-graph')
     .reads(refOf('capabilityGraph'), refOf('dependencyGraph'), { ...assets.evaluationMethod, as: 'method' }, { ...schemaRef('evaluations'), as: 'schema' }, evalMethodRef, assets.yearGranularity)
@@ -35,7 +35,11 @@ export const evaluatePool = step('evaluate-pool', '评估入池')
     )
     .checkpoint(
         barrier(
-            ['评估表已生成：每个命题四个维度的评分齐全、理由非空、总分不超过 12', '入池命题全部满足所在年限层的阈值（逐条对照 L1-L4 阈值表）', '难度分级（展示供确认，不作过/不过依据）'],
+            [
+                { label: '评估表', expect: '已生成：每个命题四个维度的评分齐全、理由非空、总分不超过 12' },
+                { label: '优先级分布', expect: '入池命题全部满足所在年限层的阈值（逐条对照 L1-L4 阈值表）' },
+                { label: '难度分级', informational: true },
+            ],
             '请确认评估结果和后处理范围。',
         ),
     )

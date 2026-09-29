@@ -5,7 +5,7 @@ import { research } from './content.ts';
 
 
 export const capabilityResearch = step('capability-research', '能力研究')
-    .target('生成能力知识库主文件、结构化摘要和索引')
+    .wish('生成能力知识库主文件、结构化摘要和索引')
     .summary('深度研究原子能力，产出知识库主文件')
     .dependsOn('evaluate-pool')
     .reads(refOf('capabilityGraph'), refOf('readme'), { ...assets.refSources, as: 'contract' }, refOf('scanIndex'), { ...schemaRef('researchPlan'), as: 'schema' }, assets.capabilityResearchMode)
@@ -42,7 +42,12 @@ export const capabilityResearch = step('capability-research', '能力研究')
     )
     .checkpoint(
         barrier(
-            ['完成数 = 能力总数（跳过与失败的逐一列出能力名）', '跳过数（展示供确认，不作过/不过依据）', '失败数（期望为 0；不为 0 时列出能力与缺项）', '素材分配率（展示分配率数值；所有抓取成功的素材都被至少一个能力使用，没有静默丢弃）'],
+            [
+                { label: '完成数', expect: '完成数 = 能力总数；跳过与失败的逐一列出能力名' },
+                { label: '跳过数', informational: true },
+                { label: '失败数', expect: '期望为 0；不为 0 时列出能力与缺项' },
+                { label: '素材分配率', expect: '展示分配率数值；所有抓取成功的素材都被至少一个能力使用，没有静默丢弃' },
+            ],
             '请确认能力研究质量。',
         ),
     )

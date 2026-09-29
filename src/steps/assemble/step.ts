@@ -5,7 +5,7 @@ import { assembly } from './content.ts';
 
 
 export const assemble = step('assemble', '命题组装')
-    .target('为每个命题生成四象限研究输出')
+    .wish('为每个命题生成四象限研究输出')
     .summary('组装四象限研究输出（overview/edge-cases/trade-offs/experiment）')
     .dependsOn('briefing-assemble')
     .reads(refOf('briefing'), refOf('requirementWeb'), refOf('capabilityGraph'), { ...schemaRef('overview'), as: 'schema' })
@@ -46,7 +46,11 @@ export const assemble = step('assemble', '命题组装')
     )
     .checkpoint(
         barrier(
-            ['完成数 = 命题总数（未完成的逐一列出命题名，标明是部分完成还是失败）', '部分完成数（每个列出缺哪个维度的分析）', '失败数（期望为 0；不为 0 时逐条列出命题与原因）'],
+            [
+                { label: '完成数', expect: '完成数 = 命题总数；未完成的逐一列出命题名，标明是部分完成还是失败' },
+                { label: '部分完成数', expect: '每个部分完成的命题列出缺哪个维度的分析' },
+                { label: '失败数', expect: '期望为 0；不为 0 时逐条列出命题与原因' },
+            ],
             '请确认命题组装质量。',
         ),
     )

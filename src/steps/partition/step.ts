@@ -5,7 +5,7 @@ import { partitionMethodRef } from '../../skill-decl.ts';
 import { refOf, schemaRef } from '../../artifacts.ts';
 
 export const partition = step('partition', '依赖分区')
-    .target('生成可被 scan 消费的分区分析和执行计划')
+    .wish('生成可被 scan 消费的分区分析和执行计划')
     .summary('整理命题依赖DAG，识别分区点分批执行')
     .dependsOn('brainstorm')
     .reads(refOf('requirementWeb'), { ...schemaRef('partitionAnalysis'), as: 'schema' }, partitionMethodRef)
@@ -35,7 +35,11 @@ export const partition = step('partition', '依赖分区')
     )
     .checkpoint(
         barrier(
-            ['session 数量（展示供确认，不作过/不过依据）', `当前会话命题数不超过 ${partitionRules.SESSION_MAX_PROPOSITIONS}，且是包含核心命题最多的一组`, '排期 session 命题（展示供确认，不作过/不过依据）'],
+            [
+                { label: 'session 数量', informational: true },
+                { label: '当前会话命题', expect: `命题数不超过 ${partitionRules.SESSION_MAX_PROPOSITIONS}，且是包含核心命题最多的一组` },
+                { label: '排期 session 命题', informational: true },
+            ],
             '请确认分区方案和本次执行计划。',
         ),
     )

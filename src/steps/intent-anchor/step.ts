@@ -4,7 +4,7 @@ import { displayFoldMulti, barrier, fail, verify } from '../../step-parts.ts';
 import { assets, refOf, schemaRef } from '../../artifacts.ts';
 
 export const intentAnchor = step('intent-anchor', '意图锚定')
-    .target(intent.target())
+    .wish(intent.target())
     .summary('解析用户指令，推断年限，生成共享骨架')
     .dependsOn('initialize')
     .reads(
@@ -38,7 +38,10 @@ export const intentAnchor = step('intent-anchor', '意图锚定')
     )
     .checkpoint(
         barrier(
-            ['展示年限推断命中的优先级层级与推断依据记录（供确认，不作过/不过依据）', '跳过判断结果'],
+            [
+                { label: '年限推断依据', informational: true },
+                { label: '跳过判断结果', expect: '每个被跳过的锚点都有跳过原因与去路' },
+            ],
             '请确认意图锚定结果、年限推断和跳过判断。',
         ),
     )

@@ -13,7 +13,7 @@ import {
 
 
 export const learningLadder = step('learning-ladder', '学习阶梯')
-    .target('为每个命题生成从不会到能讲的渐进学习路径')
+    .wish('为每个命题生成从不会到能讲的渐进学习路径')
     .summary('生成从"不会"到"能讲"的渐进式路径')
     .dependsOn('assemble')
     .reads(refOf('dependencyGraph'), refOf('summaries'), refOf('overview'), refOf('anchors'), refOf('requirementWeb'), { ...schemaRef('ladder'), as: 'schema' })
@@ -39,7 +39,11 @@ export const learningLadder = step('learning-ladder', '学习阶梯')
     )
     .checkpoint(
         barrier(
-            [`完成数 = 命题总数（每个命题的阶段数在 ${LADDER_STAGE_COUNT.min}-${LADDER_STAGE_COUNT.max} 之间）`, '跳过数（展示供确认，不作过/不过依据）', '失败数（期望为 0；不为 0 时列出命题与缺项）'],
+            [
+                { label: '完成数', expect: `完成数 = 命题总数；每个命题的阶段数在 ${LADDER_STAGE_COUNT.min}-${LADDER_STAGE_COUNT.max} 之间` },
+                { label: '跳过数', informational: true },
+                { label: '失败数', expect: '期望为 0；不为 0 时列出命题与缺项' },
+            ],
             '请确认学习阶梯最终产物。',
         ),
     )

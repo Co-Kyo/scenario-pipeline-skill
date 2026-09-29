@@ -103,9 +103,9 @@ export const fail = {
     }),
 };
 
-/** 检查点：必须停住等用户确认（step.checkpoint 的元素）。 */
+/** 检查点：必须停住等用户确认（step.checkpoint 的元素）。0.3.0 起检查项＝CheckItem（label＋expect/informational）。 */
 export function barrier(
-    checkItems: string[],
+    checkItems: SourceCheckpoint['checkItems'],
     clarifyPrompt: string,
 ): SourceCheckpoint {
     return {
