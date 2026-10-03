@@ -4,7 +4,7 @@ import { displayFoldMulti, barrier, fail, verify } from '../../step-parts.ts';
 import { assets, refOf, schemaRef } from '../../artifacts.ts';
 
 export const intentAnchor = step('intent-anchor', '意图锚定')
-    .wish(intent.target())
+    .wish(intent.wishText())
     .target('T1', '锚点集合已产出且核心字段齐备，下游步骤可直接消费')
     .target('T2', '年限推断结论可追溯，可供确认')
     .target('T3', '跳过判断结论明确且去向可交代')

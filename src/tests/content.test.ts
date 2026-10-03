@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 import { REASON_TYPES } from '../steps/brainstorm/content.ts';
 import { SCAN_DENSITY } from '../steps/scan/content.ts';
-import { countVerifyText, detail, INTERCEPT_WORDS, insufficientAnchorsText, skipSection, target } from '../steps/intent-anchor/content.ts';
+import { countVerifyText, detail, INTERCEPT_WORDS, insufficientAnchorsText, skipSection, wishText } from '../steps/intent-anchor/content.ts';
 import { detail as partitionDetail, sessionOverflowText, threeLayerSection } from '../steps/partition/content.ts';
 import { capabilityOverflowText, highgroundSection } from '../steps/capability-graph/content.ts';
 import { detail as evaluationDetail, thresholdSection } from '../steps/evaluate-pool/content.ts';
@@ -15,8 +15,8 @@ import { BATCH_POLICY, CONCURRENCY_LIMIT, WINDOW_BUDGET } from '../skill-decl.ts
 // 仓库根(src/tests/ 上两级)
 const repoRoot = fileURLToPath(new URL('../../', import.meta.url));
 
-test('intent:锚点数量常量贯穿派生文本(target/detail/verify/halt)', () => {
-    assert.ok(target().startsWith('生成 8-15 个锚点'));
+test('intent:锚点数量常量贯穿派生文本(wishText/detail/verify/halt)', () => {
+    assert.ok(wishText().startsWith('生成 8-15 个锚点'));
     assert.ok(detail().includes('- 数量 8-15 个'));
     assert.equal(countVerifyText(), '锚点数量为 8-15 个');
     assert.equal(insufficientAnchorsText(), '锚点不足 8 个');
