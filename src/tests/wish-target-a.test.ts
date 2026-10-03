@@ -3,9 +3,9 @@ import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
-// A 案迁移锁（0.3.0）：意图/可判定分家在产物中的形态——
-// ①意图章存在且不再有「## 目标」；②检查项行带期望或仅展示标注；
-// ③159 跨步约束有家（initialize 渲染「跨步约束」章）。
+// wish/target 模型锁（0.3.0）：产物形态＝每步一个「意图」章（wish，1 句）
+// ＋一个「目标」章（target，若干条），每条目标下挂着支撑它的判据。
+// 另锁：②检查项行带期望或仅展示标注；③159 跨步约束有家。
 
 const dist = fileURLToPath(new URL('../../dist/sp-skill/', import.meta.url));
 
@@ -20,12 +20,18 @@ const IDS = [
     '08-briefing-assemble', '09-assemble', '10-learning-ladder',
 ];
 
-test('A 案：意图章替换目标章（11 步全量）', () => {
+test('wish/target：11 步全量都有「意图」章与「目标」章，且目标都有判据撑着', () => {
     for (const id of IDS) {
         const md = stepMd(id);
         if (!md) continue; // dist 未构建时跳过（init 门另测）
         assert.ok(md.includes('## 意图'), `${id} 缺「意图」章`);
-        assert.ok(!md.includes('## 目标'), `${id} 仍残留「目标」章`);
+        assert.ok(md.includes('## 目标'), `${id} 缺「目标」章`);
+        const goalBlock = (md.split('## 目标')[1] ?? '').split(/\n## /)[0];
+        const numbered = (goalBlock.match(/^\d+\.\s/gm) ?? []).length;
+        const evidence = (goalBlock.match(/^\s+- (机器判据|人工判据)：/gm) ?? []).length;
+        assert.ok(numbered >= 1, `${id} 的「目标」章下没有编号目标`);
+        assert.ok(evidence >= numbered,
+            `${id} 有目标没有判据撑着（${numbered} 条目标 / ${evidence} 条判据）`);
     }
 });
 

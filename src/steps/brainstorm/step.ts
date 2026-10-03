@@ -6,6 +6,10 @@ import { assets, refOf, schemaRef } from '../../artifacts.ts';
 
 export const brainstorm = step('brainstorm', '头脑风暴')
     .wish('收敛出可被 {{step:scan}} 消费的 requirement-web.json')
+    .target('T1', '需求网主文件已落盘可解析，上下文与策略信息齐备')
+    .target('T2', '命题清单字段齐备且来源可追溯')
+    .target('T3', '命题与能力的交叉引用自洽')
+    .target('T4', '排除边界明确且维度分析过程留痕')
     .summary('4维度Agent并行分析，产出结构化需求网')
     .dependsOn('intent-anchor')
     .reads(
@@ -42,19 +46,19 @@ export const brainstorm = step('brainstorm', '头脑风暴')
         brainstormRules.integratorTask(),
     )
     .verify(
-        verify.json(refOf('requirementWeb').path, 'requirement-web.json 可解析'),
-        verify.field('context', 'context 包含 target_level、year_source、year_inference_trace'),
-        verify.field('id', '每个 proposition 包含 id'),
-        verify.field('name', '每个 proposition 包含 name'),
-        verify.field('depth', '每个 proposition 包含 depth'),
-        verify.field('search_keywords', '每个 proposition 包含 search_keywords'),
-        verify.field('capability_ids', 'capability_web 与 propositions 的 capability_ids 一致'),
-        verify.field('dependencies', 'dependencies 中引用的 id 全部存在'),
-        verify.count('scope.exclusions 非空'),
-        verify.field('level_weight', '每个 proposition 包含 level_weight'),
-        verify.field('strategy', 'strategy 元数据已写入'),
-        verify.field('provisional_role', '锚点与 proposition 的 level_weight 一致'),
-        verify.count('四份维度报告各自：文件存在、JSON 可解析、维度标识（dimension）正确、条目（entries）非空'),
+        verify.json(refOf('requirementWeb').path, 'requirement-web.json 可解析', 'T1'),
+        verify.field('context', 'context 包含 target_level、year_source、year_inference_trace', 'T1'),
+        verify.field('id', '每个 proposition 包含 id', 'T2'),
+        verify.field('name', '每个 proposition 包含 name', 'T2'),
+        verify.field('depth', '每个 proposition 包含 depth', 'T2'),
+        verify.field('search_keywords', '每个 proposition 包含 search_keywords', 'T2'),
+        verify.field('capability_ids', 'capability_web 与 propositions 的 capability_ids 一致', 'T3'),
+        verify.field('dependencies', 'dependencies 中引用的 id 全部存在', 'T3'),
+        verify.count('scope.exclusions 非空', 'T4'),
+        verify.field('level_weight', '每个 proposition 包含 level_weight', 'T2'),
+        verify.field('strategy', 'strategy 元数据已写入', 'T1'),
+        verify.field('provisional_role', '锚点与 proposition 的 level_weight 一致', 'T2'),
+        verify.count('四份维度报告各自：文件存在、JSON 可解析、维度标识（dimension）正确、条目（entries）非空', 'T4'),
     )
     .onFail(
         fail.retry('维度 Agent 超时', '检查文件是否已写入；完整保留，不完整补发一次'),
@@ -65,9 +69,9 @@ export const brainstorm = step('brainstorm', '头脑风暴')
     .checkpoint(
         barrier(
             [
-                { label: '命题数量', expect: '每条命题都有编号、名称、深度、检索关键词、能力权重五个字段，且能追溯到来源锚点' },
-                { label: '能力数量', expect: '每条能力都被命题正确引用' },
-                { label: '排除项数', expect: '四类排除原因各有几条：越界 out_of_scope／低于目标 below_target／已过时 deprecated／非前端 not_frontend' },
+                { label: '命题数量', expect: '每条命题都有编号、名称、深度、检索关键词、能力权重五个字段，且能追溯到来源锚点', target: 'T2' },
+                { label: '能力数量', expect: '每条能力都被命题正确引用', target: 'T3' },
+                { label: '排除项数', expect: '四类排除原因各有几条：越界 out_of_scope／低于目标 below_target／已过时 deprecated／非前端 not_frontend', target: 'T4' },
             ],
             '请确认头脑风暴收敛后的需求网。',
         ),

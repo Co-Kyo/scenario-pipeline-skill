@@ -43,35 +43,22 @@ export function doAction(
 }
 
 /** 校验规则：产物存在性/可解析/字段/计数/命令。 */
+const withTarget = (rule: SourceVerifyRule, target?: string): SourceVerifyRule =>
+    target ? { ...rule, target } : rule;
+
 export const verify = {
-    file: (ref: string, description: string): SourceVerifyRule => ({
-        type: 'file-exists',
-        ref,
-        description,
-    }),
-    json: (ref: string, description: string): SourceVerifyRule => ({
-        type: 'json-parse',
-        ref,
-        description,
-    }),
-    schema: (ref: string, description: string): SourceVerifyRule => ({
-        type: 'schema',
-        ref,
-        description,
-    }),
-    field: (ref: string, description: string): SourceVerifyRule => ({
-        type: 'field',
-        ref,
-        description,
-    }),
-    count: (description: string): SourceVerifyRule => ({
-        type: 'count',
-        description,
-    }),
-    command: (description: string): SourceVerifyRule => ({
-        type: 'command',
-        description,
-    }),
+    file: (ref: string, description: string, target?: string): SourceVerifyRule =>
+        withTarget({ type: 'file-exists', ref, description }, target),
+    json: (ref: string, description: string, target?: string): SourceVerifyRule =>
+        withTarget({ type: 'json-parse', ref, description }, target),
+    schema: (ref: string, description: string, target?: string): SourceVerifyRule =>
+        withTarget({ type: 'schema', ref, description }, target),
+    field: (ref: string, description: string, target?: string): SourceVerifyRule =>
+        withTarget({ type: 'field', ref, description }, target),
+    count: (description: string, target?: string): SourceVerifyRule =>
+        withTarget({ type: 'count', description }, target),
+    command: (description: string, target?: string): SourceVerifyRule =>
+        withTarget({ type: 'command', description }, target),
 };
 
 /** 失败规则：超时/缺项时重试、降级、跳过、停止或转人工检查点。 */
@@ -117,8 +104,8 @@ export function barrier(
 }
 
 /** 同一产物的成对校验：先查存在、再查可解析（verifyPair）。 */
-export function verifyPair(ref: string, existsDesc: string, parseDesc: string): SourceVerifyRule[] {
-    return [verify.file(ref, existsDesc), verify.json(ref, parseDesc)];
+export function verifyPair(ref: string, existsDesc: string, parseDesc: string, target?: string): SourceVerifyRule[] {
+    return [verify.file(ref, existsDesc, target), verify.json(ref, parseDesc, target)];
 }
 
 /** title_fold 多选 display 基座（intent-anchor/brainstorm/capability-graph 三处共同字段）。 */

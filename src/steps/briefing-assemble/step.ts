@@ -6,6 +6,8 @@ import { briefing } from './content.ts';
 
 export const briefingAssemble = step('briefing-assemble', 'Briefing 组装')
     .wish('为每个命题生成包含能力摘要的 Briefing')
+    .target('T1', 'Briefing 已按命题产出完整，缺失与进度可交代')
+    .target('T2', '场景化追溯达标可用')
     .summary('从能力摘要提取关键信息，组装Briefing')
     .dependsOn('capability-research')
     .reads(refOf('requirementWeb'), refOf('summaries'), { ...schemaRef('briefing'), as: 'schema' })
@@ -20,9 +22,9 @@ export const briefingAssemble = step('briefing-assemble', 'Briefing 组装')
         briefing.workerTask(),
     )
     .verify(
-        verify.file(refOf('briefing').path, 'Briefing 文件存在'),
-        verify.field('缺失能力标注', '缺失能力已标注'),
-        verify.count('场景化 Trace >= 3/3/3'),
+        verify.file(refOf('briefing').path, 'Briefing 文件存在', 'T1'),
+        verify.field('缺失能力标注', '缺失能力已标注', 'T1'),
+        verify.count('场景化 Trace >= 3/3/3', 'T2'),
     )
     .onFail(
         fail.degrade('能力摘要缺失', '标注缺失并继续处理其余能力'),
@@ -31,9 +33,9 @@ export const briefingAssemble = step('briefing-assemble', 'Briefing 组装')
     .checkpoint(
         barrier(
             [
-                { label: '完成数', expect: '完成数 = 命题总数；跳过与失败的逐一列出命题名' },
-                { label: '跳过数', informational: true },
-                { label: '失败数', expect: '期望为 0；不为 0 时列出命题与缺项' },
+                { label: '完成数', expect: '完成数 = 命题总数；跳过与失败的逐一列出命题名', target: 'T1' },
+                { label: '跳过数', informational: true, target: 'T1' },
+                { label: '失败数', expect: '期望为 0；不为 0 时列出命题与缺项', target: 'T1' },
             ],
             '请确认 Briefing 素材完整性。',
         ),

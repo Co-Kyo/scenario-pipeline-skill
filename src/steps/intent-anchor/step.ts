@@ -5,6 +5,9 @@ import { assets, refOf, schemaRef } from '../../artifacts.ts';
 
 export const intentAnchor = step('intent-anchor', '意图锚定')
     .wish(intent.target())
+    .target('T1', '锚点集合已产出且核心字段齐备，下游步骤可直接消费')
+    .target('T2', '年限推断结论可追溯，可供确认')
+    .target('T3', '跳过判断结论明确且去向可交代')
     .summary('解析用户指令，推断年限，生成共享骨架')
     .dependsOn('initialize')
     .reads(
@@ -28,9 +31,9 @@ export const intentAnchor = step('intent-anchor', '意图锚定')
         intent.anchorTask(),
     )
     .verify(
-        verify.count(intent.countVerifyText()),
-        verify.field('provisional_level', '每个锚点包含 provisional_level'),
-        verify.field('provisional_role', '每个锚点包含 provisional_role'),
+        verify.count(intent.countVerifyText(), 'T1'),
+        verify.field('provisional_level', '每个锚点包含 provisional_level', 'T1'),
+        verify.field('provisional_role', '每个锚点包含 provisional_role', 'T1'),
     )
     .onFail(
         fail.checkpoint('年限推断只命中了优先级链第 3 级（隐式信号）或更低级别', '默认 L2，并在初始化 Barrier 请用户确认'),
@@ -39,8 +42,8 @@ export const intentAnchor = step('intent-anchor', '意图锚定')
     .checkpoint(
         barrier(
             [
-                { label: '年限推断依据', informational: true },
-                { label: '跳过判断结果', expect: '每个被跳过的锚点都有跳过原因与去路' },
+                { label: '年限推断依据', informational: true, target: 'T2' },
+                { label: '跳过判断结果', expect: '每个被跳过的锚点都有跳过原因与去路', target: 'T3' },
             ],
             '请确认意图锚定结果、年限推断和跳过判断。',
         ),

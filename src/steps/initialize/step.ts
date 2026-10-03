@@ -5,6 +5,9 @@ import { assets, refOf } from '../../artifacts.ts';
 
 export const initialize = step('initialize', '初始化')
     .wish('确认 workDir 并建立可追溯的初始化记录')
+    .target('T1', '初始化记录已落盘且字段齐备，后续产出路径可基于它派生')
+    .target('T2', '运行信封已落盘且可解析，后续步骤能读到 run_id')
+    .target('T3', '检查点协议文档在使用它的步骤之前可被引用')
     .invariant('后续步骤按需加载 references/ 共享文档，不再重复确认 workDir（初始化只对齐一次）', 'downstream')
     .summary('确认 workDir（交互步骤），各步骤按需加载 references/ 共享文档')
 // 8.4 迁移：dependsOn 收窄为单值。initialize 是链起点（root），无前驱，
@@ -26,10 +29,10 @@ export const initialize = step('initialize', '初始化')
     )
     .detail(initializeDetail())
     .verify(
-        ...verifyPair(refOf('init').path, '初始化记录存在', '初始化记录可解析'),
-        verify.field('workDir', '初始化记录包含 workDir'),
-        verify.field('confirmed', '初始化记录包含确认状态'),
-        ...verifyPair(refOf('run').path, '运行信封存在', '运行信封可解析'),
+        ...verifyPair(refOf('init').path, '初始化记录存在', '初始化记录可解析', 'T1'),
+        verify.field('workDir', '初始化记录包含 workDir', 'T1'),
+        verify.field('confirmed', '初始化记录包含确认状态', 'T1'),
+        ...verifyPair(refOf('run').path, '运行信封存在', '运行信封可解析', 'T2'),
     )
     .onFail(
         fail.halt('用户未确认 workDir', '停止并等待用户修正输出目录'),
@@ -37,8 +40,8 @@ export const initialize = step('initialize', '初始化')
     .checkpoint(
         barrier(
             [
-                { label: 'workDir 已确认', expect: 'workDir 存在且初始化记录写入，后续产出路径均基于它派生' },
-                { label: '检查点协议文档可加载', expect: '可加载、可被引用（本步唯一声明读取的共享文档）；其余共享文档到使用它的步骤再核验' },
+                { label: 'workDir 已确认', expect: 'workDir 存在且初始化记录写入，后续产出路径均基于它派生', target: 'T1' },
+                { label: '检查点协议文档可加载', expect: '可加载、可被引用（本步唯一声明读取的共享文档）；其余共享文档到使用它的步骤再核验', target: 'T3' },
             ],
             '请确认 workDir 与初始化规则。',
         ),

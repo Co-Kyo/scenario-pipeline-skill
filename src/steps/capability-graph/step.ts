@@ -6,6 +6,9 @@ import { capabilityMethodRef } from '../../skill-decl.ts';
 
 export const capabilityGraph = step('capability-graph', '能力图谱')
     .wish('生成能力图谱、依赖图、战略高地与学习路径')
+    .target('T1', '能力图谱已落盘可解析，能力与命题引用一致')
+    .target('T2', '依赖与合并拆分过程留痕可追溯，缺失状态明确')
+    .target('T3', '战略高地与学习路径已产出且顺序合理')
     .summary('跨命题去重合并原子能力，计算战略价值')
     .dependsOn('scan')
     .reads(refOf('requirementWeb'), refOf('scanIndex'), { ...assets.capabilityMethod, as: 'method' }, { ...schemaRef('capabilityGraph'), as: 'schema' }, capabilityMethodRef)
@@ -29,10 +32,10 @@ export const capabilityGraph = step('capability-graph', '能力图谱')
         capability.highgroundTask(),
     )
     .verify(
-        verify.json(refOf('capabilityGraph').path, '能力图谱可解析'),
-        verify.field('dependencies_trace', '非空依赖包含 dependencies_trace'),
-        verify.field('t0_missing', 'T0 参考状态已记录'),
-        verify.count('每次合并或拆分都留有对应记录（merge_trace 或 split_trace 非空）'),
+        verify.json(refOf('capabilityGraph').path, '能力图谱可解析', 'T1'),
+        verify.field('dependencies_trace', '非空依赖包含 dependencies_trace', 'T2'),
+        verify.field('t0_missing', 'T0 参考状态已记录', 'T2'),
+        verify.count('每次合并或拆分都留有对应记录（merge_trace 或 split_trace 非空）', 'T2'),
     )
     .onFail(
         fail.degrade('T0 信源不可达', '标记 t0_missing 并用 T1/T2 补充'),
@@ -41,10 +44,10 @@ export const capabilityGraph = step('capability-graph', '能力图谱')
     .checkpoint(
         barrier(
             [
-                { label: '能力数量', expect: '每条能力都被命题正确引用（数量与引用一致性）' },
-                { label: '扇出度 Top 3', informational: true },
-                { label: '战略高地数量', expect: `一级高地数（价值评分达到 ${capability.HIGHGROUND_THRESHOLDS.tier1Min} 及以上的战略高地数量）` },
-                { label: '学习路径', expect: '学习路径包含全部战略高地：价值高的排在前面；有前置依赖的能力不先于其前置出现（前置关系取自能力图谱的依赖声明）' },
+                { label: '能力数量', expect: '每条能力都被命题正确引用（数量与引用一致性）', target: 'T1' },
+                { label: '扇出度 Top 3', informational: true, target: 'T1' },
+                { label: '战略高地数量', expect: `一级高地数（价值评分达到 ${capability.HIGHGROUND_THRESHOLDS.tier1Min} 及以上的战略高地数量）`, target: 'T3' },
+                { label: '学习路径', expect: '学习路径包含全部战略高地：价值高的排在前面；有前置依赖的能力不先于其前置出现（前置关系取自能力图谱的依赖声明）', target: 'T3' },
             ],
             '请确认能力图谱质量。',
         ),
