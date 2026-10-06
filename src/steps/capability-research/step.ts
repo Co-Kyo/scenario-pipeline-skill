@@ -5,7 +5,10 @@ import { research } from './content.ts';
 
 
 export const capabilityResearch = step('capability-research', '能力研究')
-    .target('生成能力知识库主文件、结构化摘要和索引')
+    .wish('生成能力知识库主文件、结构化摘要和索引')
+    .target('T1', '研究计划已落盘可解析，素材分配无静默丢弃')
+    .target('T2', '能力主文件与摘要已产出完整，进度可交代')
+    .target('T3', '分组滚动策略合规，组规模可控')
     .summary('深度研究原子能力，产出知识库主文件')
     .dependsOn('evaluate-pool')
     .reads(refOf('capabilityGraph'), refOf('readme'), { ...assets.refSources, as: 'contract' }, refOf('scanIndex'), { ...schemaRef('researchPlan'), as: 'schema' }, assets.capabilityResearchMode)
@@ -26,15 +29,15 @@ export const capabilityResearch = step('capability-research', '能力研究')
         research.capabilityFileTemplate(),
     )
     .verify(
-        verify.file(refOf('researchPlan').path, '研究素材分配计划存在'),
-        verify.json(refOf('researchPlan').path, '研究素材分配计划可解析'),
-        verify.field('coverage', '研究计划包含素材覆盖率'),
-        verify.field('material_usage', '每个能力摘要包含 material_usage'),
-        verify.file(refOf('capabilities').path.replace('*', '{id}-{name}'), '能力主文件存在'),
-        verify.json(refOf('summaries').path.replace('*', '{id}-{name}'), '能力摘要可解析'),
-        verify.count('分组能力数不超过 5'),
-        verify.count('能力知识库主文件与索引文件均已产出且非空'),
-        verify.count('每组能力数不超过 5；不足 2 个的组已并入相邻组'),
+        verify.file(refOf('researchPlan').path, '研究素材分配计划存在', 'T1'),
+        verify.json(refOf('researchPlan').path, '研究素材分配计划可解析', 'T1'),
+        verify.field('coverage', '研究计划包含素材覆盖率', 'T1'),
+        verify.field('material_usage', '每个能力摘要包含 material_usage', 'T2'),
+        verify.file(refOf('capabilities').path.replace('*', '{id}-{name}'), '能力主文件存在', 'T2'),
+        verify.json(refOf('summaries').path.replace('*', '{id}-{name}'), '能力摘要可解析', 'T2'),
+        verify.count('分组能力数不超过 5', 'T3'),
+        verify.count('能力知识库主文件与索引文件均已产出且非空', 'T2'),
+        verify.count('每组能力数不超过 5；不足 2 个的组已并入相邻组', 'T3'),
     )
     .onFail(
         fail.retry('子组 Agent 超时', '拆分为更小子组重试'),
@@ -42,7 +45,12 @@ export const capabilityResearch = step('capability-research', '能力研究')
     )
     .checkpoint(
         barrier(
-            ['完成数 = 能力总数（跳过与失败的逐一列出能力名）', '跳过数（展示供确认，不作过/不过依据）', '失败数（期望为 0；不为 0 时列出能力与缺项）', '素材分配率（展示分配率数值；所有抓取成功的素材都被至少一个能力使用，没有静默丢弃）'],
+            [
+                { label: '完成数', expect: '完成数 = 能力总数；跳过与失败的逐一列出能力名', target: 'T2' },
+                { label: '跳过数', informational: true, target: 'T2' },
+                { label: '失败数', expect: '期望为 0；不为 0 时列出能力与缺项', target: 'T2' },
+                { label: '素材分配率', expect: '展示分配率数值；所有抓取成功的素材都被至少一个能力使用，没有静默丢弃', target: 'T1' },
+            ],
             '请确认能力研究质量。',
         ),
     )

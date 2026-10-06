@@ -5,7 +5,10 @@ import { partitionMethodRef } from '../../skill-decl.ts';
 import { refOf, schemaRef } from '../../artifacts.ts';
 
 export const partition = step('partition', '依赖分区')
-    .target('生成可被 scan 消费的分区分析和执行计划')
+    .wish('生成可被 scan 消费的分区分析和执行计划')
+    .target('T1', '分区分析已落盘可解析，分区全貌可交代')
+    .target('T2', '本会话执行范围明确且命题合法可用')
+    .target('T3', '后续批次排期完整可被扫描消费')
     .summary('整理命题依赖DAG，识别分区点分批执行')
     .dependsOn('brainstorm')
     .reads(refOf('requirementWeb'), { ...schemaRef('partitionAnalysis'), as: 'schema' }, partitionMethodRef)
@@ -25,9 +28,9 @@ export const partition = step('partition', '依赖分区')
         partitionRules.sessionTask(),
     )
     .verify(
-        verify.json(refOf('partitionAnalysis').path, '分区分析可解析'),
-        verify.field('current_session', `当前会话的命题列表非空、不超过 ${partitionRules.SESSION_MAX_PROPOSITIONS} 条、且每条都是需求网中存在的命题编号`),
-        verify.field('scan_batches', 'scan_batches 可消费'),
+        verify.json(refOf('partitionAnalysis').path, '分区分析可解析', 'T1'),
+        verify.field('current_session', `当前会话的命题列表非空、不超过 ${partitionRules.SESSION_MAX_PROPOSITIONS} 条、且每条都是需求网中存在的命题编号`, 'T2'),
+        verify.field('scan_batches', 'scan_batches 可消费', 'T3'),
     )
     .onFail(
         fail.degrade('存在循环依赖', '断开 related 类型边并记录 warning'),
@@ -35,7 +38,11 @@ export const partition = step('partition', '依赖分区')
     )
     .checkpoint(
         barrier(
-            ['session 数量（展示供确认，不作过/不过依据）', `当前会话命题数不超过 ${partitionRules.SESSION_MAX_PROPOSITIONS}，且是包含核心命题最多的一组`, '排期 session 命题（展示供确认，不作过/不过依据）'],
+            [
+                { label: 'session 数量', informational: true, target: 'T1' },
+                { label: '当前会话命题', expect: `命题数不超过 ${partitionRules.SESSION_MAX_PROPOSITIONS}，且是包含核心命题最多的一组`, target: 'T2' },
+                { label: '排期 session 命题', informational: true, target: 'T3' },
+            ],
             '请确认分区方案和本次执行计划。',
         ),
     )

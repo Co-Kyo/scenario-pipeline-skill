@@ -13,7 +13,10 @@ import {
 
 
 export const learningLadder = step('learning-ladder', '学习阶梯')
-    .target('为每个命题生成从不会到能讲的渐进学习路径')
+    .wish('为每个命题生成从不会到能讲的渐进学习路径')
+    .target('T1', '学习阶梯已按命题产出完整，进度可交代')
+    .target('T2', '阶段规模合规，渐进节奏可控')
+    .target('T3', '每步验证标准明确可判定')
     .summary('生成从"不会"到"能讲"的渐进式路径')
     .dependsOn('assemble')
     .reads(refOf('dependencyGraph'), refOf('summaries'), refOf('overview'), refOf('anchors'), refOf('requirementWeb'), { ...schemaRef('ladder'), as: 'schema' })
@@ -29,9 +32,9 @@ export const learningLadder = step('learning-ladder', '学习阶梯')
         workerTask(),
     )
     .verify(
-        verify.file(refOf('ladder').path, '学习阶梯文件存在'),
-        verify.count(`阶段数 ${LADDER_STAGE_COUNT.min}-${LADDER_STAGE_COUNT.max}`),
-        verify.field(LADDER_JUDGMENT_FIELD, '每步有二值验证标准'),
+        verify.file(refOf('ladder').path, '学习阶梯文件存在', 'T1'),
+        verify.count(`阶段数 ${LADDER_STAGE_COUNT.min}-${LADDER_STAGE_COUNT.max}`, 'T2'),
+        verify.field(LADDER_JUDGMENT_FIELD, '每步有二值验证标准', 'T3'),
     )
     .onFail(
         fail.degrade('能力依赖图有环', '打断循环依赖并标记 warning'),
@@ -39,7 +42,11 @@ export const learningLadder = step('learning-ladder', '学习阶梯')
     )
     .checkpoint(
         barrier(
-            [`完成数 = 命题总数（每个命题的阶段数在 ${LADDER_STAGE_COUNT.min}-${LADDER_STAGE_COUNT.max} 之间）`, '跳过数（展示供确认，不作过/不过依据）', '失败数（期望为 0；不为 0 时列出命题与缺项）'],
+            [
+                { label: '完成数', expect: `完成数 = 命题总数；每个命题的阶段数在 ${LADDER_STAGE_COUNT.min}-${LADDER_STAGE_COUNT.max} 之间`, target: 'T2' },
+                { label: '跳过数', informational: true, target: 'T1' },
+                { label: '失败数', expect: '期望为 0；不为 0 时列出命题与缺项', target: 'T1' },
+            ],
             '请确认学习阶梯最终产物。',
         ),
     )

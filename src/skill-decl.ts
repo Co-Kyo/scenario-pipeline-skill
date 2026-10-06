@@ -8,20 +8,12 @@ import type { SourceContract, SourceModule, SourcePolicies, SourceRef } from 'sk
 import { fileURLToPath } from 'node:url';
 import { assets } from './artifacts.ts';
 
-/** skill 级策略声明（框架 policies 字段）。 */
+/**
+ * skill 级策略声明（框架 policies 字段）。
+ * 0.3.0 A 案激进清理：四个死字段（contextIsolation 等零读者）随框架删除；
+ * runtimeTrace 是活功能（运行记录埋点，enabled:true 真启用）。
+ */
 export const policies: SourcePolicies = {
-    contextIsolation: true,
-    reuseByFileExistence: true,
-    checkpointRequired: true,
-    traceFields: [
-        'year_inference_trace',
-        'source_tier',
-        'dependencies_trace',
-        'merge_trace',
-        'split_trace',
-        'priority_trace',
-        '筛选_trace',
-    ],
     runtimeTrace: {
         enabled: true,
         logDir: '{workDir}/.meta/run',

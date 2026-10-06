@@ -4,7 +4,10 @@ import { assets, refOf, schemaRef } from '../../artifacts.ts';
 import * as scanRules from './content.ts';
 
 export const scan = step('scan', '广域扫描')
-    .target('生成可被能力图谱消费的素材索引和素材正文')
+    .wish('生成可被能力图谱消费的素材索引和素材正文')
+    .target('T1', '素材索引与正文已落盘可解析，条目可定位')
+    .target('T2', '抓取与丢弃过程留痕完整，无静默丢失')
+    .target('T3', '素材分档与角色覆盖满足下游消费要求')
     .summary('按level_weight差异化搜索信源，结构化提取')
     .dependsOn('partition')
     .reads(
@@ -41,10 +44,10 @@ export const scan = step('scan', '广域扫描')
         scanRules.extractTask(),
     )
     .verify(
-        verify.file(refOf('scanIndex').path, 'index.json 已生成'),
-        verify.json(refOf('scanIndex').path, 'index.json 可解析'),
-        verify.field('file_path', '每条 material 有 file_path'),
-        verify.field('fetch_status', '反爬抓取状态已记录'),
+        verify.file(refOf('scanIndex').path, 'index.json 已生成', 'T1'),
+        verify.json(refOf('scanIndex').path, 'index.json 可解析', 'T1'),
+        verify.field('file_path', '每条 material 有 file_path', 'T1'),
+        verify.field('fetch_status', '反爬抓取状态已记录', 'T2'),
     )
     .onFail(
         fail.retry('搜索 agent 超时', '检查 search-batch 文件是否完整，完整则保留，否则重试一次'),
@@ -58,7 +61,11 @@ export const scan = step('scan', '广域扫描')
     )
     .checkpoint(
         barrier(
-            ['T0 档素材数不为 0；T0-T3 各档的数量与角色覆盖逐条列出', '丢弃数（每条都附有非空的丢弃原因）', '每个命题的核心（core）／前提（premise）／展望（outlook）三类角色都有素材支撑（缺哪一类逐条列出）'],
+            [
+                { label: '素材 Tier 分布', expect: 'T0 档素材数不为 0；T0-T3 各档的数量与角色覆盖逐条列出', target: 'T3' },
+                { label: '丢弃数', expect: '每条都附有非空的丢弃原因', target: 'T2' },
+                { label: 'role 覆盖统计', expect: '每个命题的核心（core）／前提（premise）／展望（outlook）三类角色都有素材支撑；缺哪一类逐条列出', target: 'T3' },
+            ],
             '请确认扫描素材质量和信源覆盖。',
         ),
     )

@@ -5,7 +5,10 @@ import { assets, refOf, schemaRef } from '../../artifacts.ts';
 import { evalMethodRef } from '../../skill-decl.ts';
 
 export const evaluatePool = step('evaluate-pool', '评估入池')
-    .target('生成按年限阈值入池的评估结果与推荐顺序')
+    .wish('生成按年限阈值入池的评估结果与推荐顺序')
+    .target('T1', '评估产物与总览已落盘可解析')
+    .target('T2', '入池判定按年限阈值可追溯')
+    .target('T3', '评分齐全且推荐顺序明确可用')
     .summary('四维评估矩阵打分，确定优先级和学习顺序')
     .dependsOn('capability-graph')
     .reads(refOf('capabilityGraph'), refOf('dependencyGraph'), { ...assets.evaluationMethod, as: 'method' }, { ...schemaRef('evaluations'), as: 'schema' }, evalMethodRef, assets.yearGranularity)
@@ -24,10 +27,10 @@ export const evaluatePool = step('evaluate-pool', '评估入池')
         evaluation.archiveTask(),
     )
     .verify(
-        verify.file(refOf('readme').path, '命题总览存在'),
-        verify.json(refOf('evaluations').path, '评估结果可解析'),
-        verify.field('priority_trace', '每个命题包含 priority_trace'),
-        verify.field('recommended_order', 'recommended_order 字段存在且非空'),
+        verify.file(refOf('readme').path, '命题总览存在', 'T1'),
+        verify.json(refOf('evaluations').path, '评估结果可解析', 'T1'),
+        verify.field('priority_trace', '每个命题包含 priority_trace', 'T2'),
+        verify.field('recommended_order', 'recommended_order 字段存在且非空', 'T3'),
     )
     .onFail(
         fail.degrade('任一维度的评分理由为空，或没有素材引用作支撑', '标记为 medium 并补写评分理由'),
@@ -35,7 +38,11 @@ export const evaluatePool = step('evaluate-pool', '评估入池')
     )
     .checkpoint(
         barrier(
-            ['评估表已生成：每个命题四个维度的评分齐全、理由非空、总分不超过 12', '入池命题全部满足所在年限层的阈值（逐条对照 L1-L4 阈值表）', '难度分级（展示供确认，不作过/不过依据）'],
+            [
+                { label: '评估表', expect: '已生成：每个命题四个维度的评分齐全、理由非空、总分不超过 12', target: 'T3' },
+                { label: '优先级分布', expect: '入池命题全部满足所在年限层的阈值（逐条对照 L1-L4 阈值表）', target: 'T2' },
+                { label: '难度分级', informational: true, target: 'T3' },
+            ],
             '请确认评估结果和后处理范围。',
         ),
     )

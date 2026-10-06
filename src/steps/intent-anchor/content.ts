@@ -25,7 +25,7 @@ export const YEAR_INFERENCE_CHAIN = [
     '无信号默认 L2',
 ] as const;
 
-export function target(): string {
+export function wishText(): string {
     return `生成 ${ANCHOR_COUNT.min}-${ANCHOR_COUNT.max} 个锚点并注入策略元数据`;
 }
 
