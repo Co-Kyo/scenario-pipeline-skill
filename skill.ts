@@ -4,9 +4,8 @@ import { contracts } from './src/skill-decl.ts';
 import { policies } from './src/skill-decl.ts';
 import { steps } from './src/steps/index.ts';
 
-// Phase II:阶段→步骤映射唯一数据源（链顺序唯一事实是 dependsOn 声明，由框架构建期校验；
-// flow.test 为 8.9 裁定的空壳记录文件，无断言，不跑守卫）
-// B11-A:单步阶段的 description 以该步 summary 为正本(消除双写漂移)
+// 阶段→步骤映射：链顺序唯一事实是 dependsOn 声明（框架构建期校验）；
+// 单步阶段的 description 以该步 summary 为正本（消除双写漂移）。
 const summaryOf = (id: string) => steps.find((s) => s.id === id)?.summary ?? '';
 
 export const phaseDefs: { name: string; stepIds: string[]; description: string }[] = [
@@ -36,14 +35,12 @@ const model: SkillSourceModel = {
             { label: '断点续写', pattern: '使用 scenario-pipeline，从 Step <N> 继续处理 <场景>' },
         ],
         usageNote: '系统从自然语言自动推断：经验年限、研究深度、目标平台等约束。',
-        isolationNote: '每步只读该步文件，严禁提前加载后续步骤；长文档按需分段查阅。',
         includeBuildFooter: false,
         params: [
             { name: '--year=L1|L2|L3|L4', description: '经验年限，可省略并自动推断' },
             { name: '--source=<url|file>', description: '指定扫描信源，可省略并自动推断' },
         ],
         phases: phaseDefs,
-        // D40 R0-①：initStepId 删（派生值，?? deriveInitStepId 回落，root 即 initialize，零行为变化）。
     },
     contracts,
     policies,
